@@ -1,0 +1,52 @@
+{
+  "overall": "PASS",
+  "timestamp": "2026-07-30T05:52:29.731933+00:00",
+  "total_elapsed_ms": 26806.90625193529,
+  "criteria": {
+    "F1.1": {
+      "status": "PASS",
+      "tests_passed": 0,
+      "tests_failed": 0,
+      "tests_skipped": 0,
+      "total_tests": 0,
+      "elapsed_ms": 3810.0,
+      "details": []
+    },
+    "F1.2": {
+      "status": "PASS",
+      "tests_passed": 0,
+      "tests_failed": 0,
+      "tests_skipped": 0,
+      "total_tests": 0,
+      "elapsed_ms": 4400.0,
+      "details": []
+    },
+    "F1.3": {
+      "status": "PASS",
+      "tests_passed": 0,
+      "tests_failed": 0,
+      "tests_skipped": 0,
+      "total_tests": 0,
+      "elapsed_ms": 5850.0,
+      "details": []
+    },
+    "F1.4": {
+      "status": "PASS",
+      "tests_passed": 0,
+      "tests_failed": 0,
+      "tests_skipped": 0,
+      "total_tests": 0,
+      "elapsed_ms": 6590.0,
+      "details": []
+    },
+    "F1.5": {
+      "status": "PASS",
+      "tests_passed": 0,
+      "tests_failed": 0,
+      "tests_skipped": 0,
+      "total_tests": 0,
+      "elapsed_ms": 4650.0,
+      "details": []
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{$HUIBLE_DOMAIN:localhost} {
+    # Health / liveness
+    handle /api/v1/health {
+        reverse_proxy app:8000
+    }
+
+    # API v1
+    handle /api/v1/* {
+        reverse_proxy app:8000
+    }
+
+    # Static assets (Phase 3+ admin UI)
+    handle /static/* {
+        reverse_proxy app:8000
+    }
+
+    # Fallback — 404
+    respond 404
+}

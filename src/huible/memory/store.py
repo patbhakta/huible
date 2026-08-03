@@ -1,0 +1,347 @@
+from __future__ import annotations
+
+import logging
+from uuid import UUID
+
+from sqlalchemy import func, select, text, update
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from huible.memory.models import (
+    MemoryEdgeRow,
+    MemoryRow,
+    QuarantineRow,
+)
+from huible.memory.protocol import (
+    DisclosureScope,
+    MemoryBackend,
+    MemoryEdge,
+    MemoryNode,
+    QuarantineEntry,
+    SearchResult,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class PostgresMemoryBackend(MemoryBackend):
+    def __init__(
+        self,
+        database_url: str,
+        pool_size: int = 10,
+        max_overflow: int = 20,
+    ) -> None:
+        self._engine = create_async_engine(
+            database_url,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
+        )
+        self._session_factory = async_sessionmaker(
+            self._engine, class_=AsyncSession, expire_on_commit=False,
+        )
+
+    async def close(self) -> None:
+        await self._engine.dispose()
+
+    def _session(self):
+        return self._session_factory()
+
+    def _row_to_node(self, row: MemoryRow) -> MemoryNode:
+        return MemoryNode(
+            id=row.id,
+            persona_id=row.persona_id,
+            tier=row.tier,
+            content=row.content,
+            content_type=row.content_type,
+            embedding_content=row.embedding_content,
+            embedding_sensory=row.embedding_sensory,
+            embedding_affect=row.embedding_affect,
+            valid_from=row.valid_from,
+            valid_to=row.valid_to,
+            memory_date=row.memory_date,
+            source_date=row.source_date,
+            source_type=row.source_type,
+            source_ref=row.source_ref or {},
+            disclosure_scope=row.disclosure_scope,
+            supersedes=row.supersedes,
+            superseded_by=row.superseded_by,
+            version=row.version,
+            is_active=row.is_active,
+            approved_by=row.approved_by,
+            approved_at=row.approved_at,
+            created_at=row.created_at,
+            metadata=row.metadata_ or {},
+        )
+
+    def _row_to_edge(self, row: MemoryEdgeRow) -> MemoryEdge:
+        return MemoryEdge(
+            id=row.id,
+            source_id=row.source_id,
+            target_id=row.target_id,
+            edge_type=row.edge_type,
+            weight=row.weight,
+            metadata=row.metadata_ or {},
+            created_at=row.created_at,
+        )
+
+    async def store_memory(self, node: MemoryNode) -> UUID:
+        async with self._session() as session:
+            row = MemoryRow(
+                id=node.id,
+                persona_id=node.persona_id,
+                tier=node.tier.value if hasattr(node.tier, "value") else str(node.tier),
+                content=node.content,
+                content_type=node.content_type.value
+                if hasattr(node.content_type, "value")
+                else str(node.content_type),
+                embedding_content=node.embedding_content,
+                embedding_sensory=node.embedding_sensory,
+                embedding_affect=node.embedding_affect,
+                valid_from=node.valid_from,
+                valid_to=node.valid_to,
+                memory_date=node.memory_date,
+                source_type=node.source_type.value
+                if hasattr(node.source_type, "value")
+                else str(node.source_type),
+                source_ref=node.source_ref,
+                disclosure_scope=node.disclosure_scope.value
+                if hasattr(node.disclosure_scope, "value")
+                else str(node.disclosure_scope),
+                supersedes=node.supersedes,
+                superseded_by=node.superseded_by,
+                version=node.version,
+                is_active=node.is_active,
+                approved_by=node.approved_by,
+                approved_at=node.approved_at,
+                metadata_=node.metadata,
+            )
+            session.add(row)
+            await session.commit()
+            return row.id
+
+    async def get_memory(self, memory_id: UUID) -> MemoryNode | None:
+        async with self._session() as session:
+            result = await session.execute(
+                select(MemoryRow).where(MemoryRow.id == memory_id),
+            )
+            row = result.scalar_one_or_none()
+            if row is None:
+                return None
+            return self._row_to_node(row)
+
+    async def search_by_content(
+        self,
+        persona_id: UUID,
+        query_embedding: list[float],
+        top_k: int = 20,
+        disclosure_scope: DisclosureScope | None = None,
+    ) -> list[SearchResult]:
+        return await self._vector_search(
+            persona_id, "embedding_content", query_embedding, top_k, disclosure_scope,
+        )
+
+    async def search_by_sensory(
+        self,
+        persona_id: UUID,
+        query_embedding: list[float],
+        top_k: int = 20,
+        disclosure_scope: DisclosureScope | None = None,
+    ) -> list[SearchResult]:
+        return await self._vector_search(
+            persona_id, "embedding_sensory", query_embedding, top_k, disclosure_scope,
+        )
+
+    async def search_by_affect(
+        self,
+        persona_id: UUID,
+        query_embedding: list[float],
+        top_k: int = 20,
+        disclosure_scope: DisclosureScope | None = None,
+    ) -> list[SearchResult]:
+        return await self._vector_search(
+            persona_id, "embedding_affect", query_embedding, top_k, disclosure_scope,
+        )
+
+    async def _vector_search(
+        self,
+        persona_id: UUID,
+        column_name: str,
+        query_embedding: list[float],
+        top_k: int,
+        disclosure_scope: DisclosureScope | None,
+    ) -> list[SearchResult]:
+        col = getattr(MemoryRow, column_name)
+        stmt = (
+            select(
+                MemoryRow,
+                (1 - col.cosine_distance(query_embedding)).label("similarity"),
+            )
+            .where(MemoryRow.persona_id == persona_id)
+            .where(MemoryRow.is_active.is_(True))
+            .where(col.isnot(None))
+            .order_by(text("similarity DESC"))
+            .limit(top_k)
+        )
+        if disclosure_scope is not None:
+            scope_value = (
+                disclosure_scope.value
+                if hasattr(disclosure_scope, "value")
+                else str(disclosure_scope)
+            )
+            stmt = stmt.where(MemoryRow.disclosure_scope == scope_value)
+
+        async with self._session() as session:
+            result = await session.execute(stmt)
+            rows_with_scores = result.all()
+            return [
+                SearchResult(node=self._row_to_node(row), score=score)
+                for row, score in rows_with_scores
+            ]
+
+    async def get_edges(self, memory_id: UUID) -> list[MemoryEdge]:
+        async with self._session() as session:
+            result = await session.execute(
+                select(MemoryEdgeRow).where(MemoryEdgeRow.source_id == memory_id),
+            )
+            rows = result.scalars().all()
+            return [self._row_to_edge(r) for r in rows]
+
+    async def add_edge(self, edge: MemoryEdge) -> UUID:
+        async with self._session() as session:
+            existing = await session.execute(
+                select(MemoryEdgeRow).where(
+                    MemoryEdgeRow.source_id == edge.source_id,
+                    MemoryEdgeRow.target_id == edge.target_id,
+                    MemoryEdgeRow.edge_type == (
+                        edge.edge_type.value
+                        if hasattr(edge.edge_type, "value")
+                        else str(edge.edge_type)
+                    ),
+                ),
+            )
+            if existing.scalar_one_or_none() is not None:
+                return edge.id
+
+            row = MemoryEdgeRow(
+                id=edge.id,
+                source_id=edge.source_id,
+                target_id=edge.target_id,
+                edge_type=edge.edge_type.value
+                if hasattr(edge.edge_type, "value")
+                else str(edge.edge_type),
+                weight=edge.weight,
+                metadata_=edge.metadata,
+            )
+            session.add(row)
+            await session.commit()
+            return edge.id
+
+    async def supersede_memory(
+        self,
+        old_id: UUID,
+        new_node: MemoryNode,
+    ) -> UUID:
+        async with self._session() as session:
+            await session.execute(
+                update(MemoryRow)
+                .where(MemoryRow.id == old_id)
+                .values(
+                    is_active=False,
+                    superseded_by=new_node.id,
+                ),
+            )
+            new_row = MemoryRow(
+                id=new_node.id,
+                persona_id=new_node.persona_id,
+                tier=new_node.tier.value
+                if hasattr(new_node.tier, "value")
+                else str(new_node.tier),
+                content=new_node.content,
+                content_type=new_node.content_type.value
+                if hasattr(new_node.content_type, "value")
+                else str(new_node.content_type),
+                embedding_content=new_node.embedding_content,
+                embedding_sensory=new_node.embedding_sensory,
+                embedding_affect=new_node.embedding_affect,
+                valid_from=new_node.valid_from,
+                valid_to=new_node.valid_to,
+                memory_date=new_node.memory_date,
+                source_type=new_node.source_type.value
+                if hasattr(new_node.source_type, "value")
+                else str(new_node.source_type),
+                source_ref=new_node.source_ref,
+                disclosure_scope=new_node.disclosure_scope.value
+                if hasattr(new_node.disclosure_scope, "value")
+                else str(new_node.disclosure_scope),
+                supersedes=old_id,
+                version=new_node.version,
+                is_active=True,
+                approved_by=new_node.approved_by,
+                approved_at=new_node.approved_at,
+                metadata_=new_node.metadata,
+            )
+            session.add(new_row)
+            await session.commit()
+            return new_row.id
+
+    async def get_active_memories(
+        self,
+        persona_id: UUID,
+        limit: int = 50,
+    ) -> list[MemoryNode]:
+        async with self._session() as session:
+            result = await session.execute(
+                select(MemoryRow)
+                .where(MemoryRow.persona_id == persona_id)
+                .where(MemoryRow.is_active.is_(True))
+                .order_by(MemoryRow.created_at.desc())
+                .limit(limit),
+            )
+            rows = result.scalars().all()
+            return [self._row_to_node(r) for r in rows]
+
+    async def quarantine_candidate(
+        self,
+        entry: QuarantineEntry,
+    ) -> UUID:
+        async with self._session() as session:
+            row = QuarantineRow(
+                id=entry.id,
+                candidate_data=entry.candidate_data,
+                persona_id=entry.persona_id,
+                failed_gates=entry.failed_gates,
+                priority=entry.priority.value
+                if hasattr(entry.priority, "value")
+                else str(entry.priority),
+                status=entry.status.value
+                if hasattr(entry.status, "value")
+                else str(entry.status),
+                adjudicated_by=entry.adjudicated_by,
+                adjudicated_at=entry.adjudicated_at,
+            )
+            session.add(row)
+            await session.commit()
+            return row.id
+
+    async def get_all_versions(self, memory_id: UUID) -> list[MemoryNode]:
+        root = await self.get_memory(memory_id)
+        if root is None:
+            return []
+        versions = [root]
+        current = root
+        while current.superseded_by is not None:
+            next_mem = await self.get_memory(current.superseded_by)
+            if next_mem is None:
+                break
+            versions.append(next_mem)
+            current = next_mem
+        return versions
+
+    async def get_persona_memories_count(self, persona_id: UUID) -> int:
+        async with self._session() as session:
+            result = await session.execute(
+                select(func.count())
+                .select_from(MemoryRow)
+                .where(MemoryRow.persona_id == persona_id)
+                .where(MemoryRow.is_active.is_(True)),
+            )
+            return result.scalar_one() or 0
