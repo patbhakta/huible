@@ -1,0 +1,32 @@
+id: huible-proactive
+namespace: huible
+description: "Proactive outreach — persona sends a message based on schedule and mood"
+
+# Schedule trigger — runs daily at 10am
+triggers:
+  - id: daily-check
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 10 * * *"
+
+tasks:
+  - id: check-schedule
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Check if any persona should reach out today"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/proactive/run.py --check-schedule
+
+  - id: generate-message
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Generate proactive message from persona"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/proactive/generate.py
+
+  - id: send
+    type: io.kestra.plugin.scripts.shell.Commands
+    description: "Send proactive messages via Telnyx"
+    commands:
+      - python modules/proactive/send.py

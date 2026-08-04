@@ -1,0 +1,65 @@
+id: huible-ingest
+namespace: huible
+description: "Huible ingestion pipeline — upload, clean, parse, 5-gate, embed, moderate"
+
+inputs:
+  - id: upload_path
+    type: FILE
+    description: "Raw data file (WhatsApp .txt, CSV, .m4a)"
+  - id: persona_id
+    type: STRING
+    description: "Persona UUID"
+
+tasks:
+  - id: clean
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Clean and normalize raw upload"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/clean/run.py --input "{{ inputs.upload_path }}" --persona-id "{{ inputs.persona_id }}"
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  - id: parse
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Parse into RawMemoryCandidates with speaker attribution"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/parse/run.py --persona-id "{{ inputs.persona_id }}"
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  - id: five-gate
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Run the five-gate ingestion firewall"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/ingest/run.py --persona-id "{{ inputs.persona_id }}"
+
+  - id: embed
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Generate dual embeddings (semantic + affect)"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/embed/run.py --persona-id "{{ inputs.persona_id }}"
+
+  - id: moderate
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Agent-in-loop moderation of quarantined items"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/moderate/run.py --persona-id "{{ inputs.persona_id }}"
+
+errors:
+  - id: alert
+    type: io.kestra.plugin.core.log.Log
+    message: "Ingestion pipeline FAILED for persona {{ inputs.persona_id }}"

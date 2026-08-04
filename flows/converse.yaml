@@ -1,0 +1,56 @@
+id: huible-converse
+namespace: huible
+description: "Handle incoming SMS/WhatsApp message — emotion check, retrieve memories, generate response"
+
+# Webhook trigger — Telnyx SMS webhook hits this URL
+triggers:
+  - id: sms-webhook
+    type: io.kestra.plugin.core.trigger.Webhook
+    key: "huible-sms-webhook-secret-2026"
+
+inputs:
+  - id: phone
+    type: STRING
+    description: "Sender phone number"
+  - id: message
+    type: STRING
+    description: "Incoming message text"
+  - id: persona_id
+    type: STRING
+    description: "Persona UUID"
+
+tasks:
+  - id: emotion-check
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Check emotional state of incoming message (crisis detection)"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/emotion/run.py --text "{{ inputs.message }}"
+
+  - id: context-build
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Build context from spreading activation retrieval"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/context/run.py --persona-id "{{ inputs.persona_id }}" --message "{{ inputs.message }}"
+
+  - id: generate
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Generate response via Gemini 3.6 Flash"
+    namespaceFiles:
+      enabled: true
+    commands:
+      - python modules/converse/run.py --persona-id "{{ inputs.persona_id }}" --phone "{{ inputs.phone }}"
+
+  - id: send-sms
+    type: io.kestra.plugin.scripts.shell.Commands
+    description: "Send response via Telnyx"
+    commands:
+      - python modules/converse/send.py --phone "{{ inputs.phone }}"
+
+errors:
+  - id: error-notify
+    type: io.kestra.plugin.core.log.Log
+    message: "Conversation flow FAILED for {{ inputs.phone }}"
