@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
@@ -16,7 +16,7 @@ Tier2Model = Callable[..., Coroutine[Any, Any, dict]]
 class ConversationTurn:
     speaker: str
     content: str
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -134,7 +134,7 @@ class Extractor:
                     source_type=str(item.get("source_type", "extraction")),
                     source_ref={
                         "speaker": item.get("speaker", ""),
-                        "extracted_at": datetime.utcnow().isoformat(),
+                        "extracted_at": datetime.now(timezone.utc).isoformat(),
                     },
                     disclosure_scope=str(item.get("disclosure_scope", "family")),
                     memory_date=item.get("memory_date"),
