@@ -1,0 +1,87 @@
+id: huible-onboard
+namespace: huible
+description: "Huible persona onboarding — extract → clean → OKF → ingest → validate → test"
+
+inputs:
+  - id: persona_name
+    type: STRING
+    description: "Name of the persona to onboard"
+    required: true
+  - id: input_dir
+    type: STRING
+    description: "Directory containing raw files"
+    required: true
+
+variables:
+  work_dir: "/root/repos/huible"
+  vault_dir: "/root/repos/brain/Huible/write"
+  output_dir: "/tmp/onboarding/{{ inputs.persona_name }}"
+
+tasks:
+  # Stage 1: Extract
+  - id: extract
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Extract dialog data from raw files"
+    commands:
+      - python3 /root/repos/huible/modules/onboarding/extract.py
+        --input-dir "{{ inputs.input_dir }}"
+        --persona "{{ inputs.persona_name }}"
+        --output "{{ vars.output_dir }}/extracted.jsonl"
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  # Stage 2: Clean
+  - id: clean
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Clean and normalize dialog data"
+    commands:
+      - python3 /root/repos/huible/modules/onboarding/clean.py
+        --input "{{ vars.output_dir }}/extracted.jsonl"
+        --output "{{ vars.output_dir }}/cleaned.jsonl"
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  # Stage 3: OKF (structure into OKF markdown)
+  - id: okf
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Structure into OKF v0.2 markdown documents"
+    env:
+      OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
+    commands:
+      - python3 /root/repos/huible/modules/onboarding/structure.py
+        --input "{{ vars.output_dir }}/cleaned.jsonl"
+        --output-dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
+        --persona-name "{{ inputs.persona_name }}"
+    retry:
+      type: constant
+      interval: PT30S
+      maxAttempt: 3
+
+  # Stage 4: Validate
+  - id: validate
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Validate OKF conformance and check completeness"
+    commands:
+      - python3 /root/repos/huible/modules/onboarding/validate.py
+        --dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
+        --output "{{ vars.output_dir }}/report.json"
+
+  # Stage 5: Summary
+  - id: summary
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      Onboarding complete for {{ inputs.persona_name }}
+      
+      Extract: {{ outputs.extract.vars.total_lines }} lines
+      Validate: See {{ vars.output_dir }}/report.json
+      
+      Persona docs: {{ vars.vault_dir }}/{{ inputs.persona_name }}/
+
+errors:
+  - id: on-error
+    type: io.kestra.plugin.core.log.Log
+    message: "Onboarding FAILED for {{ inputs.persona_name }}"
