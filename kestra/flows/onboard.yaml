@@ -1,0 +1,169 @@
+id: huible-onboard
+namespace: huible
+description: >-
+  Persona extraction pipeline — raw CSV → dialog → clean → stats → distill
+  (L0-L3) → gaps → structure (OKF v0.2) → validate. Deterministic grounding
+  with EvidenceLink citations; the only LLM call is the grounded structuring
+  stage.
+
+# --------------------------------------------------------------------------- #
+# Trigger mechanism
+# --------------------------------------------------------------------------- #
+# Primary trigger: webhook. The upload/staging step (or a client send) POSTs the
+# persona name and the staged raw-file directory; Kestra starts onboarding.
+#   POST /api/v1/executions/webhook/huible/huible-onboard/<key>
+#   body: {"persona_name": "chandler", "input_dir": "/root/.../raw-data"}
+# Manual execution from the Kestra UI is always available too; the inputs below
+# are prompted automatically when no trigger supplies them.
+triggers:
+  - id: onboarding-webhook
+    type: io.kestra.plugin.core.trigger.Webhook
+    key: "huible-onboard-webhook-2026"
+    inputs:
+      persona_name: "{{ trigger.body.persona_name }}"
+      input_dir: "{{ trigger.body.input_dir }}"
+
+# --------------------------------------------------------------------------- #
+# Inputs & shared paths
+# --------------------------------------------------------------------------- #
+inputs:
+  - id: persona_name
+    type: STRING
+    description: "Name of the persona to onboard"
+    required: true
+  - id: input_dir
+    type: STRING
+    description: "Directory holding raw files (e.g. write/personas/<persona>/01-garbage/raw-data)"
+    required: true
+
+variables:
+  work_dir: "/root/repos/huible"
+  module_dir: "/root/repos/huible/modules/onboarding"
+  # Persona vault — collaborative write tier. Pat promotes to read/ on approval.
+  vault_dir: "/root/repos/brain/Huible/write/personas"
+  # Per-run working dir for intermediate artifacts (passed stage-to-stage).
+  out: "/tmp/onboarding/{{ inputs.persona_name }}"
+
+# --------------------------------------------------------------------------- #
+# Pipeline
+# --------------------------------------------------------------------------- #
+# Data passing: each stage reads/writes files under {{ vars.out }}; the only
+# vault-side write happens at the structure stage ({{ vars.vault_dir }}/<persona>).
+tasks:
+  # S1 EXTRACT (deterministic) — raw CSV files → extracted.jsonl, filtered to persona
+  - id: extract
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Extract persona dialog lines from raw CSV files"
+    commands:
+      - python3 {{ vars.module_dir }}/extract.py
+        --input-dir "{{ inputs.input_dir }}"
+        --persona "{{ inputs.persona_name }}"
+        --output "{{ vars.out }}/extracted.jsonl"
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  # S2 CLEAN (deterministic) — dedup, de-noise, normalize → cleaned.jsonl
+  - id: clean
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Clean, deduplicate and normalize dialog"
+    commands:
+      - python3 {{ vars.module_dir }}/clean.py
+        --input "{{ vars.out }}/extracted.jsonl"
+        --output "{{ vars.out }}/cleaned.jsonl"
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  # S2b STATS (deterministic) — hallucination-proof grounding anchor
+  - id: stats
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Deterministic statistics extraction (grounding anchor for distill)"
+    commands:
+      - python3 {{ vars.module_dir }}/stats.py
+        --input "{{ vars.out }}/cleaned.jsonl"
+        --output "{{ vars.out }}/stats.json"
+
+  # S3 DISTILL (deterministic L0-L3, optional strict LLM) — cited memory pyramid.
+  # No structuring LLM runs before this; --strict forbids extrapolation.
+  - id: distill
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "TencentDB L0-L3 distillation with citations (grounding)"
+    env:
+      OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
+    commands:
+      - python3 -m huible.distillation.cli
+        --input "{{ vars.out }}/cleaned.jsonl"
+        --stats "{{ vars.out }}/stats.json"
+        --persona "{{ inputs.persona_name }}"
+        --out-dir "{{ vars.out }}/memory"
+        --strict
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  # S3b GAPS (deterministic) — emit facet-level coverage gaps from distillation
+  # memory. Runs straight after distill so it is NEVER blocked by structure/validate.
+  - id: gaps
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Emit facet-level gap list from distillation memory"
+    commands:
+      - python3 {{ vars.module_dir }}/gaps.py
+        --memory-dir "{{ vars.out }}/memory"
+        --persona "{{ inputs.persona_name }}"
+        --output "{{ vars.out }}/gaps.json"
+
+  # S4 STRUCTURE (LLM, grounded) — OKF v0.2 docs from distillation memory, NOT raw text.
+  # This is the only vault-side write.
+  - id: structure
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Structure into OKF v0.2 markdown from grounded distillation memory"
+    env:
+      OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
+    commands:
+      - python3 {{ vars.module_dir }}/structure.py
+        --memory-dir "{{ vars.out }}/memory"
+        --input "{{ vars.out }}/cleaned.jsonl"
+        --output-dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
+        --persona-name "{{ inputs.persona_name }}"
+    retry:
+      type: constant
+      interval: PT30S
+      maxAttempt: 3
+
+  # S5 VALIDATE (deterministic) — OKF conformance + completeness; exits 1 on failure.
+  - id: validate
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Validate OKF v0.2 conformance and completeness"
+    commands:
+      - python3 {{ vars.module_dir }}/validate.py
+        --dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
+        --output "{{ vars.out }}/report.json"
+
+# --------------------------------------------------------------------------- #
+# Failure handling
+# --------------------------------------------------------------------------- #
+# Any task failure (validation exit 1, or LLM/DB outage after retries) lands here.
+# Swap the Log for io.kestra.plugin.notifications.slack.SlackIncomingWebhook
+# (or email) once alert routing is configured.
+errors:
+  - id: on-failure
+    type: io.kestra.plugin.core.log.Log
+    message: >-
+      Onboarding FAILED for persona='{{ inputs.persona_name }}'
+      input_dir='{{ inputs.input_dir }}' execution={{ execution.id }}.
+      Inspect {{ vars.out }}/report.json and {{ vars.out }}/gaps.json.
+
+# Always runs — success or failure — so artifact locations are always surfaced.
+finally:
+  - id: summary
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      Onboarding run for '{{ inputs.persona_name }}' — execution {{ execution.id }}
+      Persona vault : {{ vars.vault_dir }}/{{ inputs.persona_name }}/
+      Distillation  : {{ vars.out }}/memory (L0-L3 + distill-manifest.json)
+      Validation    : {{ vars.out }}/report.json
+      Gaps          : {{ vars.out }}/gaps.json
