@@ -1,29 +1,133 @@
 #!/usr/bin/env python3
 """
-Huible Onboarding — Stage 3: STRUCTURE
+Huible Onboarding — Stage 4: STRUCTURE (grounded)
 
-Uses Gemini Flash 3.6 (via OpenRouter) to extract persona traits from
-cleaned dialog data and structure them into OKF v0.2 markdown documents.
+Structures the persona into OKF v0.2 markdown documents. Grounded by the
+deterministic distillation memory produced by ``huible.distillation.cli``
+(stage S3): the LLM sees the L3 profiles (durable rules / current states),
+L2 scenario summaries and L1 facts as its grounding context, NOT raw LLM over
+raw text. This closes the contamination vector called out in
+``onboarding-architecture-final.md``.
 
-The LLM is a tool, not the architecture. Swap models by changing one line.
+Inputs:
+  --memory-dir   Distillation memory store (from huible.distillation.cli, S3).
+                 Required for grounded structuring. The LLM prompt is built
+                 from the L3/L2/L1 records.
+  --input        Cleaned dialog JSONL (optional). Used only to sample notable
+                 raw quotes for the sample-dialog doc; not used as the LLM's
+                 primary source.
+  --output-dir   Vault directory for the OKF persona-profile.md / sample-dialog.md.
+  --persona-name Persona name.
 
-Usage:
-  python3 structure.py --input <cleaned.jsonl> --output-dir <dir> --persona-name chandler
+The LLM is a tool, not the architecture. Swap models by changing --model.
+
+Usage (matches the corrected huible-onboard flow §2a):
+  python3 structure.py \\
+      --memory-dir /tmp/onboarding/chandler/memory \\
+      --input      /tmp/onboarding/chandler/cleaned.jsonl \\
+      --output-dir /root/repos/brain/Huible/write/personas/chandler \\
+      --persona-name chandler
 """
 
-import json
 import argparse
+import json
 import os
 import sys
-import time
-import urllib.request
 import urllib.error
-from collections import defaultdict
-from datetime import datetime, timezone
+import urllib.request
+from datetime import UTC, datetime
 
+# --------------------------------------------------------------------------
+# Memory store loading (grounding source of truth)
+# --------------------------------------------------------------------------
+
+def _import_store():
+    """Import the MarkdownMemoryStore. Returns None if the package is absent."""
+    try:
+        from huible.distillation import MarkdownMemoryStore, Tier  # type: ignore
+
+        return MarkdownMemoryStore, Tier
+    except Exception as exc:  # pragma: no cover - environment-dependent
+        print(f"[structure] huible.distillation unavailable: {exc}", file=sys.stderr)
+        return None
+
+
+def load_memory_context(memory_dir):
+    """Load the grounded memory context from the distillation store.
+
+    Returns a dict with l3_profiles, l2_scenarios, l1_facts (each a list of
+    frontmatter dicts with a ``_body`` preview). Returns an empty context if
+    the store cannot be read.
+    """
+    store_tuple = _import_store()
+    if store_tuple is None or not os.path.isdir(memory_dir):
+        return {"l3_profiles": [], "l2_scenarios": [], "l1_facts": [], "source": memory_dir}
+
+    MarkdownMemoryStore, Tier = store_tuple
+    store = MarkdownMemoryStore(memory_dir)
+    return {
+        "l3_profiles": store.list_records(Tier.L3),
+        "l2_scenarios": store.list_records(Tier.L2),
+        "l1_facts": store.list_records(Tier.L1),
+        "source": memory_dir,
+    }
+
+
+def render_memory_brief(memory, persona_name):
+    """Render a compact, grounded brief of the memory for the LLM prompt.
+
+    The LLM is instructed to use ONLY this brief; anything absent is a gap to
+    mark "Not enough data to determine." rather than invent.
+    """
+    rules = []
+    states = []
+    for prof in memory.get("l3_profiles", []):
+        body = prof.get("_body", "").strip()
+        mtype = prof.get("memory_type", "")
+        key = prof.get("key", "")
+        line = f"- [{mtype}] {key}: {body}" if key else f"- [{mtype}] {body}"
+        if mtype == "durable_rule":
+            rules.append(line)
+        elif mtype == "current_state":
+            states.append(line)
+
+    scenarios = []
+    for scen in memory.get("l2_scenarios", []):
+        domain = scen.get("domain", "general")
+        summary = scen.get("_body", "").strip().replace("\n", " ")
+        scenarios.append(f"- ({domain}) {summary}")
+
+    facts = []
+    for fact in memory.get("l1_facts", [])[:40]:  # cap to keep prompt bounded
+        body = fact.get("_body", "").strip()
+        facts.append(f"- {body}")
+
+    brief = [
+        f"# Grounded memory brief for {persona_name}",
+        "Use ONLY the following grounded records. Do not invent. For any facet "
+        "with no supporting record below, answer 'Not enough data to determine.'",
+        "",
+        "## Durable rules (preferences/habits)",
+    ]
+    brief.extend(rules or ["- (none)"])
+    brief.append("")
+    brief.append("## Current states")
+    brief.extend(states or ["- (none)"])
+    brief.append("")
+    brief.append("## Scenario summaries")
+    brief.extend(scenarios or ["- (none)"])
+    brief.append("")
+    brief.append("## Atomic facts (sample)")
+    brief.extend(facts or ["- (none)"])
+    return "\n".join(brief)
+
+
+# --------------------------------------------------------------------------
+# Dialog sampling (optional — for raw notable quotes only)
+# --------------------------------------------------------------------------
 
 def load_dialog(input_path, max_lines=500):
-    """Load a sample of dialog lines for persona extraction."""
+    """Load a sample of dialog lines for notable-quote extraction."""
     lines = []
     with open(input_path) as f:
         for line in f:
@@ -34,48 +138,58 @@ def load_dialog(input_path, max_lines=500):
                 entry = json.loads(line)
                 if entry.get('speaker'):
                     lines.append(entry)
-            except:
+            except Exception:
                 continue
-    
-    # Sample diverse lines (every Nth line for variety)
+
     if len(lines) > max_lines:
         step = len(lines) // max_lines
         lines = lines[::step][:max_lines]
-    
+
     return lines
 
 
-def format_dialog_sample(lines):
-    """Format dialog lines for the LLM prompt."""
+def format_dialog_sample(lines, max_lines=60):
+    """Format a small dialog sample for the LLM prompt (quotes only)."""
+    sample = lines[:max_lines]
     formatted = []
-    for entry in lines:
+    for entry in sample:
         speaker = entry.get('speaker', '?')
         text = entry.get('text', '')
-        emotion = entry.get('emotion', '')
-        suffix = f" [{emotion}]" if emotion else ""
-        formatted.append(f"{speaker}: {text}{suffix}")
+        formatted.append(f"{speaker}: {text}")
     return "\n".join(formatted)
 
+
+# --------------------------------------------------------------------------
+# LLM call
+# --------------------------------------------------------------------------
 
 def call_gemini(prompt, api_key, model="google/gemini-3-flash-preview"):
     """Call Gemini via OpenRouter."""
     url = "https://openrouter.ai/api/v1/chat/completions"
-    
+
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are a persona extraction engine. Output valid JSON only. Be conservative — only extract what's directly evidenced in the data."},
-            {"role": "user", "content": prompt}
+            {
+                "role": "system",
+                "content": (
+                    "You are a persona structuring engine grounded in a memory "
+                    "brief. Output valid JSON only. Only use facts present in "
+                    "the memory brief. For any field without grounding, output "
+                    "'Not enough data to determine.' Be conservative."
+                ),
+            },
+            {"role": "user", "content": prompt},
         ],
         "max_tokens": 4000,
         "temperature": 0.3,
     }
-    
+
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(url, data=data, method='POST')
     req.add_header('Authorization', f'Bearer {api_key}')
     req.add_header('Content-Type', 'application/json')
-    
+
     try:
         with urllib.request.urlopen(req, timeout=120) as resp:
             result = json.loads(resp.read())
@@ -89,36 +203,24 @@ def call_gemini(prompt, api_key, model="google/gemini-3-flash-preview"):
         return None
 
 
-def build_extraction_prompt(persona_name, dialog_sample, line_count):
-    """Build the LLM extraction prompt."""
-    return f"""Analyze the following dialog data for the persona "{persona_name}".
-There are {line_count} total lines of dialog available; below is a representative sample.
-
-Extract the following structured information about {persona_name}:
-
-1. IDENTITY
-   - communication_style: How they speak (vocabulary level, rhythm, sentence length)
-   - humor_type: What kind of humor (sarcastic, self-deprecating, witty, slapstick)
-   - core_traits: 3-5 dominant personality traits
-   - catchphrases: Recurring phrases or verbal tics
-
-2. SPEECH_PATTERNS
-   - common_words: 10-15 frequently used words/phrases
-   - sentence_structure: Typical sentence patterns
-   - emotional_range: What emotions they express and how
-
-3. RELATIONSHIPS (from dialog context)
-   - key_relationships: People mentioned and their connection
-   - relationship_dynamics: How they interact with each
-
-4. MEMORIES (episodic)
-   - key_topics: 5-10 recurring topics/interests
-   - notable_quotes: 5-10 most characteristic lines
-
-Dialog sample:
+def build_grounded_extraction_prompt(persona_name, memory_brief, dialog_sample, line_count):
+    """Build the LLM extraction prompt GROUNDED in the distillation memory."""
+    dialog_section = ""
+    if dialog_sample:
+        dialog_section = f"""
+## Raw dialog sample (for notable quotes ONLY — do not derive traits from this)
 ---
 {dialog_sample}
 ---
+"""
+    return f"""You are structuring the persona "{persona_name}" into OKF v0.2 fields.
+
+The PRIMARY source of truth is the grounded memory brief below, produced by a
+deterministic distillation pipeline over the dialog corpus ({line_count} lines).
+Extract the OKF structure using ONLY the memory brief. Where the brief is silent,
+write "Not enough data to determine." — do not extrapolate.
+{dialog_section}
+{memory_brief}
 
 Output as JSON with this exact structure:
 {{
@@ -144,18 +246,46 @@ Output as JSON with this exact structure:
 }}"""
 
 
-def write_okf_docs(output_dir, persona_name, extraction, line_count):
+# --------------------------------------------------------------------------
+# OKF document writing (carries evidence back to memory source)
+# --------------------------------------------------------------------------
+
+def _evidence_block(memory):
+    """Render a 'Grounding & evidence' section citing memory source ids."""
+    sources = []
+    seen = set()
+    for tier_key in ("l3_profiles", "l2_scenarios", "l1_facts"):
+        for rec in memory.get(tier_key, []):
+            src = str(rec.get("source") or rec.get("evidence_sources") or "")
+            if not src:
+                continue
+            for s in src.split(","):
+                s = s.strip()
+                if s and s not in seen:
+                    seen.add(s)
+                    sources.append(s)
+    if not sources:
+        return ""
+    lines = ["", "## Grounding & evidence", ""]
+    lines.append("Structured from distillation memory `" + str(memory.get("source", "")) + "`.")
+    lines.append("Evidence links to raw L0 sources:")
+    for s in sources[:20]:
+        lines.append(f"- `{s}`")
+    return "\n".join(lines) + "\n"
+
+
+def write_okf_docs(output_dir, persona_name, extraction, line_count, memory):
     """Write structured OKF v0.2 markdown documents."""
     os.makedirs(output_dir, exist_ok=True)
-    
-    now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    
+
+    now = datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
     # 1. Persona Profile
     profile_path = os.path.join(output_dir, 'persona-profile.md')
     identity = extraction.get('identity', {})
     speech = extraction.get('speech_patterns', {})
     rels = extraction.get('relationships', {})
-    
+
     with open(profile_path, 'w') as f:
         f.write(f"""---
 type: Person Profile
@@ -167,9 +297,9 @@ generated:
   at: {now}
 tags: [huible, persona, {persona_name.lower().replace(' ', '-')}]
 sources:
-  - id: dialog-corpus
-    resource: "internal://huible/onboarding/{persona_name}"
-    title: "{line_count} dialog lines extracted and cleaned"
+  - id: distillation-memory
+    resource: "internal://huible/onboarding/{persona_name}/memory"
+    title: "Grounded L0-L3 distillation memory"
 ---
 
 # {persona_name.title()} — Persona Profile
@@ -187,22 +317,28 @@ sources:
 """)
         for trait in identity.get('core_traits', []):
             f.write(f"- {trait}\n")
-        
-        f.write(f"""
+        if not identity.get('core_traits'):
+            f.write("- Not enough data to determine.\n")
+
+        f.write("""
 ## Catchphrases
 
 """)
         for phrase in identity.get('catchphrases', []):
             f.write(f'- "{phrase}"\n')
-        
-        f.write(f"""
+        if not identity.get('catchphrases'):
+            f.write("- Not enough data to determine.\n")
+
+        f.write("""
 ## Speech Patterns
 
 **Common words/phrases:**
 """)
         for word in speech.get('common_words', []):
             f.write(f"- {word}\n")
-        
+        if not speech.get('common_words'):
+            f.write("- Not enough data to determine.\n")
+
         f.write(f"""
 **Sentence structure:** {speech.get('sentence_structure', 'N/A')}
 
@@ -213,15 +349,18 @@ sources:
 """)
         for rel in rels.get('key_relationships', []):
             f.write(f"- **{rel.get('name', '?')}**: {rel.get('connection', '?')}\n")
-        
+        if not rels.get('key_relationships'):
+            f.write("- Not enough data to determine.\n")
+
         f.write(f"""
 **Dynamics:** {rels.get('relationship_dynamics', 'N/A')}
 """)
-    
+        f.write(_evidence_block(memory))
+
     # 2. Notable Quotes / Sample Dialog
     quotes_path = os.path.join(output_dir, 'sample-dialog.md')
     memories = extraction.get('memories', {})
-    
+
     with open(quotes_path, 'w') as f:
         f.write(f"""---
 type: Reference
@@ -241,71 +380,100 @@ tags: [huible, persona, {persona_name.lower().replace(' ', '-')}, dialog]
 """)
         for topic in memories.get('key_topics', []):
             f.write(f"- {topic}\n")
-        
-        f.write(f"""
+        if not memories.get('key_topics'):
+            f.write("- Not enough data to determine.\n")
+
+        f.write("""
 ## Notable Quotes
 
 """)
+        any_quote = False
         for quote in memories.get('notable_quotes', []):
-            f.write(f"> {quote}\n\n")
-    
+            if str(quote).strip():
+                any_quote = True
+                f.write(f"> {quote}\n\n")
+        if not any_quote:
+            f.write("> Not enough data to determine.\n\n")
+
     return [profile_path, quotes_path]
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Structure dialog data into OKF docs')
-    parser.add_argument('--input', required=True, help='Cleaned JSONL file')
+    parser = argparse.ArgumentParser(
+        description='Structure persona into OKF docs (grounded by distillation memory).'
+    )
+    parser.add_argument(
+        '--memory-dir', required=True,
+        help='Distillation memory dir (huible.distillation.cli output, S3). '
+             'Required grounding source.',
+    )
+    parser.add_argument(
+        '--input', help='Cleaned JSONL file (optional; used for notable quotes only).'
+    )
     parser.add_argument('--output-dir', required=True, help='Output directory for OKF docs')
     parser.add_argument('--persona-name', required=True, help='Persona name')
     parser.add_argument('--model', default='google/gemini-3-flash-preview', help='LLM model')
-    
+
     args = parser.parse_args()
-    
+
     api_key = os.environ.get('OPENROUTER_API_KEY')
+
+    # Load grounded memory (the primary source of truth).
+    memory = load_memory_context(args.memory_dir)
+    memory_brief = render_memory_brief(memory, args.persona_name)
+    n_profiles = len(memory.get("l3_profiles", []))
+    print(f"Loaded grounded memory: {n_profiles} L3 profiles, "
+          f"{len(memory.get('l2_scenarios', []))} L2 scenarios, "
+          f"{len(memory.get('l1_facts', []))} L1 facts from {args.memory_dir}")
+
+    # Optionally sample raw dialog for notable quotes.
+    dialog_sample = ""
+    line_count = 0
+    if args.input and os.path.exists(args.input):
+        lines = load_dialog(args.input)
+        line_count = len(lines)
+        dialog_sample = format_dialog_sample(lines)
+        print(f"Loaded {line_count} dialog lines for notable-quote sampling.")
+
     if not api_key:
         print("ERROR: OPENROUTER_API_KEY not set", file=sys.stderr)
         sys.exit(1)
-    
-    # Load dialog
-    lines = load_dialog(args.input)
-    print(f"Loaded {len(lines)} dialog lines for {args.persona_name}")
-    
-    # Format sample for LLM
-    dialog_sample = format_dialog_sample(lines)
-    prompt = build_extraction_prompt(args.persona_name, dialog_sample, len(lines))
-    
-    print(f"Calling {args.model} for persona extraction...")
-    
-    # Call LLM
+
+    prompt = build_grounded_extraction_prompt(
+        args.persona_name, memory_brief, dialog_sample, line_count
+    )
+
+    print(f"Calling {args.model} for grounded persona structuring...")
+
     response = call_gemini(prompt, api_key, args.model)
     if not response:
         print("ERROR: LLM call failed", file=sys.stderr)
         sys.exit(1)
-    
-    # Parse JSON from response (handle markdown code blocks)
+
     response = response.strip()
     if response.startswith('```'):
         response = response.split('\n', 1)[1].rsplit('```', 1)[0].strip()
-    
+
     try:
         extraction = json.loads(response)
     except json.JSONDecodeError as e:
         print(f"ERROR: Failed to parse LLM output as JSON: {e}", file=sys.stderr)
         print(f"Response: {response[:500]}", file=sys.stderr)
         sys.exit(1)
-    
-    # Write OKF docs
-    docs = write_okf_docs(args.output_dir, args.persona_name, extraction, len(lines))
-    
-    print(f"\nOKF documents written:")
+
+    docs = write_okf_docs(args.output_dir, args.persona_name, extraction, line_count, memory)
+
+    print("\nOKF documents written:")
     for doc in docs:
         print(f"  {doc}")
-    
+
     result = {
         "persona": args.persona_name,
-        "dialog_lines": len(lines),
+        "dialog_lines": line_count,
+        "memory_l3_profiles": n_profiles,
         "docs_written": len(docs),
         "model_used": args.model,
+        "grounded": True,
     }
     print(f'::{json.dumps({"outputs": result})}::')
 

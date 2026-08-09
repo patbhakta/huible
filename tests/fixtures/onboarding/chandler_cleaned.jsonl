@@ -1,0 +1,12 @@
+{"speaker": "chandler", "text": "Could that report BE any later?", "source": "friends.csv", "emotion": "sarcastic"}
+{"speaker": "chandler", "text": "I'm Chandler, I make jokes when I'm uncomfortable.", "source": "friends.csv", "emotion": "neutral"}
+{"speaker": "chandler", "text": "I always use humor as a defense mechanism.", "source": "friends.csv", "emotion": "non-neutral"}
+{"speaker": "chandler", "text": "Joey is my best friend and roommate.", "source": "friends.csv", "emotion": "neutral"}
+{"speaker": "chandler", "text": "I currently work in statistical analysis and data reconfiguration.", "source": "friends.csv", "emotion": "neutral"}
+{"speaker": "chandler", "text": "Nobody knows what my job is.", "source": "friends.csv", "emotion": "joy"}
+{"speaker": "chandler", "text": "I prefer sarcasm over sincerity any day of the week.", "source": "friends.csv", "emotion": "non-neutral"}
+{"speaker": "chandler", "text": "Monica is my friend who cooks amazing food.", "source": "friends.csv", "emotion": "neutral"}
+{"speaker": "chandler", "text": "I live in apartment number 19 with Joey.", "source": "friends.csv", "emotion": "neutral"}
+{"speaker": "chandler", "text": "Oh my god, what if I never figure out what to do with my life?", "source": "friends.csv", "emotion": "fear"}
+{"speaker": "chandler", "text": "I hates thanksgiving food traditionally.", "source": "friends.csv", "emotion": "disgust"}
+{"speaker": "chandler", "text": "Could I BE wearing any more clothes?", "source": "friends.csv", "emotion": "sarcastic"}

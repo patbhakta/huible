@@ -1,6 +1,6 @@
 id: huible-onboard
 namespace: huible
-description: "Huible persona onboarding — extract → clean → OKF → ingest → validate → test"
+description: "Persona onboarding — extract → clean → stats → distill → structure → validate"
 
 inputs:
   - id: persona_name
@@ -9,16 +9,16 @@ inputs:
     required: true
   - id: input_dir
     type: STRING
-    description: "Directory containing raw files"
+    description: "Directory containing raw files (e.g. write/personas/<p>/01-garbage/raw-data)"
     required: true
 
 variables:
   work_dir: "/root/repos/huible"
-  vault_dir: "/root/repos/brain/Huible/write"
-  output_dir: "/tmp/onboarding/{{ inputs.persona_name }}"
+  vault_dir: "/root/repos/brain/Huible/write/personas"
+  out: "/tmp/onboarding/{{ inputs.persona_name }}"
 
 tasks:
-  # Stage 1: Extract
+  # Stage 1: EXTRACT (deterministic) — raw files → dialog.jsonl
   - id: extract
     type: io.kestra.plugin.scripts.python.Commands
     description: "Extract dialog data from raw files"
@@ -26,34 +26,64 @@ tasks:
       - python3 /root/repos/huible/modules/onboarding/extract.py
         --input-dir "{{ inputs.input_dir }}"
         --persona "{{ inputs.persona_name }}"
-        --output "{{ vars.output_dir }}/extracted.jsonl"
+        --output "{{ vars.out }}/extracted.jsonl"
     retry:
       type: constant
       interval: PT10S
       maxAttempt: 3
 
-  # Stage 2: Clean
+  # Stage 2: CLEAN (deterministic) — dialog → cleaned.jsonl
   - id: clean
     type: io.kestra.plugin.scripts.python.Commands
     description: "Clean and normalize dialog data"
     commands:
       - python3 /root/repos/huible/modules/onboarding/clean.py
-        --input "{{ vars.output_dir }}/extracted.jsonl"
-        --output "{{ vars.output_dir }}/cleaned.jsonl"
+        --input "{{ vars.out }}/extracted.jsonl"
+        --output "{{ vars.out }}/cleaned.jsonl"
     retry:
       type: constant
       interval: PT10S
       maxAttempt: 3
 
-  # Stage 3: OKF (structure into OKF markdown)
-  - id: okf
+  # Stage 2b: STATS (deterministic grounding anchor — hallucination-proof)
+  # Produces word/bigram/sentence metrics used to ground all later stages.
+  - id: stats
     type: io.kestra.plugin.scripts.python.Commands
-    description: "Structure into OKF v0.2 markdown documents"
+    description: "Deterministic statistics extraction (grounding anchor)"
+    commands:
+      - python3 /root/repos/huible/modules/onboarding/stats.py
+        --input "{{ vars.out }}/cleaned.jsonl"
+        --output "{{ vars.out }}/stats.json"
+
+  # Stage 3: DISTILL (deterministic L0-L3 grounding with EvidenceLink citations)
+  # No LLM structuring happens before this stage. --strict forbids extrapolation.
+  - id: distill
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "TencentDB L0-L3 distillation with citations (grounding)"
+    env:
+      OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
+    commands:
+      - python3 -m huible.distillation.cli
+        --input "{{ vars.out }}/cleaned.jsonl"
+        --stats "{{ vars.out }}/stats.json"
+        --persona "{{ inputs.persona_name }}"
+        --out-dir "{{ vars.out }}/memory"
+        --strict
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
+  # Stage 4: STRUCTURE (LLM, GROUNDED) — consumes distillation memory, not raw text
+  - id: structure
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Structure into OKF v0.2 markdown from grounded distillation memory"
     env:
       OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
     commands:
       - python3 /root/repos/huible/modules/onboarding/structure.py
-        --input "{{ vars.output_dir }}/cleaned.jsonl"
+        --memory-dir "{{ vars.out }}/memory"
+        --input "{{ vars.out }}/cleaned.jsonl"
         --output-dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
         --persona-name "{{ inputs.persona_name }}"
     retry:
@@ -61,24 +91,35 @@ tasks:
       interval: PT30S
       maxAttempt: 3
 
-  # Stage 4: Validate
+  # Stage 5: VALIDATE (deterministic) — OKF conformance + completeness
   - id: validate
     type: io.kestra.plugin.scripts.python.Commands
     description: "Validate OKF conformance and check completeness"
     commands:
       - python3 /root/repos/huible/modules/onboarding/validate.py
         --dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
-        --output "{{ vars.output_dir }}/report.json"
+        --output "{{ vars.out }}/report.json"
 
-  # Stage 5: Summary
+  # Stage 6: REPORT GAPS — emit gap list from distillation 'not found' answers
+  - id: report-gaps
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Emit gap list from distillation memory for the gap loop"
+    commands:
+      - python3 /root/repos/huible/modules/onboarding/gaps.py
+        --memory-dir "{{ vars.out }}/memory"
+        --persona "{{ inputs.persona_name }}"
+        --output "{{ vars.out }}/gaps.json"
+
+  # Stage 7: Summary
   - id: summary
     type: io.kestra.plugin.core.log.Log
     message: |
       Onboarding complete for {{ inputs.persona_name }}
-      
-      Extract: {{ outputs.extract.vars.total_lines }} lines
-      Validate: See {{ vars.output_dir }}/report.json
-      
+
+      Memory: {{ vars.out }}/memory (L0-L3 distillation)
+      Validate: See {{ vars.out }}/report.json
+      Gaps: See {{ vars.out }}/gaps.json
+
       Persona docs: {{ vars.vault_dir }}/{{ inputs.persona_name }}/
 
 errors:
