@@ -1,0 +1,119 @@
+{
+  "persona": "chandler",
+  "model": "qwen2.5:0.5b",
+  "corpus_lines": 7519,
+  "corpus_vocab_size": 6310,
+  "grounding": {
+    "memory_l3_profiles": 2323,
+    "memory_l2_scenarios": 7,
+    "memory_l1_facts": 11961,
+    "distinct_cited_sources": 7283,
+    "evidence_complete": true,
+    "evidence_coverage_pct": 100.0,
+    "missing_domains": [
+      "identity"
+    ]
+  },
+  "contaminated": {
+    "prompt": "LLM over raw dialog sample (no grounding anchor, fill-everything)",
+    "citation_coverage_pct": 0.0,
+    "evidence_block": "none (old structure.py has no evidence mechanism)",
+    "fields_emitted": 19,
+    "gap_markers": 0,
+    "content_tokens": 147,
+    "novel_tokens_not_in_corpus": 4,
+    "hallucination_rate": 0.0272,
+    "extraction": {
+      "identity": {
+        "communication_style": "sarcastic",
+        "humor_type": "self-deprecating",
+        "core_traits": [
+          "angry, sarcastic",
+          "sarcasm"
+        ],
+        "catchphrases": [
+          "oh, good",
+          "you're going to have to stop that"
+        ]
+      },
+      "speech_patterns": {
+        "common_words": [
+          "chandler:",
+          "all right joey, be nice. so does he have a hump? a hump and a hairpiece?"
+        ],
+        "sentence_structure": "chandler: (deadpan) yes, and we're very excited about it.",
+        "emotional_range": "angry, sarcastic"
+      },
+      "relationships": {
+        "key_relationships": [
+          {
+            "name": "joey",
+            "connection": "friends"
+          },
+          {
+            "name": "ross",
+            "connection": "friend"
+          }
+        ],
+        "relationship_dynamics": "they interact with each other frequently and have a close relationship."
+      },
+      "memories": {
+        "key_topics": [
+          "financial services",
+          "thanksgiving dinner"
+        ],
+        "notable_quotes": [
+          "i'd like to propose a toast. little toast here, ding ding. i know this isn't the kind of thanksgiving that all of you all planned, but for me, this has been really great, you know, i think because it didn't involve divorce or projectile vomiting. anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know? so i guess what i'm trying to say is that i'm very thankful that all of your thanksgivings sucked."
+        ],
+        "important_lines": [
+          "i'll tell you what. when we're 40, if neither one of us are married, what do you say you and i get together and have one?"
+        ]
+      }
+    }
+  },
+  "grounded": {
+    "prompt": "LLM over deterministic L0-L3 memory brief (use-only-brief, mark-gaps)",
+    "citation_coverage_pct": 100.0,
+    "evidence_block": "7283 distinct L0 sources cited",
+    "fields_emitted": 11,
+    "gap_markers": 0,
+    "content_tokens": 2,
+    "novel_tokens_not_in_corpus": 0,
+    "hallucination_rate": 0.0,
+    "extraction": {
+      "identity": {
+        "communication_style": "whispering",
+        "humor_type": "dumb",
+        "core_traits": [
+          "..."
+        ],
+        "catchphrases": []
+      },
+      "speech_patterns": {
+        "common_words": [
+          "...",
+          "..."
+        ],
+        "sentence_structure": "...",
+        "emotional_range": "10"
+      },
+      "relationships": {
+        "key_relationships": [],
+        "relationship_dynamics": "..."
+      },
+      "memories": {
+        "key_topics": [
+          "..."
+        ],
+        "notable_quotes": [
+          "...",
+          "..."
+        ]
+      }
+    }
+  },
+  "delta": {
+    "hallucination_rate_ground_minus_contam": -0.0272,
+    "gap_markers_ground_minus_contam": 0
+  }
+}

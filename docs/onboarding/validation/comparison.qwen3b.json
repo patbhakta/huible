@@ -1,0 +1,154 @@
+{
+  "persona": "chandler",
+  "model": "qwen2.5:3b",
+  "corpus_lines": 7519,
+  "corpus_vocab_size": 6310,
+  "grounding": {
+    "memory_l3_profiles": 2323,
+    "memory_l2_scenarios": 7,
+    "memory_l1_facts": 11961,
+    "distinct_cited_sources": 7283,
+    "evidence_complete": true,
+    "evidence_coverage_pct": 100.0,
+    "missing_domains": [
+      "identity"
+    ]
+  },
+  "contaminated": {
+    "prompt": "LLM over raw dialog sample (no grounding anchor, fill-everything)",
+    "citation_coverage_pct": 0.0,
+    "evidence_block": "none (old structure.py has no evidence mechanism)",
+    "fields_emitted": 36,
+    "gap_markers": 0,
+    "content_tokens": 168,
+    "novel_tokens_not_in_corpus": 32,
+    "hallucination_rate": 0.1905,
+    "extraction": {
+      "identity": {
+        "communication_style": "Chandler's communication style is characterized by his use of deadpan humor and sarcasm, often with a touch of self-deprecation.",
+        "humor_type": "Sarcastic and self-deprecating humor are prominent in Chandler's interactions. He frequently uses dry wit and irony to make points or comment on situations.",
+        "core_traits": [
+          "Humorous",
+          "Self-deprecating",
+          "Witty",
+          "Sensitive"
+        ],
+        "catchphrases": [
+          "all right kids",
+          "i gotta get to work",
+          "see buddy",
+          "smoke away"
+        ]
+      },
+      "speech_patterns": {
+        "common_words": [
+          "right",
+          "so",
+          "yeah",
+          "okay",
+          "thank you",
+          "you know",
+          "i mean",
+          "i think"
+        ],
+        "sentence_structure": "Chandler's sentences are often short and to the point, with a mix of direct statements and questions. He frequently uses parenthetical remarks for emphasis.",
+        "emotional_range": "Chandler expresses emotions such as frustration, sarcasm, humor, and sensitivity in his speech patterns."
+      },
+      "relationships": {
+        "key_relationships": [
+          {
+            "name": "Joey",
+            "connection": "Close friend"
+          },
+          {
+            "name": "Ross",
+            "connection": "Friend"
+          },
+          {
+            "name": "Rachel",
+            "connection": "Former girlfriend"
+          }
+        ],
+        "relationship_dynamics": "Chandler interacts with his friends in a casual and often humorous manner. His relationship with Ross is particularly close, as evidenced by their shared experiences and jokes."
+      },
+      "memories": {
+        "key_topics": [
+          "financial services",
+          "thanksgiving dinner",
+          "divorce",
+          "prank memos"
+        ],
+        "notable_quotes": [
+          "all right joey, be nice.",
+          "i don't know, i-i have to listen to both of them, they don't exactly let each other finish...",
+          "so how's it going there in financial services?",
+          "thank you helen, that'll be all.",
+          "you know, i can't believe you. linda is so great! why won't you go out with her again?"
+        ]
+      }
+    }
+  },
+  "grounded": {
+    "prompt": "LLM over deterministic L0-L3 memory brief (use-only-brief, mark-gaps)",
+    "citation_coverage_pct": 100.0,
+    "evidence_block": "7283 distinct L0 sources cited",
+    "fields_emitted": 23,
+    "gap_markers": 0,
+    "content_tokens": 113,
+    "novel_tokens_not_in_corpus": 21,
+    "hallucination_rate": 0.1858,
+    "extraction": {
+      "identity": {
+        "communication_style": "Joey often uses a casual and playful tone, frequently making jokes and using colloquial expressions. He tends to exaggerate situations for comedic effect.",
+        "humor_type": "Casual humor, situational comedy",
+        "core_traits": [
+          "Humorous",
+          "Playful",
+          "Exaggerating"
+        ],
+        "catchphrases": [
+          "uuhh",
+          "eh uh",
+          "sweet mother of all that is good and pure"
+        ]
+      },
+      "speech_patterns": {
+        "common_words": [
+          "reason",
+          "i mean",
+          "you know",
+          "that's a picture of your daughter, isn't it?"
+        ],
+        "sentence_structure": "Joey often uses short sentences and fragments to convey his points quickly.",
+        "emotional_range": "Joey tends to express emotions through humor rather than directly. He can be sarcastic or overly dramatic in his expressions."
+      },
+      "relationships": {
+        "key_relationships": [
+          {
+            "name": "Ross",
+            "connection": "Friends, occasional arguments"
+          },
+          {
+            "name": "Rachel",
+            "connection": "Romantic partner"
+          }
+        ],
+        "relationship_dynamics": "Joey and Ross have a close friendship but often clash over trivial matters. Joey is protective of Rachel."
+      },
+      "memories": {
+        "key_topics": [
+          "romantic partners",
+          "family issues"
+        ],
+        "notable_quotes": [
+          "i was unable to... i mean i really wanted to, but i couldn't .",
+          "look i know it was a stupid reason to break up with somebody, but i was 15!"
+        ]
+      }
+    }
+  },
+  "delta": {
+    "hallucination_rate_ground_minus_contam": -0.0047,
+    "gap_markers_ground_minus_contam": 0
+  }
+}
