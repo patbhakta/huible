@@ -32,9 +32,11 @@ Usage (matches the corrected huible-onboard flow §2a):
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
+from collections import Counter
 from datetime import UTC, datetime
 
 # --------------------------------------------------------------------------
@@ -73,11 +75,174 @@ def load_memory_context(memory_dir):
     }
 
 
+# --------------------------------------------------------------------------
+# Identity anchor (BHAA-1364: counter cross-character drift)
+# --------------------------------------------------------------------------
+
+# Sentence-initial capitalized words that are NOT proper names of other
+# characters (common sentence starters / generic tokens). These are excluded
+# when mining the corpus for "other named entities".
+_NON_NAME_CAPITALIZED = {
+    "The", "A", "An", "And", "But", "Or", "So", "If", "When", "While",
+    "Because", "Although", "Though", "Unless", "Since", "Before", "After",
+    "What", "Where", "Why", "Who", "How", "Which", "That", "This", "These",
+    "Those", "There", "Here", "It", "Its", "He", "She", "They", "We", "Us",
+    "My", "Your", "His", "Her", "Their", "Our", "You", "Me", "Him", "Them",
+    "I", "Im", "Id", "Ill", "Ive", "Could", "Would", "Should", "Will",
+    "Can", "May", "Might", "Must", "Do", "Does", "Did", "Is", "Are", "Was",
+    "Were", "Has", "Have", "Had", "Nobody", "Nothing", "Never", "Always",
+    "Actually", "Really", "Maybe", "Okay", "Ok", "Oh", "Ah", "Um", "Uh",
+    "Yeah", "Yes", "No", "Well", "Look", "Listen", "Wait", "Come", "Go",
+    "Let", "Lets", "Dont", "Cant", "Wont", "Hes", "Shes", "Theyre",
+    "Youre", "Thats", "Hows", "Whats", "Yknow", "Geez", "Wow",
+    "God", "Jesus", "Whoa", "Hey", "Hi", "Hello", "Bye", "Please", "Thanks",
+}
+
+_CAPITALIZED_TOKEN_RE = re.compile(r"\b([A-Z][a-z]{2,})\b")
+_SPEAKER_PREFIX_RE = re.compile(r"^[A-Z][\w'-]{1,30}:\s+")
+
+# Stopwords + common verbs/adjectives filtered out of the frequency fallback so
+# that salient nouns / character names surface to the top on lowercased
+# corpora (the real Chandler data is fully lowercased, so capitalization
+# cannot be the only signal).
+_NAME_MINING_STOPWORDS = {
+    # Determiners / prepositions / conjunctions.
+    "the", "a", "an", "and", "but", "or", "so", "if", "as", "at", "by", "for",
+    "in", "of", "on", "to", "with", "from", "into", "onto", "out", "up", "down",
+    "off", "over", "about", "above", "below", "between", "through", "during",
+    "after", "before", "again", "still", "even", "also", "just", "really",
+    "actually", "very", "too", "then", "than", "there", "here", "all", "some",
+    "any", "every", "both", "each", "few", "more", "most", "other", "such",
+    "no", "not", "nor", "only", "own", "same", "that", "this", "these",
+    "those", "what", "which", "who", "whom", "whose", "when", "where", "why",
+    "how", "because", "while", "though", "although", "unless", "since",
+    # Common verbs / fillers.
+    "well", "okay", "ok", "yeah", "yes", "oh", "ah", "um", "uh", "huh", "wow",
+    "hey", "look", "know", "get", "got", "go", "going", "gone", "come", "let",
+    "see", "say", "said", "tell", "told", "want", "wanted", "think", "thought",
+    "make", "makes", "made", "like", "liked", "likes", "love", "loved",
+    "feel", "felt", "good", "new", "old", "big", "right", "now", "back",
+    "way", "thing", "things", "time", "lot", "kind", "sort", "stuff", "guy",
+    "guys", "man", "woman", "girl", "boy", "people", "one", "two", "three",
+    "first", "last", "gonna", "wanna", "gotta",
+    # Verb / function-word forms (contractions already excluded by the no
+    # apostrophe tokenizer; these cover the bare forms).
+    "was", "were", "been", "being", "are", "werent", "had", "has", "have",
+    "having", "does", "did", "done", "doing", "can", "could", "should",
+    "would", "may", "might", "must", "shall", "put", "take", "took", "taken",
+    "give", "gave", "given", "went", "goes", "try", "tried", "mean", "meant",
+    "call", "called", "play", "played", "ask", "asked", "talk", "talking",
+    "looking", "getting", "telling", "wants", "needs", "saw", "seen", "found",
+    "guess", "maybe", "thanks", "thank", "hello", "bye", "nope", "yep",
+    "alright", "wait", "listen", "stop", "move", "stay", "leave", "left",
+    "came",
+    # Pronouns / determiners (frequent but never names).
+    "you", "your", "yours", "her", "him", "his", "their", "them", "us", "our",
+    "ours", "my", "mine", "me", "she", "he", "it", "its", "they", "we", "i",
+    "yall", "dont",
+    # Fragments left by apostrophe-splitting of contractions.
+    "don", "didn", "won", "isn", "aren", "wasn", "weren", "couldn", "wouldn",
+    "shouldn", "hasn", "haven", "hadn", "aint", "im", "ive", "id", "ill",
+    "youre", "theyre", "yo", "em",
+}
+
+
+def _mine_other_named_entities(memory, persona_name, max_facts=2500):
+    """Deterministically surface OTHER named characters/entities in the corpus.
+
+    Two complementary signals (corpora may be properly cased OR fully
+    lowercased — the real Chandler data is lowercased, so capitalization cannot
+    be the only signal):
+
+    1. Capitalized proper-noun candidates in L1 fact bodies (excluding the
+       persona and generic sentence starters).
+    2. A frequency fallback over non-stopword tokens so recurring salient
+       nouns/character names surface on lowercased corpora.
+
+    Returns a list of names (most informative first). This is what the
+    structuring model needs to avoid mis-attributing the persona's quotes to a
+    mentioned character (the 3b proxy attributed Chandler quotes to "Joey").
+    """
+    persona_tokens = {t.lower() for t in re.split(r"\W+", persona_name) if t}
+    persona_tokens |= {"pat"}
+    cap_counts: Counter[str] = Counter()
+    freq_counts: Counter[str] = Counter()
+    for fact in memory.get("l1_facts", [])[:max_facts]:
+        body = fact.get("_body", "")
+        # Strip a leading ``Speaker:`` prefix so it is not counted as a name.
+        stripped = _SPEAKER_PREFIX_RE.sub("", body)
+        for tok in _CAPITALIZED_TOKEN_RE.findall(stripped):
+            if tok in _NON_NAME_CAPITALIZED:
+                continue
+            if tok.lower() in persona_tokens:
+                continue
+            cap_counts[tok] += 1
+        # Frequency fallback over lowercase tokens (handles lowercased corpora).
+        # No-apostrophe tokenizer: contractions (it's, don't, i'm) are dropped
+        # automatically since names rarely contain apostrophes.
+        for raw in re.findall(r"[a-z]{3,}", stripped.lower()):
+            if raw in persona_tokens:
+                continue
+            if raw in _NAME_MINING_STOPWORDS:
+                continue
+            freq_counts[raw] += 1
+
+    ranked: list[str] = []
+    seen: set[str] = set()
+    # Prefer capitalized proper nouns when the corpus is cased.
+    for name, _ in cap_counts.most_common(8):
+        key = name.lower()
+        if key not in seen:
+            ranked.append(name)
+            seen.add(key)
+    # Supplement with the most frequent non-stopword tokens (lowercased corpora).
+    for name, count in freq_counts.most_common(20):
+        if len(ranked) >= 10:
+            break
+        if count < 3:
+            break
+        if name in seen:
+            continue
+        ranked.append(name)
+        seen.add(name)
+    return ranked
+
+
+def build_identity_anchor(memory, persona_name):
+    """Render a crisp identity anchor that leads the grounded memory brief.
+
+    Tells the structuring model exactly who the persona is and that any other
+    named entities are OTHER people/things — not the persona — so the model
+    does not drift across mentioned characters.
+    """
+    others = _mine_other_named_entities(memory, persona_name)
+    lines = [
+        f"- This brief describes **{persona_name}**. Every record below is "
+        f"{persona_name}'s own statement or a fact about {persona_name}.",
+        f"- Structuring rule: attribute all traits, quotes, preferences, and "
+        f"states to **{persona_name}** — never to any other name.",
+    ]
+    if others:
+        lines.append(
+            "- Other named entities appear in the corpus only as people/things "
+            f"{persona_name} mentions. They are NOT {persona_name}; treat them as "
+            f"relationships or topics: " + ", ".join(others) + "."
+        )
+    else:
+        lines.append(
+            f"- No other recurring named entities were detected; the corpus is "
+            f"focused on {persona_name}."
+        )
+    return lines
+
+
 def render_memory_brief(memory, persona_name):
     """Render a compact, grounded brief of the memory for the LLM prompt.
 
     The LLM is instructed to use ONLY this brief; anything absent is a gap to
-    mark "Not enough data to determine." rather than invent.
+    mark "Not enough data to determine." rather than invent. The brief LEADS
+    with a crisp identity anchor so structuring models do not drift across
+    mentioned characters (BHAA-1364).
     """
     rules = []
     states = []
@@ -106,6 +271,9 @@ def render_memory_brief(memory, persona_name):
         f"# Grounded memory brief for {persona_name}",
         "Use ONLY the following grounded records. Do not invent. For any facet "
         "with no supporting record below, answer 'Not enough data to determine.'",
+        "",
+        "## Identity anchor",
+        *build_identity_anchor(memory, persona_name),
         "",
         "## Durable rules (preferences/habits)",
     ]

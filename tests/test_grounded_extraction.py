@@ -259,3 +259,154 @@ async def test_structure_evidence_block_cites_sources(tmp_path, structure_module
     block = structure_module._evidence_block(memory)
     assert "Grounding & evidence" in block
     assert "Evidence links" in block
+
+
+# -- BHAA-1364: semantic L3 + identity anchor --------------------------------
+
+_SEMANTIC_DURABLE_PREDICATES = {
+    "likes", "avoids", "habit", "tends", "favorite",
+}
+
+
+def test_distill_extract_preference_is_high_precision():
+    """The hardened extractor only emits genuine persona-voiced preferences.
+
+    Mid-sentence keyword hits and verbatim fragments must NOT become durable
+    preferences (the BHAA-1361 noise: ``general:prefers: "no bunny at all!!!"``).
+    """
+    from huible.distillation.distill import _extract_preference
+
+    # Genuine persona-voiced preferences → semantic predicate + clean object.
+    assert _extract_preference("I love earl grey tea") == ("likes", "earl grey tea")
+    assert _extract_preference("I never watch golf") == ("avoids", "watch golf")
+    assert _extract_preference("I always use humor as a defense mechanism") == (
+        "habit",
+        "use humor as a defense mechanism",
+    )
+    assert _extract_preference("chandler: I prefer sarcasm over sincerity") == (
+        "likes",
+        "sarcasm over sincerity",
+    )
+    assert _extract_preference("I hate being left out of things") == (
+        "avoids",
+        "being left out of things",
+    )
+
+    # Noise that previously became verbatim ``prefers`` fragments → now None.
+    assert _extract_preference("I've never seen one of his plays before") is None
+    assert _extract_preference("could you look down in the shower?") is None
+    assert _extract_preference("'would've'") is None
+    assert _extract_preference("he likes the new intern") is None  # other-subject
+    assert _extract_preference("she never called back") is None
+
+
+@pytest.mark.asyncio
+async def test_distill_l3_durable_rules_are_semantic_not_verbatim(tmp_path):
+    """Every durable_rule L3 profile has a semantic predicate and a clean rule."""
+    from huible.distillation import MarkdownMemoryStore, Tier
+    from huible.distillation import cli as distill_cli
+
+    out_dir = tmp_path / "memory"
+    await distill_cli.run(
+        input_path=str(FIXTURE), stats_path=None, persona="chandler",
+        out_dir=str(out_dir), strict=True, use_llm=False, model="x", max_records=None,
+    )
+
+    store = MarkdownMemoryStore(out_dir)
+    profiles = store.list_records(Tier.L3)
+    durables = [p for p in profiles if p.get("memory_type") == "durable_rule"]
+    assert durables, "fixture should yield at least one durable rule"
+    for p in durables:
+        key = p.get("key", "")
+        predicate = key.split(":", 1)[1] if ":" in key else ""
+        assert predicate in _SEMANTIC_DURABLE_PREDICATES, (
+            f"non-semantic durable predicate: {key}"
+        )
+        rule = p.get("_body", "").strip()
+        # No verbatim quote fragments (the old noise signature).
+        assert not (rule.startswith("'") and rule.endswith("'")), f"verbatim fragment: {rule!r}"
+        assert not (rule.startswith('"') and rule.endswith('"')), f"verbatim fragment: {rule!r}"
+        assert "?" not in rule, f"question fragment promoted to rule: {rule!r}"
+        assert len(rule) >= 3
+
+
+@pytest.mark.asyncio
+async def test_distill_evidence_coverage_stays_100_pct(tmp_path):
+    """The hardening preserves the gap-safe invariant: every record is cited."""
+    from huible.distillation import MarkdownMemoryStore, Tier
+    from huible.distillation import cli as distill_cli
+
+    out_dir = tmp_path / "memory"
+    manifest = await distill_cli.run(
+        input_path=str(FIXTURE), stats_path=None, persona="chandler",
+        out_dir=str(out_dir), strict=True, use_llm=False, model="x", max_records=None,
+    )
+    assert manifest["all_records_have_evidence"] is True
+    store = MarkdownMemoryStore(out_dir)
+    for tier in (Tier.L1, Tier.L2, Tier.L3):
+        for rec in store.list_records(tier):
+            source = str(rec.get("source") or rec.get("evidence_sources") or "")
+            assert source, f"{tier.value} record missing evidence: {rec}"
+
+
+@pytest.mark.asyncio
+async def test_structure_brief_leads_with_identity_anchor(tmp_path, structure_module):
+    """The grounded brief opens with an identity anchor (BHAA-1364 item 2).
+
+    The anchor must name the persona and explicitly mark OTHER mentioned
+    characters as not-the-persona so structuring models do not drift.
+    """
+    from huible.distillation import cli as distill_cli
+
+    out_dir = tmp_path / "memory"
+    await distill_cli.run(
+        input_path=str(FIXTURE), stats_path=None, persona="chandler",
+        out_dir=str(out_dir), strict=True, use_llm=False, model="x", max_records=None,
+    )
+
+    memory = structure_module.load_memory_context(str(out_dir))
+    brief = structure_module.render_memory_brief(memory, "chandler")
+
+    # The Identity anchor section precedes the Durable rules section.
+    assert "## Identity anchor" in brief
+    assert "## Durable rules" in brief
+    assert brief.index("## Identity anchor") < brief.index("## Durable rules")
+    # The persona is foregrounded.
+    assert "describes **chandler**" in brief
+    # Mentioned characters are surfaced as OTHER entities (counter drift).
+    assert "NOT chandler" in brief
+    assert "Joey" in brief  # fixture has properly-cased "Joey is my best friend"
+
+
+def test_structure_identity_anchor_mines_lowercased_corpus(structure_module):
+    """The frequency fallback surfaces mentioned names on lowercased corpora."""
+    memory = {
+        "l1_facts": [
+            {"_body": "joey is my best friend and roommate"},
+            {"_body": "i told joey about it"},
+            {"_body": "i told joey again"},
+            {"_body": "monica is my friend who cooks"},
+            {"_body": "monica cooked dinner"},
+            {"_body": "monica made food"},
+            {"_body": "ross and rachel came over"},
+            {"_body": "ross stopped by"},
+            {"_body": "ross left early"},
+            {"_body": "rachel called twice"},
+            {"_body": "rachel visited"},
+            {"_body": "rachel left"},
+            {"_body": "phoebe sang a song"},
+            {"_body": "phoebe played guitar"},
+            {"_body": "phoebe smiled"},
+        ],
+        "l2_scenarios": [],
+        "l3_profiles": [],
+    }
+    others = structure_module._mine_other_named_entities(memory, "chandler")
+    lowered = [o.lower() for o in others]
+    for name in ("joey", "monica", "ross", "rachel", "phoebe"):
+        assert name in lowered, f"{name} not surfaced as other entity: {others}"
+
+    anchor = structure_module.build_identity_anchor(memory, "chandler")
+    joined = " ".join(anchor).lower()
+    assert "chandler" in joined
+    assert "not chandler" in joined
