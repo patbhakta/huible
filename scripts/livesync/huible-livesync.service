@@ -1,0 +1,21 @@
+[Unit]
+Description=Huible Phase 0 — Obsidian LiveSync (CouchDB) <-> filesystem bridge
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# The bridge daemon replicates CouchDB <-> local LiveSync DB every INTERVAL seconds
+# and mirrors the result to the vault filesystem. It replaces the broken `sync`
+# command in the bundled livesync CLI (see RECOVERY.md).
+WorkingDirectory=/root/repos/huible/scripts/livesync
+ExecStart=/root/repos/huible/scripts/livesync/huible-livesync daemon
+Environment=INTERVAL=5
+Environment=HUIBLE_LIVESYNC_VAULT=/root/repos/brain
+Restart=always
+RestartSec=10
+# 10 consecutive cycle failures -> exit 2 -> Restart=always still brings it back,
+# but the journal will surface the failure for RECOVERY.md triage.
+
+[Install]
+WantedBy=multi-user.target

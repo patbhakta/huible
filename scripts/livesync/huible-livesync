@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# huible-livesync — single entrypoint for bulletproof Obsidian LiveSync sync.
+#
+# This wrapper hides the Phase 0 fix: the bundled livesync CLI's `sync` is broken,
+# so we route replication through the PouchDB bridge and keep the CLI only for
+# mirror (DB->FS) and push/rm (FS->DB). See RECOVERY.md for the full story.
+#
+# Usage:
+#   huible-livesync sync       one replication cycle (remote <-> local) + mirror  [default]
+#   huible-livesync pull       remote -> local + mirror
+#   huible-livesync push       local -> remote (flush agent write-back)
+#   huible-livesync mirror     DB -> filesystem only (no network)
+#   huible-livesync daemon     continuous replicate + mirror (for systemd)
+#   huible-livesync status     local/remote doc counts
+#   huible-livesync validate   run the sync validator (N consecutive round-trips)
+#   huible-livesync log        tail the daemon journal
+#
+# Env overrides (see bridge.mjs for the full list):
+#   HUIBLE_LIVESYNC_VAULT, INTERVAL, HUIBLE_LIVESYNC_DB_NAME, ...
+
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CMD="${1:-sync}"
+shift || true
+
+case "$CMD" in
+  sync|pull|push|mirror|daemon|status)
+    exec node "$HERE/bridge.mjs" "$CMD" "$@"
+    ;;
+  validate)
+    exec node "$HERE/validator.mjs" "$@"
+    ;;
+  log)
+    exec journalctl -u huible-livesync.service -f
+    ;;
+  *)
+    echo "usage: huible-livesync <sync|pull|push|mirror|daemon|status|validate|log>" >&2
+    exit 2
+    ;;
+esac

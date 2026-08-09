@@ -1,0 +1,19 @@
+{
+  "name": "huible-livesync-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bulletproof Obsidian LiveSync (CouchDB) <-> filesystem bridge + validator for Huible Phase 0",
+  "type": "module",
+  "bin": {
+    "huible-livesync": "./bridge.mjs"
+  },
+  "scripts": {
+    "sync": "node bridge.mjs sync",
+    "validate": "node validator.mjs"
+  },
+  "dependencies": {
+    "pouchdb": "^9.0.0",
+    "pouchdb-adapter-leveldb": "^9.0.0",
+    "pouchdb-adapter-http": "^9.0.0"
+  }
+}
