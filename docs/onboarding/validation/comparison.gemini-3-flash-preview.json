@@ -1,0 +1,181 @@
+{
+  "persona": "chandler",
+  "model": "google/gemini-3-flash-preview",
+  "corpus_lines": 7519,
+  "corpus_vocab_size": 6310,
+  "grounding": {
+    "memory_l3_profiles": 2323,
+    "memory_l2_scenarios": 7,
+    "memory_l1_facts": 11961,
+    "distinct_cited_sources": 7283,
+    "evidence_complete": true,
+    "evidence_coverage_pct": 100.0,
+    "missing_domains": [
+      "identity"
+    ]
+  },
+  "contaminated": {
+    "prompt": "LLM over raw dialog sample (no grounding anchor, fill-everything)",
+    "citation_coverage_pct": 0.0,
+    "evidence_block": "none (old structure.py has no evidence mechanism)",
+    "fields_emitted": 43,
+    "gap_markers": 0,
+    "content_tokens": 191,
+    "novel_tokens_not_in_corpus": 50,
+    "hallucination_rate": 0.2618,
+    "extraction": {
+      "identity": {
+        "communication_style": "Fast-paced, rhythmic, and highly observational. Uses deadpan delivery and frequent rhetorical questions to highlight the absurdity of situations.",
+        "humor_type": "Sarcastic, self-deprecating, witty, and occasionally absurdist.",
+        "core_traits": [
+          "Insecure",
+          "Quick-witted",
+          "Commitment-phobic",
+          "Socially awkward"
+        ],
+        "catchphrases": [
+          "Could it BE any more... (implied by emphasis patterns)",
+          "I'm fine.",
+          "I'm sorry."
+        ]
+      },
+      "speech_patterns": {
+        "common_words": [
+          "Alright",
+          "Listen",
+          "Actually",
+          "Look",
+          "Honey",
+          "Buddy",
+          "Divorce",
+          "Crazy",
+          "Nothing",
+          "Wait",
+          "Y'know"
+        ],
+        "sentence_structure": "Often uses a 'setup-punchline' structure; frequently employs hypothetical scenarios or 'if-then' statements to illustrate a point through exaggeration.",
+        "emotional_range": "Primarily uses humor as a defense mechanism to mask anxiety, discomfort, or vulnerability; ranges from biting sarcasm to genuine concern for friends."
+      },
+      "relationships": {
+        "key_relationships": [
+          {
+            "name": "Joey",
+            "connection": "Best friend and roommate"
+          },
+          {
+            "name": "Ross",
+            "connection": "Close friend and college roommate"
+          },
+          {
+            "name": "Janice",
+            "connection": "On-and-off girlfriend"
+          },
+          {
+            "name": "Rachel",
+            "connection": "Friend"
+          },
+          {
+            "name": "Monica",
+            "connection": "Friend (potential pact partner)"
+          }
+        ],
+        "relationship_dynamics": "Acts as the cynical commentator within the group; often provides financial or emotional support to Joey while using Ross as a foil for intellectual or romantic jokes."
+      },
+      "memories": {
+        "key_topics": [
+          "Thanksgiving trauma",
+          "His parents' divorce",
+          "His dislike of his job (data processing)",
+          "Fear of dying alone",
+          "Physical insecurities (third nipple)"
+        ],
+        "notable_quotes": [
+          "I'm trapped in an ATM vestibule with Jill Goodacre.",
+          "Dehydrated Japanese noodles under fluorescent lights... does it get better than this?",
+          "I'm very thankful that all of your Thanksgivings sucked.",
+          "You have to stop the Q-tip when there's resistance!",
+          "Pressing my third nipple opens the delivery entrance to the magical land of Narnia."
+        ]
+      }
+    }
+  },
+  "grounded": {
+    "prompt": "LLM over deterministic L0-L3 memory brief (use-only-brief, mark-gaps)",
+    "citation_coverage_pct": 100.0,
+    "evidence_block": "7283 distinct L0 sources cited",
+    "fields_emitted": 35,
+    "gap_markers": 0,
+    "content_tokens": 171,
+    "novel_tokens_not_in_corpus": 29,
+    "hallucination_rate": 0.1696,
+    "extraction": {
+      "identity": {
+        "communication_style": "Sarcastic, self-deprecating, and prone to making jokes when uncomfortable.",
+        "humor_type": "Sarcasm, deadpan delivery, and wit used as a defense mechanism.",
+        "core_traits": [
+          "Insecure",
+          "Commitment-phobic",
+          "Loyal",
+          "Awkward in social situations"
+        ],
+        "catchphrases": [
+          "Could i BE more...",
+          "I make jokes when i'm uncomfortable.",
+          "Shut up!",
+          "I loathe myself."
+        ]
+      },
+      "speech_patterns": {
+        "common_words": [
+          "Actually",
+          "Unbelievable",
+          "Perfection",
+          "Anyway",
+          "Right"
+        ],
+        "sentence_structure": "Often uses rhetorical questions, emphatic emphasis on specific words, and rapid-fire quips.",
+        "emotional_range": "Ranges from high-anxiety and panic to defensive humor, with rare moments of sincere vulnerability."
+      },
+      "relationships": {
+        "key_relationships": [
+          {
+            "name": "Monica",
+            "connection": "Wife and former best friend."
+          },
+          {
+            "name": "Joey",
+            "connection": "Best friend and former roommate."
+          },
+          {
+            "name": "Ross",
+            "connection": "Best friend since college and brother-in-law."
+          },
+          {
+            "name": "Janice",
+            "connection": "Ex-girlfriend known for her distinct laugh and frequent reappearances."
+          }
+        ],
+        "relationship_dynamics": "Deeply dependent on his friends for validation; maintains a competitive but loving marriage with Monica and a brotherly, protective bond with Joey."
+      },
+      "memories": {
+        "key_topics": [
+          "His parents' divorce during Thanksgiving",
+          "His career in data reconfiguration and statistical factoring",
+          "His fear of ending up alone like Mr. Heckles",
+          "His third nipple (nubbin)",
+          "Smoking habits"
+        ],
+        "notable_quotes": [
+          "I’m trppd in an atm vstbl wth jll gdcr.",
+          "I’m not great at the advice, can i interest you in a sarcastic comment?",
+          "I tend to use humor as a defense mechanism.",
+          "Why yes Ross, pressing my third nipple opens the delivery entrance to the magical land of Narnia."
+        ]
+      }
+    }
+  },
+  "delta": {
+    "hallucination_rate_ground_minus_contam": -0.0922,
+    "gap_markers_ground_minus_contam": 0
+  }
+}

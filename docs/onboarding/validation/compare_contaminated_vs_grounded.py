@@ -19,11 +19,20 @@ Measured dimensions (acceptance criteria of BHAA-1361):
   model admits gaps instead of inventing).
 
 Usage:
+  # Local small-model A/B (architecture as the only variable):
   python3 docs/onboarding/validation/compare_contaminated_vs_grounded.py \
       --cleaned  /root/repos/personas/chandler-bing-01-garbage/extracted/cleaned.jsonl \
       --memory   /tmp/onboarding/chandler/memory \
       --model    qwen2.5:0.5b \
       --out      /tmp/onboarding/chandler/comparison.json
+
+  # Production model via OpenRouter (provider/model ids are routed to
+  # https://openrouter.ai; requires OPENROUTER_API_KEY):
+  python3 docs/onboarding/validation/compare_contaminated_vs_grounded.py \
+      --cleaned  /root/repos/personas/chandler-bing-01-garbage/extracted/cleaned.jsonl \
+      --memory   /tmp/onboarding/chandler/memory \
+      --model    google/gemini-3-flash-preview \
+      --out      docs/onboarding/validation/comparison.gemini-3-flash-preview.json
 """
 
 from __future__ import annotations
@@ -31,6 +40,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import re
 import sys
 import urllib.error
@@ -185,6 +195,50 @@ def call_ollama(model: str, system: str, user: str) -> str | None:
         return None
 
 
+def call_openrouter(model: str, system: str, user: str) -> str | None:
+    """Call a chat model via OpenRouter (e.g. google/gemini-3-flash-preview).
+
+    Uses temperature 0 to match the Ollama arm so the grounding layer stays the
+    only variable. Requires OPENROUTER_API_KEY in the environment.
+    """
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        print("[openrouter] OPENROUTER_API_KEY not set", file=sys.stderr)
+        return None
+    body = json.dumps({
+        "model": model,
+        "temperature": 0,
+        "max_tokens": 1000,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions", data=body, method="POST"
+    )
+    req.add_header("Authorization", f"Bearer {api_key}")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            data = json.loads(resp.read())
+        choices = data.get("choices") or []
+        return choices[0].get("message", {}).get("content", "") if choices else None
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+        detail = ""
+        if isinstance(exc, urllib.error.HTTPError) and exc.fp:
+            detail = exc.read().decode("utf-8", "replace")[:300]
+        print(f"[openrouter] call failed: {exc} {detail}", file=sys.stderr)
+        return None
+
+
+def call_llm(model: str, system: str, user: str) -> str | None:
+    """Dispatch to OpenRouter for ``provider/model`` ids, else local Ollama."""
+    if "/" in model:
+        return call_openrouter(model, system, user)
+    return call_ollama(model, system, user)
+
+
 def parse_json_response(text: str) -> dict | None:
     if not text:
         return None
@@ -296,12 +350,12 @@ def main() -> None:
                   "Be conservative.")
 
     print("\n=== CONTAMINATED run (LLM over raw text) ===")
-    contam_raw = call_ollama(args.model, contam_sys, contam_prompt)
+    contam_raw = call_llm(args.model, contam_sys, contam_prompt)
     contam_ext = parse_json_response(contam_raw) or {}
     print(f"parsed fields: {len(flatten_strings(contam_ext))}")
 
     print("\n=== GROUNDED run (LLM over memory brief) ===")
-    ground_raw = call_ollama(args.model, ground_sys, ground_prompt)
+    ground_raw = call_llm(args.model, ground_sys, ground_prompt)
     ground_ext = parse_json_response(ground_raw) or {}
     print(f"parsed fields: {len(flatten_strings(ground_ext))}")
 
