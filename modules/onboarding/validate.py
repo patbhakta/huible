@@ -30,6 +30,9 @@ REQUIRED_FILES = {
             "Humor Type",
             "Core Traits",
         ],
+        # Optional sections: validated for non-trivial content ONLY when present
+        # (e.g. multimodal onboarding adds Vocal Patterns & Prosody, BHAA-1375).
+        "optional_sections": ["Vocal Patterns & Prosody"],
         "min_list_items": 3,
     },
     "sample-dialog.md": {
@@ -38,6 +41,7 @@ REQUIRED_FILES = {
             "Key Topics",
             "Notable Quotes",
         ],
+        "optional_sections": [],
         "min_list_items": 3,
     },
 }
@@ -108,6 +112,24 @@ def strip_quotes(value):
     if len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
         return value[1:-1]
     return value
+
+
+def _section_body(body: str, section: str) -> str:
+    """Return the text under a `## <section>` header up to the next `##` header."""
+    lines = body.splitlines()
+    out: list[str] = []
+    inside = False
+    target = section.lower()
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            if inside:
+                break  # reached the next section
+            inside = stripped[3:].strip().lower() == target
+            continue
+        if inside:
+            out.append(line)
+    return "\n".join(out)
 
 
 def add_check(checks, name, key, status, detail=""):
@@ -186,6 +208,19 @@ def validate_file(name, spec, filepath, checks):
             add_check(checks, name, key, "pass")
         else:
             add_check(checks, name, key, "fail", f"missing section: {section}")
+
+    # Optional sections (multimodal etc.): soft-check content only when present.
+    for section in spec.get("optional_sections", []):
+        if section.lower() in header_lowers:
+            key = f"section_{section.lower().replace(' ', '_')}"
+            sub = _section_body(body, section)
+            sub_items = len(re.findall(r"^\s*-\s+\S", sub, flags=re.MULTILINE)) + len(
+                re.findall(r"^\s*\*\*[^:]+:\*\*", sub, flags=re.MULTILINE)
+            )
+            if sub_items >= 1:
+                add_check(checks, name, key, "pass", f"{sub_items} item(s)")
+            else:
+                add_check(checks, name, key, "warn", f"empty optional section: {section}")
 
     # Body: non-trivial content (list items or blockquotes).
     list_items = len(re.findall(r"^\s*-\s+\S", body, flags=re.MULTILINE))

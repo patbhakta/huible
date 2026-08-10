@@ -52,6 +52,35 @@ def _import_store():
         return None
 
 
+def load_audio_profile(audio_path):
+    """Load the persona-level vocal profile produced by audio.py (multimodal).
+
+    Returns ``None`` when no path is given or the file is absent, so callers can
+    treat the vocal/prosody facet as optional (text-only onboarding skips it).
+    """
+    if not audio_path or not os.path.exists(audio_path):
+        return None
+    try:
+        with open(audio_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"[structure] audio profile unreadable ({audio_path}): {exc}", file=sys.stderr)
+        return None
+    profile = data.get("persona_profile") if isinstance(data, dict) else None
+    if not isinstance(profile, dict):
+        return None
+    return {
+        "available": bool(profile.get("available")),
+        "utterance_count": int(profile.get("utterance_count") or 0),
+        "pitch": profile.get("pitch"),
+        "intensity": profile.get("intensity"),
+        "emotion_distribution": profile.get("emotion_distribution") or {},
+        "dominant_emotion": profile.get("dominant_emotion"),
+        "prosody_summary": profile.get("prosody_summary") or "No acoustic data available.",
+        "source": data.get("source") if isinstance(data, dict) else None,
+    }
+
+
 def load_memory_context(memory_dir):
     """Load the grounded memory context from the distillation store.
 
@@ -203,7 +232,9 @@ def call_gemini(prompt, api_key, model="google/gemini-3-flash-preview"):
         return None
 
 
-def build_grounded_extraction_prompt(persona_name, memory_brief, dialog_sample, line_count):
+def build_grounded_extraction_prompt(
+    persona_name, memory_brief, dialog_sample, line_count, audio_profile=None
+):
     """Build the LLM extraction prompt GROUNDED in the distillation memory."""
     dialog_section = ""
     if dialog_sample:
@@ -213,6 +244,29 @@ def build_grounded_extraction_prompt(persona_name, memory_brief, dialog_sample, 
 {dialog_sample}
 ---
 """
+    audio_section = ""
+    if audio_profile and audio_profile.get("available"):
+        dist = audio_profile.get("emotion_distribution") or {}
+        emo_lines = ", ".join(f"{e}={round(p * 100)}%" for e, p in list(dist.items())[:6])
+        pitch = audio_profile.get("pitch") or {}
+        intensity = audio_profile.get("intensity") or {}
+        pitch_line = f"Pitch mean/std: {pitch.get('mean')}/{pitch.get('std')}"
+        intensity_line = f"Intensity mean/std: {intensity.get('mean')}/{intensity.get('std')}"
+        audio_section = f"""
+## Acoustic / prosodic grounding (multimodal — vocal evidence ONLY)
+These are deterministic per-utterance acoustic aggregates ({audio_profile.get('utterance_count')}
+utterances). Use them ONLY to characterize the vocal/prosody facet below; do not
+infer non-vocal traits from them.
+- Prosody summary: {audio_profile.get('prosody_summary')}
+- Emotion mix: {emo_lines or 'n/a'}
+- {pitch_line}  {intensity_line}
+"""
+    else:
+        audio_section = """
+## Acoustic / prosodic grounding
+No acoustic data available — populate vocal_patterns fields with "Not enough
+data to determine."
+"""
     return f"""You are structuring the persona "{persona_name}" into OKF v0.2 fields.
 
 The PRIMARY source of truth is the grounded memory brief below, produced by a
@@ -220,6 +274,7 @@ deterministic distillation pipeline over the dialog corpus ({line_count} lines).
 Extract the OKF structure using ONLY the memory brief. Where the brief is silent,
 write "Not enough data to determine." — do not extrapolate.
 {dialog_section}
+{audio_section}
 {memory_brief}
 
 Output as JSON with this exact structure:
@@ -234,6 +289,12 @@ Output as JSON with this exact structure:
     "common_words": ["...", "..."],
     "sentence_structure": "...",
     "emotional_range": "..."
+  }},
+  "vocal_patterns": {{
+    "prosody": "...",
+    "pitch_tendency": "...",
+    "dominant_vocal_emotion": "...",
+    "vocal_markers": ["...", "..."]
   }},
   "relationships": {{
     "key_relationships": [{{"name": "...", "connection": "..."}}],
@@ -274,7 +335,7 @@ def _evidence_block(memory):
     return "\n".join(lines) + "\n"
 
 
-def write_okf_docs(output_dir, persona_name, extraction, line_count, memory):
+def write_okf_docs(output_dir, persona_name, extraction, line_count, memory, audio_profile=None):
     """Write structured OKF v0.2 markdown documents."""
     os.makedirs(output_dir, exist_ok=True)
 
@@ -285,6 +346,7 @@ def write_okf_docs(output_dir, persona_name, extraction, line_count, memory):
     identity = extraction.get('identity', {})
     speech = extraction.get('speech_patterns', {})
     rels = extraction.get('relationships', {})
+    vocal = extraction.get('vocal_patterns', {})
 
     with open(profile_path, 'w') as f:
         f.write(f"""---
@@ -300,7 +362,12 @@ sources:
   - id: distillation-memory
     resource: "internal://huible/onboarding/{persona_name}/memory"
     title: "Grounded L0-L3 distillation memory"
----
+""")
+        if audio_profile and audio_profile.get("source"):
+            f.write(f"  - id: acoustic-features\n"
+                    f"    resource: \"internal://huible/onboarding/{persona_name}/audio\"\n"
+                    f"    title: \"Per-utterance acoustic/prosodic features\"\n")
+        f.write(f"""---
 
 # {persona_name.title()} — Persona Profile
 
@@ -344,6 +411,36 @@ sources:
 
 **Emotional range:** {speech.get('emotional_range', 'N/A')}
 
+## Vocal Patterns & Prosody
+
+""")
+
+        # Vocal/prosody section (multimodal, BHAA-1375). Falls back to
+        # "Not enough data to determine." when no acoustic grounding exists.
+        not_enough = "Not enough data to determine."
+        if audio_profile and audio_profile.get("available"):
+            prosody_default = audio_profile.get("prosody_summary", "N/A")
+            prosody_val = vocal.get("prosody", prosody_default)
+            f.write(f"**Prosody:** {prosody_val}\n\n")
+        else:
+            f.write(f"**Prosody:** {vocal.get('prosody', not_enough)}\n\n")
+        f.write(f"**Pitch tendency:** {vocal.get('pitch_tendency', not_enough)}\n\n")
+        dom_default = (
+            audio_profile.get("dominant_emotion")
+            if audio_profile
+            else None
+        ) or not_enough
+        f.write(
+            f"**Dominant vocal emotion:** "
+            f"{vocal.get('dominant_vocal_emotion', dom_default)}\n\n"
+        )
+        f.write("**Vocal markers:**\n\n")
+        for marker in vocal.get('vocal_markers', []):
+            f.write(f"- {marker}\n")
+        if not vocal.get('vocal_markers'):
+            f.write("- Not enough data to determine.\n")
+
+        f.write("""
 ## Relationships
 
 """)
@@ -412,6 +509,9 @@ def main():
     )
     parser.add_argument('--output-dir', required=True, help='Output directory for OKF docs')
     parser.add_argument('--persona-name', required=True, help='Persona name')
+    parser.add_argument(
+        '--audio', help='Optional audio_features.json (from audio.py) for vocal/prosody grounding.'
+    )
     parser.add_argument('--model', default='google/gemini-3-flash-preview', help='LLM model')
 
     args = parser.parse_args()
@@ -425,6 +525,15 @@ def main():
     print(f"Loaded grounded memory: {n_profiles} L3 profiles, "
           f"{len(memory.get('l2_scenarios', []))} L2 scenarios, "
           f"{len(memory.get('l1_facts', []))} L1 facts from {args.memory_dir}")
+
+    # Optional multimodal vocal/prosody grounding (audio.py output).
+    audio_profile = load_audio_profile(args.audio)
+    if audio_profile and audio_profile.get("available"):
+        print(f"Loaded acoustic profile: {audio_profile['utterance_count']} utterances — "
+              f"{audio_profile['prosody_summary']}")
+    elif args.audio:
+        print(f"[structure] acoustic profile at {args.audio} unavailable; "
+              f"vocal/prosody facet will be marked as a gap.", file=sys.stderr)
 
     # Optionally sample raw dialog for notable quotes.
     dialog_sample = ""
@@ -440,7 +549,7 @@ def main():
         sys.exit(1)
 
     prompt = build_grounded_extraction_prompt(
-        args.persona_name, memory_brief, dialog_sample, line_count
+        args.persona_name, memory_brief, dialog_sample, line_count, audio_profile
     )
 
     print(f"Calling {args.model} for grounded persona structuring...")
@@ -461,7 +570,9 @@ def main():
         print(f"Response: {response[:500]}", file=sys.stderr)
         sys.exit(1)
 
-    docs = write_okf_docs(args.output_dir, args.persona_name, extraction, line_count, memory)
+    docs = write_okf_docs(
+        args.output_dir, args.persona_name, extraction, line_count, memory, audio_profile
+    )
 
     print("\nOKF documents written:")
     for doc in docs:
@@ -474,6 +585,7 @@ def main():
         "docs_written": len(docs),
         "model_used": args.model,
         "grounded": True,
+        "multimodal": bool(audio_profile and audio_profile.get("available")),
     }
     print(f'::{json.dumps({"outputs": result})}::')
 

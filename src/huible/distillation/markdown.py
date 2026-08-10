@@ -86,17 +86,40 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
 
 
 # -- Tier record renderers -------------------------------------------------
+def _acoustic_summary(metadata: dict[str, Any]) -> str:
+    """Compact one-line acoustic summary for L0 frontmatter (multimodal traceability).
+
+    Returns "" when the record carries no per-utterance acoustic features, so
+    text-only onboarding output is unchanged.
+    """
+    ac = metadata.get("acoustic")
+    if not isinstance(ac, dict) or not ac:
+        return ""
+    parts = []
+    pitch = ac.get("pitch")
+    if isinstance(pitch, dict) and "mean" in pitch:
+        parts.append(f"F0={pitch['mean']}")
+    intensity = ac.get("intensity")
+    if isinstance(intensity, dict) and "mean" in intensity:
+        parts.append(f"int={intensity['mean']}")
+    if ac.get("emotion"):
+        parts.append(f"emo={ac['emotion']}")
+    return ",".join(parts)
+
+
 def render_l0(record: L0Record) -> str:
-    return render_frontmatter(
-        {
-            "tier": Tier.L0.value,
-            "record_id": record.id,
-            "source_kind": record.kind,
-            "occurred_at": record.occurred_at,
-            "ingested_at": record.ingested_at,
-            "title": record.title,
-        }
-    ) + "\n\n" + record.content
+    fm: dict[str, Any] = {
+        "tier": Tier.L0.value,
+        "record_id": record.id,
+        "source_kind": record.kind,
+        "occurred_at": record.occurred_at,
+        "ingested_at": record.ingested_at,
+        "title": record.title,
+    }
+    acoustic = _acoustic_summary(record.metadata)
+    if acoustic:
+        fm["acoustic"] = acoustic
+    return render_frontmatter(fm) + "\n\n" + record.content
 
 
 def render_l1(fact: L1Fact) -> str:

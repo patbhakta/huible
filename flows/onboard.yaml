@@ -11,11 +11,16 @@ inputs:
     type: STRING
     description: "Directory containing raw files (e.g. write/personas/<p>/01-garbage/raw-data)"
     required: true
+  - id: audio_features
+    type: STRING
+    description: "Optional path to MELD audio features CSV (or dir) for multimodal onboarding"
+    required: false
 
 variables:
   work_dir: "/root/repos/huible"
   vault_dir: "/root/repos/brain/Huible/write/personas"
   out: "/tmp/onboarding/{{ inputs.persona_name }}"
+  audio: "{{ inputs.audio_features ?? '' }}"
 
 tasks:
   # Stage 1: EXTRACT (deterministic) — raw files → dialog.jsonl
@@ -55,20 +60,33 @@ tasks:
         --input "{{ vars.out }}/cleaned.jsonl"
         --output "{{ vars.out }}/stats.json"
 
+  # Stage 2c: AUDIO (multimodal, optional — BHAA-1375)
+  # Ingests MELD/per-utterance acoustic features → persona vocal profile +
+  # an augmented cleaned JSONL that carries acoustic features per line. Graceful
+  # no-op when no audio_features input is supplied so text-only onboarding is
+  # unchanged.
+  - id: audio
+    type: io.kestra.plugin.scripts.python.Commands
+    description: "Ingest per-utterance acoustic features (multimodal grounding)"
+    commands:
+      - if [ -z "{{ vars.audio }}" ] || [ ! -e "{{ vars.audio }}" ]; then echo "audio: no features supplied, skipping multimodal stage"; else python3 /root/repos/huible/modules/onboarding/audio.py --features "{{ vars.audio }}" --persona "{{ inputs.persona_name }}" --cleaned "{{ vars.out }}/cleaned.jsonl" --output "{{ vars.out }}/audio_features.json" --augment-output "{{ vars.out }}/cleaned_with_audio.jsonl"; fi
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 3
+
   # Stage 3: DISTILL (deterministic L0-L3 grounding with EvidenceLink citations)
   # No LLM structuring happens before this stage. --strict forbids extrapolation.
+  # When the audio stage produced cleaned_with_audio.jsonl, distill over it so
+  # per-utterance acoustic features land in L0Record metadata; otherwise use the
+  # text-only cleaned.jsonl.
   - id: distill
     type: io.kestra.plugin.scripts.python.Commands
     description: "TencentDB L0-L3 distillation with citations (grounding)"
     env:
       OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
     commands:
-      - python3 -m huible.distillation.cli
-        --input "{{ vars.out }}/cleaned.jsonl"
-        --stats "{{ vars.out }}/stats.json"
-        --persona "{{ inputs.persona_name }}"
-        --out-dir "{{ vars.out }}/memory"
-        --strict
+      - INPUT="{{ vars.out }}/cleaned.jsonl"; [ -f "{{ vars.out }}/cleaned_with_audio.jsonl" ] && INPUT="{{ vars.out }}/cleaned_with_audio.jsonl"; python3 -m huible.distillation.cli --input "$INPUT" --stats "{{ vars.out }}/stats.json" --persona "{{ inputs.persona_name }}" --out-dir "{{ vars.out }}/memory" --strict
     retry:
       type: constant
       interval: PT10S
@@ -84,6 +102,7 @@ tasks:
       - python3 /root/repos/huible/modules/onboarding/structure.py
         --memory-dir "{{ vars.out }}/memory"
         --input "{{ vars.out }}/cleaned.jsonl"
+        --audio "{{ vars.out }}/audio_features.json"
         --output-dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
         --persona-name "{{ inputs.persona_name }}"
     retry:

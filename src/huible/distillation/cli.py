@@ -77,18 +77,25 @@ def _parse_record_line(entry: dict[str, Any], persona: str, index: int) -> L0Rec
     # sha1 (not Python's randomized hash) for cross-process reproducibility.
     digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:8]
     record_id = f"{source}:{index:05d}:{digest}"
+    # Per-utterance acoustic/prosodic features (multimodal ingestion, BHAA-1375).
+    # Carried in metadata so the distiller/structurer can ground persona traits
+    # in vocal evidence. Absent for text-only onboarding → backward compatible.
+    acoustic = entry.get("acoustic")
+    metadata: dict[str, Any] = {
+        "speaker": speaker,
+        "source_file": source,
+        "emotion": entry.get("emotion"),
+        "persona": persona,
+    }
+    if isinstance(acoustic, dict) and acoustic:
+        metadata["acoustic"] = acoustic
     return L0Record(
         id=record_id,
         kind="conversation",
         title=text[:48],
         content=f"{speaker}: {text}" if speaker and speaker.lower() != persona.lower() else text,
         occurred_at=None,
-        metadata={
-            "speaker": speaker,
-            "source_file": source,
-            "emotion": entry.get("emotion"),
-            "persona": persona,
-        },
+        metadata=metadata,
     )
 
 
