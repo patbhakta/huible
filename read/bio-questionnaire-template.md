@@ -1,111 +1,106 @@
-# Huible Bio Questionnaire
+# Telling Us About Them
 
-> **Time to complete:** 10–15 minutes.
-> **Plain language only** — write the way you actually talk. There are no right or wrong answers.
-
----
-
-## Your Privacy (Please Read First)
-
-- Your answers are stored on **our own self-hosted servers** — never on shared public clouds like AWS, and **never shared with third parties**.
-- This questionnaire is the **factual backbone** of the persona. It is how the AI knows real, grounded facts about the person (names, dates, places, relationships) instead of guessing.
-- **You are in control.** You can:
-  - **Skip** any optional question (marked *Optional* below) or leave a field blank.
-  - **Opt out** of a whole section.
-  - **Request deletion** of your data at any time — we delete it within **48 hours**.
-  - **Request a copy** of what you've shared, or **withdraw consent** at any time.
-- **Sensitive details** (health, mental health, legal matters) are **encrypted at rest**, accessed only by the pipeline, **never used for marketing**, and deleted after extraction.
-- Questions? Contact **Pat Bhakta** directly.
+> Thank you for trusting us with someone so precious. There's no rush here — take all the time you need. You can answer a little today and come back tomorrow, or share everything at once. Both are perfectly fine.
+>
+> Write the way you actually talk. There are no right or wrong answers, and nothing you share is too small. Sometimes the littlest details — a nickname, a silly habit — are the ones that bring them back to life most clearly.
 
 ---
 
-## Section 1 — Basic Info
+## A Note on Your Privacy
 
-> **Why we need this:** These are the hard facts — name, dates, places, work. Without them the AI has no real-world anchor and may invent or confuse basic details. This grounds everything else.
+Everything you share with us lives on **our own private servers**. Not Amazon. Not Google. Not shared with anyone, ever. What you give us is yours, and we protect it like it's our own family's.
 
-1. Full name of the person (and any nicknames they go by).
-2. Their birth date and (if applicable) date of passing.
-3. Where they were born, and where they lived / live.
-4. Occupation / what they did for work (and what they were best known for).
-5. Languages they spoke, and any accents or dialects.
-
-*Optional:*
-
-6. Anything about their daily routine or typical day.
-7. Hobbies, interests, or passions.
+- **You're in control, always.** Skip anything you'd rather not answer. Leave a section blank. Step away for as long as you need — we'll be here when you're ready.
+- **If you ever want it gone,** just say the word and we'll delete everything, within 48 hours. No questions, no hassle.
+- Anything deeply personal you share — health, private struggles — is kept especially safe and is never used for anything beyond bringing them closer to you.
+- If you have any questions at all, Pat Bhakta is always happy to talk with you directly.
 
 ---
 
-## Section 2 — Relationships
+## Their Name & Their World
 
-> **Why we need this:** Relationships shape how someone talks and who they talk *to*. Knowing the people in their life lets the persona reference the right names, in-jokes, and emotional tones — instead of generic small talk.
+Let's start with their name. What did people call them? Did they have a nickname that only family used — something that always made them smile?
 
-8. Immediate family (spouse/partner, children, parents, siblings).
-9. Close friends or important people in their life.
-10. How they referred to you, and how you referred to them (nicknames, pet names).
+- When and where they were born, and the places that were home to them.
+- What did they do for work — and what were they most proud of?
+- The language(s) they spoke, and any accent or way of talking that was distinctly theirs.
 
-*Optional:*
+*If you'd like to share more:*
 
-11. Anyone they had a complicated or difficult relationship with (you can keep this brief).
-12. Pets or animals important to them.
-
----
-
-## Section 3 — Personality
-
-> **Why we need this:** Personality is the "flavor" — what made them *them*. It tells the AI how to sound: serious or playful, calm or intense, reserved or loud.
-
-13. Five words you'd use to describe them.
-14. What made them laugh? What was their sense of humor like?
-15. What were they passionate or opinionated about?
-16. How did they handle stress, conflict, or hard times?
-17. What quirks, habits, or catchphrases did they have?
-
-*Optional:*
-
-18. Values or beliefs that mattered most to them.
-19. Something about them that would surprise people.
+- What was a typical day like for them? The little routines that made up their life?
+- What did they love? Hobbies, passions, the things they could talk about for hours?
 
 ---
 
-## Section 4 — Key Memories
+## The People Who Mattered
 
-> **Why we need this:** Specific memories and stories give the persona real texture. Instead of vague generalities, the AI can draw on concrete moments, places, and feelings you actually shared.
+Who were the people who mattered most to them? Tell us about them — not just names, but what those relationships were like.
 
-20. A favorite memory with them.
-21. A story they loved to tell.
-22. A moment that captured who they really were.
-23. Places, traditions, or events that were important to them.
+- Family — the people closest to them.
+- The friends and loved ones who shaped their life.
+- What did they call you, and what did you call them? Pet names, silly nicknames, the words that belonged only to the two of you.
 
-*Optional:*
+*If you'd like to share more:*
 
-24. A difficult or bittersweet memory (only if you're comfortable sharing).
-25. Something they said that always stuck with you.
-
----
-
-## Section 5 — Communication Style
-
-> **Why we need this:** This is what makes the persona *sound right* — their word choices, rhythm, and tone. Pairing these details with your chat exports is the single biggest factor in fidelity.
-
-26. How did they usually start and end conversations?
-27. Did they use a lot of emojis, slang, abbreviations, or formal language?
-28. Were they direct or indirect? Short texts or long messages?
-29. Common phrases, sayings, or words unique to them.
-30. How did their tone change with different people (e.g., you vs. a stranger)?
-
-*Optional:*
-
-31. Did they text/communicate differently in writing vs. speaking?
-32. Any inside jokes that came up often in messages?
+- Was there anyone they had a complicated relationship with? You can keep this as brief as you like — or skip it entirely.
+- Pets or animals that were part of their world.
 
 ---
 
-## A Few More Notes
+## Who They Were
 
-- **Don't overthink it.** Short, honest answers in your own words are more useful than polished essays.
-- **It's okay to say "I don't know" or skip.** The persona is built from everything *combined* — chat exports, audio, photos, and this bio. No single answer carries the whole thing.
-- **Plain language wins.** Write the way you'd describe them to a friend. The richness comes from your real memories, not fancy wording.
-- **Done?** Return this to Pat, and we'll begin building the persona. You'll have a first conversation within **48 hours**, then review and refine together.
+If you had to describe them to someone who'd never met them, what would you say? What made them... them?
 
-*Thank you for sharing. This is how we bring them back into conversation.*
+- What made them laugh? What was their sense of humor like?
+- What did they care about most? What got them fired up, or made them go quiet?
+- When life got hard, how did they carry themselves?
+- The little things — habits, catchphrases, the way they always did something.
+
+*If you'd like to share more:*
+
+- The values or beliefs that guided them.
+- Something about them that would surprise people who only thought they knew them.
+
+---
+
+## Moments You'll Always Carry
+
+What's a memory that always makes you smile when you think of them? It doesn't have to be big — sometimes the small moments are the most precious.
+
+- A favorite memory the two of you shared.
+- A story they loved to tell, maybe more than once.
+- A moment that, to you, captures who they really were.
+- The places, traditions, and occasions that meant something to them.
+
+*If you'd like to share more:*
+
+- A bittersweet or difficult memory — only if you feel comfortable. Some memories hurt in a beautiful way.
+- Something they once said that has always stayed with you.
+
+---
+
+## How They Talked
+
+This is the part that helps them sound like themselves again — the rhythm of their voice, the words they reached for, the way they made you feel heard.
+
+- How did they usually open and close a conversation? "Hey kiddo," "Love you, drive safe" — those signatures.
+- Were their messages short and sweet, or long and thoughtful? Playful, or more serious?
+- Did they have phrases, sayings, or words that were just *theirs*?
+- Did they talk to you differently than they talked to others? We'd love to know the version only you got to see.
+
+*If you'd like to share more:*
+
+- Did they write one way and speak another? Some people are poets on paper and goofballs out loud.
+- Any inside jokes that came up again and again?
+
+---
+
+## Before You Go
+
+- **You don't have to be a writer.** Short, honest words in your own voice are worth more than polished essays. The way *you* remember them is exactly what we need.
+- **"I don't know" is a complete answer.** Every little piece you share helps — a single memory, a nickname, one of their sayings. It all adds up to them.
+- **Take your time.** Come back to this whenever you're ready. Some people share everything at once; others add to it over days or weeks. There's no wrong way.
+
+When you're ready, send this back to Pat. We'll begin carefully bringing them forward — and within **48 hours**, you'll have a first conversation with them. After that, you can help us get closer still, a little at a time, until it really feels like them.
+
+*Thank you for sharing them with us. Every word you wrote is an act of love — and we'll treat it that way.*
