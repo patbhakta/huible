@@ -331,7 +331,7 @@ def format_dialog_sample(lines, max_lines=60):
 # LLM call
 # --------------------------------------------------------------------------
 
-def call_gemini(prompt, api_key, model="google/gemini-3-flash-preview"):
+def call_gemini(prompt, api_key, model="google/gemini-3.6-flash"):
     """Call Gemini via OpenRouter."""
     url = "https://openrouter.ai/api/v1/chat/completions"
 
