@@ -91,9 +91,9 @@ CREATE TABLE quarantine (
     candidate_data  JSONB NOT NULL,
     persona_id      UUID NOT NULL REFERENCES personas(id),
     failed_gates    VARCHAR(32)[] NOT NULL,
-    priority        VARCHAR(16) NOT NULL DEFAULT 'low'
+    priority        VARCHAR(16) NOT NULL DEFAULT 'low',
                      -- 'critical', 'high', 'medium', 'low'
-    status          VARCHAR(16) NOT NULL DEFAULT 'pending'
+    status          VARCHAR(16) NOT NULL DEFAULT 'pending',
                      -- 'pending', 'adjudicated', 'promoted', 'rejected'
     adjudicated_by  UUID,
     adjudicated_at  TIMESTAMPTZ,
