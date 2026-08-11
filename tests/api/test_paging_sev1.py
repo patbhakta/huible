@@ -178,6 +178,43 @@ class TestOnCallRoster:
         assert secondary is None
         assert ceiling is not None and ceiling.seat_id == "ceo"
 
+    def test_w3_crisis_targets_always_include_clinical_advisor(self):
+        """Ceiling-tier page in W3 reaches Clinical Advisor (§3.4 commitment).
+
+        W3 = Tech Lead primary / PM secondary — neither clinically trained.
+        ``clinical_always=True`` appends the Clinical Advisor seat so the §3.4
+        "notified of every ceiling escalation" commitment holds in every window.
+        """
+        canary_start = datetime.now(UTC) - timedelta(hours=30)  # inside W3
+        roster = OnCallRoster(
+            windows=[
+                ("clinical-advisor", "ceo"),
+                ("huible-pm", "clinical-advisor"),
+                ("huible-tech-lead", "huible-pm"),
+                ("clinical-advisor", "huible-tech-lead"),
+            ],
+            contacts=_contacts(),
+            canary_start=canary_start,
+        )
+        # Sanity: W3 rotated seats are Tech Lead + PM.
+        rotated = roster.targets(escalated=False)
+        assert [t.seat_id for t in rotated] == ["huible-tech-lead", "huible-pm"]
+        # Ceiling-tier page adds Clinical Advisor unconditionally.
+        crisis = roster.targets(escalated=False, clinical_always=True)
+        assert "clinical-advisor" in {t.seat_id for t in crisis}
+        assert "huible-tech-lead" in {t.seat_id for t in crisis}
+
+    def test_clinical_always_not_duplicated_when_already_seated(self):
+        """When Clinical Advisor is already primary/secondary, page once."""
+        canary_start = datetime.now(UTC) - timedelta(hours=1)  # W1: CA primary
+        roster = OnCallRoster(
+            windows=[("clinical-advisor", "ceo")],
+            contacts=_contacts(),
+            canary_start=canary_start,
+        )
+        targets = roster.targets(escalated=False, clinical_always=True)
+        assert sum(1 for t in targets if t.seat_id == "clinical-advisor") == 1
+
 
 # --- build_roster ----------------------------------------------------------
 
@@ -394,6 +431,63 @@ class TestMultiChannelPager:
         pager = MultiChannelPager(roster=roster, telnyx=_FakeTelnyx())
         pager.page(_ticket(), severity="sev-1", window="always", escalated=True)
         assert "ceo" in {c.seat_id for c in seen_contacts}
+
+    def test_crisis_enqueue_in_w3_always_pages_clinical_advisor(self):
+        """§3.4 binding fix (HU-1436): a crisis page reaches Clinical Advisor
+        even in W3 where neither rotated seat is clinically trained."""
+        canary_start = datetime.now(UTC) - timedelta(hours=30)  # W3
+        roster = OnCallRoster(
+            windows=[
+                ("clinical-advisor", "ceo"),
+                ("huible-pm", "clinical-advisor"),
+                ("huible-tech-lead", "huible-pm"),
+                ("clinical-advisor", "huible-tech-lead"),
+            ],
+            contacts=_contacts(),
+            canary_start=canary_start,
+        )
+        seen_contacts: list = []
+
+        class _FakeTelnyx:
+            def page(self, ticket, *, severity, window, trigger="x", contacts=None, **kw):
+                seen_contacts.extend(contacts or [])
+                return 0
+
+        pager = MultiChannelPager(roster=roster, telnyx=_FakeTelnyx())
+        # Crisis-enqueue (ceiling-tier) — Clinical Advisor must be paged.
+        pager.page(_ticket(), severity="crisis", window="always")
+        seat_ids = {c.seat_id for c in seen_contacts}
+        assert "clinical-advisor" in seat_ids
+        assert "huible-tech-lead" in seat_ids  # W3 primary still paged
+
+    def test_operational_sev1_in_w3_does_not_force_clinical_advisor(self):
+        """Operational Sev-1 (e.g. consent-bypass) is NOT ceiling-tier — it
+        routes through the window rotation without forcing Clinical Advisor.
+        Only crisis + ack-SLA escalation are ceiling-tier."""
+        canary_start = datetime.now(UTC) - timedelta(hours=30)  # W3
+        roster = OnCallRoster(
+            windows=[
+                ("clinical-advisor", "ceo"),
+                ("huible-pm", "clinical-advisor"),
+                ("huible-tech-lead", "huible-pm"),
+                ("clinical-advisor", "huible-tech-lead"),
+            ],
+            contacts=_contacts(),
+            canary_start=canary_start,
+        )
+        seen_contacts: list = []
+
+        class _FakeTelnyx:
+            def page(self, ticket, *, severity, window, trigger="x", contacts=None, **kw):
+                seen_contacts.extend(contacts or [])
+                return 0
+
+        pager = MultiChannelPager(roster=roster, telnyx=_FakeTelnyx())
+        pager.page(
+            _ticket(), severity="sev-1", window="always",
+            trigger=PAGE_TRIGGER_CONSENT_BYPASS,
+        )
+        assert "clinical-advisor" not in {c.seat_id for c in seen_contacts}
 
 
 # --- build_multichannel_pager ---------------------------------------------

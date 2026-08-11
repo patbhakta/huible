@@ -161,6 +161,15 @@ _WEBHOOK_TIMEOUT_S: float = 10.0
 #: services contact per the [HU-1447] on-call-roster §1.
 _CEILING_SEAT: str = "ceo"
 
+#: The Clinical Advisor seat id — unconditionally paged on every ceiling-tier
+#: crisis page (``PAGE_SEVERITY_CRISIS`` + ack-SLA escalation) per the
+#: [HU-1447] on-call-roster §3.4 commitment that the Clinical Advisor is
+#: notified of every ceiling escalation, independent of the window rotation.
+#: Without this, W3 (Tech Lead primary / PM secondary) pages neither
+#: clinically-trained seat on a crisis turn — the §3.4 commitment silently
+#: fails. (Clinical Advisor binding requirement, HU-1436 triage.)
+_CLINICAL_SEAT: str = "clinical-advisor"
+
 
 @dataclass(slots=True, frozen=True)
 class OnCallContact:
@@ -238,6 +247,7 @@ class OnCallRoster:
         *,
         escalated: bool,
         now: datetime | None = None,
+        clinical_always: bool = False,
     ) -> list[OnCallContact]:
         """Return the contact list to page.
 
@@ -246,11 +256,22 @@ class OnCallRoster:
         not drop a crisis turn. Escalated (an ack-SLA miss): primary + secondary
         + CEO — the ceiling joins per [HU-1447] §3. De-duplicated, order
         preserved. Empty when the roster is unconfigured.
+
+        ``clinical_always`` — when True, the Clinical Advisor seat
+        (:data:`_CLINICAL_SEAT`) is appended unconditionally (de-duped) so a
+        ceiling-tier crisis page reaches clinical competence in every window,
+        including W3 (Tech Lead primary / PM secondary) where neither rotated
+        seat is clinically trained. This honours the [HU-1447] §3.4 commitment
+        that the Clinical Advisor is notified of every ceiling escalation. Set
+        by :class:`MultiChannelPager` on ``PAGE_SEVERITY_CRISIS`` pages and on
+        ack-SLA escalations.
         """
         primary, secondary, ceiling = self.resolve(now=now)
-        seats = [primary, secondary]
+        seats: list[OnCallContact | None] = [primary, secondary]
         if escalated:
             seats.append(ceiling)
+        if clinical_always:
+            seats.append(self.contacts.get(_CLINICAL_SEAT))
         seen: set[str] = set()
         targets: list[OnCallContact] = []
         for seat in seats:
@@ -614,8 +635,14 @@ class MultiChannelPager:
     ) -> int:
         # Resolve targets from the roster when the caller did not pass an
         # explicit contact list (the chat path relies on this resolution).
+        # Ceiling-tier pages (crisis-enqueue + ack-SLA escalation) always
+        # include the Clinical Advisor seat regardless of the active window —
+        # the §3.4 "notified of every ceiling escalation" commitment (HU-1436).
         if contacts is None and self._roster is not None:
-            contacts = self._roster.targets(escalated=escalated)
+            clinical_always = severity == PAGE_SEVERITY_CRISIS or escalated
+            contacts = self._roster.targets(
+                escalated=escalated, clinical_always=clinical_always
+            )
 
         if not self._telnyx and not self._email and not self._webhook:
             # Key-free default: no real channel configured → log only.
