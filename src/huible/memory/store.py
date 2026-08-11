@@ -36,7 +36,9 @@ class PostgresMemoryBackend(MemoryBackend):
             max_overflow=max_overflow,
         )
         self._session_factory = async_sessionmaker(
-            self._engine, class_=AsyncSession, expire_on_commit=False,
+            self._engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
         )
 
     async def close(self) -> None:
@@ -136,7 +138,11 @@ class PostgresMemoryBackend(MemoryBackend):
         disclosure_scope: DisclosureScope | None = None,
     ) -> list[SearchResult]:
         return await self._vector_search(
-            persona_id, "embedding_content", query_embedding, top_k, disclosure_scope,
+            persona_id,
+            "embedding_content",
+            query_embedding,
+            top_k,
+            disclosure_scope,
         )
 
     async def search_by_sensory(
@@ -147,7 +153,11 @@ class PostgresMemoryBackend(MemoryBackend):
         disclosure_scope: DisclosureScope | None = None,
     ) -> list[SearchResult]:
         return await self._vector_search(
-            persona_id, "embedding_sensory", query_embedding, top_k, disclosure_scope,
+            persona_id,
+            "embedding_sensory",
+            query_embedding,
+            top_k,
+            disclosure_scope,
         )
 
     async def search_by_affect(
@@ -158,7 +168,11 @@ class PostgresMemoryBackend(MemoryBackend):
         disclosure_scope: DisclosureScope | None = None,
     ) -> list[SearchResult]:
         return await self._vector_search(
-            persona_id, "embedding_affect", query_embedding, top_k, disclosure_scope,
+            persona_id,
+            "embedding_affect",
+            query_embedding,
+            top_k,
+            disclosure_scope,
         )
 
     async def _vector_search(
@@ -211,7 +225,8 @@ class PostgresMemoryBackend(MemoryBackend):
                 select(MemoryEdgeRow).where(
                     MemoryEdgeRow.source_id == edge.source_id,
                     MemoryEdgeRow.target_id == edge.target_id,
-                    MemoryEdgeRow.edge_type == (
+                    MemoryEdgeRow.edge_type
+                    == (
                         edge.edge_type.value
                         if hasattr(edge.edge_type, "value")
                         else str(edge.edge_type)
@@ -252,9 +267,7 @@ class PostgresMemoryBackend(MemoryBackend):
             new_row = MemoryRow(
                 id=new_node.id,
                 persona_id=new_node.persona_id,
-                tier=new_node.tier.value
-                if hasattr(new_node.tier, "value")
-                else str(new_node.tier),
+                tier=new_node.tier.value if hasattr(new_node.tier, "value") else str(new_node.tier),
                 content=new_node.content,
                 content_type=new_node.content_type.value
                 if hasattr(new_node.content_type, "value")
@@ -312,9 +325,7 @@ class PostgresMemoryBackend(MemoryBackend):
                 priority=entry.priority.value
                 if hasattr(entry.priority, "value")
                 else str(entry.priority),
-                status=entry.status.value
-                if hasattr(entry.status, "value")
-                else str(entry.status),
+                status=entry.status.value if hasattr(entry.status, "value") else str(entry.status),
                 adjudicated_by=entry.adjudicated_by,
                 adjudicated_at=entry.adjudicated_at,
             )
@@ -345,3 +356,24 @@ class PostgresMemoryBackend(MemoryBackend):
                 .where(MemoryRow.is_active.is_(True)),
             )
             return result.scalar_one() or 0
+
+    async def health_check(self) -> dict[str, str]:
+        """Probe DB connectivity and pgvector availability (HU-1403 ``/health``).
+
+        Returns a small status dict for the health checks map:
+        ``database`` is ``ok`` when ``SELECT 1`` succeeds else ``unhealthy``;
+        ``pgvector`` is ``ok`` when the ``vector`` extension is installed,
+        ``missing`` when the DB is reachable but the extension is absent, and
+        ``unknown`` when connectivity itself failed.
+        """
+        try:
+            async with self._engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+                result = await conn.execute(
+                    text("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+                )
+                row = result.first()
+        except Exception:
+            logger.exception("memory backend health check failed")
+            return {"database": "unhealthy", "pgvector": "unknown"}
+        return {"database": "ok", "pgvector": "ok" if row is not None else "missing"}

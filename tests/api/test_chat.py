@@ -180,7 +180,10 @@ class TestHealth:
         assert r.status_code == 200
         body = r.json()
         assert body["data"]["status"] == "ok"
-        assert body["data"]["checks"]["database"] == "ok"
+        # No DB wired by _make_app() -> DB/pgvector checks report "skipped"
+        # while the service stays overall "ok" (key-free default, HU-1403).
+        assert body["data"]["checks"]["database"] == "skipped"
+        assert body["data"]["checks"]["pgvector"] == "skipped"
         assert "generator" in body["data"]["checks"]
         assert body["data"]["version"]
 
