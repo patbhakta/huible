@@ -36,6 +36,16 @@ __all__ = ["Settings", "get_settings"]
 #: Huible memory database — the server simply stays on the key-free path.
 _HUIBLE_DB_SCHEMES = frozenset({"postgresql+asyncpg", "postgres+asyncpg"})
 
+#: Driver suffixes in :attr:`_HUIBLE_DB_SCHEMES` that get swapped to the sync
+#: psycopg driver when deriving :meth:`Settings.effective_safety_database_url`.
+#: The §7.4 safety backends (handoff / consent / conversation) are intentionally
+#: synchronous so the chat endpoint's G1 path stays pre-generation (§7.1 G1);
+#: they therefore use ``postgresql+psycopg`` instead of the asyncpg memory URL.
+_ASYNC_TO_SYNC_DRIVER = {
+    "postgresql+asyncpg": "postgresql+psycopg",
+    "postgres+asyncpg": "postgres+psycopg",
+}
+
 
 class Settings(BaseSettings):
     """Server + engine configuration loaded from ``.env`` / environment."""
@@ -205,6 +215,28 @@ class Settings(BaseSettings):
                 f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
                 f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
             )
+        return ""
+
+    @property
+    def effective_safety_database_url(self) -> str:
+        """Return the sync (psycopg) postgres URL for the §7.4 safety backends.
+
+        The §7.4 surfaces (handoff queue, consent gate, conversation / crisis
+        state) are intentionally synchronous so the chat endpoint's G1 path
+        stays pre-generation (§7.1 G1). They therefore use a sync psycopg
+        driver instead of the asyncpg memory URL. Derived from the same source
+        as :meth:`effective_database_url` so there is one DB config surface:
+        the async URL has its driver swapped to ``postgresql+psycopg``. Returns
+        ``""`` when no DB is configured (the in-memory defaults stay in place).
+        """
+        async_url = self.effective_database_url
+        if not async_url:
+            return ""
+        for async_driver, sync_driver in _ASYNC_TO_SYNC_DRIVER.items():
+            if async_url.startswith(async_driver + "://"):
+                return sync_driver + async_url[len(async_driver):]
+        # Defensive: an accepted async URL did not match a known swap — refuse
+        # to invent a sync URL rather than risk dialing with the wrong driver.
         return ""
 
     @property

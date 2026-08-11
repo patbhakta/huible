@@ -138,6 +138,12 @@ from huible.safety.risk import (
     enforce_risk_flags,
 )
 
+# NOTE: durable §7.4 backends (huible.safety.store) are imported lazily by
+# callers (e.g. huible.api.app) rather than re-exported here. store imports
+# huible.persona.context, which would form a load-time cycle through this
+# package's __init__ (persona.context → safety.crisis → safety.__init__).
+# Import from huible.safety.store directly when wiring a durable backend.
+
 __all__ = [
     "ADVICE_CLAIM_PATTERNS",
     "AGE_INAPPROPRIATE_TOPIC_PATTERNS",

@@ -149,6 +149,13 @@ from huible.safety import (
     escalate_to_human,
     sla_status,
 )
+from huible.safety.store import (
+    ConversationStore,
+    InMemoryConversationStore,
+    PostgresConsentGate,
+    PostgresConversationStore,
+    PostgresHandoffQueue,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -261,6 +268,75 @@ async def _init_memory_backend(settings: Settings) -> MemoryBackend | None:
         return None
 
 
+def _init_safety_backends(
+    settings: Settings,
+) -> tuple[HandoffQueue, ConsentGate, ConversationStore, list]:
+    """Construct durable §7.4 backends when a sync DB URL is configured.
+
+    Returns ``(queue, consent_gate, conversation_store, disposables)``. When no
+    sync URL is configured (the key-free default), returns in-memory defaults
+    and an empty disposables list — the pre-real-user posture. Construction is
+    lazy (``create_engine`` does not connect), so startup stays fast; the first
+    request exercises connectivity. The disposables are disposed in the
+    lifespan shutdown hook (HU-1440).
+    """
+    url = settings.effective_safety_database_url
+    if not url:
+        return (
+            InMemoryHandoffQueue(
+                available_responders=settings.handoff_available_responders,
+                responder_id_pool=tuple(settings.handoff_responder_pool_list),
+                sla_target_seconds=settings.handoff_sla_target_seconds,
+                coverage=CoverageWindow(
+                    mode=settings.handoff_coverage_mode,
+                    tz_name=settings.handoff_coverage_tz,
+                    open_hour=settings.handoff_coverage_open_hour,
+                    close_hour=settings.handoff_coverage_close_hour,
+                ),
+            ),
+            InMemoryConsentGate(),
+            InMemoryConversationStore(),
+            [],
+        )
+    try:
+        queue = PostgresHandoffQueue(
+            url,
+            available_responders=settings.handoff_available_responders,
+            responder_id_pool=tuple(settings.handoff_responder_pool_list),
+            sla_target_seconds=settings.handoff_sla_target_seconds,
+            coverage=CoverageWindow(
+                mode=settings.handoff_coverage_mode,
+                tz_name=settings.handoff_coverage_tz,
+                open_hour=settings.handoff_coverage_open_hour,
+                close_hour=settings.handoff_coverage_close_hour,
+            ),
+        )
+        consent_gate = PostgresConsentGate(url)
+        conversation_store = PostgresConversationStore(url)
+        logger.info("durable §7.4 safety backends wired (handoff/consent/conversation)")
+        return queue, consent_gate, conversation_store, [queue, consent_gate, conversation_store]
+    except Exception:  # pragma: no cover - defensive, misconfiguration only
+        logger.exception(
+            "failed to construct durable safety backends; falling back to in-memory"
+        )
+        return (
+            InMemoryHandoffQueue(
+                available_responders=settings.handoff_available_responders,
+                responder_id_pool=tuple(settings.handoff_responder_pool_list),
+                sla_target_seconds=settings.handoff_sla_target_seconds,
+                coverage=CoverageWindow(
+                    mode=settings.handoff_coverage_mode,
+                    tz_name=settings.handoff_coverage_tz,
+                    open_hour=settings.handoff_coverage_open_hour,
+                    close_hour=settings.handoff_coverage_close_hour,
+                ),
+            ),
+            InMemoryConsentGate(),
+            InMemoryConversationStore(),
+            [],
+        )
+
+
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Startup/shutdown: configure logging and manage the memory backend."""
@@ -277,6 +353,13 @@ async def lifespan(application: FastAPI):
                 await close()
             except Exception:  # pragma: no cover - best-effort shutdown
                 logger.warning("memory backend close failed", exc_info=True)
+        # Dispose the sync §7.4 safety backends (HU-1440). Each holds its own
+        # engine; close() is idempotent across the list.
+        for disposable in getattr(application.state, "safety_disposables", []) or []:
+            try:
+                disposable.close()
+            except Exception:  # pragma: no cover - best-effort shutdown
+                logger.warning("safety backend close failed", exc_info=True)
 
 
 # --- health probe -----------------------------------------------------------
@@ -338,6 +421,7 @@ def create_app(
     consent_gate: ConsentGate | None = None,
     consent_card_provider: ConsentCardProvider | None = None,
     risk_profile: RiskProfileProvider | None = None,
+    conversation_store: ConversationStore | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
 ) -> FastAPI:
@@ -394,40 +478,33 @@ def create_app(
     # config swap (regional line / human-handoff queue) rather than a re-build.
     application.state.crisis_classifier = crisis_classifier or DeterministicCrisisClassifier()
     application.state.crisis_resources = crisis_resources or {}
-    # §7.4.1 human-handoff (crisis escalation) queue. The default is the
-    # in-memory queue with ``available_responders=0`` from settings — the
-    # honest pre-real-user posture: every escalation degrades to the G1
-    # non-persona safe response (never drops, never the persona voice) and is
-    # still recorded for audit, until a staffed responder roster exists. A real
-    # backend (Postgres / Redis / external paging) drops in via the
-    # HandoffQueue Protocol pre-real-launch. There is intentionally no
-    # "disable handoff" knob: §10.1 invariant 5 requires auditing *every*
-    # escalation, so the queue always runs and the responder count is the only
-    # operational lever.
-    application.state.handoff_queue = handoff_queue or InMemoryHandoffQueue(
-        available_responders=resolved_settings.handoff_available_responders,
-        responder_id_pool=tuple(resolved_settings.handoff_responder_pool_list),
-        sla_target_seconds=resolved_settings.handoff_sla_target_seconds,
-        coverage=CoverageWindow(
-            mode=resolved_settings.handoff_coverage_mode,
-            tz_name=resolved_settings.handoff_coverage_tz,
-            open_hour=resolved_settings.handoff_coverage_open_hour,
-            close_hour=resolved_settings.handoff_coverage_close_hour,
-        ),
+    # §7.4.1 / §7.4.3 / §7.4.4 durable safety backends (HU-1440). When an
+    # explicit backend is injected (tests, or a caller wiring a custom store),
+    # it wins. Otherwise the backends are constructed from settings: durable
+    # Postgres-backed implementations when a sync safety DB URL is configured,
+    # in-memory defaults otherwise. The §10.1 invariant 5 audit log, the
+    # "a person will join you right now" promise, the dosage-cap turn count,
+    # and the crisis-history marker all survive a container restart when the
+    # durable backends are wired. Disposables (engines) are closed in lifespan.
+    durable_queue, durable_gate, durable_store, safety_disposables = (
+        _init_safety_backends(resolved_settings)
     )
-    # §7.4.3 G6 first-use reality-framing / consent gate. The gate enforces that
-    # no persona-voiced reply leaves the chat path before the session has
-    # acknowledged the consent card (HU-1423). The default backend is the
-    # in-memory gate (key-free pre-real-users); a real backend (Postgres /
-    # Redis / the onboarding-terminal's session store) drops in here
-    # pre-real-launch. The card content is injectable: the DefaultConsentCard
-    # ships the Onboarding Agent's drafted reality-framing + consent copy
-    # (HU-1429); a clinically-revised revision from HU-1430 swaps in via
+    application.state.handoff_queue = handoff_queue or durable_queue
+    application.state.consent_gate = consent_gate or durable_gate
+    # §7.4.3 consent card content. The DefaultConsentCard ships the Onboarding
+    # Agent's drafted reality-framing + consent copy (HU-1429); a
+    # clinically-revised revision from HU-1430 swaps in via
     # consent_card_provider without touching the gate. The deceased persona
     # never voices the consent (§7.1 H1) — the card is a non-persona system
     # message, structurally disjoint from generation.
-    application.state.consent_gate = consent_gate or InMemoryConsentGate()
     application.state.consent_card_provider = consent_card_provider or DefaultConsentCard()
+    # Per-session conversation + crisis state. The durable store survives
+    # restarts so §7.4.4 dosage-cap + crisis-history enforcement stays correct;
+    # the in-memory default is the pre-real-users fallback (HU-1440).
+    application.state.conversation_store = conversation_store or durable_store
+    application.state.safety_disposables = (
+        [] if (handoff_queue or consent_gate or conversation_store) else safety_disposables
+    )
     # §7.4.4 G8 risk-flag enforcement. The risk profile is the intake-derived
     # source of the per-session + per-persona risk flags (loss_of_child,
     # minor_decedent, recent_loss, non_acceptance, proxy_user). The default
@@ -1245,30 +1322,36 @@ def _embed(message: str) -> list[float]:
     return vec
 
 
+def _conversation_store(application: FastAPI) -> ConversationStore:
+    """Return the wired :class:`ConversationStore` (in-memory or durable).
+
+    Falls back to an :class:`InMemoryConversationStore` if nothing was wired —
+    preserves the bare-app bootstrap path (``uvicorn huible.api.app:app``).
+    """
+    store = getattr(application.state, "conversation_store", None)
+    if store is None:
+        store = InMemoryConversationStore()
+        application.state.conversation_store = store
+    return store
+
+
 def _history(application: FastAPI, conversation_id: str | None) -> list[ConversationTurn]:
     """Return the conversation history window for a conversation id.
 
-    State is held in-process on ``app.state`` keyed by conversation id. New
-    conversations start empty. This is the M2 in-process default; a persistent
-    store lands with the conversation-service follow-up.
+    Read through the wired :class:`ConversationStore` (in-memory default or the
+    durable Postgres backend). New conversations start empty. Durability across
+    restarts is the HU-1440 fix.
     """
-    if not conversation_id:
-        return []
-    store: dict[str, list[ConversationTurn]] = getattr(application.state, "conversations", {})
-    return list(store.get(conversation_id, []))
+    return _conversation_store(application).get_history(conversation_id)
 
 
 def _record_turn(
     application: FastAPI, conversation_id: str | None, message: str, reply: str
 ) -> None:
-    """Append the inbound + outbound turns to the in-process conversation log."""
-    if not conversation_id:
-        return
-    if not hasattr(application.state, "conversations"):
-        application.state.conversations = {}
-    history = application.state.conversations.setdefault(conversation_id, [])
-    history.append(ConversationTurn(speaker="user", content=message))
-    history.append(ConversationTurn(speaker="persona", content=reply))
+    """Append the inbound + outbound turns to the conversation log."""
+    store = _conversation_store(application)
+    store.append_turn(conversation_id, ConversationTurn(speaker="user", content=message))
+    store.append_turn(conversation_id, ConversationTurn(speaker="persona", content=reply))
 
 
 def _session_meta(
@@ -1276,13 +1359,11 @@ def _session_meta(
 ) -> SessionMetaView:
     """Build per-session observability metadata for the trace (G7).
 
-    Turn count is derived from the in-process conversation log (every user +
-    persona pair = one turn). Phase-1 emits the signal; it enforces nothing on
-    it (HU-1407 §7.1 G7). The dosage gate lands post-Phase-1.
+    Turn count is derived from the conversation history (every user + persona
+    pair = one turn). Phase-1 emits the signal; it enforces nothing on it
+    (HU-1407 §7.1 G7). The dosage gate lands post-Phase-1.
     """
-    if not conversation_id or not hasattr(application.state, "conversations"):
-        return SessionMetaView(turn_count=1)
-    history: list[ConversationTurn] = application.state.conversations.get(conversation_id, [])
+    history = _history(application, conversation_id)
     # History holds [user, persona, user, persona, …] → turns = pairs rounded up.
     turn_count = max(1, (len(history) + 1) // 2)
     return SessionMetaView(turn_count=turn_count)
@@ -1293,14 +1374,10 @@ def _mark_crisis_session(application: FastAPI, conversation_id: str | None) -> N
 
     The ``crisis_history`` session signal lowers the handoff threshold for the
     rest of the session (matrix §3): a repeat-crisis session tightens by
-    default. Held in-process on ``app.state.crisis_sessions``; a cross-session
-    backend lands pre-real-launch alongside the real conversation store.
+    default. Recorded through the wired :class:`ConversationStore` so the
+    marker survives restarts (HU-1440).
     """
-    if not conversation_id:
-        return
-    if not hasattr(application.state, "crisis_sessions"):
-        application.state.crisis_sessions: set[str] = set()
-    application.state.crisis_sessions.add(conversation_id)
+    _conversation_store(application).mark_crisis(conversation_id)
 
 
 def _distress_trend_rising(
@@ -1324,9 +1401,7 @@ def _distress_trend_rising(
     if not conversation_id:
         recent_user_messages = [message]
     else:
-        history: list[ConversationTurn] = getattr(
-            application.state, "conversations", {}
-        ).get(conversation_id, [])
+        history = _history(application, conversation_id)
         prior_user = [t.content for t in history if t.speaker == "user"]
         # Last 2 prior user turns + the current message → window of 3.
         recent_user_messages = [*prior_user[-2:], message]
@@ -1350,7 +1425,7 @@ def _risk_session_signals(
 ) -> RiskSessionSignals:
     """Build the §3 session-signals view for the enforcement engine.
 
-    Derives the three matrix-§3 signals from in-process session state:
+    Derives the three matrix-§3 signals from the conversation store:
 
     * **dosage** — ``turn_count`` from :func:`_session_meta`; the cap comes from
       settings (``risk_dosage_cap_turns``); ``0`` disables the cap-driven pause.
@@ -1360,11 +1435,7 @@ def _risk_session_signals(
       turns in the recent window).
     """
     session_meta = _session_meta(application, conversation_id)
-    crisis_history = bool(
-        conversation_id
-        and getattr(application.state, "crisis_sessions", set())
-        and conversation_id in application.state.crisis_sessions
-    )
+    crisis_history = _conversation_store(application).has_crisis_history(conversation_id)
     trend = _distress_trend_rising(
         application,
         message=message,
