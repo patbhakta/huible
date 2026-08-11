@@ -51,6 +51,7 @@ import json
 import logging
 import time
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
 from uuid import UUID
@@ -80,7 +81,12 @@ from huible.api.schemas import (
     ConsentAcknowledgeRequest,
     ConsentAcknowledgeResponse,
     ConsentCardView,
+    DataEnvelope,
     ExcludedMemoryRefView,
+    HandoffQueueItemView,
+    HandoffResolveRequest,
+    HandoffSLAStatusView,
+    HandoffTelemetryView,
     HandoffTicketView,
     HealthCheck,
     HealthResponse,
@@ -110,6 +116,7 @@ from huible.safety import (
     CrisisClassifier,
     DefaultConsentCard,
     DeterministicCrisisClassifier,
+    HandoffOutcome,
     HandoffQueue,
     InMemoryConsentGate,
     InMemoryHandoffQueue,
@@ -122,9 +129,11 @@ from huible.safety import (
     apply_alignment_guard,
     build_reframe_addendum,
     classify_user_message,
+    compute_handoff_telemetry,
     enforce_risk_flags,
     escalate_risk_to_human,
     escalate_to_human,
+    sla_status,
 )
 
 logger = logging.getLogger(__name__)
@@ -926,6 +935,98 @@ def _register_routes(application: FastAPI) -> None:
             )
         )
 
+    # --- §7.4 ops gate: staffed-responder handoff surface (HU-1428) ---------
+    # The responder work queue + SLA monitoring surface. Gated behind the
+    # existing bearer auth (defense in depth): a dedicated responder auth model
+    # is a future ops refinement; today any valid API key reaches this internal
+    # ops surface. The queue is the same object the chat path escalates into, so
+    # responders see live tickets the moment they are created. SLA breach
+    # detection + outcome telemetry (AC #4) are computed from the audit log on
+    # each read. The "available_responders > 0" production-wiring (AC #2) and
+    # the named responder model + coverage hours (AC #1) are the remaining
+    # clinical/ops prerequisites tracked on this issue.
+
+    @application.get(
+        "/api/v1/handoff/tickets",
+        tags=["handoff"],
+        summary="List pending handoff tickets — the staffed-responder work queue.",
+    )
+    async def list_pending_handoff_tickets(
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        queue: HandoffQueue = application.state.handoff_queue
+        now = datetime.now(UTC)
+        items = [
+            _queue_item_view(t, with_sla=True, now=now)
+            for t in queue.list_pending()
+        ]
+        return DataEnvelope(data=items)
+
+    @application.post(
+        "/api/v1/handoff/tickets/{ticket_id}/resolve",
+        tags=["handoff"],
+        summary="Resolve a handoff ticket (responder action: claim + clinical note).",
+    )
+    async def resolve_handoff_ticket(
+        ticket_id: str,
+        body: HandoffResolveRequest,
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        outcome_raw = (body.outcome or "").strip().lower()
+        try:
+            outcome = HandoffOutcome(outcome_raw)
+        except ValueError:
+            outcome = None
+        if outcome not in (HandoffOutcome.ANSWERED, HandoffOutcome.ABANDONED):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": {
+                        "code": "INVALID_OUTCOME",
+                        "status": 400,
+                        "message": "outcome must be 'answered' or 'abandoned'",
+                    }
+                },
+            )
+        queue: HandoffQueue = application.state.handoff_queue
+        updated = queue.resolve(
+            ticket_id,
+            outcome=outcome,
+            responder_id=body.responder_id,
+            clinical_review_note=body.clinical_review_note,
+        )
+        if updated is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "TICKET_NOT_FOUND",
+                        "status": 404,
+                        "message": f"No handoff ticket for id {ticket_id}",
+                    }
+                },
+            )
+        return DataEnvelope(data=_queue_item_view(updated, with_sla=False))
+
+    @application.get(
+        "/api/v1/handoff/audit",
+        tags=["handoff"],
+        summary="Handoff audit log + SLA/outcome telemetry (the dashboard surface).",
+    )
+    async def handoff_audit(
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        queue: HandoffQueue = application.state.handoff_queue
+        now = datetime.now(UTC)
+        log = queue.audit_log()
+        telemetry = compute_handoff_telemetry(log, now=now)
+        return DataEnvelope(
+            data={
+                "tickets": [_queue_item_view(t, with_sla=False) for t in log],
+                "telemetry": _telemetry_view(telemetry),
+            }
+        )
+
 
 # --- helpers ----------------------------------------------------------------
 
@@ -1182,6 +1283,60 @@ def _ticket_view(ticket, *, response_text: str) -> HandoffTicketView:
         clinical_review_note=ticket.clinical_review_note,
         resources_shown=True,
         user_acknowledgement=response_text,
+    )
+
+
+def _queue_item_view(
+    ticket, *, with_sla: bool, now: datetime | None = None
+) -> HandoffQueueItemView:
+    """Render a handoff ticket as a staffed-responder work-queue row (HU-1428).
+
+    ``with_sla`` attaches the live SLA status for pending rows (the breach
+    countdown). Historical/audit rows pass ``with_sla=False`` since the live
+    countdown is meaningless once the ticket is resolved.
+    """
+    sla_view: HandoffSLAStatusView | None = None
+    if with_sla:
+        status_ = sla_status(ticket, now=now)
+        sla_view = HandoffSLAStatusView(
+            breached=status_.breached,
+            seconds_since_created=status_.seconds_since_created,
+            seconds_to_sla=status_.seconds_to_sla,
+            seconds_overdue=status_.seconds_overdue,
+        )
+    return HandoffQueueItemView(
+        ticket_id=ticket.id,
+        outcome=ticket.outcome.value,
+        trigger_signal=ticket.trigger_signal,
+        affect=ticket.affect,
+        persona_id=ticket.persona_id,
+        conversation_id=ticket.conversation_id,
+        risk_flags=list(ticket.risk_flags),
+        matched_patterns=list(ticket.matched_patterns),
+        sla_target_seconds=ticket.sla_target_seconds,
+        created_at=ticket.created_at,
+        resolved_at=ticket.resolved_at,
+        responder_id=ticket.responder_id,
+        degrade_reason=ticket.degrade_reason,
+        clinical_review_note=ticket.clinical_review_note,
+        sla_status=sla_view,
+    )
+
+
+def _telemetry_view(telemetry) -> HandoffTelemetryView:
+    """Render the SLA/outcome telemetry dataclass as the dashboard view."""
+    return HandoffTelemetryView(
+        total=telemetry.total,
+        by_outcome=dict(telemetry.by_outcome),
+        pending=telemetry.pending,
+        answered=telemetry.answered,
+        degraded=telemetry.degraded,
+        abandoned=telemetry.abandoned,
+        pending_breached=telemetry.pending_breached,
+        answered_breached_sla=telemetry.answered_breached_sla,
+        degrade_rate=telemetry.degrade_rate,
+        pending_breach_rate=telemetry.pending_breach_rate,
+        answered_breach_rate=telemetry.answered_breach_rate,
     )
 
 

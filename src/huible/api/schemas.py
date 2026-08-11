@@ -36,6 +36,10 @@ __all__ = [
     "ConsentCardView",
     "DataEnvelope",
     "ExcludedMemoryRefView",
+    "HandoffQueueItemView",
+    "HandoffResolveRequest",
+    "HandoffSLAStatusView",
+    "HandoffTelemetryView",
     "HandoffTicketView",
     "HealthCheck",
     "HealthResponse",
@@ -287,6 +291,128 @@ class HandoffTicketView(BaseModel):
     user_acknowledgement: str = Field(
         default="",
         description="Warm non-persona acknowledgement text shown to the user this turn.",
+    )
+
+
+class HandoffSLAStatusView(BaseModel):
+    """Live SLA status for one handoff ticket (§7.4 ops gate / HU-1428 AC #4).
+
+    The breach-alert signal for the staffed-responder work queue: a pending row
+    past its SLA means a grieving user is waiting beyond target and the on-call
+    responder must be paged.
+    """
+
+    breached: bool = Field(description="True when the ticket is past its SLA target now.")
+    seconds_since_created: int = Field(
+        ge=0, description="Seconds elapsed since the ticket was opened."
+    )
+    seconds_to_sla: int = Field(
+        description=(
+            "Countdown to the SLA boundary in seconds. Positive while within "
+            "target, zero at the boundary, negative once breached."
+        )
+    )
+    seconds_overdue: int = Field(
+        ge=0, description="Overdue magnitude in seconds (0 when within SLA)."
+    )
+
+
+class HandoffQueueItemView(BaseModel):
+    """A staffed-responder work-queue row (the ``GET /handoff/tickets`` item).
+
+    The full audit row plus the live SLA status, so a responder opening the
+    queue sees both who/why (trigger signal, risk flags, affect) and how urgent
+    (breach countdown). Used for pending tickets; the audit endpoint reuses it
+    without the SLA status for historical rows.
+    """
+
+    ticket_id: str = Field(description="Unique escalation ticket id (audit key).")
+    outcome: str = Field(
+        description="Escalation outcome: enqueued | degraded | answered | abandoned."
+    )
+    trigger_signal: str = Field(
+        description="Classifier signal that routed the turn (risk:* prefix = §7.4.4 risk-driven)."
+    )
+    affect: str = Field(description="Graded user affect at the escalation turn.")
+    persona_id: str = Field(description="Persona the escalation occurred on.")
+    conversation_id: str | None = Field(
+        default=None, description="Session the escalation occurred in, if any."
+    )
+    risk_flags: list[str] = Field(default_factory=list, description="Intake risk flags present.")
+    matched_patterns: list[str] = Field(
+        default_factory=list, description="Classifier pattern snippets that fired (audit only)."
+    )
+    sla_target_seconds: int = Field(
+        description="Configured SLA target (seconds) for acknowledgement."
+    )
+    created_at: str = Field(description="ISO-8601 UTC timestamp the ticket was opened.")
+    resolved_at: str | None = Field(
+        default=None, description="ISO-8601 UTC timestamp the ticket was finalized, if any."
+    )
+    responder_id: str | None = Field(
+        default=None, description="Staffed responder id paged / claiming the ticket."
+    )
+    degrade_reason: str | None = Field(
+        default=None, description="Why the turn degraded (no_responder_available | queue_error:*)."
+    )
+    clinical_review_note: str | None = Field(
+        default=None, description="Free-text clinical-review note recorded on resolve()."
+    )
+    sla_status: HandoffSLAStatusView | None = Field(
+        default=None,
+        description=(
+            "Live SLA status. Populated for pending (enqueued) rows; null for "
+            "historical/resolved rows."
+        ),
+    )
+
+
+class HandoffTelemetryView(BaseModel):
+    """Aggregate SLA + outcome telemetry over the handoff audit log (HU-1428 AC #4).
+
+    The dashboard surface the Clinical Advisor signs off against before lifting
+    the real-user hold: degrade rate must trend to ~0 once staffed, and the
+    answered-within-SLA rate must clear the agreed threshold.
+    """
+
+    total: int = Field(ge=0, description="Total tickets ever created.")
+    by_outcome: dict[str, int] = Field(
+        default_factory=dict, description="Ticket counts keyed by outcome value."
+    )
+    pending: int = Field(ge=0, description="Open (enqueued) tickets now.")
+    answered: int = Field(ge=0, description="Tickets finalized as answered.")
+    degraded: int = Field(ge=0, description="Tickets that degraded (fail-safe fired).")
+    abandoned: int = Field(ge=0, description="Tickets finalized as abandoned.")
+    pending_breached: int = Field(
+        ge=0, description="Open tickets past SLA now — the live alert count."
+    )
+    answered_breached_sla: int = Field(
+        ge=0, description="Resolved tickets whose wait exceeded SLA — historical miss count."
+    )
+    degrade_rate: float = Field(
+        ge=0.0, le=1.0, description="Degraded / total — the fail-safe firing share."
+    )
+    pending_breach_rate: float = Field(
+        ge=0.0, le=1.0, description="pending_breached / pending — live breach pressure."
+    )
+    answered_breach_rate: float = Field(
+        ge=0.0, le=1.0, description="answered_breached_sla / answered — responder miss rate."
+    )
+
+
+class HandoffResolveRequest(BaseModel):
+    """Body of ``POST /api/v1/handoff/tickets/{ticket_id}/resolve`` (responder action)."""
+
+    outcome: str = Field(
+        description="Finalization outcome: 'answered' or 'abandoned'."
+    )
+    responder_id: str | None = Field(
+        default=None,
+        description="Staffed responder id claiming/finalizing the ticket.",
+    )
+    clinical_review_note: str | None = Field(
+        default=None,
+        description="Free-text clinical-review note recorded on the ticket.",
     )
 
 

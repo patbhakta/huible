@@ -130,6 +130,11 @@ class HandoffTicket:
     #: (no responder available, queue error). Never shown to the user; surfaced
     #: on the audit row for clinical/ops review.
     degrade_reason: str | None = None
+    #: ISO-8601 UTC timestamp stamped when a responder finalizes the ticket via
+    #: :meth:`HandoffQueue.resolve`. ``None`` until resolved. Paired with
+    #: :attr:`created_at` it yields the responder wait time, which the SLA
+    #: monitoring (AC #4) uses to compute the answered-within-SLA rate.
+    resolved_at: str | None = None
 
 
 @runtime_checkable
@@ -178,8 +183,9 @@ class HandoffQueue(Protocol):
         """Finalize an open ticket (clinician/responder action).
 
         Sets ``outcome`` to :attr:`HandoffOutcome.ANSWERED` or
-        :attr:`HandoffOutcome.ABANDONED` and records the free-text
-        ``clinical_review_note``. Returns the updated ticket, or ``None`` if no
+        :attr:`HandoffOutcome.ABANDONED`, records the free-text
+        ``clinical_review_note``, and stamps ``resolved_at`` (the SLA-monitoring
+        wait-time endpoint). Returns the updated ticket, or ``None`` if no
         ticket matches.
         """
         ...
@@ -284,6 +290,11 @@ class InMemoryHandoffQueue:
         if responder_id is not None:
             ticket.responder_id = responder_id
         ticket.clinical_review_note = clinical_review_note
+        # Stamp the resolution timestamp so SLA monitoring (AC #4) can compute
+        # the responder wait time (resolved_at - created_at) for the
+        # answered-within-SLA rate. Plain assignment keeps the in-memory backend
+        # synchronous and side-effect-light (§7.1 G1).
+        ticket.resolved_at = _now_iso()
         return ticket
 
     def _next_responder_id(self) -> str:

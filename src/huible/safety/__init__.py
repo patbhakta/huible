@@ -16,6 +16,11 @@ required for the Phase-1 phase-gate sign-off recorded in HU-1407 §7.3, plus the
   queue: routes a G1-flagged turn into an audited, staffed-responder queue with
   a defined SLA, a non-persona waiting UX, and a fail-safe that degrades to the
   G1 safe response when no human is available (never drops, never persona voice).
+* :mod:`huible.safety.handoff_monitoring` — §7.4 ops-gate SLA monitoring +
+  outcome telemetry over the handoff audit log: live breach status per open
+  ticket (the on-call alert signal) plus aggregate degrade / pending-breach /
+  answered-within-SLA rates (the dashboard surface the Clinical Advisor signs
+  off before real-user traffic).
 * :mod:`huible.safety.alignment` — §7.4.2 generation-time claim->ref alignment
   filter: any factual/identity claim in the persona's reply must be traceable
   to a retrieved reference (or the persona vault), or be suppressed. The
@@ -104,6 +109,13 @@ from huible.safety.handoff import (
     escalate_risk_to_human,
     escalate_to_human,
 )
+from huible.safety.handoff_monitoring import (
+    HandoffTelemetry,
+    SLAStatus,
+    compute_handoff_telemetry,
+    sla_status,
+    was_answered_within_sla,
+)
 from huible.safety.risk import (
     AGE_INAPPROPRIATE_TOPIC_PATTERNS,
     DEFAULT_DOSAGE_CAP_TURNS,
@@ -164,6 +176,7 @@ __all__ = [
     "HandoffOutcome",
     "HandoffQueue",
     "HandoffResult",
+    "HandoffTelemetry",
     "HandoffTicket",
     "InMemoryConsentGate",
     "InMemoryHandoffQueue",
@@ -171,6 +184,7 @@ __all__ = [
     "RiskFlag",
     "RiskProfileProvider",
     "RiskSessionSignals",
+    "SLAStatus",
     "UserAffect",
     "align_response",
     "apply_affect_guard",
@@ -180,6 +194,7 @@ __all__ = [
     "build_handoff_acknowledgement",
     "build_reframe_addendum",
     "classify_user_message",
+    "compute_handoff_telemetry",
     "detect_sarcastic_dismissive",
     "enforce_risk_flags",
     "escalate_risk_to_human",
@@ -188,4 +203,6 @@ __all__ = [
     "get_distress_addendum",
     "get_framing",
     "is_grounded",
+    "sla_status",
+    "was_answered_within_sla",
 ]
