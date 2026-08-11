@@ -18,6 +18,7 @@ import pytest
 from huible.api.paging import (
     PAGE_SEVERITY_CRISIS,
     PAGE_SEVERITY_SEV1,
+    PAGE_TRIGGER_SLA_BREACH,
     LoggingPager,
     Pager,
     WebhookPager,
@@ -189,7 +190,7 @@ class TestEscalateSlaBreaches:
         paged: list[tuple] = []
 
         class _Recorder:
-            def page(self, ticket, *, severity, window):
+            def page(self, ticket, *, severity, window, **kwargs):
                 paged.append((ticket.id, severity, window))
 
         count = escalate_sla_breaches(
@@ -208,7 +209,7 @@ class TestEscalateSlaBreaches:
             def __init__(self):
                 self.pages = 0
 
-            def page(self, ticket, *, severity, window):
+            def page(self, ticket, *, severity, window, **kwargs):
                 self.pages += 1
 
         rec = _Recorder()
@@ -217,7 +218,7 @@ class TestEscalateSlaBreaches:
         assert rec.pages == 0
 
     def test_degraded_ticket_is_never_repaged(self):
-        """A degraded ticket has no responder paged → never re-paged."""
+        """A degraded ticket has no responder paged → never re-paged here."""
         queue = InMemoryHandoffQueue(available_responders=0)  # everything degrades
         degraded = _ticket(
             outcome=HandoffOutcome.DEGRADED, seconds_old=999, sla_target_seconds=300
@@ -228,7 +229,7 @@ class TestEscalateSlaBreaches:
             def __init__(self):
                 self.pages = 0
 
-            def page(self, ticket, *, severity, window):
+            def page(self, ticket, *, severity, window, **kwargs):
                 self.pages += 1
 
         rec = _Recorder()
@@ -243,12 +244,25 @@ class TestEscalateSlaBreaches:
         paged: list[str] = []
 
         class _Recorder:
-            def page(self, ticket, *, severity, window):
+            def page(self, ticket, *, severity, window, **kwargs):
                 paged.append(ticket.id)
 
         count = escalate_sla_breaches(queue, _Recorder(), window="always")
         assert count == 1
         assert paged == ["hh-stale"]
+
+    def test_breached_repaged_with_sla_breach_trigger_label(self):
+        """The Sev-1 re-page carries the ``sla_breach`` trigger label (HU-1451)."""
+        queue = InMemoryHandoffQueue(available_responders=1)
+        queue.enqueue(_ticket(seconds_old=400, sla_target_seconds=300))
+        seen: dict = {}
+
+        class _Recorder:
+            def page(self, ticket, *, severity, window, trigger="x", **kwargs):
+                seen["trigger"] = trigger
+
+        escalate_sla_breaches(queue, _Recorder(), window="always")
+        assert seen["trigger"] == PAGE_TRIGGER_SLA_BREACH
 
 
 if __name__ == "__main__":

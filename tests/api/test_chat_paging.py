@@ -26,7 +26,12 @@ from fastapi.testclient import TestClient
 
 from huible.api.app import create_app
 from huible.api.auth import InMemoryApiKeyStore, InMemoryPersonaRegistry
-from huible.api.paging import PAGE_SEVERITY_CRISIS, PAGE_SEVERITY_SEV1, Pager
+from huible.api.paging import (
+    PAGE_SEVERITY_CRISIS,
+    PAGE_SEVERITY_SEV1,
+    PAGE_TRIGGER_DEGRADED_NET,
+    Pager,
+)
 from huible.api.real_user_gate import REAL_USER_TRAFFIC_CLASS_HEADER
 from huible.api.settings import Settings
 from huible.llm.client import FakeLLMClient
@@ -46,9 +51,12 @@ class _RecordingPager:
 
     def __init__(self) -> None:
         self.pages: list[tuple[str, str, str]] = []
+        self.triggers: list[str] = []
 
-    def page(self, ticket: HandoffTicket, *, severity: str, window: str) -> None:
+    def page(self, ticket: HandoffTicket, *, severity: str, window: str, **kwargs) -> int:
         self.pages.append((ticket.id, severity, window))
+        self.triggers.append(kwargs.get("trigger", "unspecified"))
+        return 0  # no real-channel failures in the test double
 
 
 def _make_app(
@@ -121,8 +129,15 @@ class TestCrisisEnqueuePages:
         assert severity == PAGE_SEVERITY_CRISIS
         assert window == "always"
 
-    def test_g1_crisis_degraded_does_not_invoke_pager(self):
-        """G1 crisis → DEGRADED → no page (§10.1 #2: no responder was paged)."""
+    def test_g1_crisis_degraded_pages_sev1_net_failure(self):
+        """G1 crisis → DEGRADED → §3 Sev-1 (B) net-failure page (HU-1451 #3).
+
+        Supersedes the HU-1450 "degraded does not page" contract: a degraded
+        ticket means no responder was available — a grieving user in crisis was
+        NOT helped by a human, which is itself a Sev-1 operational failure. The
+        page is distinct from the crisis-enqueue page (no responder is "on it");
+        it carries the ``degraded_net`` trigger so the ceiling intervenes.
+        """
         queue = InMemoryHandoffQueue(available_responders=0)  # fail-safe degrade
         pager = _RecordingPager()
         client = _make_app(queue=queue, pager=pager)
@@ -130,7 +145,10 @@ class TestCrisisEnqueuePages:
         body = _post_crisis(client, "sess-page-deg")
 
         assert body["trace"]["handoff"]["outcome"] == "degraded"
-        assert pager.pages == []
+        # The net-failure page fired at Sev-1 (not the crisis-enqueue severity).
+        assert len(pager.pages) == 1
+        assert pager.pages[0][1] == PAGE_SEVERITY_SEV1
+        assert pager.triggers == [PAGE_TRIGGER_DEGRADED_NET]
 
     def test_risk_driven_handoff_enqueued_invokes_pager(self):
         """§7.4.4 risk-driven handoff → ENQUEUED → the on-call is paged."""

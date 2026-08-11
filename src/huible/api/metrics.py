@@ -43,6 +43,7 @@ __all__ = [
     "ChatTurnOutcome",
     "metrics_response",
     "record_chat_turn",
+    "record_paging_failures",
 ]
 
 
@@ -125,6 +126,19 @@ ALERT_ONCALL_CONFIGURED = Gauge(
     "(Clinical Advisor dependency on HU-1446).",
 )
 
+# §3 Sev-1 paging failures (HU-1451 AC #3). A page-send failure (a real channel
+# — Telnyx SMS / email / webhook — errored or never landed) is itself a Sev-1
+# counter: the clinical turn continued unaffected (paging is fire-and-forget),
+# but a page that did not reach a human device is a safety event the operator
+# must see. ``trigger`` is the :data:`huible.api.paging.PAGE_TRIGGER_*` label.
+PAGING_FAILURES = Counter(
+    "huible_paging_failures_total",
+    "§3 Sev-1 page-send failures by trigger (HU-1451). A real channel "
+    "(Telnyx/email/webhook) errored on send; the clinical turn was not "
+    "affected, but the page did not land. The log fallback is not a failure.",
+    ["trigger"],
+)
+
 
 @dataclass(slots=True)
 class ChatTurnOutcome:
@@ -201,3 +215,17 @@ def record_chat_turn(result: ChatTurnOutcome) -> None:
 def metrics_response() -> tuple[bytes, str]:
     """Return ``(body_bytes, content_type)`` for the ``GET /metrics`` endpoint."""
     return generate_latest(), CONTENT_TYPE_LATEST
+
+
+def record_paging_failures(trigger: str, count: int) -> None:
+    """Record real-channel page-send failures for the §3 Sev-1 paging counter.
+
+    Called fire-and-forget by the chat-path paging wrappers (HU-1451 AC #3).
+    ``trigger`` is the :data:`huible.api.paging.PAGE_TRIGGER_*` label so the
+    counter distinguishes *which* Sev-1 condition's page did not land.
+    ``count`` is the number of real-channel failures (0 = page landed or only
+    the key-free log fallback ran). A non-positive count is a no-op.
+    """
+    if count <= 0:
+        return
+    PAGING_FAILURES.labels(trigger=trigger).inc(count)

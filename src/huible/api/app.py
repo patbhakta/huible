@@ -75,12 +75,20 @@ from huible.api.metrics import (
     ChatTurnOutcome,
     metrics_response,
     record_chat_turn,
+    record_paging_failures,
 )
 from huible.api.paging import (
     PAGE_SEVERITY_CRISIS,
+    PAGE_TRIGGER_CONSENT_BYPASS,
+    PAGE_TRIGGER_CRISIS_ENQUEUE,
+    PAGE_TRIGGER_DEGRADED_NET,
+    PAGE_TRIGGER_UNGROUNDED_LEAK,
     Pager,
-    build_pager,
+    build_multichannel_pager,
+    build_roster,
     escalate_sla_breaches,
+    page_degraded_net,
+    page_sev1_signal,
 )
 from huible.api.real_user_gate import (
     REAL_USER_MODE_OFF_RESPONSE,
@@ -560,18 +568,42 @@ def create_app(
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
     application.state.memory_backend: MemoryBackend | None = None
-    # Stage 0.4 wire (HU-1450): on-call paging transport + the gauge flip that
-    # marks the §3 Sev-1 alerts as wired to the 0.4 on-call roster. The pager
-    # is the missing link deferred from HU-1446: an enqueued crisis ticket now
-    # pages a real person. The key-free default (LoggingPager) emits a
-    # structured ``handoff.page`` CRITICAL log line; a WebhookPager lands at
-    # deploy time via HANDOFF_PAGER_WEBHOOK_URL. Paging is additive on top of
-    # ENQUEUED — it never bypasses the §10.1 #2 degrade gate (a degraded
-    # ticket has no responder paged, so it is never paged here).
-    application.state.pager = pager or build_pager(
-        provider=resolved_settings.handoff_pager_provider,
-        webhook_url=resolved_settings.handoff_pager_webhook_url,
+    # Stage 0.4 wire (HU-1450) + Stage 0.4a Sev-1 paging channel (HU-1451): the
+    # on-call paging transport + the gauge flip that marks the §3 Sev-1 alerts
+    # as wired to the 0.4 on-call roster. The pager is the missing link deferred
+    # from HU-1446: an enqueued crisis ticket now pages a real person. The
+    # key-free default (LoggingPager) emits a structured ``handoff.page``
+    # CRITICAL log line; a WebhookPager lands at deploy time via
+    # HANDOFF_PAGER_WEBHOOK_URL. Paging is additive on top of ENQUEUED — it
+    # never bypasses the §10.1 #2 degrade gate.
+    #
+    # HU-1451: when Telnyx / email / webhook credentials are present, a
+    # MultiChannelPager fans every page out to the roster-resolved primary +
+    # secondary (+ CEO on ack-SLA miss), so a page reaches a real human device
+    # — not merely a log line. The OnCallRoster resolves the active window from
+    # the canary-start clock. When credentials are absent the key-free
+    # LoggingPager stays the honest pre-deploy posture.
+    application.state.oncall_roster = build_roster(
+        contacts_json=resolved_settings.handoff_oncall_contacts,
+        canary_start_ts=resolved_settings.handoff_canary_start_ts,
     )
+    if pager is not None:
+        # Explicitly injected (tests) — respect it as-is.
+        application.state.pager = pager
+    else:
+        application.state.pager = build_multichannel_pager(
+            provider=resolved_settings.handoff_pager_provider,
+            webhook_url=resolved_settings.handoff_pager_webhook_url,
+            roster=application.state.oncall_roster,
+            telnyx_api_key=resolved_settings.telnyx_api_key,
+            telnyx_from=resolved_settings.telnyx_from,
+            telnyx_api_base_url=resolved_settings.telnyx_api_base_url,
+            smtp_host=resolved_settings.handoff_pager_smtp_host,
+            smtp_port=resolved_settings.handoff_pager_smtp_port,
+            smtp_user=resolved_settings.handoff_pager_smtp_user,
+            smtp_password=resolved_settings.handoff_pager_smtp_password,
+            email_from_addr=resolved_settings.handoff_pager_email_from,
+        )
     application.state.coverage_window_label = _coverage_window_label(resolved_settings)
     # The gauge wiring target (HU-1446) flips to 1 once the roster is staffed
     # (HANDOFF_AVAILABLE_RESPONDERS>0) — i.e. the §3 Sev-1 alerts are now
@@ -1159,6 +1191,20 @@ def _register_routes(application: FastAPI) -> None:
         )
         response_text = alignment.text
 
+        # §3 Sev-1 (A) — un-grounded persona claim leak (HU-1451 trigger #2).
+        # When the alignment guard fired ``suppressed`` the generator
+        # confabulated a claim; the guard caught it this turn, but a degraded
+        # generator could leak next time. The detection is itself the Sev-1
+        # signal — page immediately (fire-and-forget), never throttled behind
+        # the >10%/1h aggregate. The user-facing turn is unaffected (the guard
+        # already substituted the claim-free fallback); paging never alters it.
+        if alignment.disposition == "suppressed":
+            _page_sev1_fire_and_forget(
+                application,
+                trigger=PAGE_TRIGGER_UNGROUNDED_LEAK,
+                persona_id=str(persona_id),
+            )
+
         _record_turn(application, body.conversation_id, body.message, response_text)
         _emit_turn(
             persona_id,
@@ -1186,6 +1232,27 @@ def _register_routes(application: FastAPI) -> None:
             claim_count=alignment.claim_count,
             disposition=alignment.disposition,
         )
+
+        # §3 Sev-1 (C) — consent-bypass defensive check (HU-1451 trigger #4).
+        # The G6 consent gate at line ~955 is authoritative: it raises 409
+        # before any persona voice when consent is unrecorded. This is a
+        # defense-in-depth *post-hoc* re-check right before the persona reply
+        # leaves the server — if the gate was somehow bypassed (backend
+        # corruption, race, a future code path that skips it), a persona-voiced
+        # turn reached a real user without recorded consent. That is §3 Sev-1
+        # (C): page immediately, fire-and-forget. The turn itself is unaffected
+        # (the guard already produced the response); this only raises the alarm.
+        # No-op on the happy path (consent still recorded) — one extra cheap read.
+        try:
+            consent_gate_check: ConsentGate = application.state.consent_gate
+            if not consent_gate_check.is_acknowledged(session_id, persona_id):
+                _page_sev1_fire_and_forget(
+                    application,
+                    trigger=PAGE_TRIGGER_CONSENT_BYPASS,
+                    persona_id=str(persona_id),
+                )
+        except Exception:  # pragma: no cover - defensive; never break the turn
+            logger.exception("consent-bypass check failed; turn continues")
 
         return PersonaChatResponse(
             response=response_text,
@@ -1812,33 +1879,74 @@ def _escalate_and_build_trace(
 
 
 def _page_on_enqueue(application: FastAPI, ticket) -> None:
-    """Page the on-call immediately when a crisis ticket was enqueued (HU-1450).
+    """Page the on-call immediately on a crisis handoff outcome (HU-1450 + HU-1451).
 
-    The primary Sev-1 trigger: every ``ENQUEUED`` escalation (G1
-    ``escalate_to_human`` and risk-driven ``escalate_risk_to_human``) pages the
-    0.4 on-call at :data:`~huible.api.paging.PAGE_SEVERITY_CRISIS`, immediately
-    and **never** throttled behind the >10%/1h aggregate backstop — a grieving
-    user waiting on a crisis turn cannot be rate-limited. A ``DEGRADED``
-    ticket is **not** paged: no responder was paged by the queue, so the
-    on-call must not be told one was (§10.1 #2 fail-safe stays authoritative;
-    paging is additive on top of ``ENQUEUED``).
+    Two distinct paging paths, both fire-and-forget and never throttled behind
+    the >10%/1h aggregate:
+
+    * ``ENQUEUED`` → the primary Sev-1 trigger: a responder was assigned, so
+      page the on-call at :data:`~huible.api.paging.PAGE_SEVERITY_CRISIS` so the
+      responder *actually* sees the ticket on a real device. Paging is additive
+      on top of ``ENQUEUED`` (§10.1 #2 fail-safe stays authoritative).
+    * ``DEGRADED`` → §3 Sev-1 (B) (HU-1451 trigger #3): the net failed — no
+      responder was available / the enqueue failed. A grieving user in crisis
+      was NOT helped by a human, which is itself a Sev-1 operational failure
+      requiring immediate ceiling intervention. Paged at ``sev-1`` with the
+      :data:`~huible.api.paging.PAGE_TRIGGER_DEGRADED_NET` label (distinct from
+      the crisis-enqueue page; kill-switch-eligible).
 
     Paging is best-effort: a transport failure must never break a clinical
-    turn. :class:`~huible.api.paging.LoggingPager` cannot raise; the
-    :class:`~huible.api.paging.WebhookPager` swallows transport errors and
-    falls back to the log line. The catch here is defense-in-depth so an
-    unexpected pager implementation also degrades silently.
+    turn. Every pager implementation swallows transport errors and falls back
+    to the log line; the failure count it returns is recorded on the
+    ``huible_paging_failures_total{trigger}`` counter (AC #3). The catch here
+    is defense-in-depth so an unexpected pager also degrades silently.
     """
-    if ticket.outcome is not HandoffOutcome.ENQUEUED:
-        return
+    pager: Pager = application.state.pager
+    window = application.state.coverage_window_label
     try:
-        application.state.pager.page(
-            ticket,
-            severity=PAGE_SEVERITY_CRISIS,
-            window=application.state.coverage_window_label,
-        )
+        if ticket.outcome is HandoffOutcome.ENQUEUED:
+            failures = pager.page(
+                ticket,
+                severity=PAGE_SEVERITY_CRISIS,
+                window=window,
+                trigger=PAGE_TRIGGER_CRISIS_ENQUEUE,
+            )
+            record_paging_failures(PAGE_TRIGGER_CRISIS_ENQUEUE, failures)
+        elif ticket.outcome is HandoffOutcome.DEGRADED:
+            failures = page_degraded_net(pager, ticket=ticket, window=window)
+            record_paging_failures(PAGE_TRIGGER_DEGRADED_NET, failures)
     except Exception:  # pragma: no cover - defensive; paging must never break a turn
         logger.exception("handoff.page failed; clinical turn continues unaffected")
+
+
+def _page_sev1_fire_and_forget(
+    application: FastAPI,
+    *,
+    trigger: str,
+    ticket=None,
+    persona_id: str | None = None,
+) -> None:
+    """Fire-and-forget Sev-1 page for the persona-path triggers (HU-1451 #2/#4).
+
+    Used by the un-grounded-claim-leak (#2) and consent-bypass (#4) triggers,
+    which are detected on the persona-voiced path where there is no handoff
+    ticket. Delegates to :func:`huible.api.paging.page_sev1_signal`, records
+    real-channel failures on the ``huible_paging_failures_total`` counter, and
+    swallows every error so a page never breaks a clinical turn.
+    """
+    pager: Pager = application.state.pager
+    window = application.state.coverage_window_label
+    try:
+        failures = page_sev1_signal(
+            pager,
+            ticket=ticket,
+            trigger=trigger,
+            window=window,
+            persona_id=persona_id,
+        )
+        record_paging_failures(trigger, failures)
+    except Exception:  # pragma: no cover - defensive; paging must never break a turn
+        logger.exception("Sev-1 page failed; clinical turn continues unaffected")
 
 
 def _ticket_view(ticket, *, response_text: str) -> HandoffTicketView:

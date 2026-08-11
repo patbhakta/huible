@@ -153,6 +153,31 @@ class Settings(BaseSettings):
     # when the URL is empty so credentials land at deploy time.
     handoff_pager_provider: str = "log"
     handoff_pager_webhook_url: str = ""
+    # ── Stage 0.4a Sev-1 paging channel (HU-1451) ───────────────────────────
+    # The four §3 Sev-1 triggers (crisis enqueue + ack-SLA miss + un-grounded
+    # claim leak + degraded net + consent bypass) page a real human channel,
+    # not merely a log line. The on-call contact map + the canary T+0 clock
+    # resolve the current-window primary + secondary (+ CEO on miss); the
+    # multi-channel pager fans the page out to them. Telnyx is the SMS
+    # transport (the inbound side already speaks the Telnyx webhook); email is
+    # the second channel. All keys default empty so the key-free LoggingPager
+    # stays the honest pre-deploy posture — credentials land at deploy time.
+    # JSON: seat_id -> {"phone": "+1...", "email": "..."}. Seats are the
+    # [HU-1447] §1 roster ids: huible-pm, huible-tech-lead, clinical-advisor, ceo.
+    handoff_oncall_contacts: str = ""
+    # ISO-8601 canary T+0 clock (the first real grieving-user turn). The 4x12h
+    # rotation is anchored here. Empty → roster unconfigured → log fallback.
+    handoff_canary_start_ts: str = ""
+    # Telnyx SMS outbound (Messaging API). Empty key/from → SMS channel omitted.
+    telnyx_api_key: str = ""
+    telnyx_from: str = ""
+    telnyx_api_base_url: str = "https://api.telnyx.com/v2"
+    # Email (SMTP relay) outbound. Empty host → email channel omitted.
+    handoff_pager_smtp_host: str = ""
+    handoff_pager_smtp_port: int = 587
+    handoff_pager_smtp_user: str = ""
+    handoff_pager_smtp_password: str = ""
+    handoff_pager_email_from: str = ""
 
     # ── G8 risk-flag enforcement — §7.4.4 dosage cap ──────────────────────
     # Pre-real-user clinical gate (HU-1424 / HU-1407 §7.4 #4). The reserved
