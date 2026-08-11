@@ -783,6 +783,7 @@ def _register_routes(application: FastAPI) -> None:
                 application, body.conversation_id, body.message, REAL_USER_MODE_OFF_RESPONSE
             )
             _emit_turn(persona_id, outcome="real_user_refused", real_user_refused=True)
+            _log_chat_trace(application, body.conversation_id, action="refuse")
             return PersonaChatResponse(
                 response=REAL_USER_MODE_OFF_RESPONSE,
                 trace=ChatTrace(
@@ -886,6 +887,12 @@ def _register_routes(application: FastAPI) -> None:
                 crisis=True,
                 handoff_outcome=handoff_view.outcome,
             )
+            _log_chat_trace(
+                application,
+                body.conversation_id,
+                action="handoff",
+                fired_flags=tuple(session_risk_flags),
+            )
             return PersonaChatResponse(
                 response=escalation,
                 trace=ChatTrace(
@@ -987,6 +994,12 @@ def _register_routes(application: FastAPI) -> None:
                     risk_action="pause_session",
                     risk_flags=tuple(f.value for f in enforcement.fired_flags),
                 )
+                _log_chat_trace(
+                    application,
+                    body.conversation_id,
+                    action="pause",
+                    fired_flags=tuple(f.value for f in enforcement.fired_flags),
+                )
                 return PersonaChatResponse(
                     response=response_text,
                     trace=ChatTrace(
@@ -1023,6 +1036,12 @@ def _register_routes(application: FastAPI) -> None:
                     risk_flags=tuple(f.value for f in enforcement.fired_flags),
                     handoff_outcome=handoff_view.outcome,
                 )
+                _log_chat_trace(
+                    application,
+                    body.conversation_id,
+                    action="handoff",
+                    fired_flags=tuple(f.value for f in enforcement.fired_flags),
+                )
                 return PersonaChatResponse(
                     response=response_text,
                     trace=ChatTrace(
@@ -1040,6 +1059,12 @@ def _register_routes(application: FastAPI) -> None:
                 outcome="risk_refuse",
                 risk_action="refuse_topic",
                 risk_flags=tuple(f.value for f in enforcement.fired_flags),
+            )
+            _log_chat_trace(
+                application,
+                body.conversation_id,
+                action="refuse",
+                fired_flags=tuple(f.value for f in enforcement.fired_flags),
             )
             return PersonaChatResponse(
                 response=response_text,
@@ -1111,6 +1136,24 @@ def _register_routes(application: FastAPI) -> None:
             alignment_disposition=alignment.disposition,
             risk_action=enforcement.action.value if enforcement.action else None,
             risk_flags=tuple(f.value for f in enforcement.fired_flags),
+        )
+        _persona_action = (
+            enforcement.action.value
+            if enforcement.action
+            else "tighten"
+            if enforcement.forces_tighten
+            else "reframe"
+            if enforcement.forces_reframe
+            else "persona"
+        )
+        _log_chat_trace(
+            application,
+            body.conversation_id,
+            action=_persona_action,
+            fired_flags=tuple(f.value for f in enforcement.fired_flags),
+            ungrounded=alignment.ungrounded_count,
+            claim_count=alignment.claim_count,
+            disposition=alignment.disposition,
         )
 
         return PersonaChatResponse(
@@ -1430,6 +1473,42 @@ def _session_meta(
     # History holds [user, persona, user, persona, …] → turns = pairs rounded up.
     turn_count = max(1, (len(history) + 1) // 2)
     return SessionMetaView(turn_count=turn_count)
+
+
+def _log_chat_trace(
+    application: FastAPI,
+    conversation_id: str | None,
+    *,
+    action: str,
+    fired_flags: tuple[str, ...] = (),
+    ungrounded: int | None = None,
+    claim_count: int | None = None,
+    disposition: str | None = None,
+) -> None:
+    """Emit one ``chat.trace`` stdout line per chat turn (HU-1442).
+
+    The risk-enforcement, claim-alignment, and dosage-pause signals are
+    otherwise response-only ``.trace`` fields with no server-side aggregation
+    (rollout-plan flagged concern #3). This folds them into the same stdout
+    stream as ``consent.record`` (via :class:`_JsonLineFormatter`) so the
+    daily review can ``grep chat.trace`` across all five telemetry surfaces.
+    """
+    turn_count = _session_meta(application, conversation_id).turn_count
+    flags = ",".join(fired_flags) if fired_flags else "-"
+    ungrounded_field = (
+        f"{ungrounded}/{claim_count}"
+        if ungrounded is not None and claim_count is not None
+        else "-/-"
+    )
+    logger.info(
+        "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s disposition=%s turn_count=%s",
+        conversation_id or "-",
+        action,
+        flags,
+        ungrounded_field,
+        disposition or "n/a",
+        turn_count,
+    )
 
 
 def _mark_crisis_session(application: FastAPI, conversation_id: str | None) -> None:
