@@ -141,24 +141,39 @@ class HandoffTicketRow(SafetyBase):
     trigger_signal: Mapped[str] = mapped_column(Text, nullable=False)
     affect: Mapped[str] = mapped_column(Text, nullable=False)
     matched_patterns: Mapped[list] = mapped_column(
-        _PortableJSON, nullable=False, default=list,
+        _PortableJSON,
+        nullable=False,
+        default=list,
     )
     risk_flags: Mapped[list] = mapped_column(
-        _PortableJSON, nullable=False, default=list,
+        _PortableJSON,
+        nullable=False,
+        default=list,
     )
     sla_target_seconds: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default=str(DEFAULT_HANDOFF_SLA_SECONDS),
+        Integer,
+        nullable=False,
+        server_default=str(DEFAULT_HANDOFF_SLA_SECONDS),
     )
-    created_at: Mapped[str] = mapped_column(
-        Text, nullable=False,
+    # TIMESTAMPTZ on Postgres (matches migrations 002 + init-db schema); the
+    # value-object contract is an ISO-8601 string, so the conversion happens
+    # at the row boundary (_row_to_ticket / enqueue). Declared as
+    # DateTime(timezone=True) rather than Text so real-Postgres inserts don't
+    # hit DatatypeMismatch against the TIMESTAMPTZ column (sqlite test path
+    # stores ISO text transparently either way).
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
     )
     outcome: Mapped[str] = mapped_column(
-        Text, nullable=False, server_default=HandoffOutcome.ENQUEUED.value,
+        Text,
+        nullable=False,
+        server_default=HandoffOutcome.ENQUEUED.value,
     )
     responder_id: Mapped[str | None] = mapped_column(Text)
     clinical_review_note: Mapped[str | None] = mapped_column(Text)
     degrade_reason: Mapped[str | None] = mapped_column(Text)
-    resolved_at: Mapped[str | None] = mapped_column(Text)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (
         Index("idx_handoff_outcome", "outcome"),
@@ -181,7 +196,13 @@ class ConsentRecordRow(SafetyBase):
     session_id: Mapped[str] = mapped_column(Text, nullable=False)
     persona_id: Mapped[str] = mapped_column(Text, nullable=False)
     card_version: Mapped[int] = mapped_column(Integer, nullable=False)
-    acknowledged_at: Mapped[str] = mapped_column(Text, nullable=False)
+    # TIMESTAMPTZ on Postgres (matches migrations 002 + init-db schema); the
+    # value-object contract is an ISO-8601 string, converted at the row
+    # boundary. See ConsentRecordRow / HandoffTicketRow for the same pattern.
+    acknowledged_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
 
     __table_args__ = (
         Index("idx_consent_session_persona", "session_id", "persona_id"),
@@ -203,18 +224,19 @@ class ConversationTurnRow(SafetyBase):
 
     id: Mapped[int] = mapped_column(
         BigInteger().with_variant(Integer, "sqlite"),
-        primary_key=True, autoincrement=True,
+        primary_key=True,
+        autoincrement=True,
     )
     conversation_id: Mapped[str] = mapped_column(Text, nullable=False)
     speaker: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=_TS,
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=_TS,
     )
 
-    __table_args__ = (
-        Index("idx_conversation_turns_conv", "conversation_id", "id"),
-    )
+    __table_args__ = (Index("idx_conversation_turns_conv", "conversation_id", "id"),)
 
 
 class CrisisSessionRow(SafetyBase):
@@ -228,7 +250,9 @@ class CrisisSessionRow(SafetyBase):
 
     conversation_id: Mapped[str] = mapped_column(Text, primary_key=True)
     marked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=_TS,
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=_TS,
     )
 
 
@@ -258,16 +282,21 @@ class RiskProfileRow(SafetyBase):
 
     id: Mapped[int] = mapped_column(
         BigInteger().with_variant(Integer, "sqlite"),
-        primary_key=True, autoincrement=True,
+        primary_key=True,
+        autoincrement=True,
     )
     scope: Mapped[str] = mapped_column(Text, nullable=False)
     persona_id: Mapped[str] = mapped_column(Text, nullable=False)
     session_id: Mapped[str | None] = mapped_column(Text)
     flags: Mapped[list] = mapped_column(
-        _PortableJSON, nullable=False, default=list,
+        _PortableJSON,
+        nullable=False,
+        default=list,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=_TS,
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=_TS,
     )
 
     __table_args__ = (
@@ -290,12 +319,12 @@ def _row_to_ticket(row: HandoffTicketRow) -> HandoffTicket:
         matched_patterns=list(row.matched_patterns or []),
         risk_flags=list(row.risk_flags or []),
         sla_target_seconds=row.sla_target_seconds,
-        created_at=row.created_at,
+        created_at=_dt_to_iso(row.created_at),
         outcome=HandoffOutcome(row.outcome),
         responder_id=row.responder_id,
         clinical_review_note=row.clinical_review_note,
         degrade_reason=row.degrade_reason,
-        resolved_at=row.resolved_at,
+        resolved_at=_dt_to_iso(row.resolved_at),
     )
 
 
@@ -333,11 +362,15 @@ class PostgresHandoffQueue:
         self._sla_target_seconds = sla_target_seconds
         self._coverage = coverage or CoverageWindow()
         self._engine = create_engine(
-            database_url, pool_size=pool_size, max_overflow=max_overflow,
+            database_url,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             future=True,
         )
         self._session_factory = sessionmaker(
-            self._engine, class_=Session, expire_on_commit=False,
+            self._engine,
+            class_=Session,
+            expire_on_commit=False,
         )
         self._robin = 0
 
@@ -379,18 +412,20 @@ class PostgresHandoffQueue:
                 matched_patterns=list(ticket.matched_patterns),
                 risk_flags=list(ticket.risk_flags),
                 sla_target_seconds=ticket.sla_target_seconds,
-                created_at=ticket.created_at,
+                created_at=_iso_to_dt(ticket.created_at),
                 outcome=ticket.outcome.value,
                 responder_id=ticket.responder_id,
                 clinical_review_note=ticket.clinical_review_note,
                 degrade_reason=ticket.degrade_reason,
-                resolved_at=ticket.resolved_at,
+                resolved_at=_iso_to_dt(ticket.resolved_at) if ticket.resolved_at else None,
             )
             session.add(row)
             session.commit()
         logger.info(
             "handoff.enqueue ticket=%s outcome=%s signal=%s responder=%s",
-            ticket.id, ticket.outcome.value, ticket.trigger_signal,
+            ticket.id,
+            ticket.outcome.value,
+            ticket.trigger_signal,
             ticket.responder_id,
         )
         return ticket
@@ -425,9 +460,7 @@ class PostgresHandoffQueue:
         clinical_review_note: str | None = None,
     ) -> HandoffTicket | None:
         if outcome not in (HandoffOutcome.ANSWERED, HandoffOutcome.ABANDONED):
-            raise ValueError(
-                f"resolve() outcome must be answered or abandoned, got {outcome!r}"
-            )
+            raise ValueError(f"resolve() outcome must be answered or abandoned, got {outcome!r}")
         resolved_at = _now_iso()
         with self._session_factory() as session:
             row = session.get(HandoffTicketRow, ticket_id)
@@ -437,7 +470,7 @@ class PostgresHandoffQueue:
             if responder_id is not None:
                 row.responder_id = responder_id
             row.clinical_review_note = clinical_review_note
-            row.resolved_at = resolved_at
+            row.resolved_at = _iso_to_dt(resolved_at)
             session.commit()
             ticket = _row_to_ticket(row)
         return ticket
@@ -459,7 +492,7 @@ def _row_to_record(row: ConsentRecordRow) -> ConsentRecord:
         session_id=row.session_id,
         persona_id=row.persona_id,
         card_version=row.card_version,
-        acknowledged_at=row.acknowledged_at,
+        acknowledged_at=_dt_to_iso(row.acknowledged_at),
         acknowledgment_id=row.acknowledgment_id,
     )
 
@@ -475,14 +508,17 @@ class PostgresConsentGate:
     HU-1440 fix for §7.4.3).
     """
 
-    def __init__(self, database_url: str, *, pool_size: int = 5,
-                 max_overflow: int = 10) -> None:
+    def __init__(self, database_url: str, *, pool_size: int = 5, max_overflow: int = 10) -> None:
         self._engine = create_engine(
-            database_url, pool_size=pool_size, max_overflow=max_overflow,
+            database_url,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             future=True,
         )
         self._session_factory = sessionmaker(
-            self._engine, class_=Session, expire_on_commit=False,
+            self._engine,
+            class_=Session,
+            expire_on_commit=False,
         )
 
     def close(self) -> None:
@@ -509,13 +545,15 @@ class PostgresConsentGate:
                 session_id=session_id,
                 persona_id=str(persona_id),
                 card_version=card_version,
-                acknowledged_at=record.acknowledged_at,
+                acknowledged_at=_iso_to_dt(record.acknowledged_at),
             )
             session.add(row)
             session.commit()
         logger.info(
             "consent.record session=%s persona=%s card_version=%s ack_id=%s",
-            record.session_id, record.persona_id, record.card_version,
+            record.session_id,
+            record.persona_id,
+            record.card_version,
             record.acknowledgment_id,
         )
         return record
@@ -536,9 +574,7 @@ class PostgresConsentGate:
 
     def audit_log(self) -> list[ConsentRecord]:
         with self._session_factory() as session:
-            stmt = select(ConsentRecordRow).order_by(
-                ConsentRecordRow.acknowledged_at
-            )
+            stmt = select(ConsentRecordRow).order_by(ConsentRecordRow.acknowledged_at)
             return [_row_to_record(r) for r in session.scalars(stmt)]
 
 
@@ -568,22 +604,23 @@ class PostgresRiskProfile:
     _PERSONA_SCOPE = "persona"
     _SESSION_SCOPE = "session"
 
-    def __init__(self, database_url: str, *, pool_size: int = 5,
-                 max_overflow: int = 10) -> None:
+    def __init__(self, database_url: str, *, pool_size: int = 5, max_overflow: int = 10) -> None:
         self._engine = create_engine(
-            database_url, pool_size=pool_size, max_overflow=max_overflow,
+            database_url,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             future=True,
         )
         self._session_factory = sessionmaker(
-            self._engine, class_=Session, expire_on_commit=False,
+            self._engine,
+            class_=Session,
+            expire_on_commit=False,
         )
 
     def close(self) -> None:
         self._engine.dispose()
 
-    def set_persona_flags(
-        self, persona_id: UUID | str, flags: set[str] | list[str]
-    ) -> None:
+    def set_persona_flags(self, persona_id: UUID | str, flags: set[str] | list[str]) -> None:
         """Set the intake-derived flags for a persona (applies to every session).
 
         Upserts the single persona-scoped row for ``persona_id``. Mirrors
@@ -602,9 +639,7 @@ class PostgresRiskProfile:
         Upserts the single session-scoped row for ``(session_id, persona_id)``.
         Mirrors :meth:`InMemoryRiskProfile.set_session_flags`.
         """
-        self._upsert(
-            self._SESSION_SCOPE, str(persona_id), session_id, list(flags)
-        )
+        self._upsert(self._SESSION_SCOPE, str(persona_id), session_id, list(flags))
 
     def get_flags(self, session_id: str, persona_id: UUID) -> list[str]:
         # Union of persona-scoped + session-scoped rows for this
@@ -653,12 +688,14 @@ class PostgresRiskProfile:
                 stmt = stmt.where(RiskProfileRow.session_id == session_id)
             row = session.scalars(stmt).first()
             if row is None:
-                session.add(RiskProfileRow(
-                    scope=scope,
-                    persona_id=persona_id,
-                    session_id=session_id,
-                    flags=list(flags),
-                ))
+                session.add(
+                    RiskProfileRow(
+                        scope=scope,
+                        persona_id=persona_id,
+                        session_id=session_id,
+                        flags=list(flags),
+                    )
+                )
             else:
                 row.flags = list(flags)
                 row.updated_at = datetime.now(UTC)
@@ -684,9 +721,7 @@ class ConversationStore(Protocol):
         """Return the full ordered turn window for the conversation."""
         ...
 
-    def append_turn(
-        self, conversation_id: str | None, turn: ConversationTurn
-    ) -> None:
+    def append_turn(self, conversation_id: str | None, turn: ConversationTurn) -> None:
         """Append one speaker turn to the conversation log (no-op if no id)."""
         ...
 
@@ -717,9 +752,7 @@ class InMemoryConversationStore:
             return []
         return list(self._conversations.get(conversation_id, []))
 
-    def append_turn(
-        self, conversation_id: str | None, turn: ConversationTurn
-    ) -> None:
+    def append_turn(self, conversation_id: str | None, turn: ConversationTurn) -> None:
         if not conversation_id:
             return
         self._conversations.setdefault(conversation_id, []).append(turn)
@@ -745,14 +778,17 @@ class PostgresConversationStore:
     stays correct across restarts (the HU-1440 fix).
     """
 
-    def __init__(self, database_url: str, *, pool_size: int = 5,
-                 max_overflow: int = 10) -> None:
+    def __init__(self, database_url: str, *, pool_size: int = 5, max_overflow: int = 10) -> None:
         self._engine = create_engine(
-            database_url, pool_size=pool_size, max_overflow=max_overflow,
+            database_url,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             future=True,
         )
         self._session_factory = sessionmaker(
-            self._engine, class_=Session, expire_on_commit=False,
+            self._engine,
+            class_=Session,
+            expire_on_commit=False,
         )
 
     def close(self) -> None:
@@ -770,22 +806,19 @@ class PostgresConversationStore:
                 .where(ConversationTurnRow.conversation_id == conversation_id)
                 .order_by(ConversationTurnRow.id)
             )
-            return [
-                _Turn(speaker=r.speaker, content=r.content)
-                for r in session.scalars(stmt)
-            ]
+            return [_Turn(speaker=r.speaker, content=r.content) for r in session.scalars(stmt)]
 
-    def append_turn(
-        self, conversation_id: str | None, turn: ConversationTurn
-    ) -> None:
+    def append_turn(self, conversation_id: str | None, turn: ConversationTurn) -> None:
         if not conversation_id:
             return
         with self._session_factory() as session:
-            session.add(ConversationTurnRow(
-                conversation_id=conversation_id,
-                speaker=turn.speaker,
-                content=turn.content,
-            ))
+            session.add(
+                ConversationTurnRow(
+                    conversation_id=conversation_id,
+                    speaker=turn.speaker,
+                    content=turn.content,
+                )
+            )
             session.commit()
 
     def mark_crisis(self, conversation_id: str | None) -> None:
@@ -808,9 +841,11 @@ class PostgresConversationStore:
                 # this race-free; Postgres uses the real upsert above.
                 existing = session.get(CrisisSessionRow, conversation_id)
                 if existing is None:
-                    session.add(CrisisSessionRow(
-                        conversation_id=conversation_id,
-                    ))
+                    session.add(
+                        CrisisSessionRow(
+                            conversation_id=conversation_id,
+                        )
+                    )
             session.commit()
 
     def has_crisis_history(self, conversation_id: str | None) -> bool:
@@ -824,8 +859,7 @@ class PostgresConversationStore:
 # --- helpers ----------------------------------------------------------------
 
 
-def build_safety_engine(database_url: str, *, pool_size: int = 5,
-                        max_overflow: int = 10):
+def build_safety_engine(database_url: str, *, pool_size: int = 5, max_overflow: int = 10):
     """Construct a sync SQLAlchemy engine for the §7.4 safety backends.
 
     Shared by the three Postgres backends so :func:`huible.api.app.create_app`
@@ -834,13 +868,41 @@ def build_safety_engine(database_url: str, *, pool_size: int = 5,
     first request.
     """
     return create_engine(
-        database_url, pool_size=pool_size, max_overflow=max_overflow, future=True,
+        database_url,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+        future=True,
     )
 
 
 def _now_iso() -> str:
     """Return the current UTC timestamp as an ISO-8601 string."""
     return datetime.now(UTC).isoformat()
+
+
+def _iso_to_dt(ts: str | None) -> datetime | None:
+    """Parse an ISO-8601 timestamp into an aware UTC datetime (row write).
+
+    The value objects (:class:`HandoffTicket`, :class:`ConsentRecord`) carry
+    ISO-8601 strings as their user-facing contract; the durable rows store
+    ``TIMESTAMPTZ`` columns, so the string is parsed at the row boundary.
+    ``None`` passes through for nullable columns.
+    """
+    if ts is None:
+        return None
+    return _parse_ticket_time(ts)
+
+
+def _dt_to_iso(dt: datetime | None) -> str | None:
+    """Render a stored datetime back to the ISO-8601 string contract (row read).
+
+    Inverse of :func:`_iso_to_dt`. ``None`` passes through for nullable columns.
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.isoformat()
 
 
 def _parse_ticket_time(ts: str) -> datetime:
@@ -860,4 +922,3 @@ def _parse_ticket_time(ts: str) -> datetime:
 # ``RiskProfileProvider`` are structural Protocols; the Postgres classes
 # satisfy them without declaring inheritance.
 _PROTOCOL_REEXPORTS = (HandoffQueue, ConsentGate, RiskProfileProvider)
-

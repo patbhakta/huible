@@ -112,8 +112,12 @@ def _risk_profile(eng) -> PostgresRiskProfile:
 
 
 def _ticket(
-    *, ticket_id: str = "hh-1", persona_id: str = "p1", conversation_id: str = "c1",
-    outcome: HandoffOutcome = HandoffOutcome.ENQUEUED, age_seconds: int = 60,
+    *,
+    ticket_id: str = "hh-1",
+    persona_id: str = "p1",
+    conversation_id: str = "c1",
+    outcome: HandoffOutcome = HandoffOutcome.ENQUEUED,
+    age_seconds: int = 60,
 ) -> HandoffTicket:
     t = HandoffTicket(
         id=ticket_id,
@@ -235,7 +239,8 @@ class TestConsentGateDurability:
         log = g2.audit_log()
         assert len(log) == 2
         assert {r.acknowledgment_id for r in log} == {
-            first.acknowledgment_id, second.acknowledgment_id,
+            first.acknowledgment_id,
+            second.acknowledgment_id,
         }
         # Latest-of-record is the most recent acknowledgment.
         latest = g2.get_record("sess-2", pid)
@@ -274,7 +279,9 @@ class TestConversationStoreDurability:
         s2 = _conversation_store(safety_engine)
         history = s2.get_history("c1")
         assert [(t.speaker, t.content) for t in history] == [
-            ("user", "hi"), ("persona", "hello"), ("user", "tell me more"),
+            ("user", "hi"),
+            ("persona", "hello"),
+            ("user", "tell me more"),
         ]
 
     def test_dosage_turn_count_survives_restart(self, safety_engine):
@@ -422,6 +429,46 @@ class TestRiskProfileDurability:
         assert p2.get_flags("sess-1", pid_b) == []
 
 
+# --- ORM ↔ production DDL type alignment (HU-1459 regression guard) ---------
+
+
+class TestOrmTimestampTypesMatchProdDdl:
+    """The durable timestamp columns must be ``TIMESTAMPTZ`` on Postgres.
+
+    Regression guard for the HU-1459 deployment gap: the sqlite test path
+    stores everything as text, so an ORM column declared ``Text`` round-trips
+    cleanly in the key-free suite even when the production schema (init-db +
+    Alembic 002) declares the column ``TIMESTAMPTZ``. On real Postgres that
+    mismatch raises ``DatatypeMismatch`` on the first insert, silently
+    breaking the "conversation history persists across restart" acceptance.
+    These assertions pin the ORM timestamp columns to ``DateTime`` so the
+    type-alignment with the production DDL cannot regress.
+    """
+
+    def _col(self, model, name):
+        from sqlalchemy import DateTime
+
+        col = model.__table__.columns[name]
+        assert isinstance(col.type, DateTime), (
+            f"{model.__name__}.{name} must be DateTime (TIMESTAMPTZ on "
+            f"Postgres), got {type(col.type).__name__}"
+        )
+        assert col.type.timezone is True, (
+            f"{model.__name__}.{name} must be timezone-aware (TIMESTAMPTZ)"
+        )
+
+    def test_handoff_ticket_timestamps_are_timestamptz(self):
+        from huible.safety.store import HandoffTicketRow
+
+        self._col(HandoffTicketRow, "created_at")
+        self._col(HandoffTicketRow, "resolved_at")
+
+    def test_consent_record_timestamp_is_timestamptz(self):
+        from huible.safety.store import ConsentRecordRow
+
+        self._col(ConsentRecordRow, "acknowledged_at")
+
+
 # --- Settings: sync URL derivation -----------------------------------------
 
 
@@ -450,8 +497,11 @@ class TestSafetyDatabaseUrlDerivation:
     def test_postgres_fields_assembled_into_sync_url(self):
         s = Settings(
             database_url="",
-            postgres_user="u", postgres_password="p",
-            postgres_host="h", postgres_port=5432, postgres_db="d",
+            postgres_user="u",
+            postgres_password="p",
+            postgres_host="h",
+            postgres_port=5432,
+            postgres_db="d",
         )
         sync = s.effective_safety_database_url
         assert sync == "postgresql+psycopg://u:p@h:5432/d"
