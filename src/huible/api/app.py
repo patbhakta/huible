@@ -56,7 +56,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from huible.api.auth import (
@@ -69,6 +69,14 @@ from huible.api.auth import (
     authenticate,
     get_persona_registry,
     raise_forbidden,
+)
+from huible.api.real_user_gate import (
+    REAL_USER_MODE_OFF_RESPONSE,
+    REAL_USER_TRAFFIC_CLASS_HEADER,
+    RealUserMode,
+    is_real_user_turn_refused,
+    parse_real_user_mode,
+    traffic_class_from_header,
 )
 from huible.api.schemas import (
     ActivatedMemoryView,
@@ -550,6 +558,9 @@ def _register_routes(application: FastAPI) -> None:
         body: PersonaChatRequest,
         principal: ApiKeyPrincipal = Depends(authenticate),
         registry: PersonaRegistry = Depends(get_persona_registry),
+        real_user_traffic_class: str | None = Header(
+            default=None, alias=REAL_USER_TRAFFIC_CLASS_HEADER
+        ),
     ) -> PersonaChatResponse:
         """Persona-scoped chat endpoint — the Phase-1 integration milestone (HU-1406).
 
@@ -572,6 +583,46 @@ def _register_routes(application: FastAPI) -> None:
         """
         if persona_id != principal.persona_id:
             raise_forbidden()
+
+        # --- Stage 0.1: real-user ramp gate / kill switch (HU-1444) -----------
+        # Real grieving-user traffic is refused unless the runtime mode is
+        # canary/open AND (for canary) the persona is on the allowlist. This is
+        # the rollback spine for the HU-1436 rollout: one env flip
+        # (PERSONA_CHAT_REAL_USER_MODE=off) refuses grieving-user turns with a
+        # warm, non-persona response — never the deceased-persona voice.
+        # Internal/synthetic traffic (``X-Huible-Traffic-Class: internal``) is
+        # unaffected in every mode so the test suite and probes keep running
+        # when the switch is off. Absent/unknown header → ``real`` (the safe
+        # direction: an unmarked client is treated as a grieving user). Default
+        # to OFF on ambiguous signal (Clinical Advisor + PM ratified, plan §3).
+        chat_settings: Settings = application.state.settings
+        real_user_mode = parse_real_user_mode(chat_settings.persona_chat_real_user_mode)
+        traffic_class = traffic_class_from_header(real_user_traffic_class)
+        if is_real_user_turn_refused(
+            real_user_mode,
+            traffic_class,
+            persona_id,
+            chat_settings.persona_chat_canary_personas_set,
+        ):
+            refusal_provider = str(
+                getattr(application.state.llm_client, "provider", "unknown")
+            )
+            _record_turn(
+                application, body.conversation_id, body.message, REAL_USER_MODE_OFF_RESPONSE
+            )
+            return PersonaChatResponse(
+                response=REAL_USER_MODE_OFF_RESPONSE,
+                trace=ChatTrace(
+                    provider=refusal_provider,
+                    safety_event=SafetyEventView(
+                        kind="real_user_mode_off",
+                        signal="n/a",
+                        affect="n/a",
+                        matched=[],
+                        resources_shown=True,
+                    ),
+                ),
+            )
 
         try:
             relationship = body.requester_relationship()
@@ -1031,6 +1082,33 @@ def _register_routes(application: FastAPI) -> None:
             data={
                 "tickets": [_queue_item_view(t, with_sla=False) for t in log],
                 "telemetry": _telemetry_view(telemetry),
+            }
+        )
+
+    @application.get(
+        "/api/v1/admin/real-user-mode",
+        tags=["admin"],
+        summary="Real-user ramp-gate / kill-switch state (Stage 0.1, HU-1444).",
+    )
+    async def real_user_mode_status(
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        """Current ``PERSONA_CHAT_REAL_USER_MODE`` + canary allowlist size.
+
+        Read-only surface for the kill-switch drill and for monitoring to
+        confirm the switch is armed at the expected stage (plan §4/§5). The
+        switch is env-only at Stage 0 — flipping it requires a container
+        restart (settings are process-cached); live re-read is a follow-on.
+        """
+        admin_settings: Settings = application.state.settings
+        mode = parse_real_user_mode(admin_settings.persona_chat_real_user_mode)
+        return DataEnvelope(
+            data={
+                "mode": str(mode),
+                "is_off": mode == RealUserMode.OFF,
+                "canary_persona_count": len(
+                    admin_settings.persona_chat_canary_personas_set
+                ),
             }
         )
 

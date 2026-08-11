@@ -17,6 +17,7 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -145,6 +146,24 @@ class Settings(BaseSettings):
     # §3 signals: distress trend + crisis history).
     risk_dosage_cap_turns: int = 20
 
+    # ── Real-user persona-chat ramp gate / kill switch (Stage 0.1, HU-1444) ──
+    # Operational kill switch for grieving-user traffic on
+    # ``POST /api/v1/chat/{persona_id}``. The §7.4 *clinical* gate being closed
+    # does not by itself make a real-user flip safe (HU-1436 rollout plan §0):
+    # there must also be an in-band, fast, unilateral OFF that refuses grieving-
+    # user turns without a deploy. ``off`` (the default) refuses real-user turns
+    # with a warm non-persona response — never the deceased-persona voice;
+    # ``canary`` allows only the personas in ``persona_chat_canary_personas``;
+    # ``open`` allows all. Internal/synthetic traffic
+    # (``X-Huible-Traffic-Class: internal``) is unaffected in every mode so the
+    # test suite and synthetic probes keep running when the switch is off. One
+    # env flip to ``off`` is the documented rollback action (plan §4); settings
+    # are process-cached so a flip requires a container restart — documented in
+    # the runbook. Unknown/blank values default to ``off`` (safe direction).
+    persona_chat_real_user_mode: str = "off"
+    # Comma-separated persona UUIDs permitted when mode = ``canary``.
+    persona_chat_canary_personas: str = ""
+
     @field_validator("huible_log_level", mode="before")
     @classmethod
     def _normalize_log_level(cls, v: Any) -> Any:
@@ -209,6 +228,25 @@ class Settings(BaseSettings):
         if not raw:
             return []
         return [r.strip() for r in raw.split(",") if r.strip()]
+
+    @property
+    def persona_chat_canary_personas_set(self) -> frozenset[UUID]:
+        """Persona UUIDs permitted under ``persona_chat_real_user_mode = canary``."""
+        raw = (self.persona_chat_canary_personas or "").strip()
+        if not raw:
+            return frozenset()
+        allowed: set[UUID] = set()
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                allowed.add(UUID(part))
+            except ValueError:
+                logger.warning(
+                    "Ignoring non-UUID PERSONA_CHAT_CANARY_PERSONAS entry: %r", part
+                )
+        return frozenset(allowed)
 
     def to_generator_config(self) -> GeneratorConfig:
         """Build a :class:`GeneratorConfig` from these settings.
