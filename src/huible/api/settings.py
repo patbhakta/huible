@@ -142,6 +142,17 @@ class Settings(BaseSettings):
     handoff_coverage_tz: str = "UTC"
     handoff_coverage_open_hour: int = 0
     handoff_coverage_close_hour: int = 24
+    # On-call paging transport — Stage 0.4 wire (HU-1450). The alert→on-call
+    # paging link deferred from HU-1446 lands here: once the roster is named
+    # (HU-1447), an enqueued crisis ticket pages a real person. Key-free
+    # default (``log``) emits a structured ``handoff.page`` CRITICAL log line
+    # the operator scrapes/alerts on without external credentials — mirrors the
+    # ``llm_provider`` / ``generator_provider`` key-free-default convention.
+    # ``webhook`` POSTs to ``HANDOFF_PAGER_WEBHOOK_URL`` (Slack incoming
+    # webhook / PagerDuty Events API v2 style), falling back to the log line
+    # when the URL is empty so credentials land at deploy time.
+    handoff_pager_provider: str = "log"
+    handoff_pager_webhook_url: str = ""
 
     # ── G8 risk-flag enforcement — §7.4.4 dosage cap ──────────────────────
     # Pre-real-user clinical gate (HU-1424 / HU-1407 §7.4 #4). The reserved

@@ -112,6 +112,42 @@ All configuration is via environment variables (see `.env.example`).
 | `TAILSCALE_ENABLED` | `false` | Enable Tailscale funnel for private deployment |
 | `TAILSCALE_FUNNEL_DOMAIN` | — | Tailscale funnel domain name |
 
+### 3.7 Human-Handoff & On-Call Paging (§7.4.1, Stage 0.4)
+
+The crisis-escalation queue routes every G1-flagged turn into a staffed-responder
+queue with a monitored SLA and a fail-safe that degrades to the non-persona safe
+response when no human is available (never drops, never the persona voice). The
+responder count is the operational lever; paging is additive on top of an
+`ENQUEUED` ticket — it never bypasses the degrade gate.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HANDOFF_SLA_TARGET_SECONDS` | `300` | Target for a responder to acknowledge (canary: `900` = 15 min) |
+| `HANDOFF_AVAILABLE_RESPONDERS` | `0` | Simultaneous on-call responders. `0` = fail-safe degrade (pre-roster) |
+| `HANDOFF_RESPONDER_POOL` | — | Comma-separated staffed responder ids (the on-call roster) |
+| `HANDOFF_COVERAGE_MODE` | `always` | `always` (24/7) or `hours` (bounded window) |
+| `HANDOFF_COVERAGE_TZ` | `UTC` | IANA timezone for the coverage window |
+| `HANDOFF_COVERAGE_OPEN_HOUR` | `0` | Hour-of-day coverage opens, inclusive (`0`-`23`) |
+| `HANDOFF_COVERAGE_CLOSE_HOUR` | `24` | Hour-of-day coverage ends, exclusive (`1`-`24`) |
+| `HANDOFF_PAGER_PROVIDER` | `log` | `log` (key-free CRITICAL log line) or `webhook` |
+| `HANDOFF_PAGER_WEBHOOK_URL` | — | Slack incoming webhook / PagerDuty Events API v2 URL (empty → log fallback) |
+
+**Stage 1 canary on-call config** (founder-staffed 4×12h roster — PM / Tech Lead /
+Clinical Advisor / CEO, named in the HU-1447 on-call-roster doc):
+
+```ini
+HANDOFF_AVAILABLE_RESPONDERS=4
+HANDOFF_RESPONDER_POOL=huible-pm,huible-tech-lead,clinical-advisor,ceo
+HANDOFF_SLA_TARGET_SECONDS=900
+HANDOFF_COVERAGE_MODE=always
+HANDOFF_PAGER_PROVIDER=log   # flip to webhook once the pager URL is provisioned
+```
+
+Setting `HANDOFF_AVAILABLE_RESPONDERS>0` flips the `huible_alert_oncall_configured`
+gauge to `1` (the §3 Sev-1 alerts are now wired to a real on-call). Defaults stay
+at the fail-safe (`0` responders) so an unconfigured deploy never falsely pages or
+promises a responder.
+
 ---
 
 ## 4. Containerization
@@ -368,6 +404,48 @@ docker compose logs -f app | fluent-bit
 ```
 
 **Recommended stack:** Grafana Loki + Promtail (lightweight, pairs well with Prometheus).
+
+### 7.5 On-Call Paging & Sev-1 Alerts (§7.4.1, Stage 0.4)
+
+The `GET /metrics` endpoint exposes the guardrail counters shipped in Stage 0.3
+(chat turns, G1 crisis fires, handoff outcomes, risk enforcement, kill-switch
+refusals). Stage 0.4 wires the **alert→on-call paging link** on top of that
+substrate.
+
+**Gauge — alert wiring target:**
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `huible_alert_oncall_configured` | gauge | `1` once the §3 Sev-1 alerts page the 0.4 on-call roster; `0` until `HANDOFF_AVAILABLE_RESPONDERS>0` |
+
+**Two Sev-1 page triggers (both page the 0.4 on-call):**
+
+1. **Crisis enqueue (primary).** Every `ENQUEUED` crisis ticket (G1
+   `escalate_to_human` and risk-driven `escalate_risk_to_human`) pages
+   immediately at `severity=crisis` — never throttled behind the >10%/1h
+   aggregate backstop. A grieving user waiting on a crisis turn cannot be
+   rate-limited.
+2. **Ack-SLA breach (Sev-1 escalation).** An `ENQUEUED` ticket past its
+   `HANDOFF_SLA_TARGET_SECONDS` without an acknowledgement is re-paged at
+   `severity=sev-1` on every staffed-responder queue read (`GET
+   /api/v1/handoff/tickets`). The canary ack SLA is **900s (15 min)**.
+
+**Paging transports** (`HANDOFF_PAGER_PROVIDER`):
+
+- `log` (key-free default) — emits a structured `handoff.page` **CRITICAL** log
+  line. An operator wires a log scrape rule (match `level=CRITICAL` on the
+  `handoff.page` message prefix) to turn this into a real alert. Distinct from
+  the `handoff.enqueue` INFO audit line.
+- `webhook` — POSTs a JSON payload to `HANDOFF_PAGER_WEBHOOK_URL` (Slack
+  incoming webhook / PagerDuty Events API v2 style). Falls back to the log line
+  when the URL is empty or the POST fails, so a misconfigured pager degrades to
+  the honest log line rather than dropping the page silently.
+
+**Paging drill (pre-real-user gate).** Before real grieving-user traffic flows,
+record a successful end-to-end drill: a `handoff.page` CRITICAL line captured on
+a crisis turn *and* a roster responder `POST …/handoff/tickets/{id}/resolve` on
+the ticket. A `DEGRADED` ticket is never paged (no responder was paged by the
+queue, so the on-call must not be told one was).
 
 ---
 

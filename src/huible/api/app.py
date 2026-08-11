@@ -71,9 +71,16 @@ from huible.api.auth import (
     raise_forbidden,
 )
 from huible.api.metrics import (
+    ALERT_ONCALL_CONFIGURED,
     ChatTurnOutcome,
     metrics_response,
     record_chat_turn,
+)
+from huible.api.paging import (
+    PAGE_SEVERITY_CRISIS,
+    Pager,
+    build_pager,
+    escalate_sla_breaches,
 )
 from huible.api.real_user_gate import (
     REAL_USER_MODE_OFF_RESPONSE,
@@ -422,6 +429,7 @@ def create_app(
     consent_card_provider: ConsentCardProvider | None = None,
     risk_profile: RiskProfileProvider | None = None,
     conversation_store: ConversationStore | None = None,
+    pager: Pager | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
 ) -> FastAPI:
@@ -520,9 +528,48 @@ def create_app(
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
     application.state.memory_backend: MemoryBackend | None = None
+    # Stage 0.4 wire (HU-1450): on-call paging transport + the gauge flip that
+    # marks the §3 Sev-1 alerts as wired to the 0.4 on-call roster. The pager
+    # is the missing link deferred from HU-1446: an enqueued crisis ticket now
+    # pages a real person. The key-free default (LoggingPager) emits a
+    # structured ``handoff.page`` CRITICAL log line; a WebhookPager lands at
+    # deploy time via HANDOFF_PAGER_WEBHOOK_URL. Paging is additive on top of
+    # ENQUEUED — it never bypasses the §10.1 #2 degrade gate (a degraded
+    # ticket has no responder paged, so it is never paged here).
+    application.state.pager = pager or build_pager(
+        provider=resolved_settings.handoff_pager_provider,
+        webhook_url=resolved_settings.handoff_pager_webhook_url,
+    )
+    application.state.coverage_window_label = _coverage_window_label(resolved_settings)
+    # The gauge wiring target (HU-1446) flips to 1 once the roster is staffed
+    # (HANDOFF_AVAILABLE_RESPONDERS>0) — i.e. the §3 Sev-1 alerts are now
+    # wired to a real on-call rather than the pre-roster fail-safe. Stays 0
+    # in the key-free / pre-roster default so the dashboard honestly reports
+    # "alerts will not page anyone" until ops configures the roster.
+    if resolved_settings.handoff_available_responders > 0:
+        ALERT_ONCALL_CONFIGURED.set(1)
+    else:
+        ALERT_ONCALL_CONFIGURED.set(0)
 
     _register_routes(application)
     return application
+
+
+def _coverage_window_label(settings: Settings) -> str:
+    """Build a human-readable label for the active coverage window (HU-1450).
+
+    The label rides on every ``handoff.page`` so the paged operator knows which
+    seat / window is active (e.g. ``"always"`` for 24/7 cover, or
+    ``"hours 09:00-17:00 America/New_York"`` for a bounded window). Derived
+    from the same settings that construct the :class:`CoverageWindow` so the
+    page matches the queue's degrade decisions.
+    """
+    if settings.handoff_coverage_mode == "always":
+        return "always"
+    return (
+        f"hours {settings.handoff_coverage_open_hour:02d}:00-"
+        f"{settings.handoff_coverage_close_hour:02d}:00 {settings.handoff_coverage_tz}"
+    )
 
 
 def _register_routes(application: FastAPI) -> None:
@@ -1180,6 +1227,21 @@ def _register_routes(application: FastAPI) -> None:
     ) -> DataEnvelope:
         queue: HandoffQueue = application.state.handoff_queue
         now = datetime.now(UTC)
+        # Ack-SLA Sev-1 escalation (HU-1450 item 5): every queue read re-pages
+        # any ENQUEUED ticket past its per-ticket HANDOFF_SLA_TARGET_SECONDS
+        # without an acknowledgement. This is the monitoring cadence that turns
+        # the live breach signal into a re-page — the canary 900s (15-min) ack
+        # SLA is the threshold. The >10%/1h aggregate stays the rate backstop.
+        # Best-effort: a paging failure must never break the queue read.
+        try:
+            escalate_sla_breaches(
+                queue,
+                application.state.pager,
+                window=application.state.coverage_window_label,
+                now=now,
+            )
+        except Exception:  # pragma: no cover - defensive
+            logger.exception("SLA-breach re-page failed; queue read continues")
         items = [
             _queue_item_view(t, with_sla=True, now=now)
             for t in queue.list_pending()
@@ -1494,6 +1556,7 @@ def _escalate_risk_and_build_trace(
         risk_flags=risk_flags,
         resources=application.state.crisis_resources or None,
     )
+    _page_on_enqueue(application, result.ticket)
     return _ticket_view(result.ticket, response_text=result.response_text)
 
 
@@ -1528,7 +1591,38 @@ def _escalate_and_build_trace(
         risk_flags=risk_flags,
         resources=application.state.crisis_resources or None,
     )
+    _page_on_enqueue(application, result.ticket)
     return _ticket_view(result.ticket, response_text=result.response_text)
+
+
+def _page_on_enqueue(application: FastAPI, ticket) -> None:
+    """Page the on-call immediately when a crisis ticket was enqueued (HU-1450).
+
+    The primary Sev-1 trigger: every ``ENQUEUED`` escalation (G1
+    ``escalate_to_human`` and risk-driven ``escalate_risk_to_human``) pages the
+    0.4 on-call at :data:`~huible.api.paging.PAGE_SEVERITY_CRISIS`, immediately
+    and **never** throttled behind the >10%/1h aggregate backstop — a grieving
+    user waiting on a crisis turn cannot be rate-limited. A ``DEGRADED``
+    ticket is **not** paged: no responder was paged by the queue, so the
+    on-call must not be told one was (§10.1 #2 fail-safe stays authoritative;
+    paging is additive on top of ``ENQUEUED``).
+
+    Paging is best-effort: a transport failure must never break a clinical
+    turn. :class:`~huible.api.paging.LoggingPager` cannot raise; the
+    :class:`~huible.api.paging.WebhookPager` swallows transport errors and
+    falls back to the log line. The catch here is defense-in-depth so an
+    unexpected pager implementation also degrades silently.
+    """
+    if ticket.outcome is not HandoffOutcome.ENQUEUED:
+        return
+    try:
+        application.state.pager.page(
+            ticket,
+            severity=PAGE_SEVERITY_CRISIS,
+            window=application.state.coverage_window_label,
+        )
+    except Exception:  # pragma: no cover - defensive; paging must never break a turn
+        logger.exception("handoff.page failed; clinical turn continues unaffected")
 
 
 def _ticket_view(ticket, *, response_text: str) -> HandoffTicketView:
