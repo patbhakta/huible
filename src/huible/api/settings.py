@@ -120,6 +120,17 @@ class Settings(BaseSettings):
     handoff_sla_target_seconds: int = 300
     handoff_available_responders: int = 0
     handoff_responder_pool: str = ""
+    # Coverage-hours gate for the §7.4.1 queue — funding-independent plumbing
+    # (HU-1428 AC #2). Even when responders are staffed, escalations outside
+    # the configured coverage window degrade to the G1 safe response rather
+    # than promising a person who is off-shift (§10.1 #2/#4). Default ``always``
+    # (24/7) preserves today's single-lever behaviour; switching to ``hours``
+    # with open/close + tz enables the bounded window recorded in the §7.4.1
+    # coverage-hours decision (AC #1).
+    handoff_coverage_mode: str = "always"
+    handoff_coverage_tz: str = "UTC"
+    handoff_coverage_open_hour: int = 0
+    handoff_coverage_close_hour: int = 24
 
     # ── G8 risk-flag enforcement — §7.4.4 dosage cap ──────────────────────
     # Pre-real-user clinical gate (HU-1424 / HU-1407 §7.4 #4). The reserved

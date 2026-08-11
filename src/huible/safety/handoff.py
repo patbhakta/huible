@@ -51,6 +51,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
+from zoneinfo import ZoneInfo
 
 from huible.safety.crisis import (
     CrisisResult,
@@ -60,7 +61,10 @@ from huible.safety.crisis import (
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "COVERAGE_ALWAYS",
+    "COVERAGE_HOURS",
     "DEFAULT_HANDOFF_SLA_SECONDS",
+    "CoverageWindow",
     "HandoffOutcome",
     "HandoffQueue",
     "HandoffResult",
@@ -76,6 +80,80 @@ __all__ = [
 #: operational reality (who staffs it, hours). Pre-real-users this is a target,
 #: not a guarantee — and the fail-safe degrades when it cannot be met.
 DEFAULT_HANDOFF_SLA_SECONDS: int = 300
+
+#: Coverage mode constant: responders are on-call 24/7 (no time-of-day gate).
+#: The default — preserves the single-lever behaviour where ``available_responders``
+#: is the only operational knob.
+COVERAGE_ALWAYS: str = "always"
+
+#: Coverage mode constant: responders are on-call only during bounded hours
+#: (``open_hour``..``close_hour`` in ``tz_name``). Escalations outside that
+#: window degrade to the G1 safe response rather than promising an off-shift
+#: person (§10.1 #2/#4). Recorded in the §7.4.1 coverage-hours decision (AC #1).
+COVERAGE_HOURS: str = "hours"
+
+
+@dataclass(slots=True, frozen=True)
+class CoverageWindow:
+    """When staffed responders are on-call (the §7.4.1 coverage-hours gate).
+
+    A funding-independent plumbing layer over the :class:`HandoffQueue`: even
+    when ``available_responders > 0``, an escalation arriving outside the
+    configured coverage window degrades to the G1 non-persona safe response —
+    it never claims a person is joining when nobody is on-shift (§10.1 #2/#4).
+    The default :attr:`COVERAGE_ALWAYS` mode is 24/7 and never degrades on
+    time-of-day, so today's single-lever behaviour is unchanged until ops
+    configures a bounded window. This is generic coverage-window awareness, so
+    it is low-regret regardless of which responder option the board funds.
+
+    Hours are whole-hour boundaries expressed in :attr:`tz_name`. ``open_hour``
+    is inclusive (``0``-``23``) and ``close_hour`` is exclusive (``1``-``24``,
+    where ``24`` means midnight at the end of the day). A window that wraps
+    past midnight (``open_hour > close_hour``, e.g. ``22``->``6`` night cover)
+    is supported. ``open_hour == close_hour`` is rejected as a zero-width
+    misconfiguration; the full-day case is ``open_hour=0, close_hour=24``.
+    """
+
+    mode: str = COVERAGE_ALWAYS
+    tz_name: str = "UTC"
+    open_hour: int = 0
+    close_hour: int = 24
+
+    def __post_init__(self) -> None:
+        if self.mode not in (COVERAGE_ALWAYS, COVERAGE_HOURS):
+            raise ValueError(
+                f"coverage mode must be {COVERAGE_ALWAYS!r} or {COVERAGE_HOURS!r}, "
+                f"got {self.mode!r}"
+            )
+        if self.mode == COVERAGE_HOURS:
+            if not 0 <= self.open_hour <= 23:
+                raise ValueError(f"open_hour must be in [0, 23], got {self.open_hour}")
+            if not 1 <= self.close_hour <= 24:
+                raise ValueError(f"close_hour must be in [1, 24], got {self.close_hour}")
+            if self.open_hour == self.close_hour:
+                raise ValueError(
+                    "open_hour equals close_hour (zero-width window); "
+                    "use mode 'always' for 24/7 cover or widen the range"
+                )
+
+    def is_open(self, now: datetime | None = None) -> bool:
+        """Whether ``now`` falls inside the coverage window.
+
+        ``now`` is an aware datetime (UTC by convention) and defaults to the
+        current UTC time. It is converted to the window's timezone before the
+        hour comparison, so a single ops config (e.g.
+        ``America/New_York`` 09:00-17:00) is evaluated correctly regardless of
+        where the server runs. In :attr:`COVERAGE_ALWAYS` mode this is always
+        ``True`` without inspecting the time.
+        """
+        if self.mode == COVERAGE_ALWAYS:
+            return True
+        moment = (now or datetime.now(UTC)).astimezone(ZoneInfo(self.tz_name))
+        hour = moment.hour
+        if self.open_hour < self.close_hour:
+            return self.open_hour <= hour < self.close_hour
+        # Wraps past midnight (e.g. 22→6): open at/after open OR before close.
+        return hour >= self.open_hour or hour < self.close_hour
 
 
 class HandoffOutcome(StrEnum):
@@ -101,6 +179,19 @@ class HandoffOutcome(StrEnum):
 def _now_iso() -> str:
     """Return the current UTC timestamp as an ISO-8601 string."""
     return datetime.now(UTC).isoformat()
+
+
+def _parse_ticket_time(ts: str) -> datetime:
+    """Parse a ticket's ISO-8601 timestamp into an aware UTC datetime.
+
+    ``HandoffTicket.created_at`` is stamped via :func:`_now_iso`, so it is
+    always offset-aware; this makes the coverage-hours evaluation deterministic
+    against the escalation's own timestamp rather than wall-clock ``now``.
+    """
+    dt = datetime.fromisoformat(ts)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt
 
 
 @dataclass(slots=True)
@@ -201,6 +292,12 @@ class InMemoryHandoffQueue:
     count; the named surface / hours / SLA monitoring is recorded in the
     scoping note (AC #1) and lands as a pre-real-launch ops dependency.
 
+    The optional :class:`CoverageWindow` adds a second, time-of-day gate: even
+    when responders are staffed, an escalation outside the coverage window
+    degrades to the G1 safe response (``degrade_reason="outside_coverage_hours"``)
+    rather than promising an off-shift person. The default ``always`` window
+    never degrades on time-of-day, preserving the single-lever behaviour.
+
     Responder ids are pulled round-robin from ``responder_id_pool``. When the
     pool is empty but ``available_responders > 0``, a synthetic responder id is
     minted so the "a person will join" acknowledgement is still truthful.
@@ -215,12 +312,14 @@ class InMemoryHandoffQueue:
         available_responders: int = 0,
         responder_id_pool: tuple[str, ...] = (),
         sla_target_seconds: int = DEFAULT_HANDOFF_SLA_SECONDS,
+        coverage: CoverageWindow | None = None,
     ) -> None:
         if available_responders < 0:
             raise ValueError("available_responders must be >= 0")
         self._available_responders = available_responders
         self._responder_id_pool = tuple(responder_id_pool)
         self._sla_target_seconds = sla_target_seconds
+        self._coverage = coverage or CoverageWindow()
         self._tickets: dict[str, HandoffTicket] = {}
         self._order: list[str] = []
         self._robin = 0
@@ -236,17 +335,27 @@ class InMemoryHandoffQueue:
     def enqueue(self, ticket: HandoffTicket) -> HandoffTicket:
         # Always stamp the configured SLA on the audit row (monitored target).
         ticket.sla_target_seconds = self._sla_target_seconds
-        if self._available_responders > 0:
-            ticket.outcome = HandoffOutcome.ENQUEUED
-            ticket.responder_id = self._next_responder_id()
-            ticket.degrade_reason = None
-        else:
-            # Fail-safe: no responder available within SLA → degrade. The chat
-            # endpoint will return the G1 non-persona safe response; the persona
-            # path is never taken. The ticket is still recorded for audit.
+        if self._available_responders <= 0:
+            # Fail-safe: no responder on the roster → degrade (§10.1 #2). The
+            # chat endpoint returns the G1 non-persona safe response; the persona
+            # path is never taken. The ticket is still recorded for audit. This
+            # is checked first so the fail-safe reason stays authoritative even
+            # if the escalation is also outside coverage hours.
             ticket.outcome = HandoffOutcome.DEGRADED
             ticket.responder_id = None
             ticket.degrade_reason = "no_responder_available"
+        elif not self._coverage.is_open(_parse_ticket_time(ticket.created_at)):
+            # Coverage-hours gate: responders exist but are off-shift right now.
+            # Degrade the same way — never claim a person is joining when nobody
+            # is on-call (§10.1 #2/#4). Recorded distinctly so ops can tell
+            # "no roster" from "after hours" on the audit/dashboard surface.
+            ticket.outcome = HandoffOutcome.DEGRADED
+            ticket.responder_id = None
+            ticket.degrade_reason = "outside_coverage_hours"
+        else:
+            ticket.outcome = HandoffOutcome.ENQUEUED
+            ticket.responder_id = self._next_responder_id()
+            ticket.degrade_reason = None
         self._tickets[ticket.id] = ticket
         self._order.append(ticket.id)
         logger.info(

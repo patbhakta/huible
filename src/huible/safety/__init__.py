@@ -99,7 +99,10 @@ from huible.safety.framing import (
     get_framing,
 )
 from huible.safety.handoff import (
+    COVERAGE_ALWAYS,
+    COVERAGE_HOURS,
     DEFAULT_HANDOFF_SLA_SECONDS,
+    CoverageWindow,
     HandoffOutcome,
     HandoffQueue,
     HandoffResult,
@@ -140,6 +143,8 @@ __all__ = [
     "AGE_INAPPROPRIATE_TOPIC_PATTERNS",
     "ALIGNMENT_FALLBACK_RESPONSE",
     "CONSENT_CARD_VERSION",
+    "COVERAGE_ALWAYS",
+    "COVERAGE_HOURS",
     "DEFAULT_CONSENT_ACKNOWLEDGE_INSTRUCTIONS",
     "DEFAULT_CONSENT_CARD_BODY",
     "DEFAULT_CONSENT_CARD_TITLE",
@@ -165,6 +170,7 @@ __all__ = [
     "ConsentCardProvider",
     "ConsentGate",
     "ConsentRecord",
+    "CoverageWindow",
     "CrisisClassifier",
     "CrisisResult",
     "CrisisSignal",

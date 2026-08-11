@@ -113,6 +113,7 @@ from huible.safety import (
     REFUSE_TOPIC_FALLBACK_RESPONSE,
     ConsentCardProvider,
     ConsentGate,
+    CoverageWindow,
     CrisisClassifier,
     DefaultConsentCard,
     DeterministicCrisisClassifier,
@@ -394,6 +395,12 @@ def create_app(
         available_responders=resolved_settings.handoff_available_responders,
         responder_id_pool=tuple(resolved_settings.handoff_responder_pool_list),
         sla_target_seconds=resolved_settings.handoff_sla_target_seconds,
+        coverage=CoverageWindow(
+            mode=resolved_settings.handoff_coverage_mode,
+            tz_name=resolved_settings.handoff_coverage_tz,
+            open_hour=resolved_settings.handoff_coverage_open_hour,
+            close_hour=resolved_settings.handoff_coverage_close_hour,
+        ),
     )
     # §7.4.3 G6 first-use reality-framing / consent gate. The gate enforces that
     # no persona-voiced reply leaves the chat path before the session has

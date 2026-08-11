@@ -18,10 +18,15 @@ end-to-end wiring is exercised in ``tests/api/test_chat_guardrails.py``:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from huible.safety import (
+    COVERAGE_ALWAYS,
+    COVERAGE_HOURS,
     DEFAULT_HANDOFF_SLA_SECONDS,
+    CoverageWindow,
     HandoffOutcome,
     HandoffTicket,
     InMemoryHandoffQueue,
@@ -33,6 +38,11 @@ from huible.safety.crisis import CrisisResult, CrisisSignal, UserAffect, classif
 
 def _crisis() -> CrisisResult:
     return classify_user_message("I want to die")
+
+
+def _dt(*, hour: int, minute: int = 0) -> datetime:
+    """A pinned UTC datetime on a fixed summer date for coverage-window tests."""
+    return datetime(2026, 7, 1, hour, minute, tzinfo=UTC)
 
 
 # --- #1: SLA defined + monitored, staffing model explicit -------------------
@@ -335,3 +345,182 @@ class TestProtocolConformance:
         from huible.safety import HandoffQueue
 
         assert isinstance(InMemoryHandoffQueue(), HandoffQueue)
+
+
+# --- coverage-hours gate (§7.4.1 coverage window) --------------------------
+
+
+class TestCoverageWindow:
+    def test_default_is_always_mode(self):
+        w = CoverageWindow()
+        assert w.mode == COVERAGE_ALWAYS
+        assert w.mode == "always"
+
+    def test_always_mode_is_open_at_any_hour(self):
+        w = CoverageWindow()  # default always
+        for h in range(24):
+            assert w.is_open(_dt(hour=h)) is True
+
+    def test_hours_mode_open_within_window(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17)
+        assert w.is_open(_dt(hour=9)) is True  # open boundary inclusive
+        assert w.is_open(_dt(hour=12)) is True
+        assert w.is_open(_dt(hour=16, minute=59)) is True
+
+    def test_hours_mode_closed_outside_window(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17)
+        assert w.is_open(_dt(hour=8)) is False
+        assert w.is_open(_dt(hour=17)) is False  # close boundary exclusive
+        assert w.is_open(_dt(hour=23)) is False
+
+    def test_wraparound_window_covers_overnight(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=22, close_hour=6)
+        assert w.is_open(_dt(hour=22)) is True
+        assert w.is_open(_dt(hour=3)) is True
+        assert w.is_open(_dt(hour=5, minute=59)) is True
+        assert w.is_open(_dt(hour=6)) is False  # close boundary exclusive
+        assert w.is_open(_dt(hour=12)) is False
+
+    def test_full_day_hours_window_is_always_open(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=0, close_hour=24)
+        for h in range(24):
+            assert w.is_open(_dt(hour=h)) is True
+
+    def test_timezone_is_applied_to_evaluation(self):
+        # 09:00 America/New_York (UTC-4 in summer) == 13:00 UTC.
+        w = CoverageWindow(
+            mode=COVERAGE_HOURS, tz_name="America/New_York", open_hour=9, close_hour=17
+        )
+        assert w.is_open(datetime(2026, 7, 1, 13, 0, tzinfo=UTC)) is True  # 9am EDT
+        assert w.is_open(datetime(2026, 7, 1, 21, 0, tzinfo=UTC)) is False  # 5pm EDT
+
+    def test_zero_width_window_rejected(self):
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=9)
+
+    def test_invalid_mode_rejected(self):
+        with pytest.raises(ValueError):
+            CoverageWindow(mode="sometimes")
+
+    def test_out_of_range_hours_rejected(self):
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=24, close_hour=6)
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=0, close_hour=0)
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=25)
+
+    def test_invalid_hours_not_validated_in_always_mode(self):
+        # always mode ignores the hour fields, so out-of-range values are fine.
+        w = CoverageWindow(mode=COVERAGE_ALWAYS, open_hour=99, close_hour=0)
+        assert w.is_open(_dt(hour=3)) is True
+
+
+class TestCoverageGateInQueue:
+    """The coverage window gates enqueue only when responders are staffed."""
+
+    @staticmethod
+    def _ticket(*, created_at: str) -> HandoffTicket:
+        return HandoffTicket(
+            id="hh-test",
+            persona_id="p1",
+            conversation_id="c1",
+            trigger_signal="crisis",
+            affect="crisis",
+            created_at=created_at,
+        )
+
+    def test_outside_coverage_hours_degrades_even_with_responders(self):
+        q = InMemoryHandoffQueue(
+            available_responders=1,
+            coverage=CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17),
+        )
+        # 03:00 UTC is outside the 09-17 window.
+        t = self._ticket(created_at="2026-07-01T03:00:00+00:00")
+        q.enqueue(t)
+        assert t.outcome is HandoffOutcome.DEGRADED
+        assert t.degrade_reason == "outside_coverage_hours"
+        assert t.responder_id is None
+
+    def test_within_coverage_hours_enqueues(self):
+        q = InMemoryHandoffQueue(
+            available_responders=1,
+            coverage=CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17),
+        )
+        t = self._ticket(created_at="2026-07-01T12:00:00+00:00")
+        q.enqueue(t)
+        assert t.outcome is HandoffOutcome.ENQUEUED
+        assert t.responder_id is not None
+        assert t.degrade_reason is None
+
+    def test_zero_responders_reports_no_responder_not_outside_hours(self):
+        """§10.1 #2: the fail-safe reason stays authoritative.
+
+        When responders=0 the ticket degrades with ``no_responder_available``
+        even if it is also outside coverage hours — ops must be able to tell
+        "no roster" from "after hours" on the audit surface.
+        """
+        q = InMemoryHandoffQueue(
+            available_responders=0,
+            coverage=CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17),
+        )
+        t = self._ticket(created_at="2026-07-01T03:00:00+00:00")
+        q.enqueue(t)
+        assert t.outcome is HandoffOutcome.DEGRADED
+        assert t.degrade_reason == "no_responder_available"
+
+    def test_always_coverage_with_responders_enqueues_at_any_hour(self):
+        q = InMemoryHandoffQueue(
+            available_responders=1,
+            coverage=CoverageWindow(),  # always (default)
+        )
+        t = self._ticket(created_at="2026-07-01T03:00:00+00:00")
+        q.enqueue(t)
+        assert t.outcome is HandoffOutcome.ENQUEUED
+
+    def test_default_queue_has_always_coverage(self):
+        # Constructing without an explicit window defaults to always → today's
+        # single-lever behaviour is unchanged by this feature.
+        q = InMemoryHandoffQueue(available_responders=1)
+        t = self._ticket(created_at="2026-07-01T03:00:00+00:00")
+        q.enqueue(t)
+        assert t.outcome is HandoffOutcome.ENQUEUED
+
+    def test_outside_hours_degraded_ticket_is_audited(self):
+        """§10.1 #5: every escalation is audited, even off-hours degradations."""
+        q = InMemoryHandoffQueue(
+            available_responders=1,
+            coverage=CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17),
+        )
+        t = self._ticket(created_at="2026-07-01T03:00:00+00:00")
+        q.enqueue(t)
+        log = q.audit_log()
+        assert len(log) == 1
+        assert log[0].outcome is HandoffOutcome.DEGRADED
+        assert log[0].degrade_reason == "outside_coverage_hours"
+        # And it is not in the pending (staffed-responder) work queue.
+        assert q.list_pending() == []
+
+    def test_outside_hours_degradation_never_claims_person_joining(self):
+        """§10.1 #2/#4: an off-hours degrade produces no "person will join" text.
+
+        Deterministic via a direct enqueue with a pinned outside-hours
+        timestamp, then routing the finalized ticket through the same
+        acknowledgement builder the chat endpoint uses.
+        """
+        from huible.safety.handoff import build_handoff_acknowledgement
+
+        q = InMemoryHandoffQueue(
+            available_responders=1,
+            coverage=CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17),
+        )
+        t = self._ticket(created_at="2026-07-01T03:00:00+00:00")
+        q.enqueue(t)
+        assert t.outcome is HandoffOutcome.DEGRADED
+        acknowledgement = build_handoff_acknowledgement(
+            outcome=t.outcome,
+            sla_target_seconds=t.sla_target_seconds,
+            responder_id=t.responder_id,
+        )
+        assert acknowledgement == ""
+        assert "person to reach out" not in acknowledgement
