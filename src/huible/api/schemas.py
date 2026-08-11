@@ -28,9 +28,12 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "ChatResponseData",
+    "ChatTrace",
     "DataEnvelope",
     "HealthCheck",
     "HealthResponse",
+    "PersonaChatRequest",
+    "PersonaChatResponse",
     "RelationshipTierLiteral",
 ]
 
@@ -119,3 +122,66 @@ class DataEnvelope(BaseModel):
     """Generic ``{"data": ...}`` envelope for future endpoints."""
 
     data: Any
+
+
+# --- Persona-scoped chat (HU-1406) -----------------------------------------
+
+
+#: Admissible ``relationship`` request values. Maps 1:1 to the context
+#: builder's :class:`~huible.persona.context.RelationshipTier`, which in turn
+#: determines the disclosure scope a requester may see (INV-DS).
+_PERSONA_RELATIONSHIPS: frozenset[str] = frozenset(
+    {"intimate", "family", "close_friend", "acquaintance"}
+)
+
+
+class PersonaChatRequest(BaseModel):
+    """Body of ``POST /api/v1/chat/{persona_id}`` (HU-1406).
+
+    A minimal text-in contract for the Phase-1 integration milestone: the
+    inbound ``message`` plus an optional ``relationship`` that selects the
+    requester's disclosure tier (default ``family``).
+    """
+
+    message: str = Field(..., min_length=1, description="Inbound user message.")
+    relationship: str | None = Field(
+        default=None,
+        description=(
+            "Requester relationship to the persona: intimate | family | "
+            "close_friend | acquaintance. Default: family."
+        ),
+    )
+
+    def requester_relationship(self) -> str:
+        """Return the relationship tier, defaulting to ``family`` (spec)."""
+        tier = (self.relationship or "family").strip().lower()
+        if tier not in _PERSONA_RELATIONSHIPS:
+            raise ValueError(
+                f"relationship must be one of {sorted(_PERSONA_RELATIONSHIPS)}, got {tier!r}"
+            )
+        return tier
+
+
+class ChatTrace(BaseModel):
+    """Structured retrieval/generation trace for audit + future F-tests.
+
+    ``memory_refs`` and ``provenance_tiers`` describe only the memories that
+    passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
+    LOW / QUARANTINE confidence memories are dropped by the context builder
+    before generation and therefore never appear here.
+    """
+
+    memory_refs: list[str] = Field(default_factory=list)
+    provenance_tiers: list[str] = Field(default_factory=list)
+    provider: str
+
+
+class PersonaChatResponse(BaseModel):
+    """Full persona chat response (HU-1406).
+
+    Top-level ``response`` + ``trace`` contract (not enveloped in ``data``) so
+    later fidelity benchmarks can consume the trace payload directly.
+    """
+
+    response: str
+    trace: ChatTrace

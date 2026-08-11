@@ -30,6 +30,81 @@ python -m scripts.seed_data --url postgresql://postgres:postgres@localhost:5432/
 ruff check .
 ```
 
+## Running the API + Chat Endpoint
+
+The FastAPI server (`huible.api.app`) exposes the persona chat path. It boots
+key-free with the fake LLM provider (`LLM_PROVIDER=fake`), so you can run it
+locally with no database and no model key.
+
+```bash
+# Install (Python 3.12+)
+pip install -e ".[dev]"
+
+# Start the dev server (key-free defaults: fake LLM, no DB)
+uvicorn huible.api.app:app --reload --port 8000
+
+# Liveness probe
+curl http://localhost:8000/api/v1/health
+```
+
+### Persona chat — `POST /api/v1/chat/{persona_id}`
+
+The Phase-1 integration milestone (text → retrieval → LLM → text). The inbound
+message flows through the provenance-safe ContextBuilder (HIGH/MEDIUM L1 memory
+only) into the runtime LLM client and back out as text plus a structured trace.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/chat/$PERSONA_ID \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "tell me about fishing on the lake", "relationship": "family"}'
+```
+
+Request body:
+
+| Field         | Type   | Required | Notes                                                                 |
+|---------------|--------|----------|-----------------------------------------------------------------------|
+| `message`     | string | yes      | Inbound user message (non-empty).                                     |
+| `relationship`| string | no       | `intimate` \| `family` \| `close_friend` \| `acquaintance` (default `family`). Selects the disclosure tier the requester may see (INV-DS). |
+
+Response (top-level `response` + `trace`, not enveloped in `data`):
+
+```json
+{
+  "response": "[fake-llm:9f2c1a] Deterministic response.",
+  "trace": {
+    "memory_refs": ["<uuid>", "<uuid>"],
+    "provenance_tiers": ["canonical", "derived"],
+    "provider": "fake"
+  }
+}
+```
+
+The `trace` only ever reports the admissible memories that passed the
+provenance firewall — LOW / QUARANTINE confidence memories are dropped before
+the LLM sees them, so their tiers never surface. The `provider` label reflects
+the configured LLM (`fake` | `openrouter` | `gemini`).
+
+Auth: persona-scoped bearer key (401 when missing/unknown); the path
+`persona_id` must match the key's scope (403 otherwise). Seed keys via the
+`API_KEYS` env var (`"key:persona-uuid,key2:persona-uuid"`).
+
+### Swapping in a real LLM
+
+The fake provider is the default. Once a hosted key is approved, switching is a
+pure env change — no code edits:
+
+```bash
+# OpenRouter
+LLM_PROVIDER=openrouter OPENROUTER_API_KEY=sk-or-... uvicorn huible.api.app:app --port 8000
+
+# Native Gemini
+LLM_PROVIDER=gemini GEMINI_API_KEY=... uvicorn huible.api.app:app --port 8000
+```
+
+Real providers raise at startup when their key is absent, so a hosted endpoint
+is never silently wired.
+
 ## Project Index
 
 ### Source — `src/huible/`

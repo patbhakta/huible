@@ -255,6 +255,8 @@ class FakeLLMClient:
         self._fixed_response = response
         self._persona_name = persona_name
         self.calls: list[tuple[str, str | None]] = []
+        # Self-describing provider label, surfaced in the chat response trace.
+        self.provider: str = LLMProvider.FAKE.value
 
     async def generate(
         self,
@@ -344,6 +346,8 @@ class OpenRouterLLMClient:
             )
         self._config = config
         self._transport = transport
+        # Self-describing provider label, surfaced in the chat response trace.
+        self.provider: str = LLMProvider.OPENROUTER.value
 
     async def generate(
         self,
@@ -444,6 +448,8 @@ class GeminiLLMClient:
             )
         self._config = config
         self._transport = transport
+        # Self-describing provider label, surfaced in the chat response trace.
+        self.provider: str = LLMProvider.GEMINI.value
 
     async def generate(
         self,

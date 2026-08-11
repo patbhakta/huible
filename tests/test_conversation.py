@@ -36,7 +36,7 @@ class TestHuibleConversationLoop:
         vec1 = simple_embedding("Earl Grey tea")
         vec2 = simple_embedding("Earl Grey tea")
         vec3 = simple_embedding("Quantum mechanics")
-        assert len(vec1) == 10
+        assert len(vec1) == 64
         assert vec1 == vec2
         assert vec1 != vec3
 

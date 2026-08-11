@@ -1,11 +1,15 @@
 """FastAPI ASGI app for the Huible memory-driven persona engine.
 
-Server foundation (HU-1403) plus the M2 chat wiring (HU-1401). Exposes:
+Server foundation (HU-1403) plus the M2 chat wiring (HU-1401 / HU-1406). Exposes:
 
 * ``GET /health`` — top-level liveness / readiness probe with service +
   version + DB/pgvector connectivity (HU-1403).
 * ``GET /api/v1/health`` — same probe under the versioned prefix (HU-1401).
-* ``POST /api/v1/chat`` — text-in -> text-out persona chat (HU-1401).
+* ``POST /api/v1/chat`` — text-in -> text-out persona chat via the
+  PersonaGeneratorClient speaking voice (HU-1401).
+* ``POST /api/v1/chat/{persona_id}`` — persona-scoped chat wired to the
+  runtime LLM client (HU-1406 Phase-1 integration milestone:
+  text -> retrieval -> LLM -> text). Returns a structured ``trace``.
 
 The app factory (:func:`create_app`) wires:
 
@@ -22,8 +26,8 @@ Chat wiring (the M2 priority):
     inbound message
       -> bearer auth (persona-scoped API key)
       -> ContextBuilder (provenance-safe memory -> prompt bridge, HU-1399)
-      -> PersonaGeneratorClient (the speaking voice, HU-1400)
-      -> reply
+      -> PersonaGeneratorClient (the speaking voice, HU-1400) / LLMClient (HU-1405)
+      -> reply + retrieval trace
 
 The chat path reads **only** HIGH/MEDIUM L1 memories. The ContextBuilder is the
 only sanctioned bridge and hard-excludes LOW / QUARANTINE / missing-confidence
@@ -35,10 +39,10 @@ The remaining spec endpoints (memories CRUD, retrieve, quarantine adjudication)
 land incrementally; health + chat are the M2 priority per the issue.
 
 Construction is dependency-injected via :func:`create_app` so tests wire a
-seeded key store, persona registry, and (mock) generator without touching
-production code paths. The module-level :data:`app` is a bare default instance
-so ``uvicorn huible.api.app:app`` boots and ``/health`` returns 200; chat will
-401 until keys are seeded (correct behavior).
+seeded key store, persona registry, and (mock) generator / fake LLM client
+without touching production code paths. The module-level :data:`app` is a bare
+default instance so ``uvicorn huible.api.app:app`` boots and ``/health``
+returns 200; chat will 401 until keys are seeded (correct behavior).
 """
 
 from __future__ import annotations
@@ -49,6 +53,7 @@ import time
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
+from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -69,10 +74,14 @@ from huible.api.schemas import (
     ChatRequest,
     ChatResponse,
     ChatResponseData,
+    ChatTrace,
     HealthCheck,
     HealthResponse,
+    PersonaChatRequest,
+    PersonaChatResponse,
 )
 from huible.api.settings import Settings, get_settings
+from huible.llm.client import LLMClient, build_llm_client
 from huible.memory.protocol import MemoryBackend
 from huible.memory.store import PostgresMemoryBackend
 from huible.persona.context import (
@@ -92,6 +101,11 @@ _DISCLOSURE_TO_TIER: dict[str, RelationshipTier] = {
     tier.disclosure_scope.value: tier for tier in RelationshipTier
 }
 
+#: Relationship name (request wire) -> requester RelationshipTier (context layer).
+_RELATIONSHIP_TO_TIER: dict[str, RelationshipTier] = {
+    tier.value: tier for tier in RelationshipTier
+}
+
 
 def _resolve_requester_tier(disclosure_tier: str) -> RelationshipTier:
     """Map a request ``disclosure_tier`` to the requester RelationshipTier."""
@@ -104,6 +118,23 @@ def _resolve_requester_tier(disclosure_tier: str) -> RelationshipTier:
                     "code": "VALIDATION_ERROR",
                     "status": 400,
                     "message": f"Invalid disclosure_tier: {disclosure_tier!r}",
+                }
+            },
+        )
+    return tier
+
+
+def _resolve_relationship(relationship: str) -> RelationshipTier:
+    """Map a request ``relationship`` to the requester RelationshipTier."""
+    tier = _RELATIONSHIP_TO_TIER.get(relationship)
+    if tier is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "status": 400,
+                    "message": f"Invalid relationship: {relationship!r}",
                 }
             },
         )
@@ -241,6 +272,7 @@ def create_app(
     api_key_store: ApiKeyStore | None = None,
     persona_registry: PersonaRegistry | None = None,
     generator: PersonaGeneratorClient | None = None,
+    llm_client: LLMClient | None = None,
     context_builder: ContextBuilder | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
@@ -250,7 +282,7 @@ def create_app(
     All parameters are optional; sensible defaults let ``uvicorn
     huible.api.app:app`` boot (chat will 401 without seeded keys). Tests pass a
     seeded key store + persona registry and usually the deterministic mock
-    generator.
+    generator / fake LLM client.
     """
     resolved_settings = settings or get_settings()
 
@@ -286,6 +318,9 @@ def create_app(
     application.state.persona_registry = persona_registry or InMemoryPersonaRegistry()
     application.state.generator = generator or make_generator_client(
         resolved_settings.to_generator_config()
+    )
+    application.state.llm_client = llm_client or build_llm_client(
+        resolved_settings.to_llm_config()
     )
     application.state.context_builder = context_builder or ContextBuilder()
     application.state.start_time = start_time if start_time is not None else time.time()
@@ -399,6 +434,89 @@ def _register_routes(application: FastAPI) -> None:
                 activated_memories=[_view(node) for node in ctx.included_memories],
                 exclusion_counts=dict(ctx.exclusion_counts),
             )
+        )
+
+    @application.post(
+        "/api/v1/chat/{persona_id}",
+        response_model=PersonaChatResponse,
+        tags=["Chat"],
+        summary="Persona chat (text -> retrieval -> LLM -> text)",
+    )
+    async def persona_chat(
+        persona_id: UUID,
+        body: PersonaChatRequest,
+        principal: ApiKeyPrincipal = Depends(authenticate),
+        registry: PersonaRegistry = Depends(get_persona_registry),
+    ) -> PersonaChatResponse:
+        """Persona-scoped chat endpoint — the Phase-1 integration milestone (HU-1406).
+
+        First real text-in -> memory-retrieval -> LLM -> text-out path. Wiring:
+
+            inbound message
+              -> ContextBuilder (provenance-safe memory -> prompt bridge, HU-1399)
+              -> LLMClient (HU-1405: fake | openrouter | gemini)
+              -> response + structured trace
+
+        The ContextBuilder is the only sanctioned bridge and hard-excludes LOW /
+        QUARANTINE / missing-confidence memories before the LLM ever sees them,
+        so the response is grounded in provenance-safe HIGH/MEDIUM L1 memory
+        only. The trace surfaces the admissible memory refs, their provenance
+        tiers (canonical/derived), and the provider label so later F-tests
+        (fidelity benchmarks) can consume it and prove the firewall held.
+
+        Auth: persona-scoped bearer key (401 when missing/unknown). The path
+        ``persona_id`` must match the key's scope (403 otherwise).
+        """
+        if persona_id != principal.persona_id:
+            raise_forbidden()
+
+        try:
+            relationship = body.requester_relationship()
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": {
+                        "code": "VALIDATION_ERROR",
+                        "status": 400,
+                        "message": str(exc),
+                    }
+                },
+            ) from exc
+
+        requester_tier = _resolve_relationship(relationship)
+        binding: PersonaBinding | None = registry.get(persona_id, requester_tier)
+        if binding is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "PERSONA_NOT_FOUND",
+                        "status": 404,
+                        "message": f"No persona registered for id {persona_id}",
+                    }
+                },
+            )
+
+        ctx = await application.state.context_builder.build(
+            persona=binding.persona,
+            requester_tier=binding.requester_tier,
+            backend=binding.backend,
+            query_embedding_content=_embed(body.message),
+            current_message=body.message,
+        )
+
+        prompt = ctx.render()
+        llm: LLMClient = application.state.llm_client
+        response_text = await llm.generate(prompt, system_prompt=ctx.system_prompt)
+
+        return PersonaChatResponse(
+            response=response_text,
+            trace=ChatTrace(
+                memory_refs=[str(node.id) for node in ctx.included_memories],
+                provenance_tiers=sorted({node.tier.value for node in ctx.included_memories}),
+                provider=str(getattr(llm, "provider", "unknown")),
+            ),
         )
 
 
