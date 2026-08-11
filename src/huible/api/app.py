@@ -86,6 +86,7 @@ from huible.api.schemas import (
     HealthResponse,
     PersonaChatRequest,
     PersonaChatResponse,
+    RiskEnforcementView,
     SafetyEventView,
     SessionMetaView,
 )
@@ -101,6 +102,9 @@ from huible.persona.context import (
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.safety import (
+    PAUSE_SESSION_RESPONSE,
+    PROXY_USER_PAUSE_RESPONSE,
+    REFUSE_TOPIC_FALLBACK_RESPONSE,
     ConsentCardProvider,
     ConsentGate,
     CrisisClassifier,
@@ -109,9 +113,17 @@ from huible.safety import (
     HandoffQueue,
     InMemoryConsentGate,
     InMemoryHandoffQueue,
+    InMemoryRiskProfile,
+    RiskFlag,
+    RiskProfileProvider,
+    RiskSessionSignals,
+    UserAffect,
     apply_affect_guard,
     apply_alignment_guard,
+    build_reframe_addendum,
     classify_user_message,
+    enforce_risk_flags,
+    escalate_risk_to_human,
     escalate_to_human,
 )
 
@@ -302,6 +314,7 @@ def create_app(
     handoff_queue: HandoffQueue | None = None,
     consent_gate: ConsentGate | None = None,
     consent_card_provider: ConsentCardProvider | None = None,
+    risk_profile: RiskProfileProvider | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
 ) -> FastAPI:
@@ -386,6 +399,17 @@ def create_app(
     # message, structurally disjoint from generation.
     application.state.consent_gate = consent_gate or InMemoryConsentGate()
     application.state.consent_card_provider = consent_card_provider or DefaultConsentCard()
+    # §7.4.4 G8 risk-flag enforcement. The risk profile is the intake-derived
+    # source of the per-session + per-persona risk flags (loss_of_child,
+    # minor_decedent, recent_loss, non_acceptance, proxy_user). The default
+    # InMemoryRiskProfile is empty (no flags) so the pre-real-user suite runs
+    # key-free and the default persona-chat turn is unaffected; tests inject a
+    # seeded instance to exercise each flag → action path. Pre-real-launch the
+    # onboarding / intake path populates this (memory-content-derived
+    # loss_of_child, persona-age-derived minor_decedent, death-date-derived
+    # recent_loss, intake-assessment non_acceptance, identity-verification
+    # proxy_user) without touching the chat endpoint.
+    application.state.risk_profile = risk_profile or InMemoryRiskProfile()
     application.state.start_time = start_time if start_time is not None else time.time()
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
@@ -564,6 +588,17 @@ def _register_routes(application: FastAPI) -> None:
         llm: LLMClient = application.state.llm_client
         provider_label = str(getattr(llm, "provider", "unknown"))
 
+        # --- §7.4.4 G8: load the session risk profile (once per turn) -------
+        # The intake-derived risk flags are a property of the (session,
+        # persona), not the message. Loading them up-front lets the G1 crisis
+        # branch carry the real flags on its handoff ticket (matrix §2 audit
+        # field: "risk flags present") AND lets the post-consent enforcement
+        # branch act on them. The default profile is empty (no flags) so the
+        # pre-real-user suite and the default persona-chat turn are unaffected.
+        session_id = body.conversation_id or _mint_conversation_id()
+        risk_profile: RiskProfileProvider = application.state.risk_profile
+        session_risk_flags = risk_profile.get_flags(session_id, persona_id)
+
         # --- G1 + §7.4.1: synchronous crisis pre-check → human-handoff queue ---
         # A crisis signal must NEVER reach the persona voice (HU-1407 §7.1 G1).
         # The check is synchronous, pre-generation, and pre-retrieval: on a
@@ -578,18 +613,25 @@ def _register_routes(application: FastAPI) -> None:
         # G1 safe response when no human is available. The persona path is
         # unreachable from here by construction (we return on every branch).
         # Routing trigger is the G1 classifier signal, never persona-output.
+        #
+        # §7.4.4 G8 (matrix §4): G1 crisis always pre-empts flag enforcement —
+        # a positive G1 signal short-circuits to the non-persona escalation
+        # path regardless of any risk flag, and flags do not weaken G1. The
+        # loaded risk flags still ride on the handoff ticket (audit row) so the
+        # flag context is preserved for clinical review.
         crisis_result = classify_user_message(
             body.message,
             classifier=application.state.crisis_classifier,
         )
         if crisis_result.is_crisis:
+            _mark_crisis_session(application, body.conversation_id)
             handoff_view = _escalate_and_build_trace(
                 application,
                 message=body.message,
                 crisis_result=crisis_result,
                 persona_id=persona_id,
                 conversation_id=body.conversation_id,
-                risk_flags=[],
+                risk_flags=session_risk_flags,
             )
             # handoff_view.user_acknowledgement already carries the full G1
             # crisis resources (+ "a person will join" only when a responder
@@ -623,7 +665,6 @@ def _register_routes(application: FastAPI) -> None:
         # CONSENT_REQUIRED and the card inline, so the client can render it and
         # POST /consent. The deceased persona never voices the consent: the
         # card is a non-persona system message and never reaches the generator.
-        session_id = body.conversation_id or _mint_conversation_id()
         consent_gate: ConsentGate = application.state.consent_gate
         if not consent_gate.is_acknowledged(session_id, persona_id):
             card_provider: ConsentCardProvider = application.state.consent_card_provider
@@ -650,27 +691,130 @@ def _register_routes(application: FastAPI) -> None:
                 },
             )
 
+        # --- §7.4.4 G8: risk-flag enforcement (act, not just record) --------
+        # The Clinical Advisor's enforcement matrix converts the session's risk
+        # flags + session-meta signals into a binding action with concrete
+        # runtime effects. G1 has already cleared (crisis pre-empts), so the
+        # report's ``is_crisis`` is structurally False here. The binding action
+        # may short-circuit generation (pause_session / handoff / refuse_topic)
+        # or apply generation-side constraints (tighten / reframe) that compose
+        # with G3 (shared affect signal) and §7.4.2 (claim alignment).
+        settings = application.state.settings
+        session_signals = _risk_session_signals(
+            application,
+            message=body.message,
+            conversation_id=body.conversation_id,
+            dosage_cap_turns=settings.risk_dosage_cap_turns,
+            crisis_classifier=application.state.crisis_classifier,
+        )
+        enforcement = enforce_risk_flags(
+            session_risk_flags,
+            session_signals=session_signals,
+            is_crisis=False,
+            message=body.message,
+        )
+
+        # Pre-generation short-circuits: persona voice is suppressed for the
+        # flagged turn (matrix §1). Each branch surfaces the enforcement report
+        # on the trace for the per-flag fire-count + per-action telemetry.
+        if enforcement.action is not None and enforcement.short_circuits_generation:
+            if enforcement.action.value == "pause_session":
+                # proxy_user gets its own specialized pause copy (the actionable
+                # next step is identity re-confirmation, not just a breather).
+                response_text = (
+                    PROXY_USER_PAUSE_RESPONSE
+                    if RiskFlag.PROXY_USER in enforcement.fired_flags
+                    else PAUSE_SESSION_RESPONSE
+                )
+                _record_turn(application, body.conversation_id, body.message, response_text)
+                return PersonaChatResponse(
+                    response=response_text,
+                    trace=ChatTrace(
+                        provider=provider_label,
+                        session_meta=_session_meta(application, body.conversation_id),
+                        risk_enforcement=_risk_enforcement_view(enforcement),
+                    ),
+                )
+            if enforcement.action.value == "handoff":
+                # Matrix §4: handoff composes with G1 — reuse the warm
+                # non-persona posture + crisis-line display + §7.4.1 queue.
+                # The trigger label distinguishes the risk-driven path from a
+                # G1 crisis escalation on the audit row.
+                trigger = (
+                    "distress_trend_rising"
+                    if "handoff" in enforcement.session_signal_actions
+                    else enforcement.fired_flags[0].value
+                    if enforcement.fired_flags
+                    else "risk_flag"
+                )
+                handoff_view = _escalate_risk_and_build_trace(
+                    application,
+                    trigger=trigger,
+                    persona_id=persona_id,
+                    conversation_id=body.conversation_id,
+                    risk_flags=session_risk_flags,
+                )
+                response_text = handoff_view.user_acknowledgement
+                _record_turn(application, body.conversation_id, body.message, response_text)
+                return PersonaChatResponse(
+                    response=response_text,
+                    trace=ChatTrace(
+                        provider=provider_label,
+                        handoff=handoff_view,
+                        session_meta=_session_meta(application, body.conversation_id),
+                        risk_enforcement=_risk_enforcement_view(enforcement),
+                    ),
+                )
+            # refuse_topic: in-voice topic-redirect fallback (no LLM call).
+            response_text = REFUSE_TOPIC_FALLBACK_RESPONSE
+            _record_turn(application, body.conversation_id, body.message, response_text)
+            return PersonaChatResponse(
+                response=response_text,
+                trace=ChatTrace(
+                    provider=provider_label,
+                    session_meta=_session_meta(application, body.conversation_id),
+                    risk_enforcement=_risk_enforcement_view(enforcement),
+                ),
+            )
+
         # --- Default / G3-distress path: retrieve + render + generate --------
         # The shared affect signal grades sub-acute distress; the ContextBuilder
         # branches the prompt (G3 dynamic half) and the affect guard suppresses
         # any sarcastic/dismissive generation on the distress branch.
+        #
+        # §7.4.4 G8 composition: when ``tighten`` is in the required actions the
+        # distress branch is forced on for the turn (flattens humor/levity even
+        # without a distress signal — matrix §2 loss_of_child / minor_decedent /
+        # recent_loss). When ``reframe`` is in the required actions a reality-
+        # framing re-anchor addendum is appended to the system prompt (matrix
+        # §1: re-anchor using the existing G2 framing asset; does not author
+        # new framing). Both compose with the §7.4.2 alignment guard below.
+        effective_affect = (
+            UserAffect.DISTRESS if enforcement.forces_tighten else crisis_result.affect
+        )
         ctx = await application.state.context_builder.build(
             persona=binding.persona,
             requester_tier=binding.requester_tier,
             backend=binding.backend,
             query_embedding_content=_embed(body.message),
             current_message=body.message,
-            user_affect=crisis_result.affect,
+            user_affect=effective_affect,
         )
 
         prompt = ctx.render()
-        response_text = await llm.generate(prompt, system_prompt=ctx.system_prompt)
+        system_prompt = ctx.system_prompt
+        if enforcement.forces_reframe:
+            system_prompt = system_prompt + "\n\n" + build_reframe_addendum(
+                binding.persona.name
+            )
+        response_text = await llm.generate(prompt, system_prompt=system_prompt)
 
-        # G3 generation-time guard: on the distress branch, replace a sarcastic
-        # / dismissive generation with a safe grounded fallback. Conservative —
-        # only replaces on distress when a concrete pattern fires.
+        # G3 generation-time guard: on the distress branch (forced or graded),
+        # replace a sarcastic / dismissive generation with a safe grounded
+        # fallback. Conservative — only replaces on distress when a concrete
+        # pattern fires.
         response_text, _suppressed = apply_affect_guard(
-            response_text, affect=crisis_result.affect
+            response_text, affect=effective_affect
         )
 
         # §7.4.2 generation-time claim->ref alignment filter. The retrieval-side
@@ -707,6 +851,7 @@ def _register_routes(application: FastAPI) -> None:
                     disposition=alignment.disposition,
                     ungrounded_by_category=alignment.category_counts(),
                 ),
+                risk_enforcement=_risk_enforcement_view(enforcement),
             ),
         )
 
@@ -847,6 +992,144 @@ def _session_meta(
     # History holds [user, persona, user, persona, …] → turns = pairs rounded up.
     turn_count = max(1, (len(history) + 1) // 2)
     return SessionMetaView(turn_count=turn_count)
+
+
+def _mark_crisis_session(application: FastAPI, conversation_id: str | None) -> None:
+    """Record that this session has had at least one G1 crisis turn (§7.4.4 §3).
+
+    The ``crisis_history`` session signal lowers the handoff threshold for the
+    rest of the session (matrix §3): a repeat-crisis session tightens by
+    default. Held in-process on ``app.state.crisis_sessions``; a cross-session
+    backend lands pre-real-launch alongside the real conversation store.
+    """
+    if not conversation_id:
+        return
+    if not hasattr(application.state, "crisis_sessions"):
+        application.state.crisis_sessions: set[str] = set()
+    application.state.crisis_sessions.add(conversation_id)
+
+
+def _distress_trend_rising(
+    application: FastAPI,
+    *,
+    message: str,
+    conversation_id: str | None,
+    classifier: CrisisClassifier,
+) -> bool:
+    """Derive the §3 "escalating distress trend" signal from session history.
+
+    Deterministic derivation (matrix §3): re-grade the current message plus the
+    prior user turns in the session window; when **two or more** of the most
+    recent user turns (including the current one) grade as DISTRESS, the trend
+    is rising. This is the conservative proxy for a real affect tracker — it
+    fires on sustained distress, not a single distress turn, so a one-off
+    distress message does not auto-escalate to handoff. The classifier is the
+    same shared G1/G3 signal (HU-1407 §7.1 G3), so the trend is consistent
+    with the per-turn affect already driving the G3 branch.
+    """
+    if not conversation_id:
+        recent_user_messages = [message]
+    else:
+        history: list[ConversationTurn] = getattr(
+            application.state, "conversations", {}
+        ).get(conversation_id, [])
+        prior_user = [t.content for t in history if t.speaker == "user"]
+        # Last 2 prior user turns + the current message → window of 3.
+        recent_user_messages = [*prior_user[-2:], message]
+    if not recent_user_messages:
+        return False
+    distress_count = sum(
+        1
+        for msg in recent_user_messages
+        if classify_user_message(msg, classifier=classifier).affect is UserAffect.DISTRESS
+    )
+    return distress_count >= 2
+
+
+def _risk_session_signals(
+    application: FastAPI,
+    *,
+    message: str,
+    conversation_id: str | None,
+    dosage_cap_turns: int,
+    crisis_classifier: CrisisClassifier,
+) -> RiskSessionSignals:
+    """Build the §3 session-signals view for the enforcement engine.
+
+    Derives the three matrix-§3 signals from in-process session state:
+
+    * **dosage** — ``turn_count`` from :func:`_session_meta`; the cap comes from
+      settings (``risk_dosage_cap_turns``); ``0`` disables the cap-driven pause.
+    * **crisis_history** — True iff the session has had a prior G1 crisis turn
+      (tracked via :func:`_mark_crisis_session`).
+    * **distress_trend_rising** — :func:`_distress_trend_rising` (≥2 distress
+      turns in the recent window).
+    """
+    session_meta = _session_meta(application, conversation_id)
+    crisis_history = bool(
+        conversation_id
+        and getattr(application.state, "crisis_sessions", set())
+        and conversation_id in application.state.crisis_sessions
+    )
+    trend = _distress_trend_rising(
+        application,
+        message=message,
+        conversation_id=conversation_id,
+        classifier=crisis_classifier,
+    )
+    cap = dosage_cap_turns if dosage_cap_turns and dosage_cap_turns > 0 else None
+    # ``turn_count`` for enforcement includes the turn *about to be served*
+    # (session_meta counts only completed turns). The cap should trigger
+    # BEFORE the turn that would exceed it, not after — so a session at the
+    # cap gets one more turn, and the next one pauses.
+    enforcement_turn_count = session_meta.turn_count + 1
+    return RiskSessionSignals(
+        turn_count=enforcement_turn_count,
+        duration_seconds=session_meta.duration_seconds,
+        dosage_cap_turns=cap,
+        distress_trend_rising=trend,
+        crisis_history=crisis_history,
+    )
+
+
+def _risk_enforcement_view(report) -> RiskEnforcementView:
+    """Render an :class:`~huible.safety.risk.EnforcementReport` as a trace view."""
+    return RiskEnforcementView(
+        action=report.action.value,
+        required_actions=sorted({a.value for a in report.required_actions}),
+        fired_flags=[f.value for f in report.fired_flags],
+        session_signal_actions=[a.value for a in report.session_signal_actions],
+        pre_empted_by_crisis=report.pre_empted_by_crisis,
+    )
+
+
+def _escalate_risk_and_build_trace(
+    application: FastAPI,
+    *,
+    trigger: str,
+    persona_id: UUID,
+    conversation_id: str | None,
+    risk_flags: list[str],
+) -> HandoffTicketView:
+    """Route a §7.4.4 risk-driven handoff into the queue and build the trace view.
+
+    Matrix §4 composition: the risk-driven ``handoff`` reuses the G1 warm
+    non-persona posture + crisis-line display + the §7.4.1 queue. The only
+    difference from :func:`_escalate_and_build_trace` is the audit row's
+    ``trigger_signal`` — it carries a ``risk:`` prefix so clinical review
+    distinguishes a G1-crisis escalation from a risk-flag-driven one. Fail-safe
+    is identical (queue errors degrade to the G1 safe response).
+    """
+    queue: HandoffQueue = application.state.handoff_queue
+    result = escalate_risk_to_human(
+        trigger=trigger,
+        queue=queue,
+        persona_id=str(persona_id),
+        conversation_id=conversation_id,
+        risk_flags=risk_flags,
+        resources=application.state.crisis_resources or None,
+    )
+    return _ticket_view(result.ticket, response_text=result.response_text)
 
 
 def _escalate_and_build_trace(

@@ -121,6 +121,19 @@ class Settings(BaseSettings):
     handoff_available_responders: int = 0
     handoff_responder_pool: str = ""
 
+    # ── G8 risk-flag enforcement — §7.4.4 dosage cap ──────────────────────
+    # Pre-real-user clinical gate (HU-1424 / HU-1407 §7.4 #4). The reserved
+    # ``risk_flags`` / ``session_meta`` surfaces MUST change runtime behavior
+    # before real grieving-user traffic flows over the chat path. The dosage
+    # cap is the per-session turn ceiling above which the binding action
+    # escalates to ``pause_session`` (matrix §3): surface support, end the
+    # persona turn, require explicit re-entry — never auto-continue. Default
+    # is a conservative ceiling; a clinically-tuned cap lands with the ops
+    # follow-up that owns the real dosage policy. Set to ``0`` to disable the
+    # cap-driven pause (the session-signal surface still fires for the other
+    # §3 signals: distress trend + crisis history).
+    risk_dosage_cap_turns: int = 20
+
     @field_validator("huible_log_level", mode="before")
     @classmethod
     def _normalize_log_level(cls, v: Any) -> Any:

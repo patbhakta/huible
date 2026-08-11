@@ -26,6 +26,12 @@ required for the Phase-1 phase-gate sign-off recorded in HU-1407 §7.3, plus the
   acknowledged the consent card. Pluggable backend + injectable card content
   (the Onboarding Agent owns the clinically-reviewed copy); the deceased persona
   never voices the consent.
+* :mod:`huible.safety.risk` — §7.4.4 G8 risk-flag enforcement: the reserved
+  ``risk_flags`` / ``session_meta`` surfaces actually gate runtime behavior
+  (not just record). The enforcement engine maps each flag + session signal
+  to a binding action (tighten / reframe / refuse_topic / handoff /
+  pause_session) per the Clinical Advisor's enforcement matrix; the chat path
+  applies the action with concrete runtime effects.
 
 The chat endpoint (``huible.api.app``) wires these so that a crisis signal
 never reaches the persona voice (G1), every persona-voiced turn carries the
@@ -33,8 +39,9 @@ immutable framing (G2/G5/G9), distress flattens the voice (G3), the response
 trace records the safety event / memory refs for audit (G4), a crisis turn
 escalates to a real human with a monitored SLA (§7.4.1), every persona-voiced
 reply is aligned against its retrieved refs so no unsupported claim reaches a
-grieving user (§7.4.2), and no persona reply proceeds before the session
-acknowledges the reality-framing / consent card (§7.4.3 G6).
+grieving user (§7.4.2), no persona reply proceeds before the session
+acknowledges the reality-framing / consent card (§7.4.3 G6), and every
+risk-flag / session-meta signal actually changes runtime behavior (§7.4.4 G8).
 """
 
 from huible.safety.affect import (
@@ -94,23 +101,50 @@ from huible.safety.handoff import (
     HandoffTicket,
     InMemoryHandoffQueue,
     build_handoff_acknowledgement,
+    escalate_risk_to_human,
     escalate_to_human,
+)
+from huible.safety.risk import (
+    AGE_INAPPROPRIATE_TOPIC_PATTERNS,
+    DEFAULT_DOSAGE_CAP_TURNS,
+    PAUSE_SESSION_RESPONSE,
+    PRECEDENCE,
+    PROXY_USER_PAUSE_RESPONSE,
+    REFRAME_REANCHOR_ADDENDUM,
+    REFUSE_TOPIC_FALLBACK_RESPONSE,
+    RISK_FLAG_REQUIRED_ACTIONS,
+    EnforcementAction,
+    EnforcementReport,
+    InMemoryRiskProfile,
+    RiskFlag,
+    RiskProfileProvider,
+    RiskSessionSignals,
+    build_reframe_addendum,
+    enforce_risk_flags,
 )
 
 __all__ = [
     "ADVICE_CLAIM_PATTERNS",
+    "AGE_INAPPROPRIATE_TOPIC_PATTERNS",
     "ALIGNMENT_FALLBACK_RESPONSE",
     "CONSENT_CARD_VERSION",
     "DEFAULT_CONSENT_ACKNOWLEDGE_INSTRUCTIONS",
     "DEFAULT_CONSENT_CARD_BODY",
     "DEFAULT_CONSENT_CARD_TITLE",
     "DEFAULT_CRISIS_RESOURCES",
+    "DEFAULT_DOSAGE_CAP_TURNS",
     "DEFAULT_HANDOFF_SLA_SECONDS",
     "DISTRESS_FALLBACK_RESPONSE",
     "DISTRESS_GROUNDING_ADDENDUM",
     "FRAMING_VERSION",
     "IDENTITY_CLAIM_PATTERNS",
+    "PAUSE_SESSION_RESPONSE",
+    "PRECEDENCE",
+    "PROXY_USER_PAUSE_RESPONSE",
     "REALITY_FRAMING_BLOCK",
+    "REFRAME_REANCHOR_ADDENDUM",
+    "REFUSE_TOPIC_FALLBACK_RESPONSE",
+    "RISK_FLAG_REQUIRED_ACTIONS",
     "SARCASTIC_DISMISSIVE_PATTERNS",
     "AlignmentReport",
     "Claim",
@@ -124,6 +158,8 @@ __all__ = [
     "CrisisSignal",
     "DefaultConsentCard",
     "DeterministicCrisisClassifier",
+    "EnforcementAction",
+    "EnforcementReport",
     "FramingBlock",
     "HandoffOutcome",
     "HandoffQueue",
@@ -131,6 +167,10 @@ __all__ = [
     "HandoffTicket",
     "InMemoryConsentGate",
     "InMemoryHandoffQueue",
+    "InMemoryRiskProfile",
+    "RiskFlag",
+    "RiskProfileProvider",
+    "RiskSessionSignals",
     "UserAffect",
     "align_response",
     "apply_affect_guard",
@@ -138,8 +178,11 @@ __all__ = [
     "build_crisis_response",
     "build_grounding_corpus",
     "build_handoff_acknowledgement",
+    "build_reframe_addendum",
     "classify_user_message",
     "detect_sarcastic_dismissive",
+    "enforce_risk_flags",
+    "escalate_risk_to_human",
     "escalate_to_human",
     "extract_claims",
     "get_distress_addendum",

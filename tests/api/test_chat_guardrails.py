@@ -48,7 +48,13 @@ from huible.memory.protocol import (
     SourceType,
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
-from huible.safety import DEFAULT_HANDOFF_SLA_SECONDS, FRAMING_VERSION, InMemoryHandoffQueue
+from huible.safety import (
+    DEFAULT_HANDOFF_SLA_SECONDS,
+    FRAMING_VERSION,
+    InMemoryHandoffQueue,
+    InMemoryRiskProfile,
+    RiskFlag,
+)
 
 PERSONA_ID = uuid4()
 API_KEY = "key-chandler-family-guardrails"
@@ -183,6 +189,8 @@ def _make_app(
     memories: dict[str, MemoryNode] | None = None,
     crisis_resources: dict[str, str] | None = None,
     handoff_queue=None,
+    risk_profile=None,
+    settings=None,
 ) -> tuple[TestClient, FakeLLMClient, dict[str, MemoryNode]]:
     if backend is not None:
         seeded_backend = backend
@@ -199,6 +207,8 @@ def _make_app(
         llm_client=fake_llm,
         crisis_resources=crisis_resources,
         handoff_queue=handoff_queue,
+        risk_profile=risk_profile,
+        settings=settings,
         start_time=0.0,
     )
     return TestClient(application), fake_llm, seeded_memories
@@ -410,6 +420,226 @@ class TestHumanHandoffG1Path:
         # No deceased-voice markers anywhere in the escalation.
         assert "[fake-llm:" not in resp
         assert "Chandler" not in resp  # the persona never speaks during handoff
+
+
+# ---------------------------------------------------------------------------
+# §7.4.4 G8 — Risk-flag enforcement (act on risk_flags, not just record)
+#
+# The Clinical Advisor's enforcement matrix converts each intake risk flag +
+# session-meta signal into a binding action with concrete runtime effects.
+# Every test exercises the full chat-path wiring against the deterministic
+# fake LLM so CI is key-free. Coverage matches matrix §6 (required tests):
+#   - one test per flag → action path (5 paths)
+#   - multi-flag precedence
+#   - G1 pre-emption of flag enforcement
+#   - handoff → queue wiring (risk-driven)
+#   - dosage-cap pause_session
+# ---------------------------------------------------------------------------
+
+
+class TestG8RiskFlagEnforcement:
+    """Matrix §2: each flag actually changes runtime behavior."""
+
+    def test_proxy_user_pauses_session_non_persona(self):
+        """proxy_user → pause_session: persona voice suppressed, support shown."""
+        profile = InMemoryRiskProfile()
+        profile.set_session_flags("sess-guardrails", PERSONA_ID, {RiskFlag.PROXY_USER})
+        client, llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about fishing")
+
+        resp = body["response"]
+        # Non-persona: the deceased does not voice the pause.
+        assert "[fake-llm:" not in resp
+        assert "988" in resp
+        assert "identity" in resp.lower() or "right person" in resp.lower()
+        # The LLM was never called (generation short-circuited).
+        assert llm.calls == []
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "pause_session"
+        assert "proxy_user" in risk["fired_flags"]
+
+    def test_minor_decedent_refuses_age_inappropriate_topic(self):
+        """minor_decedent + age-inappropriate topic → refuse_topic (no LLM call)."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.MINOR_DECEDENT})
+        client, llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about our dating future together")
+
+        resp = body["response"]
+        # In-voice topic-redirect fallback (persona voicing the redirect, but
+        # the flagged topic is declined — no LLM generation ran).
+        assert resp  # non-empty
+        assert "[fake-llm:" not in resp
+        assert llm.calls == []
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "refuse_topic"
+        assert "minor_decedent" in risk["fired_flags"]
+
+    def test_minor_decedent_tightens_on_neutral_topic(self):
+        """minor_decedent on a neutral topic → tighten (generation proceeds)."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.MINOR_DECEDENT})
+        client, llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about your favorite toy")
+
+        # Generation proceeds under tighten (distress branch forced on).
+        assert llm.calls  # the LLM WAS called
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "tighten"
+        assert "minor_decedent" in risk["fired_flags"]
+        # tighten forces the G3 distress branch → distress_grounding is True.
+        assert body["trace"]["distress_grounding"] is True
+
+    def test_non_acceptance_forces_reframe_addendum_into_prompt(self):
+        """non_acceptance → reframe: the re-anchor addendum reaches the generator."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.NON_ACCEPTANCE})
+        client, llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about fishing")
+
+        _prompt, system_prompt = llm.calls[0]
+        # The re-anchor addendum is appended to the system prompt.
+        assert "Reality-framing re-anchor" in system_prompt
+        assert "not literally here" in system_prompt
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "reframe"
+
+    def test_loss_of_child_forces_both_tighten_and_reframe(self):
+        """loss_of_child → {tighten, reframe}: both effects apply, binding=reframe."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.LOSS_OF_CHILD})
+        client, llm, _memories = _make_app(risk_profile=profile)
+        _post(client, "tell me about fishing")
+
+        _prompt, system_prompt = llm.calls[0]
+        # tighten → distress branch forced on.
+        # reframe → re-anchor addendum appended.
+        assert "Reality-framing re-anchor" in system_prompt
+
+    def test_recent_loss_tightens_only(self):
+        """recent_loss → tighten only: generation proceeds, distress grounding on."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.RECENT_LOSS})
+        client, llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about fishing")
+
+        assert llm.calls
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "tighten"
+        assert body["trace"]["distress_grounding"] is True
+
+    def test_continue_when_no_flags(self):
+        """Default (no flags) → continue: normal persona turn, no enforcement effect."""
+        client, _llm, _memories = _make_app()
+        body = _post(client, "tell me about fishing")
+
+        assert body["response"].startswith("[fake-llm:")
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "continue"
+        assert risk["fired_flags"] == []
+
+
+class TestG8MultiFlagPrecedence:
+    """Matrix §6: multi-flag precedence — most restrictive single action wins."""
+
+    def test_proxy_user_dominates_loss_of_child(self):
+        """proxy_user (pause) + loss_of_child (reframe) → pause_session."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(
+            PERSONA_ID, {RiskFlag.PROXY_USER, RiskFlag.LOSS_OF_CHILD}
+        )
+        client, llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about fishing")
+
+        resp = body["response"]
+        assert "[fake-llm:" not in resp  # pause short-circuited generation
+        assert llm.calls == []
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "pause_session"
+        assert set(risk["fired_flags"]) == {"proxy_user", "loss_of_child"}
+        # The full required-actions union is surfaced for telemetry.
+        assert "pause_session" in risk["required_actions"]
+        assert "reframe" in risk["required_actions"]
+
+    def test_minor_decedent_refuse_dominates_loss_of_child_reframe(self):
+        """minor_decedent refuse + loss_of_child reframe → refuse_topic."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(
+            PERSONA_ID, {RiskFlag.MINOR_DECEDENT, RiskFlag.LOSS_OF_CHILD}
+        )
+        client, _llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about our dating future")
+
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "refuse_topic"
+
+
+class TestG8G1Composition:
+    """Matrix §4: G1 crisis always pre-empts flag enforcement."""
+
+    def test_crisis_path_does_not_evaluate_risk_enforcement(self):
+        """A crisis turn takes the G1 path; risk_enforcement is None on that trace."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.PROXY_USER})
+        client, _llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "I want to die, I have the pills")
+
+        # G1 took over — safety_event is set, risk_enforcement is absent.
+        assert body["trace"]["safety_event"] is not None
+        assert body["trace"]["risk_enforcement"] is None
+        # The loaded risk flags still ride on the handoff ticket (audit).
+        handoff = body["trace"]["handoff"]
+        assert "proxy_user" in handoff["risk_flags"]
+
+
+class TestG8RiskDrivenHandoffAndDosage:
+    """Matrix §3/§4: session signals drive handoff + dosage pause."""
+
+    def test_distress_trend_rising_routes_to_handoff_queue(self):
+        """≥2 distress turns → distress_trend_rising → handoff (risk-driven)."""
+        queue = InMemoryHandoffQueue()
+        profile = InMemoryRiskProfile()
+        # recent_loss + escalating distress → handoff composes with G1 queue.
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.RECENT_LOSS})
+        client, _llm, _memories = _make_app(
+            risk_profile=profile, handoff_queue=queue
+        )
+        # Turn 1: distress (recorded into history).
+        _post(client, "I am heartbroken and crying", conversation_id="sess-trend")
+        # Turn 2: still distress → trend rising on the 2nd distress turn.
+        body = _post(client, "the pain is unbearable", conversation_id="sess-trend")
+
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "handoff"
+        assert "handoff" in risk["session_signal_actions"]
+        # The handoff ticket is on the trace + in the audit log.
+        assert body["trace"]["handoff"] is not None
+        assert body["trace"]["handoff"]["trigger_signal"].startswith("risk:")
+        assert len(queue.audit_log()) == 1
+        # Non-persona: the deceased does not voice the handoff.
+        assert "[fake-llm:" not in body["response"]
+
+    def test_dosage_over_cap_triggers_pause_session(self):
+        """turn_count > dosage_cap → pause_session: surface support, no persona voice."""
+        # A cap of 2 → the 3rd turn pauses.
+        from huible.api.settings import Settings
+
+        settings = Settings(risk_dosage_cap_turns=2)
+        client, llm, _memories = _make_app(settings=settings)
+        # Two consented turns fit under the cap (caps are checked pre-turn).
+        _post(client, "tell me about fishing", conversation_id="sess-cap")
+        _post(client, "tell me more", conversation_id="sess-cap")
+        # Third turn exceeds the cap → pause_session.
+        body = _post(client, "and then what", conversation_id="sess-cap")
+
+        risk = body["trace"]["risk_enforcement"]
+        assert risk["action"] == "pause_session"
+        assert "pause_session" in risk["session_signal_actions"]
+        # Non-persona pause response.
+        assert "[fake-llm:" not in body["response"]
+        assert "988" in body["response"]
+        # Only the first two (under-cap) turns generated; the third short-circuited.
+        assert len(llm.calls) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -634,12 +864,30 @@ class TestG7G8Observability:
         )
         assert body["trace"]["session_meta"]["turn_count"] >= 1
 
-    def test_risk_flags_surface_is_reserved(self):
-        """G8: the risk-flag surface exists (observability-only at Phase-1)."""
+    def test_risk_enforcement_view_emitted_on_every_turn(self):
+        """G8 (§7.4.4): the enforcement report is on every persona-voiced turn.
+
+        With no flags the binding action is ``continue`` and no flags fired —
+        but the report IS surfaced (it is no longer observability-only).
+        """
         client, _llm, _memories = _make_app()
         body = _post(client, "tell me about fishing")
-        # Field exists and defaults to empty (intake populates it pre-real-users).
-        assert body["trace"]["risk_flags"] == []
+        risk = body["trace"]["risk_enforcement"]
+        assert risk is not None
+        assert risk["action"] == "continue"
+        assert risk["fired_flags"] == []
+        assert risk["pre_empted_by_crisis"] is False
+
+    def test_risk_flags_surface_is_reserved(self):
+        """G8: the intake risk-flag surface populates the enforcement report."""
+        profile = InMemoryRiskProfile()
+        profile.set_persona_flags(PERSONA_ID, {RiskFlag.RECENT_LOSS})
+        client, _llm, _memories = _make_app(risk_profile=profile)
+        body = _post(client, "tell me about fishing")
+        # The flag is surfaced on the enforcement report (fired_flags).
+        risk = body["trace"]["risk_enforcement"]
+        assert "recent_loss" in risk["fired_flags"]
+        assert risk["action"] == "tighten"
 
 
 # ---------------------------------------------------------------------------

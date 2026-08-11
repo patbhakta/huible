@@ -67,6 +67,7 @@ __all__ = [
     "HandoffTicket",
     "InMemoryHandoffQueue",
     "build_handoff_acknowledgement",
+    "escalate_risk_to_human",
     "escalate_to_human",
 ]
 
@@ -338,6 +339,42 @@ def build_handoff_acknowledgement(
     return ""
 
 
+def _enqueue_with_fail_safe(
+    ticket: HandoffTicket,
+    *,
+    queue: HandoffQueue,
+    base_response: str,
+) -> HandoffResult:
+    """Route ``ticket`` through ``queue`` with the §10.1 #2 fail-safe.
+
+    Shared by the G1-driven (:func:`escalate_to_human`) and risk-driven
+    (:func:`escalate_risk_to_human`) paths. If the queue raises, the ticket is
+    recorded as ``DEGRADED`` with a ``queue_error:*`` reason and the call
+    still returns a G1-safe ``response_text`` — the persona path is
+    unreachable from either entry point by construction (callers return
+    ``response_text`` directly).
+    """
+    try:
+        finalized = queue.enqueue(ticket)
+    except Exception as exc:  # pragma: no cover - defensive, backend-specific
+        logger.exception("handoff queue raised; degrading to G1 safe response")
+        ticket.outcome = HandoffOutcome.DEGRADED
+        ticket.responder_id = None
+        ticket.degrade_reason = f"queue_error:{type(exc).__name__}"
+        finalized = ticket
+
+    acknowledgement = build_handoff_acknowledgement(
+        outcome=finalized.outcome,
+        sla_target_seconds=finalized.sla_target_seconds,
+        responder_id=finalized.responder_id,
+    )
+    return HandoffResult(
+        response_text=base_response + acknowledgement,
+        ticket=finalized,
+        degraded=finalized.outcome is HandoffOutcome.DEGRADED,
+    )
+
+
 def escalate_to_human(
     message: str,
     *,
@@ -381,25 +418,53 @@ def escalate_to_human(
         sla_target_seconds=sla_target_seconds,
     )
 
-    try:
-        finalized = queue.enqueue(ticket)
-    except Exception as exc:  # pragma: no cover - defensive, backend-specific
-        # Fail-safe: a broken queue degrades to G1, never drops and never
-        # proceeds to persona voice. Record the ticket as degraded for audit.
-        logger.exception("handoff queue raised; degrading to G1 safe response")
-        ticket.outcome = HandoffOutcome.DEGRADED
-        ticket.responder_id = None
-        ticket.degrade_reason = f"queue_error:{type(exc).__name__}"
-        finalized = ticket
+    return _enqueue_with_fail_safe(ticket, queue=queue, base_response=base_response)
 
-    acknowledgement = build_handoff_acknowledgement(
-        outcome=finalized.outcome,
-        sla_target_seconds=finalized.sla_target_seconds,
-        responder_id=finalized.responder_id,
+
+def escalate_risk_to_human(
+    *,
+    trigger: str,
+    queue: HandoffQueue,
+    persona_id: str,
+    conversation_id: str | None,
+    risk_flags: list[str] | None = None,
+    resources: dict[str, str] | None = None,
+    sla_target_seconds: int = DEFAULT_HANDOFF_SLA_SECONDS,
+) -> HandoffResult:
+    """Route a risk-flag-driven escalation into the human-handoff queue (§7.4.4 / matrix §3).
+
+    Matrix §4 composition: the risk-driven ``handoff`` action reuses the G1
+    warm non-persona posture + crisis-line display (Phase-1
+    :func:`build_crisis_response`) and routes into the same §7.4.1
+    (:mod:`huible.safety.handoff`) queue. The only difference from the G1
+    path is the audit row's ``trigger_signal`` — it carries a ``risk:`` prefix
+    so clinical review distinguishes a G1-crisis escalation from a risk-flag-
+    driven one (e.g. escalating distress trend on a ``recent_loss`` session).
+
+    Called **only** from the §7.4.4 enforcement branch of the chat endpoint
+    when the binding action is :attr:`~huible.safety.risk.EnforcementAction.HANDOFF`
+    — after G1 has already cleared (G1 pre-empts per matrix §4) and after the
+    consent gate. The persona path is unreachable from here by construction.
+
+    Fail-safe contract (§10.1 #2): identical to :func:`escalate_to_human` —
+    queue errors degrade to the G1 safe response, never drop, never persona.
+
+    ``trigger`` is a short stable label for the audit row (e.g.
+    ``"distress_trend_rising"``). ``affect`` is recorded as ``"distress"`` —
+    a risk-driven handoff is distress-spectrum by definition (a G1-crisis
+    affect would have pre-empted via :func:`escalate_to_human`).
+    """
+    base_response = build_crisis_response(resources=resources)
+
+    ticket = HandoffTicket(
+        id=f"hh-{uuid.uuid4().hex[:16]}",
+        persona_id=persona_id,
+        conversation_id=conversation_id,
+        trigger_signal=f"risk:{trigger}",
+        affect="distress",
+        matched_patterns=[],
+        risk_flags=list(risk_flags or []),
+        sla_target_seconds=sla_target_seconds,
     )
 
-    return HandoffResult(
-        response_text=base_response + acknowledgement,
-        ticket=finalized,
-        degraded=finalized.outcome is HandoffOutcome.DEGRADED,
-    )
+    return _enqueue_with_fail_safe(ticket, queue=queue, base_response=base_response)

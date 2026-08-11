@@ -42,6 +42,7 @@ __all__ = [
     "PersonaChatRequest",
     "PersonaChatResponse",
     "RelationshipTierLiteral",
+    "RiskEnforcementView",
     "SafetyEventView",
     "SessionMetaView",
 ]
@@ -333,6 +334,63 @@ class AlignmentView(BaseModel):
     )
 
 
+class RiskEnforcementView(BaseModel):
+    """G8 risk-flag enforcement report surfaced on the trace (§7.4.4).
+
+    Non-null on every persona-chat turn AND every risk-flag short-circuit
+    (``refuse_topic`` / ``handoff`` / ``pause_session``). Carries the binding
+    action the chat path took, the full required-actions set (so clinical
+    review sees the union of effects, not just the binding one), the flags
+    that fired, and the session-signal contributions — so the per-flag fire
+    count + per-action distribution the Clinical Advisor requires (matrix §5)
+    are read directly off the trace.
+
+    ``pre_empted_by_crisis`` is recorded when a G1 crisis signal overrode the
+    report (matrix §4) — in that case ``action`` is ``continue`` and no flag
+    enforcement applied (the G1 path took over). This lets clinical review
+    distinguish "no flags fired" from "G1 pre-empted flag enforcement" in the
+    telemetry.
+    """
+
+    action: str = Field(
+        description=(
+            "Binding (most-restrictive) enforcement action taken this turn: "
+            "continue | tighten | reframe | refuse_topic | handoff | pause_session."
+        )
+    )
+    required_actions: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Full union of enforcement effects for the turn (may include "
+            "tighten + reframe additively even when the binding action is "
+            "refuse_topic, etc.). Drives the per-action distribution telemetry."
+        ),
+    )
+    fired_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Intake risk flags that fired this turn (loss_of_child | "
+            "minor_decedent | recent_loss | non_acceptance | proxy_user). "
+            "Drives the per-flag fire-count telemetry."
+        ),
+    )
+    session_signal_actions: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Enforcement actions contributed by session-level signals "
+            "(dosage-cap pause_session, distress-trend handoff/tighten, "
+            "crisis-history tighten). Empty when no session signal fired."
+        ),
+    )
+    pre_empted_by_crisis: bool = Field(
+        default=False,
+        description=(
+            "True when a G1 crisis signal overrode flag enforcement this "
+            "turn (matrix §4). Distinguishes 'no flags' from 'G1 pre-empted'."
+        ),
+    )
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
     passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
@@ -357,6 +415,14 @@ class ChatTrace(BaseModel):
       per-category un-grounded counts, and the disposition applied this turn.
       Drives the un-grounded-claim rate + disposition telemetry the Clinical
       Advisor requires. ``None`` on crisis turns (no generation ran).
+    * ``risk_enforcement`` — non-null on every turn where G8 risk-flag /
+      session-meta enforcement was evaluated (§7.4.4). Carries the binding
+      action the chat path took (continue / tighten / reframe / refuse_topic
+      / handoff / pause_session), the full required-actions set, the flags
+      that fired, and the session-signal contributions. Drives the per-flag
+      fire-count + per-action distribution telemetry the Clinical Advisor
+      requires. ``None`` on the G1 crisis path (G1 pre-empts flag enforcement
+      per matrix §4; the safety_event on that trace is the audit surface).
     """
 
     memory_refs: list[str] = Field(default_factory=list)
@@ -389,6 +455,17 @@ class ChatTrace(BaseModel):
             "Generation-time claim->ref alignment report (§7.4.2). Non-null on "
             "every persona-voiced turn; null on crisis turns. Exposes the "
             "un-grounded-claim rate and disposition for clinical review."
+        ),
+    )
+    risk_enforcement: RiskEnforcementView | None = Field(
+        default=None,
+        description=(
+            "G8 risk-flag enforcement report (§7.4.4). Non-null on every turn "
+            "where risk-flag / session-meta enforcement was evaluated; null on "
+            "the G1 crisis path (G1 pre-empts flag enforcement). Exposes the "
+            "binding action, required-actions set, fired flags, and session-"
+            "signal contributions for the per-flag fire-count + per-action "
+            "distribution telemetry."
         ),
     )
 
