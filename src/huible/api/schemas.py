@@ -31,6 +31,7 @@ __all__ = [
     "ChatTrace",
     "DataEnvelope",
     "ExcludedMemoryRefView",
+    "HandoffTicketView",
     "HealthCheck",
     "HealthResponse",
     "PersonaChatRequest",
@@ -220,6 +221,69 @@ class SessionMetaView(BaseModel):
     duration_seconds: float = 0.0
 
 
+class HandoffTicketView(BaseModel):
+    """Human-handoff escalation record surfaced on the trace (§7.4.1).
+
+    Non-null ``handoff`` on the trace means a G1 crisis turn was routed into the
+    human-handoff queue (HU-1421). Every field the Clinical Advisor requires on
+    the audit log (HU-1407 §10.1 invariant 5) is present here: trigger signal,
+    risk flags, timestamp, SLA target, outcome, and (after a responder action) a
+    free-text clinical-review note. This is a monitored safety artifact, not a
+    normal chat field — it exists for clinical review and operational SLA
+    monitoring.
+
+    ``user_acknowledgement`` is the warm, non-persona text that was shown to the
+    user on this turn (resources + "a person will join" only when a responder
+    was actually paged).
+    """
+
+    ticket_id: str = Field(description="Unique escalation ticket id (audit key).")
+    outcome: str = Field(
+        description=(
+            "Escalation outcome: 'enqueued' (responder paged), 'degraded' "
+            "(no human available within SLA → G1 safe response), 'answered' or "
+            "'abandoned' (set by a responder after the turn)."
+        )
+    )
+    trigger_signal: str = Field(
+        description="G1/G2-derived classifier signal that routed the turn (never persona-output)."
+    )
+    affect: str = Field(description="Graded user affect at the crisis turn (e.g. 'crisis').")
+    risk_flags: list[str] = Field(
+        default_factory=list,
+        description="Intake risk flags present (G8 surface) — observability + routing context.",
+    )
+    matched_patterns: list[str] = Field(
+        default_factory=list,
+        description="Classifier pattern snippets that fired (audit only; never shown to user).",
+    )
+    sla_target_seconds: int = Field(
+        description="Configured SLA target (seconds) for a responder to acknowledge."
+    )
+    created_at: str = Field(description="ISO-8601 UTC timestamp the ticket was opened.")
+    responder_id: str | None = Field(
+        default=None, description="Staffed responder id paged (null when degraded)."
+    )
+    degrade_reason: str | None = Field(
+        default=None,
+        description=(
+            "Why the turn degraded instead of enqueuing (no_responder_available | queue_error:*). "
+            "Audit/ops only; never shown to the user."
+        ),
+    )
+    clinical_review_note: str | None = Field(
+        default=None,
+        description="Free-text clinical-review note recorded by a responder on resolve().",
+    )
+    resources_shown: bool = Field(
+        default=True, description="Whether crisis-line resources were surfaced in the response."
+    )
+    user_acknowledgement: str = Field(
+        default="",
+        description="Warm non-persona acknowledgement text shown to the user this turn.",
+    )
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
 
@@ -238,6 +302,9 @@ class ChatTrace(BaseModel):
     * ``session_meta`` — per-session dosage observability (G7).
     * ``risk_flags`` — reserved intake risk-flag surface (G8, observability only
       at Phase-1; enforcement is a gating clinical review item pre-real-users).
+    * ``handoff`` — non-null when the turn was routed to the human-handoff queue
+      (§7.4.1). Carries the full audit row (trigger signal, risk flags,
+      timestamp, SLA target, outcome, clinical-review note).
     """
 
     memory_refs: list[str] = Field(default_factory=list)
@@ -254,6 +321,14 @@ class ChatTrace(BaseModel):
             "Reserved intake risk-flag surface (G8): loss_of_child, "
             "minor_decedent, recent_loss, non_acceptance, proxy_user. "
             "Observability-only at Phase-1."
+        ),
+    )
+    handoff: HandoffTicketView | None = Field(
+        default=None,
+        description=(
+            "Human-handoff escalation record (§7.4.1). Non-null when the G1 "
+            "crisis turn was routed to the staffed-responder queue. Carries the "
+            "full audit row for clinical review."
         ),
     )
 

@@ -105,6 +105,22 @@ class Settings(BaseSettings):
     tailscale_enabled: bool = False
     tailscale_funnel_domain: str = ""
 
+    # ── Human-handoff (crisis escalation) queue — §7.4.1 ───────────────────
+    # Pre-real-user clinical gate (HU-1421 / HU-1407 §7.4 #1). When a G1
+    # crisis signal fires on a persona-chat turn, the turn is routed into a
+    # staffed-responder queue with a defined, monitored SLA and a fail-safe
+    # that degrades to the G1 non-persona safe response when no human is
+    # available (never drops, never the persona voice). Defaults reflect the
+    # honest pre-real-user posture: SLA target 5 minutes and **zero** staffed
+    # responders → every escalation degrades to G1 (the clinically correct
+    # fail-safe until a roster exists) while still being audited. There is no
+    # "disable handoff" knob: §10.1 invariant 5 requires auditing *every*
+    # escalation, so the queue always runs and the responder count is the only
+    # operational lever.
+    handoff_sla_target_seconds: int = 300
+    handoff_available_responders: int = 0
+    handoff_responder_pool: str = ""
+
     @field_validator("huible_log_level", mode="before")
     @classmethod
     def _normalize_log_level(cls, v: Any) -> Any:
@@ -161,6 +177,14 @@ class Settings(BaseSettings):
         if not raw:
             return []
         return [k.strip() for k in raw.split(",") if k.strip()]
+
+    @property
+    def handoff_responder_pool_list(self) -> list[str]:
+        """Comma-separated staffed responder ids (the on-call roster)."""
+        raw = (self.handoff_responder_pool or "").strip()
+        if not raw:
+            return []
+        return [r.strip() for r in raw.split(",") if r.strip()]
 
     def to_generator_config(self) -> GeneratorConfig:
         """Build a :class:`GeneratorConfig` from these settings.

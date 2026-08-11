@@ -76,6 +76,7 @@ from huible.api.schemas import (
     ChatResponseData,
     ChatTrace,
     ExcludedMemoryRefView,
+    HandoffTicketView,
     HealthCheck,
     HealthResponse,
     PersonaChatRequest,
@@ -97,9 +98,11 @@ from huible.persona.generator import PersonaGeneratorClient, make_generator_clie
 from huible.safety import (
     CrisisClassifier,
     DeterministicCrisisClassifier,
+    HandoffQueue,
+    InMemoryHandoffQueue,
     apply_affect_guard,
-    build_crisis_response,
     classify_user_message,
+    escalate_to_human,
 )
 
 logger = logging.getLogger(__name__)
@@ -286,6 +289,7 @@ def create_app(
     context_builder: ContextBuilder | None = None,
     crisis_classifier: CrisisClassifier | None = None,
     crisis_resources: dict[str, str] | None = None,
+    handoff_queue: HandoffQueue | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
 ) -> FastAPI:
@@ -342,6 +346,21 @@ def create_app(
     # config swap (regional line / human-handoff queue) rather than a re-build.
     application.state.crisis_classifier = crisis_classifier or DeterministicCrisisClassifier()
     application.state.crisis_resources = crisis_resources or {}
+    # §7.4.1 human-handoff (crisis escalation) queue. The default is the
+    # in-memory queue with ``available_responders=0`` from settings — the
+    # honest pre-real-user posture: every escalation degrades to the G1
+    # non-persona safe response (never drops, never the persona voice) and is
+    # still recorded for audit, until a staffed responder roster exists. A real
+    # backend (Postgres / Redis / external paging) drops in via the
+    # HandoffQueue Protocol pre-real-launch. There is intentionally no
+    # "disable handoff" knob: §10.1 invariant 5 requires auditing *every*
+    # escalation, so the queue always runs and the responder count is the only
+    # operational lever.
+    application.state.handoff_queue = handoff_queue or InMemoryHandoffQueue(
+        available_responders=resolved_settings.handoff_available_responders,
+        responder_id_pool=tuple(resolved_settings.handoff_responder_pool_list),
+        sla_target_seconds=resolved_settings.handoff_sla_target_seconds,
+    )
     application.state.start_time = start_time if start_time is not None else time.time()
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
@@ -520,21 +539,37 @@ def _register_routes(application: FastAPI) -> None:
         llm: LLMClient = application.state.llm_client
         provider_label = str(getattr(llm, "provider", "unknown"))
 
-        # --- G1: synchronous crisis pre-check (before ContextBuilder.build) ---
+        # --- G1 + §7.4.1: synchronous crisis pre-check → human-handoff queue ---
         # A crisis signal must NEVER reach the persona voice (HU-1407 §7.1 G1).
         # The check is synchronous, pre-generation, and pre-retrieval: on a
         # positive crisis signal the ContextBuilder is not called at all (no
         # memory retrieval on a crisis turn), persona-voiced generation is
         # skipped, and a warm non-persona escalation response is returned with a
         # recorded safety_event on the trace.
+        #
+        # §7.4.1 (HU-1421): the crisis turn is *also* routed into the
+        # human-handoff queue — an audited escalation ticket with a defined SLA,
+        # a non-persona waiting UX, and a fail-safe that degrades to this same
+        # G1 safe response when no human is available. The persona path is
+        # unreachable from here by construction (we return on every branch).
+        # Routing trigger is the G1 classifier signal, never persona-output.
         crisis_result = classify_user_message(
             body.message,
             classifier=application.state.crisis_classifier,
         )
         if crisis_result.is_crisis:
-            escalation = build_crisis_response(
-                resources=application.state.crisis_resources,
+            handoff_view = _escalate_and_build_trace(
+                application,
+                message=body.message,
+                crisis_result=crisis_result,
+                persona_id=persona_id,
+                conversation_id=body.conversation_id,
+                risk_flags=[],
             )
+            # handoff_view.user_acknowledgement already carries the full G1
+            # crisis resources (+ "a person will join" only when a responder
+            # was actually paged).
+            escalation = handoff_view.user_acknowledgement
             _record_turn(application, body.conversation_id, body.message, escalation)
             return PersonaChatResponse(
                 response=escalation,
@@ -546,6 +581,7 @@ def _register_routes(application: FastAPI) -> None:
                         affect=crisis_result.affect.value,
                         matched=list(crisis_result.matched),
                     ),
+                    handoff=handoff_view,
                     session_meta=_session_meta(application, body.conversation_id),
                 ),
             )
@@ -657,6 +693,59 @@ def _session_meta(
     # History holds [user, persona, user, persona, …] → turns = pairs rounded up.
     turn_count = max(1, (len(history) + 1) // 2)
     return SessionMetaView(turn_count=turn_count)
+
+
+def _escalate_and_build_trace(
+    application: FastAPI,
+    *,
+    message: str,
+    crisis_result,
+    persona_id: UUID,
+    conversation_id: str | None,
+    risk_flags: list[str],
+) -> HandoffTicketView:
+    """Route a G1 crisis turn into the human-handoff queue and build the trace view.
+
+    §7.4.1 (HU-1421): the queue is the escalation-to-human path. It always runs
+    so §10.1 invariant 5 ("audit every escalation") holds even when no
+    responder is staffed — the InMemoryHandoffQueue default (0 responders)
+    records every ticket as ``degraded`` and the user still gets the G1
+    non-persona safe response.
+
+    Fail-safe (HU-1407 §10.1 #2): if the queue raises, ``escalate_to_human``
+    degrades to the G1 safe response and records the ticket as ``degraded``. The
+    persona path is unreachable from here.
+    """
+    queue: HandoffQueue = application.state.handoff_queue
+    result = escalate_to_human(
+        message,
+        crisis_result=crisis_result,
+        queue=queue,
+        persona_id=str(persona_id),
+        conversation_id=conversation_id,
+        risk_flags=risk_flags,
+        resources=application.state.crisis_resources or None,
+    )
+    return _ticket_view(result.ticket, response_text=result.response_text)
+
+
+def _ticket_view(ticket, *, response_text: str) -> HandoffTicketView:
+    """Render a handoff ticket + the user-facing acknowledgement as a trace view."""
+    return HandoffTicketView(
+        ticket_id=ticket.id,
+        outcome=ticket.outcome.value,
+        trigger_signal=ticket.trigger_signal,
+        affect=ticket.affect,
+        risk_flags=list(ticket.risk_flags),
+        matched_patterns=list(ticket.matched_patterns),
+        sla_target_seconds=ticket.sla_target_seconds,
+        created_at=ticket.created_at,
+        responder_id=ticket.responder_id,
+        degrade_reason=ticket.degrade_reason,
+        clinical_review_note=ticket.clinical_review_note,
+        resources_shown=True,
+        user_acknowledgement=response_text,
+    )
 
 
 def _mint_conversation_id() -> str:

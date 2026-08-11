@@ -48,7 +48,7 @@ from huible.memory.protocol import (
     SourceType,
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
-from huible.safety import FRAMING_VERSION
+from huible.safety import DEFAULT_HANDOFF_SLA_SECONDS, FRAMING_VERSION, InMemoryHandoffQueue
 
 PERSONA_ID = uuid4()
 API_KEY = "key-chandler-family-guardrails"
@@ -181,6 +181,8 @@ def _make_app(
     backend: _FakeBackend | None = None,
     llm: FakeLLMClient | None = None,
     memories: dict[str, MemoryNode] | None = None,
+    crisis_resources: dict[str, str] | None = None,
+    handoff_queue=None,
 ) -> tuple[TestClient, FakeLLMClient, dict[str, MemoryNode]]:
     if backend is not None:
         seeded_backend = backend
@@ -195,6 +197,8 @@ def _make_app(
         api_key_store=keys,
         persona_registry=registry,
         llm_client=fake_llm,
+        crisis_resources=crisis_resources,
+        handoff_queue=handoff_queue,
         start_time=0.0,
     )
     return TestClient(application), fake_llm, seeded_memories
@@ -266,6 +270,137 @@ class TestG1CrisisPath:
         body = _post(client, "I want to kill myself")
         assert "116 123" in body["response"]
         assert "988" not in body["response"]
+
+
+# ---------------------------------------------------------------------------
+# §7.4.1 — Human-handoff (crisis escalation) queue on the G1 path (HU-1421)
+#
+# Every G1 crisis turn is routed into the human-handoff queue. Default posture
+# (0 staffed responders) degrades to the G1 safe response — never drops, never
+# the persona voice — and still records an audited ticket. With a staffed queue
+# the user gets a warm non-persona "a person will join" acknowledgement.
+# ---------------------------------------------------------------------------
+
+
+class TestHumanHandoffG1Path:
+    def test_crisis_turn_creates_audited_handoff_ticket(self):
+        """A crisis turn creates a ``trace.handoff`` audit row with every §10.1 field."""
+        queue = InMemoryHandoffQueue()  # 0 responders → degrade
+        client, _llm, _memories = _make_app(handoff_queue=queue)
+        body = _post(client, "I want to die, I have the pills", conversation_id="sess-crisis")
+
+        handoff = body["trace"]["handoff"]
+        assert handoff is not None
+        # §10.1 invariant 5 — every required audit field is present.
+        assert handoff["ticket_id"].startswith("hh-")
+        assert handoff["trigger_signal"] == "crisis"
+        assert handoff["affect"] == "crisis"
+        assert handoff["risk_flags"] == []
+        assert len(handoff["matched_patterns"]) >= 1
+        assert handoff["created_at"]
+        assert handoff["sla_target_seconds"] == DEFAULT_HANDOFF_SLA_SECONDS
+        assert handoff["outcome"] == "degraded"
+        assert handoff["degrade_reason"] == "no_responder_available"
+        assert handoff["responder_id"] is None
+        # The audit row is in the queue's audit log.
+        assert len(queue.audit_log()) == 1
+        assert queue.audit_log()[0].conversation_id == "sess-crisis"
+
+    def test_default_zero_responders_degrades_to_g1_safe_response(self):
+        """§10.1 #2: 0 responders → degrade to G1, never persona voice."""
+        client, llm, _memories = _make_app()  # default 0 responders
+        body = _post(client, "I am going to kill myself")
+
+        resp = body["response"]
+        # Resources always surfaced.
+        assert "988" in resp
+        assert "still be here" in resp
+        # No false "person joining" claim on degrade.
+        assert "person to reach out" not in resp
+        # Persona never invoked.
+        assert llm.calls == []
+        # Non-persona response.
+        assert "[fake-llm:" not in resp
+
+    def test_staffed_queue_enqueues_and_acknowledges_a_person_joining(self):
+        """A staffed queue pages a responder; the UX says a person will join."""
+        queue = InMemoryHandoffQueue(
+            available_responders=1, responder_id_pool=("pat-clinical",), sla_target_seconds=600
+        )
+        client, _llm, _memories = _make_app(handoff_queue=queue)
+        body = _post(client, "I want to join them, I want to die")
+
+        resp = body["response"]
+        handoff = body["trace"]["handoff"]
+        # Outcome enqueued + responder paged.
+        assert handoff["outcome"] == "enqueued"
+        assert handoff["responder_id"] == "pat-clinical"
+        assert handoff["degrade_reason"] is None
+        assert handoff["sla_target_seconds"] == 600
+        # Non-persona warm acknowledgement.
+        assert "person to reach out" in resp
+        assert "10 minutes" in resp  # 600s → 10 min
+        # Resources still visible alongside the acknowledgement.
+        assert "988" in resp
+
+    def test_persona_path_unreachable_on_crisis_even_when_queue_is_staffed(self):
+        """§10.1 #2/#3: a staffed queue never lets the persona voice fire on crisis."""
+        queue = InMemoryHandoffQueue(available_responders=2, responder_id_pool=("a", "b"))
+        client, llm, _memories = _make_app(handoff_queue=queue)
+        _post(client, "I want to die")
+        # The LLM is never called on a crisis turn, enqueue or not.
+        assert llm.calls == []
+
+    def test_queue_error_degrades_to_g1_safe_response(self):
+        """§10.1 #2: a broken queue degrades — never drops, never the persona voice."""
+        from huible.safety import HandoffTicket
+
+        class _BrokenQueue(InMemoryHandoffQueue):
+            def enqueue(self, ticket: HandoffTicket) -> HandoffTicket:
+                raise RuntimeError("backend down")
+
+        client, llm, _memories = _make_app(handoff_queue=_BrokenQueue())
+        body = _post(client, "I want to kill myself")
+
+        handoff = body["trace"]["handoff"]
+        assert handoff["outcome"] == "degraded"
+        assert handoff["degrade_reason"] == "queue_error:RuntimeError"
+        # User still gets the G1 safe response.
+        assert "988" in body["response"]
+        # Persona never invoked.
+        assert llm.calls == []
+
+    def test_routing_trigger_is_g1_signal_not_persona_output(self):
+        """§10.1 #3: a non-crisis (neutral/distress) turn never opens a ticket."""
+        queue = InMemoryHandoffQueue(available_responders=1)
+        client, _llm, _memories = _make_app(handoff_queue=queue)
+        # Distress (sub-acute) message → not crisis → persona path, no handoff.
+        body = _post(client, "I miss him so much, my heart is broken")
+        assert body["trace"]["handoff"] is None
+        assert len(queue.audit_log()) == 0
+
+    def test_audit_log_captures_every_escalation_across_turns(self):
+        """§10.1 #5: multiple crisis turns produce multiple audit rows, in order."""
+        queue = InMemoryHandoffQueue(available_responders=1, responder_id_pool=("pat",))
+        client, _llm, _memories = _make_app(handoff_queue=queue)
+        _post(client, "I want to die", conversation_id="c1")
+        _post(client, "I am going to kill myself", conversation_id="c2")
+
+        log = queue.audit_log()
+        assert len(log) == 2
+        assert [t.conversation_id for t in log] == ["c1", "c2"]
+        assert all(t.outcome.value == "enqueued" for t in log)
+        assert {t.responder_id for t in log} == {"pat"}
+
+    def test_handoff_acknowledgement_is_never_persona_voiced(self):
+        """§10.1 #4: the waiting UX is non-persona even when a responder is paged."""
+        queue = InMemoryHandoffQueue(available_responders=1)
+        client, _llm, _memories = _make_app(handoff_queue=queue)
+        body = _post(client, "I want to join them")
+        resp = body["response"]
+        # No deceased-voice markers anywhere in the escalation.
+        assert "[fake-llm:" not in resp
+        assert "Chandler" not in resp  # the persona never speaks during handoff
 
 
 # ---------------------------------------------------------------------------
