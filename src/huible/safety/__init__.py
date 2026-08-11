@@ -1,11 +1,10 @@
-"""Persona-chat runtime clinical guardrails (G1-G4 + G5/G9 framing + §7.4.1 handoff).
+"""Persona-chat runtime clinical guardrails (G1-G4 + G5/G9 framing + §7.4 handoff/consent).
 
 Clinical source: the Clinical Advisor's ``clinical-guardrails`` spec (advisory
 issue HU-1407), PM adoption (HU-1408), and Tech-Lead architectural placement
 (HU-1409, clinically approved). This package implements the runtime guardrails
 required for the Phase-1 phase-gate sign-off recorded in HU-1407 §7.3, plus the
-§7.4.1 human-handoff escalation queue required before any real grieving-user
-traffic (HU-1421, §7.4 #1 / §10.1 fail-safe invariants):
+§7.4 pre-real-user clinical gates (HU-1420):
 
 * :mod:`huible.safety.crisis` — G1 synchronous crisis-signal detection + warm
   non-persona escalation, plus the shared affect grade (G3 signal source).
@@ -22,14 +21,20 @@ traffic (HU-1421, §7.4 #1 / §10.1 fail-safe invariants):
   to a retrieved reference (or the persona vault), or be suppressed. The
   generation-side backstop for a confabulating generator, complementing the
   G4 retrieval-side provenance firewall.
+* :mod:`huible.safety.consent` — §7.4.3 G6 first-use reality-framing / consent
+  gate: no persona-voiced reply may leave the chat path before the session has
+  acknowledged the consent card. Pluggable backend + injectable card content
+  (the Onboarding Agent owns the clinically-reviewed copy); the deceased persona
+  never voices the consent.
 
 The chat endpoint (``huible.api.app``) wires these so that a crisis signal
 never reaches the persona voice (G1), every persona-voiced turn carries the
 immutable framing (G2/G5/G9), distress flattens the voice (G3), the response
 trace records the safety event / memory refs for audit (G4), a crisis turn
-escalates to a real human with a monitored SLA (§7.4.1), and every
-persona-voiced reply is aligned against its retrieved refs so no unsupported
-claim reaches a grieving user (§7.4.2).
+escalates to a real human with a monitored SLA (§7.4.1), every persona-voiced
+reply is aligned against its retrieved refs so no unsupported claim reaches a
+grieving user (§7.4.2), and no persona reply proceeds before the session
+acknowledges the reality-framing / consent card (§7.4.3 G6).
 """
 
 from huible.safety.affect import (
@@ -50,6 +55,18 @@ from huible.safety.alignment import (
     build_grounding_corpus,
     extract_claims,
     is_grounded,
+)
+from huible.safety.consent import (
+    CONSENT_CARD_VERSION,
+    DEFAULT_CONSENT_ACKNOWLEDGE_INSTRUCTIONS,
+    DEFAULT_CONSENT_CARD_BODY,
+    DEFAULT_CONSENT_CARD_TITLE,
+    ConsentCard,
+    ConsentCardProvider,
+    ConsentGate,
+    ConsentRecord,
+    DefaultConsentCard,
+    InMemoryConsentGate,
 )
 from huible.safety.crisis import (
     DEFAULT_CRISIS_RESOURCES,
@@ -83,6 +100,10 @@ from huible.safety.handoff import (
 __all__ = [
     "ADVICE_CLAIM_PATTERNS",
     "ALIGNMENT_FALLBACK_RESPONSE",
+    "CONSENT_CARD_VERSION",
+    "DEFAULT_CONSENT_ACKNOWLEDGE_INSTRUCTIONS",
+    "DEFAULT_CONSENT_CARD_BODY",
+    "DEFAULT_CONSENT_CARD_TITLE",
     "DEFAULT_CRISIS_RESOURCES",
     "DEFAULT_HANDOFF_SLA_SECONDS",
     "DISTRESS_FALLBACK_RESPONSE",
@@ -94,15 +115,21 @@ __all__ = [
     "AlignmentReport",
     "Claim",
     "ClaimCategory",
+    "ConsentCard",
+    "ConsentCardProvider",
+    "ConsentGate",
+    "ConsentRecord",
     "CrisisClassifier",
     "CrisisResult",
     "CrisisSignal",
+    "DefaultConsentCard",
     "DeterministicCrisisClassifier",
     "FramingBlock",
     "HandoffOutcome",
     "HandoffQueue",
     "HandoffResult",
     "HandoffTicket",
+    "InMemoryConsentGate",
     "InMemoryHandoffQueue",
     "UserAffect",
     "align_response",

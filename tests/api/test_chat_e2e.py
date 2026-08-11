@@ -207,6 +207,20 @@ def _make_app(
     return TestClient(application), fake_llm, memories
 
 
+def _consent(client: TestClient, conv: str = "sess-e2e") -> str:
+    """Pre-consent a session so the persona path under test runs.
+
+    The G6 reality-framing / consent gate is exercised in test_chat_consent.py;
+    this suite covers the post-consent retrieval/generation path (HU-1406).
+    """
+    client.post(
+        f"/api/v1/chat/{PERSONA_ID}/consent",
+        json={"conversation_id": conv},
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
+    return conv
+
+
 # ---------------------------------------------------------------------------
 # Headline: text -> retrieval -> LLM -> text
 # ---------------------------------------------------------------------------
@@ -216,10 +230,11 @@ class TestPersonaChatEndToEnd:
     def test_full_path_returns_response_and_trace(self):
         """Text-in -> retrieval -> LLM -> text-out works end to end."""
         client, llm, _memories = _make_app()
+        conv = _consent(client)
 
         r = client.post(
             f"/api/v1/chat/{PERSONA_ID}",
-            json={"message": "tell me about fishing on the lake"},
+            json={"message": "tell me about fishing on the lake", "conversation_id": conv},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
         assert r.status_code == 200, r.text
@@ -239,10 +254,11 @@ class TestPersonaChatEndToEnd:
         firewall (HU-1399) before generation, so their tiers never surface.
         """
         client, _llm, memories = _make_app()
+        conv = _consent(client)
 
         r = client.post(
             f"/api/v1/chat/{PERSONA_ID}",
-            json={"message": "tell me about fishing on the lake"},
+            json={"message": "tell me about fishing on the lake", "conversation_id": conv},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
         assert r.status_code == 200, r.text
@@ -266,10 +282,11 @@ class TestPersonaChatEndToEnd:
     def test_provenance_firewall_blocks_low_and_quarantine_from_llm_prompt(self):
         """Defense in depth: LOW/QUARANTINE text never reaches the LLM prompt."""
         client, llm, _memories = _make_app()
+        conv = _consent(client)
 
         client.post(
             f"/api/v1/chat/{PERSONA_ID}",
-            json={"message": "tell me about fishing on the lake"},
+            json={"message": "tell me about fishing on the lake", "conversation_id": conv},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
 
@@ -305,12 +322,14 @@ class TestPersonaChatEndToEnd:
         backend.seed(private)
 
         client, llm, _memories = _make_app(backend=backend)
+        conv = _consent(client)
 
         r = client.post(
             f"/api/v1/chat/{PERSONA_ID}",
             json={
                 "message": "fishing on the lake",
                 "relationship": "acquaintance",
+                "conversation_id": conv,
             },
             headers={"Authorization": f"Bearer {API_KEY}"},
         )

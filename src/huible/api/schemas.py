@@ -30,6 +30,10 @@ __all__ = [
     "ChatResponse",
     "ChatResponseData",
     "ChatTrace",
+    "ConsentAcknowledgeData",
+    "ConsentAcknowledgeRequest",
+    "ConsentAcknowledgeResponse",
+    "ConsentCardView",
     "DataEnvelope",
     "ExcludedMemoryRefView",
     "HandoffTicketView",
@@ -398,3 +402,67 @@ class PersonaChatResponse(BaseModel):
 
     response: str
     trace: ChatTrace
+
+
+# --- G6 entry-framing / consent card (HU-1423, §7.4.3) ---------------------
+
+
+class ConsentCardView(BaseModel):
+    """Reality-framing / consent card content surfaced to the client (§7.4.3 G6).
+
+    The card is an onboarding/system message — it is **never** voiced by the
+    deceased persona and never passed through the generator. When the chat path
+    refuses a turn for lack of consent (HTTP 409 ``CONSENT_REQUIRED``), the card
+    is included inline so the client can render it and then call the acknowledge
+    endpoint. The Onboarding Agent owns the clinically-reviewed wording; this
+    view is the wire shape the card provider fills in.
+    """
+
+    version: int = Field(
+        description="Monotonically-increasing card revision (drift / audit pin)."
+    )
+    title: str = Field(description="Short card heading shown to the user.")
+    body: str = Field(description="Reality-framing + consent copy shown to the user.")
+    acknowledge_instructions: str = Field(
+        description="How the client records the acknowledgment (the consent endpoint path)."
+    )
+
+
+class ConsentAcknowledgeRequest(BaseModel):
+    """Body of ``POST /api/v1/chat/{persona_id}/consent`` (§7.4.3 G6).
+
+    Records that the user acknowledged the reality-framing / consent card for
+    this session. ``conversation_id`` is the session key the consent binds to
+    (the same id threaded through ``POST /chat/{persona_id}``).
+    """
+
+    conversation_id: str = Field(
+        ...,
+        min_length=1,
+        description="Session id the acknowledgment binds to (same as chat conversation_id).",
+    )
+    card_version: int | None = Field(
+        default=None,
+        ge=1,
+        description=(
+            "Card revision the user acknowledged. Defaults to the provider's "
+            "current revision when omitted."
+        ),
+    )
+
+
+class ConsentAcknowledgeData(BaseModel):
+    """The ``data`` payload of a successful acknowledge response."""
+
+    acknowledged: bool = Field(default=True)
+    conversation_id: str
+    persona_id: UUID
+    card_version: int
+    acknowledged_at: str = Field(description="ISO-8601 UTC timestamp.")
+    acknowledgment_id: str = Field(description="Audit key for the recorded consent.")
+
+
+class ConsentAcknowledgeResponse(BaseModel):
+    """Full acknowledge response envelope."""
+
+    data: ConsentAcknowledgeData

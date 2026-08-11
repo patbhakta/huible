@@ -76,6 +76,10 @@ from huible.api.schemas import (
     ChatResponse,
     ChatResponseData,
     ChatTrace,
+    ConsentAcknowledgeData,
+    ConsentAcknowledgeRequest,
+    ConsentAcknowledgeResponse,
+    ConsentCardView,
     ExcludedMemoryRefView,
     HandoffTicketView,
     HealthCheck,
@@ -97,9 +101,13 @@ from huible.persona.context import (
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.safety import (
+    ConsentCardProvider,
+    ConsentGate,
     CrisisClassifier,
+    DefaultConsentCard,
     DeterministicCrisisClassifier,
     HandoffQueue,
+    InMemoryConsentGate,
     InMemoryHandoffQueue,
     apply_affect_guard,
     apply_alignment_guard,
@@ -292,6 +300,8 @@ def create_app(
     crisis_classifier: CrisisClassifier | None = None,
     crisis_resources: dict[str, str] | None = None,
     handoff_queue: HandoffQueue | None = None,
+    consent_gate: ConsentGate | None = None,
+    consent_card_provider: ConsentCardProvider | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
 ) -> FastAPI:
@@ -363,6 +373,18 @@ def create_app(
         responder_id_pool=tuple(resolved_settings.handoff_responder_pool_list),
         sla_target_seconds=resolved_settings.handoff_sla_target_seconds,
     )
+    # §7.4.3 G6 first-use reality-framing / consent gate. The gate enforces that
+    # no persona-voiced reply leaves the chat path before the session has
+    # acknowledged the consent card (HU-1423). The default backend is the
+    # in-memory gate (key-free pre-real-users); a real backend (Postgres /
+    # Redis / the onboarding-terminal's session store) drops in here
+    # pre-real-launch. The card content is injectable: the DefaultConsentCard
+    # is an explicitly-marked PLACEHOLDER; the Onboarding Agent's clinically
+    # reviewed copy swaps in via consent_card_provider without touching the
+    # gate. The deceased persona never voices the consent (§7.1 H1) — the card
+    # is a non-persona system message, structurally disjoint from generation.
+    application.state.consent_gate = consent_gate or InMemoryConsentGate()
+    application.state.consent_card_provider = consent_card_provider or DefaultConsentCard()
     application.state.start_time = start_time if start_time is not None else time.time()
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
@@ -588,6 +610,45 @@ def _register_routes(application: FastAPI) -> None:
                 ),
             )
 
+        # --- §7.4.3 G6: first-use reality-framing / consent gate ---------------
+        # No persona-voiced reply may leave this path before the session has
+        # acknowledged the consent card (HU-1423). The check runs AFTER the G1
+        # crisis branch on purpose: crisis resources are a non-persona safety
+        # response and must remain reachable on a first, un-consented turn
+        # (safety wins over framing). The persona path — retrieval, generation,
+        # the whole deceased-voice surface — is what is gated here.
+        #
+        # On a missing consent the turn fails fast with HTTP 409
+        # CONSENT_REQUIRED and the card inline, so the client can render it and
+        # POST /consent. The deceased persona never voices the consent: the
+        # card is a non-persona system message and never reaches the generator.
+        session_id = body.conversation_id or _mint_conversation_id()
+        consent_gate: ConsentGate = application.state.consent_gate
+        if not consent_gate.is_acknowledged(session_id, persona_id):
+            card_provider: ConsentCardProvider = application.state.consent_card_provider
+            card = card_provider.get_card(binding.persona.name)
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": {
+                        "code": "CONSENT_REQUIRED",
+                        "status": 409,
+                        "message": (
+                            "Reality-framing consent is required before this "
+                            "session can proceed."
+                        ),
+                        "conversation_id": session_id,
+                        "acknowledge_url": f"/api/v1/chat/{persona_id}/consent",
+                        "consent_card": ConsentCardView(
+                            version=card.version,
+                            title=card.title,
+                            body=card.body,
+                            acknowledge_instructions=card.acknowledge_instructions,
+                        ).model_dump(),
+                    }
+                },
+            )
+
         # --- Default / G3-distress path: retrieve + render + generate --------
         # The shared affect signal grades sub-acute distress; the ContextBuilder
         # branches the prompt (G3 dynamic half) and the affect guard suppresses
@@ -646,6 +707,77 @@ def _register_routes(application: FastAPI) -> None:
                     ungrounded_by_category=alignment.category_counts(),
                 ),
             ),
+        )
+
+    @application.post(
+        "/api/v1/chat/{persona_id}/consent",
+        response_model=ConsentAcknowledgeResponse,
+        tags=["Chat"],
+        summary="Acknowledge the G6 reality-framing / consent card for a session",
+    )
+    async def acknowledge_consent(
+        persona_id: UUID,
+        body: ConsentAcknowledgeRequest,
+        principal: ApiKeyPrincipal = Depends(authenticate),
+        registry: PersonaRegistry = Depends(get_persona_registry),
+    ) -> ConsentAcknowledgeResponse:
+        """Record first-use reality-framing consent for a session (§7.4.3 G6).
+
+        The chat path (``POST /api/v1/chat/{persona_id}``) refuses to produce a
+        persona reply until this is recorded. The consent binds to the session
+        (``conversation_id``) and persona. The card is an onboarding/system
+        message — the deceased persona never voices it (§7.1 H1); this endpoint
+        only records the acknowledgment, it performs no generation.
+
+        Auth: persona-scoped bearer key (401 when missing/unknown). The path
+        ``persona_id`` must match the key's scope (403 otherwise). The persona
+        must be registered (404 otherwise) so consent cannot be recorded for an
+        unknown persona.
+
+        This is the chat-path-owned recording surface. When the onboarding
+        terminal lands it either calls this endpoint or writes to the same
+        ``ConsentGate`` backend; the enforcement in ``persona_chat`` is the
+        durable gate either way.
+        """
+        if persona_id != principal.persona_id:
+            raise_forbidden()
+
+        # Resolve any requester tier to confirm the persona is registered. The
+        # relationship is not meaningful for consent (the card is the same for
+        # every requester), but we require the persona to exist so consent
+        # cannot be recorded against an unknown persona id.
+        binding: PersonaBinding | None = registry.get(persona_id, RelationshipTier.FAMILY)
+        if binding is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "PERSONA_NOT_FOUND",
+                        "status": 404,
+                        "message": f"No persona registered for id {persona_id}",
+                    }
+                },
+            )
+
+        card_provider: ConsentCardProvider = application.state.consent_card_provider
+        card_version = body.card_version or card_provider.get_card(
+            binding.persona.name
+        ).version
+
+        gate: ConsentGate = application.state.consent_gate
+        record = gate.record_acknowledgement(
+            body.conversation_id, persona_id=persona_id, card_version=card_version
+        )
+
+        return ConsentAcknowledgeResponse(
+            data=ConsentAcknowledgeData(
+                acknowledged=True,
+                conversation_id=record.session_id,
+                persona_id=persona_id,
+                card_version=record.card_version,
+                acknowledged_at=record.acknowledged_at,
+                acknowledgment_id=record.acknowledgment_id,
+            )
         )
 
 

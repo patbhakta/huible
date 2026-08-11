@@ -153,6 +153,14 @@ def _make_app(
 
 def _post(client: TestClient, message: str, **body: Any) -> Any:
     body = {"message": message, **body}
+    # Pre-consent the session so the persona path under test runs. The G6
+    # consent gate is exercised in test_chat_consent.py.
+    conv = body.setdefault("conversation_id", "sess-alignment")
+    client.post(
+        f"/api/v1/chat/{PERSONA_ID}/consent",
+        json={"conversation_id": conv},
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
     r = client.post(
         f"/api/v1/chat/{PERSONA_ID}",
         json=body,
