@@ -37,6 +37,13 @@ required for the Phase-1 phase-gate sign-off recorded in HU-1407 §7.3, plus the
   to a binding action (tighten / reframe / refuse_topic / handoff /
   pause_session) per the Clinical Advisor's enforcement matrix; the chat path
   applies the action with concrete runtime effects.
+* :mod:`huible.safety.intake` — Stage 0.5 risk-profile intake: the minimal,
+  consent-aware path that populates the G8 ``risk_flags`` for the canary
+  cohort (≤10 invited users) so the enforcement engine is live (not inert)
+  before real grieving-user traffic flows. Derives the objective flags
+  (``minor_decedent`` / ``recent_loss``) from the persona record and gathers
+  the assessment flags (``loss_of_child`` / ``non_acceptance`` /
+  ``proxy_user``) behind the §7.4.3 G6 consent card (no bypass).
 
 The chat endpoint (``huible.api.app``) wires these so that a crisis signal
 never reaches the persona voice (G1), every persona-voiced turn carries the
@@ -119,6 +126,15 @@ from huible.safety.handoff_monitoring import (
     sla_status,
     was_answered_within_sla,
 )
+from huible.safety.intake import (
+    MINOR_DECEDENT_AGE_THRESHOLD,
+    RECENT_LOSS_ACUTE_WINDOW_DAYS,
+    ConsentNotRecordedError,
+    IntakeResult,
+    RiskIntakeAssessment,
+    RiskIntakeService,
+    derive_persona_flags,
+)
 from huible.safety.risk import (
     AGE_INAPPROPRIATE_TOPIC_PATTERNS,
     DEFAULT_DOSAGE_CAP_TURNS,
@@ -161,10 +177,12 @@ __all__ = [
     "DISTRESS_GROUNDING_ADDENDUM",
     "FRAMING_VERSION",
     "IDENTITY_CLAIM_PATTERNS",
+    "MINOR_DECEDENT_AGE_THRESHOLD",
     "PAUSE_SESSION_RESPONSE",
     "PRECEDENCE",
     "PROXY_USER_PAUSE_RESPONSE",
     "REALITY_FRAMING_BLOCK",
+    "RECENT_LOSS_ACUTE_WINDOW_DAYS",
     "REFRAME_REANCHOR_ADDENDUM",
     "REFUSE_TOPIC_FALLBACK_RESPONSE",
     "RISK_FLAG_REQUIRED_ACTIONS",
@@ -175,6 +193,7 @@ __all__ = [
     "ConsentCard",
     "ConsentCardProvider",
     "ConsentGate",
+    "ConsentNotRecordedError",
     "ConsentRecord",
     "CoverageWindow",
     "CrisisClassifier",
@@ -193,7 +212,10 @@ __all__ = [
     "InMemoryConsentGate",
     "InMemoryHandoffQueue",
     "InMemoryRiskProfile",
+    "IntakeResult",
     "RiskFlag",
+    "RiskIntakeAssessment",
+    "RiskIntakeService",
     "RiskProfileProvider",
     "RiskSessionSignals",
     "SLAStatus",
@@ -207,6 +229,7 @@ __all__ = [
     "build_reframe_addendum",
     "classify_user_message",
     "compute_handoff_telemetry",
+    "derive_persona_flags",
     "detect_sarcastic_dismissive",
     "enforce_risk_flags",
     "escalate_risk_to_human",

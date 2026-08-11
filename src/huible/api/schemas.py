@@ -669,3 +669,106 @@ class ConsentAcknowledgeResponse(BaseModel):
     """Full acknowledge response envelope."""
 
     data: ConsentAcknowledgeData
+
+
+# --- Stage 0.5 risk-profile intake (HU-1448, §7.4.4) ------------------------
+
+
+class RiskIntakeAssessmentRequest(BaseModel):
+    """Body of ``POST /api/v1/admin/risk-intake`` — the canary-cohort intake form.
+
+    Captures only the user-gathered assessment booleans the G8 enforcement
+    matrix acts on (matrix §2). The objective persona-record flags
+    (``minor_decedent`` / ``recent_loss``) are derived server-side from the
+    registered persona config and are not part of this request. No clinical-
+    diagnosis fields (Stage 2+ owns the full assessment instrument).
+    """
+
+    conversation_id: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Session id the intake binds to (same as chat conversation_id). "
+            "Must have a recorded G6 consent acknowledgment for (conversation_id, "
+            "persona_id) before this call — intake does not bypass consent."
+        ),
+    )
+    persona_id: UUID = Field(
+        ...,
+        description="The canary persona the intake is being recorded against.",
+    )
+    loss_of_child: bool = Field(
+        default=False,
+        description="The deceased is the user's child (matrix §2 loss_of_child).",
+    )
+    non_acceptance: bool = Field(
+        default=False,
+        description=(
+            "The reality-framing has not landed; the user is asserting literal "
+            "presence / reunion (matrix §2 non_acceptance)."
+        ),
+    )
+    proxy_user: bool = Field(
+        default=False,
+        description=(
+            "Identity verification failed for this session; the person at the "
+            "keyboard is not the intended requester (matrix §2 proxy_user, "
+            "intrinsically per-session)."
+        ),
+    )
+
+
+class RiskIntakeData(BaseModel):
+    """The ``data`` payload of a successful intake response — audit view."""
+
+    persona_id: UUID
+    conversation_id: str = Field(
+        description="Session id the intake was recorded against."
+    )
+    consent_acknowledgment_id: str | None = Field(
+        default=None,
+        description="Audit key of the G6 consent record that authorized this intake.",
+    )
+    persona_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Intake-derived flags written at persona scope (apply to every "
+            "session for this persona). Includes objective derivation "
+            "(minor_decedent / recent_loss) + assessment (loss_of_child / "
+            "non_acceptance)."
+        ),
+    )
+    session_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Intake-derived flags written at session scope (proxy_user). "
+            "Cleared/refreshed per intake for this (session, persona)."
+        ),
+    )
+    derived_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Subset of persona_flags derived objectively from the persona "
+            "record (minor_decedent / recent_loss). Consent-independent."
+        ),
+    )
+    assessed_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Subset of flags gathered from the user assessment "
+            "(loss_of_child / non_acceptance / proxy_user). Consent-gated."
+        ),
+    )
+    all_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Sorted union of every flag written this intake (both scopes). "
+            "This is what G8 enforcement will read on the next chat turn."
+        ),
+    )
+
+
+class RiskIntakeResponse(BaseModel):
+    """Full intake response envelope."""
+
+    data: RiskIntakeData

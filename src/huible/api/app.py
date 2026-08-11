@@ -113,6 +113,9 @@ from huible.api.schemas import (
     PersonaChatRequest,
     PersonaChatResponse,
     RiskEnforcementView,
+    RiskIntakeAssessmentRequest,
+    RiskIntakeData,
+    RiskIntakeResponse,
     SafetyEventView,
     SessionMetaView,
 )
@@ -133,6 +136,7 @@ from huible.safety import (
     REFUSE_TOPIC_FALLBACK_RESPONSE,
     ConsentCardProvider,
     ConsentGate,
+    ConsentNotRecordedError,
     CoverageWindow,
     CrisisClassifier,
     DefaultConsentCard,
@@ -143,6 +147,8 @@ from huible.safety import (
     InMemoryHandoffQueue,
     InMemoryRiskProfile,
     RiskFlag,
+    RiskIntakeAssessment,
+    RiskIntakeService,
     RiskProfileProvider,
     RiskSessionSignals,
     UserAffect,
@@ -1407,6 +1413,111 @@ def _register_routes(application: FastAPI) -> None:
                     admin_settings.persona_chat_canary_personas_set
                 ),
             }
+        )
+
+    @application.post(
+        "/api/v1/admin/risk-intake",
+        response_model=RiskIntakeResponse,
+        tags=["admin"],
+        summary="Stage 0.5 risk-profile intake for the canary cohort (§7.4.4 G8).",
+    )
+    async def record_risk_intake(
+        body: RiskIntakeAssessmentRequest,
+        principal: ApiKeyPrincipal = Depends(authenticate),
+        registry: PersonaRegistry = Depends(get_persona_registry),
+    ) -> RiskIntakeResponse:
+        """Populate ``risk_flags`` for a canary (session, persona) so G8 is live.
+
+        The minimal, consent-aware intake path (Stage 0.5, HU-1448). Merges
+        the objective persona-derived flags (``minor_decedent`` /
+        ``recent_loss`` from the registered persona config) with the user-
+        gathered assessment flags (``loss_of_child`` / ``non_acceptance`` /
+        ``proxy_user``) and writes them into the wired
+        :class:`RiskProfileProvider`. On the next ``POST /chat/{persona_id}``
+        turn the chat path reads them back via ``get_flags`` and §7.4.4 G8
+        enforcement actually changes runtime behavior (dosage cap, reframe,
+        refuse-topic, pause-session, handoff).
+
+        Consent-aware (§7.4.3 G6 — no bypass): the (conversation_id,
+        persona_id) pair must have a recorded reality-framing consent
+        acknowledgment first (``POST /api/v1/chat/{persona_id}/consent``);
+        otherwise this returns HTTP 409 ``CONSENT_REQUIRED``. The intake does
+        not weaken the chat-path consent gate — it is defense in depth on the
+        intake write surface.
+
+        Auth: persona-scoped bearer key (401 when missing/unknown). The body
+        ``persona_id`` must match the key's scope (403 otherwise). The persona
+        must be registered (404 otherwise).
+
+        Scope: canary cohort (≤10 invited users). No clinical-diagnosis
+        fields; the full assessment instrument is Stage 2+.
+        """
+        if body.persona_id != principal.persona_id:
+            raise_forbidden()
+
+        # Resolve the persona config to derive objective flags + confirm it is
+        # registered. The relationship tier is not meaningful for intake
+        # (objective derivation is tier-independent), but we require the
+        # persona to exist so flags cannot be recorded against an unknown id.
+        binding: PersonaBinding | None = registry.get(
+            body.persona_id, RelationshipTier.FAMILY
+        )
+        if binding is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "PERSONA_NOT_FOUND",
+                        "status": 404,
+                        "message": f"No persona registered for id {body.persona_id}",
+                    }
+                },
+            )
+
+        risk_profile: RiskProfileProvider = application.state.risk_profile
+        consent_gate: ConsentGate = application.state.consent_gate
+        service = RiskIntakeService(risk_profile, consent_gate=consent_gate)
+        try:
+            result = service.record_intake(
+                session_id=body.conversation_id,
+                persona_id=body.persona_id,
+                persona=binding.persona,
+                assessment=RiskIntakeAssessment(
+                    loss_of_child=body.loss_of_child,
+                    non_acceptance=body.non_acceptance,
+                    proxy_user=body.proxy_user,
+                ),
+            )
+        except ConsentNotRecordedError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": {
+                        "code": "CONSENT_REQUIRED",
+                        "status": 409,
+                        "message": (
+                            "Reality-framing consent is required before intake "
+                            "can be recorded for this session."
+                        ),
+                        "conversation_id": body.conversation_id,
+                        "acknowledge_url": (
+                            f"/api/v1/chat/{body.persona_id}/consent"
+                        ),
+                    }
+                },
+            ) from None
+
+        return RiskIntakeResponse(
+            data=RiskIntakeData(
+                persona_id=body.persona_id,
+                conversation_id=result.session_id,
+                consent_acknowledgment_id=result.consent_acknowledgment_id,
+                persona_flags=result.persona_flags,
+                session_flags=result.session_flags,
+                derived_flags=result.derived_flags,
+                assessed_flags=result.assessed_flags,
+                all_flags=result.all_flags,
+            )
         )
 
     @application.get(
