@@ -162,6 +162,7 @@ from huible.safety.store import (
     PostgresConsentGate,
     PostgresConversationStore,
     PostgresHandoffQueue,
+    PostgresRiskProfile,
 )
 
 logger = logging.getLogger(__name__)
@@ -277,15 +278,15 @@ async def _init_memory_backend(settings: Settings) -> MemoryBackend | None:
 
 def _init_safety_backends(
     settings: Settings,
-) -> tuple[HandoffQueue, ConsentGate, ConversationStore, list]:
+) -> tuple[HandoffQueue, ConsentGate, ConversationStore, RiskProfileProvider, list]:
     """Construct durable §7.4 backends when a sync DB URL is configured.
 
-    Returns ``(queue, consent_gate, conversation_store, disposables)``. When no
-    sync URL is configured (the key-free default), returns in-memory defaults
-    and an empty disposables list — the pre-real-user posture. Construction is
-    lazy (``create_engine`` does not connect), so startup stays fast; the first
-    request exercises connectivity. The disposables are disposed in the
-    lifespan shutdown hook (HU-1440).
+    Returns ``(queue, consent_gate, conversation_store, risk_profile,
+    disposables)``. When no sync URL is configured (the key-free default),
+    returns in-memory defaults and an empty disposables list — the
+    pre-real-user posture. Construction is lazy (``create_engine`` does not
+    connect), so startup stays fast; the first request exercises connectivity.
+    The disposables are disposed in the lifespan shutdown hook (HU-1440).
     """
     url = settings.effective_safety_database_url
     if not url:
@@ -303,6 +304,7 @@ def _init_safety_backends(
             ),
             InMemoryConsentGate(),
             InMemoryConversationStore(),
+            InMemoryRiskProfile(),
             [],
         )
     try:
@@ -320,8 +322,18 @@ def _init_safety_backends(
         )
         consent_gate = PostgresConsentGate(url)
         conversation_store = PostgresConversationStore(url)
-        logger.info("durable §7.4 safety backends wired (handoff/consent/conversation)")
-        return queue, consent_gate, conversation_store, [queue, consent_gate, conversation_store]
+        risk_profile = PostgresRiskProfile(url)
+        logger.info(
+            "durable §7.4 safety backends wired "
+            "(handoff/consent/conversation/risk)"
+        )
+        return (
+            queue,
+            consent_gate,
+            conversation_store,
+            risk_profile,
+            [queue, consent_gate, conversation_store, risk_profile],
+        )
     except Exception:  # pragma: no cover - defensive, misconfiguration only
         logger.exception(
             "failed to construct durable safety backends; falling back to in-memory"
@@ -340,6 +352,7 @@ def _init_safety_backends(
             ),
             InMemoryConsentGate(),
             InMemoryConversationStore(),
+            InMemoryRiskProfile(),
             [],
         )
 
@@ -492,11 +505,16 @@ def create_app(
     # Postgres-backed implementations when a sync safety DB URL is configured,
     # in-memory defaults otherwise. The §10.1 invariant 5 audit log, the
     # "a person will join you right now" promise, the dosage-cap turn count,
-    # and the crisis-history marker all survive a container restart when the
-    # durable backends are wired. Disposables (engines) are closed in lifespan.
-    durable_queue, durable_gate, durable_store, safety_disposables = (
-        _init_safety_backends(resolved_settings)
-    )
+    # the crisis-history marker, and the G8 risk profile all survive a
+    # container restart when the durable backends are wired. Disposables
+    # (engines) are closed in lifespan.
+    (
+        durable_queue,
+        durable_gate,
+        durable_store,
+        durable_risk_profile,
+        safety_disposables,
+    ) = _init_safety_backends(resolved_settings)
     application.state.handoff_queue = handoff_queue or durable_queue
     application.state.consent_gate = consent_gate or durable_gate
     # §7.4.3 consent card content. The DefaultConsentCard ships the
@@ -511,8 +529,13 @@ def create_app(
     # restarts so §7.4.4 dosage-cap + crisis-history enforcement stays correct;
     # the in-memory default is the pre-real-users fallback (HU-1440).
     application.state.conversation_store = conversation_store or durable_store
+    # When any backend is explicitly injected, the durable disposables are not
+    # owned by this app (the caller owns their lifecycle); otherwise this app
+    # owns the engines it constructed and disposes them on shutdown.
     application.state.safety_disposables = (
-        [] if (handoff_queue or consent_gate or conversation_store) else safety_disposables
+        []
+        if (handoff_queue or consent_gate or conversation_store or risk_profile)
+        else safety_disposables
     )
     # §7.4.4 G8 risk-flag enforcement. The risk profile is the intake-derived
     # source of the per-session + per-persona risk flags (loss_of_child,
@@ -523,8 +546,10 @@ def create_app(
     # onboarding / intake path populates this (memory-content-derived
     # loss_of_child, persona-age-derived minor_decedent, death-date-derived
     # recent_loss, intake-assessment non_acceptance, identity-verification
-    # proxy_user) without touching the chat endpoint.
-    application.state.risk_profile = risk_profile or InMemoryRiskProfile()
+    # proxy_user) without touching the chat endpoint. The durable
+    # PostgresRiskProfile (HU-1445) survives a restart so a populated profile
+    # does not silently go inert and disable G8 enforcement mid-ramp.
+    application.state.risk_profile = risk_profile or durable_risk_profile
     application.state.start_time = start_time if start_time is not None else time.time()
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.

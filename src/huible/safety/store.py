@@ -49,8 +49,10 @@ from sqlalchemy import (
     Index,
     Integer,
     Text,
+    and_,
     create_engine,
     func,
+    or_,
     select,
 )
 from sqlalchemy.orm import (
@@ -73,6 +75,7 @@ from huible.safety.handoff import (
     HandoffQueue,
     HandoffTicket,
 )
+from huible.safety.risk import RiskProfileProvider
 
 if TYPE_CHECKING:
     # Avoid a circular import at runtime: ``huible.persona.context`` imports
@@ -93,6 +96,8 @@ __all__ = [
     "PostgresConsentGate",
     "PostgresConversationStore",
     "PostgresHandoffQueue",
+    "PostgresRiskProfile",
+    "RiskProfileRow",
     "SafetyBase",
     "build_safety_engine",
 ]
@@ -224,6 +229,50 @@ class CrisisSessionRow(SafetyBase):
     conversation_id: Mapped[str] = mapped_column(Text, primary_key=True)
     marked_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=_TS,
+    )
+
+
+class RiskProfileRow(SafetyBase):
+    """Durable row for one scope of intake-derived risk flags (matrix §2).
+
+    Carries the G8 ``risk_flags`` that §7.4.4 enforcement acts on. Two scopes
+    share this one table (mirrors
+    :class:`~huible.safety.risk.InMemoryRiskProfile._persona_flags` /
+    ``._session_flags``):
+
+    * ``scope = 'persona'`` — intake-derived flags applying to every session for
+      that persona (``session_id`` is NULL). Examples: ``loss_of_child``
+      (memory-content-derived), ``minor_decedent`` (persona-age-derived),
+      ``recent_loss`` (death-date-derived), ``non_acceptance`` (intake
+      assessment).
+    * ``scope = 'session'`` — session-scoped flags (``proxy_user`` from
+      identity-verification failure; ``non_acceptance`` once a per-session
+      acceptance tracker lands).
+
+    :meth:`~huible.safety.risk.RiskProfileProvider.get_flags` returns the union
+    of both scopes for a (session, persona). Flags persist across a container
+    restart so G8 enforcement does not go inert mid-ramp (the HU-1445 fix).
+    """
+
+    __tablename__ = "risk_profiles"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True, autoincrement=True,
+    )
+    scope: Mapped[str] = mapped_column(Text, nullable=False)
+    persona_id: Mapped[str] = mapped_column(Text, nullable=False)
+    session_id: Mapped[str | None] = mapped_column(Text)
+    flags: Mapped[list] = mapped_column(
+        _PortableJSON, nullable=False, default=list,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=_TS,
+    )
+
+    __table_args__ = (
+        Index("idx_risk_profile_persona", "scope", "persona_id"),
+        Index("idx_risk_profile_session", "scope", "persona_id", "session_id"),
     )
 
 
@@ -493,6 +542,129 @@ class PostgresConsentGate:
             return [_row_to_record(r) for r in session.scalars(stmt)]
 
 
+# --- risk profile backend ---------------------------------------------------
+
+
+class PostgresRiskProfile:
+    """Durable :class:`RiskProfileProvider` backend (sync SQLAlchemy + Postgres).
+
+    Functional parity with
+    :class:`~huible.safety.risk.InMemoryRiskProfile`: intake-derived flags are
+    stored per-persona (``set_persona_flags`` — apply to every session for that
+    persona) and/or per-session (``set_session_flags``); :meth:`get_flags`
+    returns the sorted union of both scopes. Both scopes persist across a
+    container restart so §7.4.4 G8 enforcement stays in force after a restart
+    (the HU-1445 fix — a populated risk profile no longer goes inert, which
+    would otherwise silently disable the per-flag required actions in
+    :data:`huible.safety.risk.RISK_FLAG_REQUIRED_ACTIONS`).
+
+    The intake / onboarding path (memory-content-derived ``loss_of_child``,
+    persona-age-derived ``minor_decedent``, death-date-derived ``recent_loss``,
+    intake-assessment ``non_acceptance``, identity-verification ``proxy_user``)
+    populates this pre-real-launch via the ``set_*_flags`` write surface; the
+    chat path only reads via :meth:`get_flags` (the Protocol method).
+    """
+
+    _PERSONA_SCOPE = "persona"
+    _SESSION_SCOPE = "session"
+
+    def __init__(self, database_url: str, *, pool_size: int = 5,
+                 max_overflow: int = 10) -> None:
+        self._engine = create_engine(
+            database_url, pool_size=pool_size, max_overflow=max_overflow,
+            future=True,
+        )
+        self._session_factory = sessionmaker(
+            self._engine, class_=Session, expire_on_commit=False,
+        )
+
+    def close(self) -> None:
+        self._engine.dispose()
+
+    def set_persona_flags(
+        self, persona_id: UUID | str, flags: set[str] | list[str]
+    ) -> None:
+        """Set the intake-derived flags for a persona (applies to every session).
+
+        Upserts the single persona-scoped row for ``persona_id``. Mirrors
+        :meth:`InMemoryRiskProfile.set_persona_flags`.
+        """
+        self._upsert(self._PERSONA_SCOPE, str(persona_id), None, list(flags))
+
+    def set_session_flags(
+        self,
+        session_id: str,
+        persona_id: UUID | str,
+        flags: set[str] | list[str],
+    ) -> None:
+        """Set session-scoped flags for a (session, persona) pair.
+
+        Upserts the single session-scoped row for ``(session_id, persona_id)``.
+        Mirrors :meth:`InMemoryRiskProfile.set_session_flags`.
+        """
+        self._upsert(
+            self._SESSION_SCOPE, str(persona_id), session_id, list(flags)
+        )
+
+    def get_flags(self, session_id: str, persona_id: UUID) -> list[str]:
+        # Union of persona-scoped + session-scoped rows for this
+        # (session, persona), matching InMemoryRiskProfile.get_flags. Sorted so
+        # the result is deterministic (the enforcement engine parses it into a
+        # set internally, but stable ordering keeps logs/telemetry readable).
+        with self._session_factory() as session:
+            stmt = (
+                select(RiskProfileRow)
+                .where(RiskProfileRow.persona_id == str(persona_id))
+                .where(
+                    or_(
+                        RiskProfileRow.scope == self._PERSONA_SCOPE,
+                        and_(
+                            RiskProfileRow.scope == self._SESSION_SCOPE,
+                            RiskProfileRow.session_id == session_id,
+                        ),
+                    )
+                )
+            )
+            flags: set[str] = set()
+            for row in session.scalars(stmt):
+                flags.update(row.flags or [])
+            return sorted(flags)
+
+    def _upsert(
+        self,
+        scope: str,
+        persona_id: str,
+        session_id: str | None,
+        flags: list[str],
+    ) -> None:
+        # SELECT-then-UPDATE/INSERT within one transaction. Portable across
+        # sqlite (test path) and Postgres (prod) without dialect-specific
+        # upsert syntax; the write path is the low-volume intake path, not the
+        # hot chat path, so the extra round-trip is immaterial.
+        with self._session_factory() as session:
+            stmt = (
+                select(RiskProfileRow)
+                .where(RiskProfileRow.scope == scope)
+                .where(RiskProfileRow.persona_id == persona_id)
+            )
+            if session_id is None:
+                stmt = stmt.where(RiskProfileRow.session_id.is_(None))
+            else:
+                stmt = stmt.where(RiskProfileRow.session_id == session_id)
+            row = session.scalars(stmt).first()
+            if row is None:
+                session.add(RiskProfileRow(
+                    scope=scope,
+                    persona_id=persona_id,
+                    session_id=session_id,
+                    flags=list(flags),
+                ))
+            else:
+                row.flags = list(flags)
+                row.updated_at = datetime.now(UTC)
+            session.commit()
+
+
 # --- conversation / session state -------------------------------------------
 
 
@@ -684,7 +856,8 @@ def _parse_ticket_time(ts: str) -> datetime:
 
 
 # Protocol re-exports for callers that construct backends from settings and
-# want a single import path. ``HandoffQueue`` / ``ConsentGate`` are structural
-# Protocols; the Postgres classes satisfy them without declaring inheritance.
-_PROTOCOL_REEXPORTS = (HandoffQueue, ConsentGate)
+# want a single import path. ``HandoffQueue`` / ``ConsentGate`` /
+# ``RiskProfileProvider`` are structural Protocols; the Postgres classes
+# satisfy them without declaring inheritance.
+_PROTOCOL_REEXPORTS = (HandoffQueue, ConsentGate, RiskProfileProvider)
 

@@ -39,10 +39,12 @@ from huible.safety.handoff import (
     HandoffOutcome,
     HandoffTicket,
 )
+from huible.safety.risk import RiskFlag, RiskProfileProvider
 from huible.safety.store import (
     PostgresConsentGate,
     PostgresConversationStore,
     PostgresHandoffQueue,
+    PostgresRiskProfile,
     SafetyBase,
 )
 
@@ -95,6 +97,18 @@ def _conversation_store(eng) -> PostgresConversationStore:
     s._engine = eng
     s._session_factory = sessionmaker(eng, class_=Session, expire_on_commit=False)
     return s
+
+
+def _risk_profile(eng) -> PostgresRiskProfile:
+    """Build a PostgresRiskProfile wired to a shared (already-created) engine.
+
+    Mirrors the other ``_<backend>(eng)`` helpers so a "restarted" profile is
+    just a second object over the same DB — the durability contract under test.
+    """
+    p = PostgresRiskProfile.__new__(PostgresRiskProfile)
+    p._engine = eng
+    p._session_factory = sessionmaker(eng, class_=Session, expire_on_commit=False)
+    return p
 
 
 def _ticket(
@@ -306,6 +320,106 @@ class TestConversationStoreDurability:
         s.mark_crisis(None)
         assert s.get_history(None) == []
         assert s.has_crisis_history(None) is False
+
+
+# --- AC #4: risk profile durability (HU-1445) --------------------------------
+
+
+class TestRiskProfileDurability:
+    """The §7.4.4 G8 risk profile must survive a container restart.
+
+    This is the HU-1445 consequence: a populated risk profile wiped on restart
+    silently disables G8 enforcement — every per-flag required action in
+    ``RISK_FLAG_REQUIRED_ACTIONS`` reverts to the no-flag (``CONTINUE``) path,
+    so e.g. a ``loss_of_child`` session stops tightening/reframing and a
+    ``proxy_user`` session stops pausing. The intake-derived flags must persist.
+    """
+
+    def test_persona_flags_survive_restart(self, safety_engine):
+        """Intake-derived persona flags apply to every session and survive."""
+        pid = uuid4()
+        p1 = _risk_profile(safety_engine)
+        p1.set_persona_flags(pid, {RiskFlag.LOSS_OF_CHILD, RiskFlag.RECENT_LOSS})
+
+        # "Restart": fresh backend, same DB.
+        p2 = _risk_profile(safety_engine)
+        flags = p2.get_flags("any-session", pid)
+        assert flags == [RiskFlag.LOSS_OF_CHILD.value, RiskFlag.RECENT_LOSS.value]
+
+    def test_session_flags_survive_restart(self, safety_engine):
+        """Session-scoped flags (proxy_user, non_acceptance) survive restart."""
+        pid = uuid4()
+        p1 = _risk_profile(safety_engine)
+        p1.set_session_flags("sess-1", pid, {RiskFlag.PROXY_USER})
+
+        p2 = _risk_profile(safety_engine)
+        flags = p2.get_flags("sess-1", pid)
+        assert flags == [RiskFlag.PROXY_USER.value]
+
+    def test_persona_and_session_union_survives_restart(self, safety_engine):
+        """get_flags returns the union of persona + session scopes (the
+        InMemoryRiskProfile contract), and that union survives restart."""
+        pid = uuid4()
+        p1 = _risk_profile(safety_engine)
+        p1.set_persona_flags(pid, {RiskFlag.LOSS_OF_CHILD})
+        p1.set_session_flags("sess-u", pid, {RiskFlag.NON_ACCEPTANCE})
+
+        p2 = _risk_profile(safety_engine)
+        union = p2.get_flags("sess-u", pid)
+        assert union == [RiskFlag.LOSS_OF_CHILD.value, RiskFlag.NON_ACCEPTANCE.value]
+        # A different session on the same persona only sees the persona flags.
+        other = p2.get_flags("sess-other", pid)
+        assert other == [RiskFlag.LOSS_OF_CHILD.value]
+
+    def test_set_persona_flags_upserts(self, safety_engine):
+        """Re-setting persona flags replaces (not appends to) the prior set,
+        mirroring InMemoryRiskProfile.set_persona_flags."""
+        pid = uuid4()
+        p1 = _risk_profile(safety_engine)
+        p1.set_persona_flags(pid, {RiskFlag.LOSS_OF_CHILD, RiskFlag.RECENT_LOSS})
+        p1.set_persona_flags(pid, {RiskFlag.MINOR_DECEDENT})
+
+        p2 = _risk_profile(safety_engine)
+        flags = p2.get_flags("sess-1", pid)
+        # The second set replaced the first — no stale loss_of_child/recent_loss.
+        assert flags == [RiskFlag.MINOR_DECEDENT.value]
+
+    def test_set_session_flags_upserts(self, safety_engine):
+        pid = uuid4()
+        p1 = _risk_profile(safety_engine)
+        p1.set_session_flags("sess-1", pid, {RiskFlag.PROXY_USER})
+        p1.set_session_flags("sess-1", pid, {RiskFlag.NON_ACCEPTANCE})
+
+        p2 = _risk_profile(safety_engine)
+        flags = p2.get_flags("sess-1", pid)
+        assert flags == [RiskFlag.NON_ACCEPTANCE.value]
+
+    def test_empty_profile_stays_empty_after_restart(self, safety_engine):
+        """An un-populated persona must read empty (the pre-real-user default)
+        after a restart, so the default persona-chat turn stays unaffected."""
+        pid = uuid4()
+        p1 = _risk_profile(safety_engine)
+
+        p2 = _risk_profile(safety_engine)
+        assert p2.get_flags("sess-1", pid) == []
+        # Sanity: the first object also read empty before the "restart".
+        assert p1.get_flags("sess-1", pid) == []
+
+    def test_is_a_risk_profile_provider(self, safety_engine):
+        """PostgresRiskProfile satisfies the RiskProfileProvider Protocol."""
+        p = _risk_profile(safety_engine)
+        assert isinstance(p, RiskProfileProvider)
+
+    def test_persona_flags_isolated_per_persona(self, safety_engine):
+        """Flags for one persona must not leak into another's profile."""
+        pid_a = uuid4()
+        pid_b = uuid4()
+        p1 = _risk_profile(safety_engine)
+        p1.set_persona_flags(pid_a, {RiskFlag.LOSS_OF_CHILD})
+
+        p2 = _risk_profile(safety_engine)
+        assert p2.get_flags("sess-1", pid_a) == [RiskFlag.LOSS_OF_CHILD.value]
+        assert p2.get_flags("sess-1", pid_b) == []
 
 
 # --- Settings: sync URL derivation -----------------------------------------
