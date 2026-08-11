@@ -32,7 +32,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from huible.api.app import create_app
 from huible.api.auth import InMemoryApiKeyStore, InMemoryPersonaRegistry
 from huible.api.settings import Settings
-from huible.persona.context import ConversationTurn
+from huible.llm.client import FakeLLMClient
+from huible.persona.context import ConversationTurn, PersonaConfig
 from huible.safety.handoff import (
     DEFAULT_HANDOFF_SLA_SECONDS,
     CoverageWindow,
@@ -562,3 +563,189 @@ class TestHandoffAuditEndpointDurability:
         assert ids2 == ["hh-api-1"]
         # Telemetry is computed from the same durable audit log.
         assert body2["telemetry"]["total"] == 1
+
+
+# --- HU-1460 Stage-0.5: persistent crisis-session history (e2e via chat path) -
+#
+# The store-level tests above prove the durable backend persists the crisis
+# marker. HU-1460's acceptance is that the *production chat path* writes through
+# that backend (not the old in-process ``app.state.crisis_sessions`` set), so a
+# fresh app instance — a container restart or a second replica sharing the DB —
+# reads the crisis history AND the handoff audit for the crisis turn. These two
+# tests exercise the full ``POST /api/v1/chat/{persona_id}`` G1 path against a
+# durable store/queue and assert cross-instance visibility.
+
+_PERSONA_ID_E2E = uuid4()
+_API_KEY_E2E = "key-crisis-durability-e2e"
+
+
+class _NullBackend:
+    """No-op memory backend.
+
+    The G1 crisis path bypasses the ContextBuilder entirely (no memory
+    retrieval on a crisis turn). The distress (non-crisis) turn used by the
+    regression guard does go through the persona path, so the read methods
+    return empty results rather than raise. Either way no real memory is
+    needed for the crisis-durability contract under test.
+    """
+
+    async def store_memory(self, node):  # pragma: no cover - never called
+        return getattr(node, "id", None)
+
+    async def get_memory(self, memory_id):  # pragma: no cover - never called
+        return None
+
+    async def search_by_content(self, *a, **k):
+        return []
+
+    async def search_by_sensory(self, *a, **k):
+        return []
+
+    async def search_by_affect(self, *a, **k):
+        return []
+
+    async def get_edges(self, memory_id):
+        return []
+
+    async def add_edge(self, edge):  # pragma: no cover - never called
+        return getattr(edge, "id", None)
+
+    async def supersede_memory(self, *a, **k):  # pragma: no cover - never called
+        return None
+
+    async def get_active_memories(self, *a, **k):
+        return []
+
+    async def quarantine_candidate(self, *a, **k):  # pragma: no cover - never called
+        return None
+
+    async def get_all_versions(self, memory_id):
+        return []
+
+
+def _crisis_chat_app(queue, store) -> TestClient:
+    """Build a chat-capable app wired to durable ``queue`` + ``store``.
+
+    Mirrors the ``_make_app`` fixture in ``tests/api/test_chat_guardrails.py``
+    but injects the durable §7.4 backends so the G1 crisis turn writes through
+    the real persistence layer (the HU-1460 contract under test).
+    """
+    persona = PersonaConfig(
+        id=_PERSONA_ID_E2E,
+        name="Chandler",
+        voice_instructions="Warm Texas storyteller.",
+        era_knowledge_boundary="2024-12-01",
+        age_at_death=72,
+        death_date="2024-12-01",
+    )
+    registry = InMemoryPersonaRegistry({persona.id: (persona, _NullBackend())})
+    keys = InMemoryApiKeyStore({_API_KEY_E2E: _PERSONA_ID_E2E}, read_env=False)
+    application = create_app(
+        api_key_store=keys,
+        persona_registry=registry,
+        llm_client=FakeLLMClient(),
+        handoff_queue=queue,
+        conversation_store=store,
+        start_time=0.0,
+    )
+    return TestClient(application)
+
+
+def _post_crisis(client: TestClient, message: str, conversation_id: str) -> dict:
+    """Pre-consent then POST a message; return the parsed chat body.
+
+    Sends ``X-Huible-Traffic-Class: internal`` so the Stage-0.1 real-user ramp
+    gate (HU-1444) never refuses the turn — this is synthetic test traffic,
+    which is exactly what the ``internal`` class denotes (see
+    ``huible.api.real_user_gate``). Keeps the test independent of the runtime
+    ``persona_chat_real_user_mode`` setting.
+    """
+    headers = {
+        "Authorization": f"Bearer {_API_KEY_E2E}",
+        "X-Huible-Traffic-Class": "internal",
+    }
+    client.post(
+        f"/api/v1/chat/{_PERSONA_ID_E2E}/consent",
+        json={"conversation_id": conversation_id},
+        headers=headers,
+    )
+    resp = client.post(
+        f"/api/v1/chat/{_PERSONA_ID_E2E}",
+        json={"message": message, "conversation_id": conversation_id},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
+class TestCrisisSessionHistoryDurabilityE2E:
+    """HU-1460 Stage-0.5 acceptance through the real chat endpoint.
+
+    AC #1 — crisis-session history persists across a restart and is shared
+    across instances (a fresh app over the same DB reads the marker).
+    AC #2 — the handoff audit still records the crisis-session escalation,
+    visible to a fresh instance.
+    """
+
+    def test_crisis_history_persists_across_restart_via_chat_path(self, safety_engine):
+        """AC #1: a G1 crisis turn served by instance 1 is visible as
+        ``has_crisis_history=True`` to a fresh instance 2 over the same DB."""
+        conv = "sess-crisis-e2e"
+        # Instance 1 serves the crisis turn.
+        q1 = _handoff_queue(
+            safety_engine, available_responders=1, responder_id_pool=("pat",)
+        )
+        store1 = _conversation_store(safety_engine)
+        client1 = _crisis_chat_app(q1, store1)
+        body = _post_crisis(client1, "I want to die, I have the pills", conv)
+        # The turn really was a crisis escalation (not the persona voice).
+        assert body["trace"]["safety_event"]["kind"] == "crisis_escalation"
+        assert body["trace"]["handoff"]["trigger_signal"] == "crisis"
+        # Sanity: instance 1 sees its own in-flight marker.
+        assert store1.has_crisis_history(conv) is True
+
+        # "Restart": a fresh app + fresh store/queue over the SAME durable DB.
+        q2 = _handoff_queue(safety_engine)
+        store2 = _conversation_store(safety_engine)
+        _crisis_chat_app(q2, store2)
+        # AC #1 — the marker survived the restart and is visible cross-instance.
+        assert store2.has_crisis_history(conv) is True
+        # A session with no prior crisis turn is still unmarked.
+        assert store2.has_crisis_history("sess-never-crisis") is False
+
+    def test_handoff_audit_records_crisis_session_across_restart(self, safety_engine):
+        """AC #2: the handoff audit log retains the crisis escalation and a
+        fresh instance reads it (the §10.1 invariant 5 surface)."""
+        conv = "sess-audit-e2e"
+        q1 = _handoff_queue(
+            safety_engine, available_responders=1, responder_id_pool=("pat",)
+        )
+        store1 = _conversation_store(safety_engine)
+        client1 = _crisis_chat_app(q1, store1)
+        _post_crisis(client1, "I am going to kill myself", conv)
+
+        # Fresh instance over the same durable DB reads the audit trail.
+        q2 = _handoff_queue(safety_engine)
+        log = q2.audit_log()
+        assert len(log) == 1
+        ticket = log[0]
+        assert ticket.id.startswith("hh-")
+        assert ticket.conversation_id == conv
+        assert ticket.trigger_signal == "crisis"
+        assert ticket.outcome is HandoffOutcome.ENQUEUED
+
+    def test_non_crisis_turn_does_not_mark_session(self, safety_engine):
+        """Regression guard: only a G1 crisis turn marks the session. A
+        distress (sub-acute) turn through the same durable path must not."""
+        conv = "sess-distress-e2e"
+        q = _handoff_queue(
+            safety_engine, available_responders=1, responder_id_pool=("pat",)
+        )
+        store = _conversation_store(safety_engine)
+        client = _crisis_chat_app(q, store)
+        body = _post_crisis(client, "I miss him so much, my heart is broken", conv)
+        # Distress, not crisis → persona path, no handoff, no crisis marker.
+        assert body["trace"]["safety_event"] is None
+        assert body["trace"]["handoff"] is None
+        assert store.has_crisis_history(conv) is False
+        assert q.audit_log() == []
