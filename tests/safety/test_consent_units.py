@@ -12,8 +12,9 @@ the end-to-end wiring is exercised in ``tests/api/test_chat_consent.py``:
 * **Audit trail** — every recorded consent carries session, persona, card
   revision, and an ISO-8601 timestamp + audit key.
 * **Injectable card content** — the :class:`DefaultConsentCard` ships the
-  Onboarding Agent's drafted reality-framing + consent copy (HU-1429); a custom
-  provider swaps the copy without touching the gate.
+  clinically-approved revision 3 copy (HU-1441, swapped per HU-1438 §4 over
+  the Onboarding Agent's drafted revision 2 in HU-1429); a custom provider
+  swaps the copy without touching the gate.
 * **Persona never voices the consent** — the card is a non-persona system
   message (no deceased-voice surface in the card copy).
 """
@@ -145,22 +146,30 @@ class TestIdempotentRefreshAndAudit:
 
 
 class TestConsentCardProvider:
-    def test_default_card_carries_drafted_copy_not_placeholder(self):
-        """The default card ships the Onboarding Agent's drafted copy (HU-1429).
+    def test_default_card_carries_rev3_clinically_approved_copy(self):
+        """The default card ships the clinically-approved revision 3 (HU-1441).
 
-        Revision 2 replaces the explicitly-marked PLACEHOLDER (revision 1). The
-        card must carry the real reality-framing + consent language and must no
-        longer carry the placeholder marker. A clinically-revised revision from
-        HU-1430 swaps in later via a custom provider.
+        Revision 3 (swapped per HU-1438 §4) carries everything revision 2 did
+        plus two additions: (a) a "may guess / fill gaps / trust your memory"
+        paragraph naming the false-memory/confabulation harm surface, and
+        (b) a one-line session-scoped data-use notice. The card must still read
+        as a non-persona system frame and must not carry the placeholder marker.
+        A future clinically-revised revision swaps in via a custom provider.
         """
         card = DefaultConsentCard().get_card("Chandler")
         assert card.version == CONSENT_CARD_VERSION
+        assert card.version == 3
         assert "PLACEHOLDER" not in card.body
-        # Reality-framing + consent language is present.
+        # Reality-framing + consent language carried over from revision 2.
         assert "AI representation of Chandler" in card.body
         assert "This is not Chandler" in card.body
         # Crisis resources are surfaced for users who arrive in distress.
         assert "988" in card.body
+        # Rev 3 addition (a): the guess/gaps "trust your memory" paragraph.
+        assert "fill in a gap" in card.body
+        assert "trust what you remember" in card.body
+        # Rev 3 addition (b): the session-scoped data-use notice.
+        assert "stays in this session" in card.body
 
     def test_default_card_substitutes_persona_name(self):
         card = DefaultConsentCard().get_card("Chandler")

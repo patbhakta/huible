@@ -499,12 +499,13 @@ def create_app(
     )
     application.state.handoff_queue = handoff_queue or durable_queue
     application.state.consent_gate = consent_gate or durable_gate
-    # §7.4.3 consent card content. The DefaultConsentCard ships the Onboarding
-    # Agent's drafted reality-framing + consent copy (HU-1429); a
-    # clinically-revised revision from HU-1430 swaps in via
-    # consent_card_provider without touching the gate. The deceased persona
-    # never voices the consent (§7.1 H1) — the card is a non-persona system
-    # message, structurally disjoint from generation.
+    # §7.4.3 consent card content. The DefaultConsentCard ships the
+    # clinically-approved revision 3 copy (HU-1441, swapped per HU-1438 §4 over
+    # the Onboarding Agent's drafted revision 2 in HU-1429); a future
+    # clinically-revised revision swaps in via consent_card_provider without
+    # touching the gate. The deceased persona never voices the consent
+    # (§7.1 H1) — the card is a non-persona system message, structurally
+    # disjoint from generation.
     application.state.consent_card_provider = consent_card_provider or DefaultConsentCard()
     # Per-session conversation + crisis state. The durable store survives
     # restarts so §7.4.4 dosage-cap + crisis-history enforcement stays correct;

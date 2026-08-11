@@ -11,10 +11,10 @@ Architectural placement (clinically approved in HU-1409):
 * The **onboarding-terminal** owns the **card content** (reality-framing +
   consent language, clinically reviewed). That copy lives in the injectable
   :class:`ConsentCardProvider`; the :class:`DefaultConsentCard` here ships the
-  Onboarding Agent's drafted reality-framing + consent copy (HU-1429). It is
-  the production default pending Clinical Advisor sign-off in the sibling issue
-  HU-1430; a clinically-revised revision swaps in via
-  ``consent_card_provider`` without touching the gate.
+  clinically-approved revision 3 copy (HU-1441, swapped per HU-1438 §4 over the
+  Onboarding Agent's drafted revision 2 in HU-1429). A future
+  clinically-revised revision swaps in via ``consent_card_provider`` without
+  touching the gate.
 * The **chat path** (``huible.api.app``, HU-1406) owns the **gate**: it refuses
   to produce a persona reply until the card is acknowledged and records the
   acknowledgment on the session. That enforcement lives in the route layer; this
@@ -69,17 +69,22 @@ __all__ = [
 #: Monotonically-increasing consent-card revision. Tests pin against this so a
 #: silent edit to the card is caught (the version must be bumped on purpose).
 #: Revision 1 was the explicitly-marked PLACEHOLDER that existed only so the
-#: gate was testable end-to-end. Revision 2 (HU-1429) ships the Onboarding
-#: Agent's drafted reality-framing + consent copy; the provider remains the swap
-#: point for the clinically-revised revision after HU-1430 sign-off.
-CONSENT_CARD_VERSION = 2
+#: gate was testable end-to-end. Revision 2 (HU-1429) shipped the Onboarding
+#: Agent's drafted reality-framing + consent copy. Revision 3 (HU-1441) is the
+#: clinically-approved pre-flip swap (HU-1438 §4): it adds (a) a "may guess /
+#: fill gaps / trust your memory" paragraph naming the false-memory /
+#: confabulation harm surface, and (b) a one-line session-scoped data-use
+#: notice for informed-consent completeness.
+CONSENT_CARD_VERSION = 3
 
 #: Card title. A non-persona, onboarding/system frame — warm but honest. The
 #: Onboarding Agent owns the final wording (clinical review via HU-1430).
 DEFAULT_CONSENT_CARD_TITLE = "Before we begin — please read"
 
-#: Reality-framing + consent card body (HU-1429). Drafted by the Onboarding
-#: Agent to cover the four clinical requirements in §7.4.3:
+#: Reality-framing + consent card body (revision 3, clinically approved).
+#:
+#: Revision 2 (HU-1429) was drafted by the Onboarding Agent to cover the four
+#: clinical requirements in §7.4.3:
 #:
 #: * frame the representation honestly — an AI built from shared memories, not
 #:   the person, and not a channel to or from them or the afterlife;
@@ -89,6 +94,13 @@ DEFAULT_CONSENT_CARD_TITLE = "Before we begin — please read"
 #:   :data:`huible.safety.crisis.DEFAULT_CRISIS_RESOURCES`);
 #: * and never be voiced by the deceased persona — this is an onboarding/system
 #:   message, never passed through the generator (§7.1 H1).
+#:
+#: Revision 3 (HU-1441) is the Clinical Advisor's clinically-approved pre-flip
+#: swap (HU-1438 §4). It integrates two additions over revision 2: (a) a "may
+#: guess / fill gaps / trust your memory" paragraph that names the
+#: false-memory/confabulation harm surface so a grieving user preserves
+#: reality-monitoring, and (b) a one-line session-scoped data-use notice for
+#: informed-consent completeness.
 #:
 #: ``{persona_name}`` is the only substitution; it resolves to ``"the person"``
 #: when the name is blank. The card is structurally disjoint from
@@ -108,6 +120,13 @@ DEFAULT_CONSENT_CARD_BODY = (
     "Speaking here may bring comfort, and it is still a memory speaking, not "
     "the person. If at any moment it feels confusing, painful, or simply too "
     "much, you can stop, and you can come back.\n"
+    "One more honest thing. This representation speaks in {persona_name}'s "
+    "voice, but it does not know everything about them. Sometimes it may fill "
+    "in a gap, offer a guess, or get a detail wrong. If something does not "
+    "sound like the {persona_name} you knew, trust what you remember — not "
+    "what is said here.\n"
+    "What you share in this session stays in this session — it is not kept "
+    "beyond it or used anywhere else.\n"
     "Before you continue, please acknowledge that you understand this is an "
     "AI representation of {persona_name}, built from shared memories, and that "
     "you would like to begin.\n"
@@ -154,23 +173,26 @@ class ConsentCardProvider(Protocol):
     """Pluggable source of the G6 consent card content.
 
     The Onboarding Agent owns the clinically-reviewed wording. The default
-    :class:`DefaultConsentCard` ships the Onboarding Agent's drafted
-    reality-framing + consent copy (HU-1429, revision 2) pending Clinical
-    Advisor sign-off in HU-1430; a clinically-revised card drops in via this
-    provider at app construction without touching the chat endpoint or the gate.
+    :class:`DefaultConsentCard` ships the clinically-approved revision 3 copy
+    (HU-1441, swapped per HU-1438 §4); a future clinically-revised card drops
+    in via this provider at app construction without touching the chat
+    endpoint or the gate.
     """
 
     def get_card(self, persona_name: str) -> ConsentCard: ...
 
 
 class DefaultConsentCard:
-    """Default consent-card provider — Onboarding Agent drafted copy (HU-1429).
+    """Default consent-card provider — clinically-approved copy (revision 3).
 
-    Returns the reality-framing + consent card drafted by the Onboarding Agent
-    (revision 2), pending Clinical Advisor sign-off in the sibling issue
-    HU-1430. The card is deliberately *not* voiced by the deceased persona — it
-    is an onboarding/system message (§7.1 H1), structurally disjoint from
-    generation. A clinically-revised revision swaps in via a custom
+    Returns the reality-framing + consent card at revision 3, the Clinical
+    Advisor's clinically-approved pre-flip swap (HU-1441, per HU-1438 §4).
+    Revision 3 integrates two additions over the Onboarding Agent's drafted
+    revision 2 (HU-1429): a "may guess / fill gaps / trust your memory"
+    paragraph and a session-scoped data-use notice. The card is deliberately
+    *not* voiced by the deceased persona — it is an onboarding/system message
+    (§7.1 H1), structurally disjoint from generation. A future
+    clinically-revised revision swaps in via a custom
     :class:`ConsentCardProvider` without touching the gate.
     """
 

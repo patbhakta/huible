@@ -18,7 +18,8 @@ Coverage (maps 1:1 onto HU-1423 acceptance criteria):
   voices the consent.
 * **Per-session binding** — consenting session A does not unblock session B.
 * **Injectable card content** — a custom provider surfaces in the 409; the
-  default ships the Onboarding Agent's drafted copy (HU-1429).
+  default ships the clinically-approved revision 3 copy (HU-1441, swapped per
+  HU-1438 §4).
 * **Consent endpoint guards** — auth (401), scope mismatch (403), unknown
   persona (404).
 """
@@ -491,12 +492,13 @@ class TestInjectableCardContent:
         assert "clinically reviewed" in card["body"]
         assert "PLACEHOLDER" not in card["body"]
 
-    def test_default_card_carries_drafted_copy(self):
-        """The default card ships the Onboarding Agent's drafted copy (HU-1429).
+    def test_default_card_carries_rev3_clinically_approved_copy(self):
+        """The default card ships the clinically-approved revision 3 (HU-1441).
 
-        Revision 2 replaces the explicitly-marked PLACEHOLDER (revision 1). The
-        409 surfaces the drafted reality-framing + consent language, not the
-        placeholder marker. Clinical review happens in the sibling HU-1430.
+        Revision 3 (swapped per HU-1438 §4) carries everything revision 2 did
+        plus two additions: (a) a "may guess / fill gaps / trust your memory"
+        paragraph, and (b) a session-scoped data-use notice. The 409 surfaces
+        the clinically-approved copy, not the placeholder marker.
         """
         client, _llm, _gate = _make_app()
         r = client.post(
@@ -507,8 +509,14 @@ class TestInjectableCardContent:
         card = r.json()["detail"]["error"]["consent_card"]
         assert "PLACEHOLDER" not in card["body"]
         assert card["version"] == CONSENT_CARD_VERSION
+        assert card["version"] == 3
         assert "AI representation" in card["body"]
         assert "988" in card["body"]
+        # Rev 3 addition (a): the guess/gaps "trust your memory" paragraph.
+        assert "fill in a gap" in card["body"]
+        assert "trust what you remember" in card["body"]
+        # Rev 3 addition (b): the session-scoped data-use notice.
+        assert "stays in this session" in card["body"]
 
 
 # ---------------------------------------------------------------------------
