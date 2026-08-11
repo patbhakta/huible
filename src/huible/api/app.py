@@ -56,7 +56,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from huible.api.auth import (
@@ -69,6 +69,11 @@ from huible.api.auth import (
     authenticate,
     get_persona_registry,
     raise_forbidden,
+)
+from huible.api.metrics import (
+    ChatTurnOutcome,
+    metrics_response,
+    record_chat_turn,
 )
 from huible.api.real_user_gate import (
     REAL_USER_MODE_OFF_RESPONSE,
@@ -581,7 +586,49 @@ def _register_routes(application: FastAPI) -> None:
         Auth: persona-scoped bearer key (401 when missing/unknown). The path
         ``persona_id`` must match the key's scope (403 otherwise).
         """
+        # Stage 0.3: per-turn metrics + structured access log (HU-1446). Each
+        # exit branch calls ``_emit_turn`` with its outcome + guardrail-fire
+        # bits; the helper records latency, increments the §3 counters, and
+        # writes one JSON access-log line (no PHI). Defined once at entry so the
+        # latency clock starts before auth + the ramp gate.
+        _turn_t0 = time.perf_counter()
+
+        def _emit_turn(
+            pid: UUID,
+            *,
+            outcome: str,
+            status_class: str | None = None,
+            crisis: bool = False,
+            consent_required: bool = False,
+            real_user_refused: bool = False,
+            ungrounded_claims: int = 0,
+            alignment_disposition: str | None = None,
+            risk_action: str | None = None,
+            risk_flags: tuple[str, ...] = (),
+            handoff_outcome: str | None = None,
+        ) -> None:
+            try:
+                record_chat_turn(
+                    ChatTurnOutcome(
+                        outcome=outcome,
+                        latency_s=time.perf_counter() - _turn_t0,
+                        persona_id=pid,
+                        status_class=status_class,
+                        crisis=crisis,
+                        consent_required=consent_required,
+                        real_user_refused=real_user_refused,
+                        ungrounded_claims=ungrounded_claims,
+                        alignment_disposition=alignment_disposition,
+                        risk_action=risk_action,
+                        risk_flags=risk_flags,
+                        handoff_outcome=handoff_outcome,
+                    )
+                )
+            except Exception:  # metrics must never break a clinical turn
+                logger.exception("persona_chat metrics recording failed")
+
         if persona_id != principal.persona_id:
+            _emit_turn(persona_id, outcome="forbidden", status_class="4xx")
             raise_forbidden()
 
         # --- Stage 0.1: real-user ramp gate / kill switch (HU-1444) -----------
@@ -610,6 +657,7 @@ def _register_routes(application: FastAPI) -> None:
             _record_turn(
                 application, body.conversation_id, body.message, REAL_USER_MODE_OFF_RESPONSE
             )
+            _emit_turn(persona_id, outcome="real_user_refused", real_user_refused=True)
             return PersonaChatResponse(
                 response=REAL_USER_MODE_OFF_RESPONSE,
                 trace=ChatTrace(
@@ -627,6 +675,7 @@ def _register_routes(application: FastAPI) -> None:
         try:
             relationship = body.requester_relationship()
         except ValueError as exc:
+            _emit_turn(persona_id, outcome="validation_error", status_class="4xx")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
@@ -641,6 +690,7 @@ def _register_routes(application: FastAPI) -> None:
         requester_tier = _resolve_relationship(relationship)
         binding: PersonaBinding | None = registry.get(persona_id, requester_tier)
         if binding is None:
+            _emit_turn(persona_id, outcome="persona_not_found", status_class="4xx")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail={
@@ -705,6 +755,12 @@ def _register_routes(application: FastAPI) -> None:
             # was actually paged).
             escalation = handoff_view.user_acknowledgement
             _record_turn(application, body.conversation_id, body.message, escalation)
+            _emit_turn(
+                persona_id,
+                outcome="crisis",
+                crisis=True,
+                handoff_outcome=handoff_view.outcome,
+            )
             return PersonaChatResponse(
                 response=escalation,
                 trace=ChatTrace(
@@ -736,6 +792,12 @@ def _register_routes(application: FastAPI) -> None:
         if not consent_gate.is_acknowledged(session_id, persona_id):
             card_provider: ConsentCardProvider = application.state.consent_card_provider
             card = card_provider.get_card(binding.persona.name)
+            _emit_turn(
+                persona_id,
+                outcome="consent_required",
+                consent_required=True,
+                status_class="4xx",
+            )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail={
@@ -794,6 +856,12 @@ def _register_routes(application: FastAPI) -> None:
                     else PAUSE_SESSION_RESPONSE
                 )
                 _record_turn(application, body.conversation_id, body.message, response_text)
+                _emit_turn(
+                    persona_id,
+                    outcome="risk_pause",
+                    risk_action="pause_session",
+                    risk_flags=tuple(f.value for f in enforcement.fired_flags),
+                )
                 return PersonaChatResponse(
                     response=response_text,
                     trace=ChatTrace(
@@ -823,6 +891,13 @@ def _register_routes(application: FastAPI) -> None:
                 )
                 response_text = handoff_view.user_acknowledgement
                 _record_turn(application, body.conversation_id, body.message, response_text)
+                _emit_turn(
+                    persona_id,
+                    outcome="risk_handoff",
+                    risk_action="handoff",
+                    risk_flags=tuple(f.value for f in enforcement.fired_flags),
+                    handoff_outcome=handoff_view.outcome,
+                )
                 return PersonaChatResponse(
                     response=response_text,
                     trace=ChatTrace(
@@ -835,6 +910,12 @@ def _register_routes(application: FastAPI) -> None:
             # refuse_topic: in-voice topic-redirect fallback (no LLM call).
             response_text = REFUSE_TOPIC_FALLBACK_RESPONSE
             _record_turn(application, body.conversation_id, body.message, response_text)
+            _emit_turn(
+                persona_id,
+                outcome="risk_refuse",
+                risk_action="refuse_topic",
+                risk_flags=tuple(f.value for f in enforcement.fired_flags),
+            )
             return PersonaChatResponse(
                 response=response_text,
                 trace=ChatTrace(
@@ -898,6 +979,14 @@ def _register_routes(application: FastAPI) -> None:
         response_text = alignment.text
 
         _record_turn(application, body.conversation_id, body.message, response_text)
+        _emit_turn(
+            persona_id,
+            outcome="persona",
+            ungrounded_claims=alignment.ungrounded_count,
+            alignment_disposition=alignment.disposition,
+            risk_action=enforcement.action.value if enforcement.action else None,
+            risk_flags=tuple(f.value for f in enforcement.fired_flags),
+        )
 
         return PersonaChatResponse(
             response=response_text,
@@ -1111,6 +1200,25 @@ def _register_routes(application: FastAPI) -> None:
                 ),
             }
         )
+
+    @application.get(
+        "/metrics",
+        tags=["admin"],
+        summary="Prometheus metrics for persona-chat + §7.4 guardrails (Stage 0.3, HU-1446).",
+        include_in_schema=True,
+    )
+    async def prometheus_metrics() -> Response:
+        """Aggregate scrape endpoint: chat turns/latency/errors + every §7.4
+        guardrail counter (G1 crisis, G6 consent, §7.4.1 handoff outcomes,
+        §7.4.2 un-grounded claims + dispositions, §7.4.4 enforcement actions,
+        Stage 0.1 kill-switch refusals). No PHI — labels are aggregate-safe.
+
+        Unauthenticated by design (Prometheus convention); contains no user
+        data, only monotonic counters + a latency histogram. The §3 Sev-1
+        alerts page the 0.4 on-call once that roster is wired (HU-1447).
+        """
+        body, content_type = metrics_response()
+        return Response(content=body, media_type=content_type)
 
 
 # --- helpers ----------------------------------------------------------------
