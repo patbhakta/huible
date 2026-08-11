@@ -379,10 +379,11 @@ def create_app(
     # in-memory gate (key-free pre-real-users); a real backend (Postgres /
     # Redis / the onboarding-terminal's session store) drops in here
     # pre-real-launch. The card content is injectable: the DefaultConsentCard
-    # is an explicitly-marked PLACEHOLDER; the Onboarding Agent's clinically
-    # reviewed copy swaps in via consent_card_provider without touching the
-    # gate. The deceased persona never voices the consent (§7.1 H1) — the card
-    # is a non-persona system message, structurally disjoint from generation.
+    # ships the Onboarding Agent's drafted reality-framing + consent copy
+    # (HU-1429); a clinically-revised revision from HU-1430 swaps in via
+    # consent_card_provider without touching the gate. The deceased persona
+    # never voices the consent (§7.1 H1) — the card is a non-persona system
+    # message, structurally disjoint from generation.
     application.state.consent_gate = consent_gate or InMemoryConsentGate()
     application.state.consent_card_provider = consent_card_provider or DefaultConsentCard()
     application.state.start_time = start_time if start_time is not None else time.time()

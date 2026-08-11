@@ -18,7 +18,7 @@ Coverage (maps 1:1 onto HU-1423 acceptance criteria):
   voices the consent.
 * **Per-session binding** — consenting session A does not unblock session B.
 * **Injectable card content** — a custom provider surfaces in the 409; the
-  placeholder is explicitly marked.
+  default ships the Onboarding Agent's drafted copy (HU-1429).
 * **Consent endpoint guards** — auth (401), scope mismatch (403), unknown
   persona (404).
 """
@@ -491,8 +491,13 @@ class TestInjectableCardContent:
         assert "clinically reviewed" in card["body"]
         assert "PLACEHOLDER" not in card["body"]
 
-    def test_default_card_is_marked_placeholder(self):
-        """The default card is explicitly a placeholder pending clinical review."""
+    def test_default_card_carries_drafted_copy(self):
+        """The default card ships the Onboarding Agent's drafted copy (HU-1429).
+
+        Revision 2 replaces the explicitly-marked PLACEHOLDER (revision 1). The
+        409 surfaces the drafted reality-framing + consent language, not the
+        placeholder marker. Clinical review happens in the sibling HU-1430.
+        """
         client, _llm, _gate = _make_app()
         r = client.post(
             f"/api/v1/chat/{PERSONA_ID}",
@@ -500,7 +505,10 @@ class TestInjectableCardContent:
             headers=_auth(),
         )
         card = r.json()["detail"]["error"]["consent_card"]
-        assert "PLACEHOLDER" in card["body"]
+        assert "PLACEHOLDER" not in card["body"]
+        assert card["version"] == CONSENT_CARD_VERSION
+        assert "AI representation" in card["body"]
+        assert "988" in card["body"]
 
 
 # ---------------------------------------------------------------------------

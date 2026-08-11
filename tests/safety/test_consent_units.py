@@ -11,10 +11,11 @@ the end-to-end wiring is exercised in ``tests/api/test_chat_consent.py``:
   / ack id) rather than raising; the audit log retains history.
 * **Audit trail** — every recorded consent carries session, persona, card
   revision, and an ISO-8601 timestamp + audit key.
-* **Injectable card content** — the :class:`DefaultConsentCard` is an explicitly
-  marked PLACEHOLDER; a custom provider swaps the copy without touching the gate.
+* **Injectable card content** — the :class:`DefaultConsentCard` ships the
+  Onboarding Agent's drafted reality-framing + consent copy (HU-1429); a custom
+  provider swaps the copy without touching the gate.
 * **Persona never voices the consent** — the card is a non-persona system
-  message (no deceased-voice surface in the placeholder copy).
+  message (no deceased-voice surface in the card copy).
 """
 
 from __future__ import annotations
@@ -144,10 +145,22 @@ class TestIdempotentRefreshAndAudit:
 
 
 class TestConsentCardProvider:
-    def test_default_card_is_explicitly_marked_placeholder(self):
-        """The default card is a placeholder pending Onboarding Agent copy."""
+    def test_default_card_carries_drafted_copy_not_placeholder(self):
+        """The default card ships the Onboarding Agent's drafted copy (HU-1429).
+
+        Revision 2 replaces the explicitly-marked PLACEHOLDER (revision 1). The
+        card must carry the real reality-framing + consent language and must no
+        longer carry the placeholder marker. A clinically-revised revision from
+        HU-1430 swaps in later via a custom provider.
+        """
         card = DefaultConsentCard().get_card("Chandler")
-        assert "[PLACEHOLDER CONSENT CARD" in card.body
+        assert card.version == CONSENT_CARD_VERSION
+        assert "PLACEHOLDER" not in card.body
+        # Reality-framing + consent language is present.
+        assert "AI representation of Chandler" in card.body
+        assert "This is not Chandler" in card.body
+        # Crisis resources are surfaced for users who arrive in distress.
+        assert "988" in card.body
 
     def test_default_card_substitutes_persona_name(self):
         card = DefaultConsentCard().get_card("Chandler")
