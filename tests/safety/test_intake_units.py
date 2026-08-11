@@ -543,6 +543,7 @@ def _intake_app(
     *,
     persona: PersonaConfig,
     consented_session: str | None = None,
+    llm_client=None,
 ):
     """Build a TestClient app with a registered persona + optional consent recorded."""
     from huible.memory.protocol import MemoryBackend
@@ -573,6 +574,7 @@ def _intake_app(
         persona_registry=registry,
         consent_gate=consent_gate,
         risk_profile=risk_profile,
+        llm_client=llm_client,
     )
     return app, risk_profile
 
@@ -714,6 +716,98 @@ class TestAdminIntakeEndpoint:
         # Session-scoped: present on sess-admin, not on sess-other.
         assert "proxy_user" in profile.get_flags("sess-admin", persona.id)
         assert "proxy_user" not in profile.get_flags("sess-other", persona.id)
+
+
+class TestIntakeToFiresG8OnChatTrace:
+    """HU-1458 acceptance: intake populates the five risk signals for one
+    canary user, then a chat turn on that flagged session shows a non-empty
+    ``trace.risk_enforcement`` with the full flag union firing (G8 live).
+
+    This is the end-to-end Stage-0.3 exit criterion: onboarding/intake → risk
+    profile → chat-path enforcement. The unit-level pieces (derive, record,
+    per-flag enforcement) are covered above; this test wires them through the
+    real FastAPI admin intake endpoint + the real chat endpoint to prove the
+    populated profile is what the chat path actually reads back.
+    """
+
+    def test_all_five_intake_flags_fire_g8_on_chat_trace(self):
+        from huible.llm.client import FakeLLMClient
+
+        today = date(2026, 8, 11)
+        # Persona record derives minor_decedent (age < 18) + recent_loss
+        # (death within the acute window); the assessment supplies the other
+        # three (loss_of_child, non_acceptance, proxy_user).
+        persona = _persona(
+            age_at_death=10,
+            death_date=(today - timedelta(days=30)).isoformat(),
+        )
+        app, _profile = _intake_app(
+            persona=persona,
+            consented_session="sess-stage03",
+            llm_client=FakeLLMClient(persona_name="Chandler"),
+        )
+        client = TestClient(app)
+
+        # 1. Record intake with all three assessment flags. The service merges
+        #    in the two objective persona-derived flags.
+        intake = client.post(
+            "/api/v1/admin/risk-intake",
+            json={
+                "conversation_id": "sess-stage03",
+                "persona_id": str(persona.id),
+                "loss_of_child": True,
+                "non_acceptance": True,
+                "proxy_user": True,
+            },
+            headers={"Authorization": f"Bearer key-{persona.id}"},
+        )
+        assert intake.status_code == 200, intake.text
+        data = intake.json()["data"]
+        # AC #1 + #3: intake populates the five risk signals; no flag absent.
+        assert set(data["all_flags"]) == {
+            "loss_of_child",
+            "minor_decedent",
+            "recent_loss",
+            "non_acceptance",
+            "proxy_user",
+        }
+
+        # 2. A chat turn on the same flagged session. proxy_user (pause_session)
+        #    dominates the union, so generation short-circuits — no LLM call.
+        #    Sent as internal dogfood traffic (Stage A) — the real-user kill
+        #    switch (Stage 0.1, HU-1444) refuses unmarked traffic by default;
+        #    internal traffic is always allowed past it so this verification
+        #    runs without flipping the ramp gate.
+        from huible.api.real_user_gate import REAL_USER_TRAFFIC_CLASS_HEADER
+
+        chat = client.post(
+            f"/api/v1/chat/{persona.id}",
+            json={
+                "message": "tell me about fishing",
+                "conversation_id": "sess-stage03",
+            },
+            headers={
+                "Authorization": f"Bearer key-{persona.id}",
+                REAL_USER_TRAFFIC_CLASS_HEADER: "internal",
+            },
+        )
+        assert chat.status_code == 200, chat.text
+        body = chat.json()
+
+        # AC #2: trace.risk_enforcement is non-empty on the flagged session.
+        risk = body["trace"]["risk_enforcement"]
+        assert risk is not None
+        assert risk["action"] == "pause_session"
+        # Every populated flag contributed a required action (no flag absent).
+        assert set(risk["fired_flags"]) == {
+            "loss_of_child",
+            "minor_decedent",
+            "recent_loss",
+            "non_acceptance",
+            "proxy_user",
+        }
+        # Pause is non-persona: the LLM was never called for this turn.
+        assert "pause" in body["response"].lower() or "988" in body["response"]
 
 
 # --- re-exports sanity ------------------------------------------------------
