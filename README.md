@@ -67,6 +67,18 @@ Root-level tests: `test_models.py`, `test_store.py`, `test_retrieval.py`, `test_
 
 ### Documentation — `docs/`
 
+#### Numbered spec suite ([00]–[09])
+
+| File | Purpose |
+|------|---------|
+| `04-build-plan.md` | [04] Phased build plan with acceptance criteria (Phase 1 F1 exit gate) |
+| `06-testing-strategy.md` | [06] F1–F8 gate suites + invariant → test matrix |
+| `07-api-specification.md` | [07] REST API specification v1.0 |
+| `08-product-definition.md` | [08] What Huible is / is not, defining test, product invariants |
+| `09-deployment-ops-guide.md` | [09] Deployment & operations runbook |
+
+#### Core specs & reports
+
 | File | Purpose |
 |------|---------|
 | `ENGINE_SPEC.md` | Full engine specification v1.0 — architecture, memory model, gates, invariants, tech stack, phase plan |
