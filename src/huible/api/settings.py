@@ -22,6 +22,7 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
+    from huible.llm.client import LLMConfig
     from huible.persona.generator import GeneratorConfig
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,22 @@ class Settings(BaseSettings):
     generator_max_tokens: int = 512
     generator_temperature: float = 0.7
     generator_request_timeout_s: float = 60.0
+
+    # ── LLM client (runtime generation: OpenRouter / Gemini) ────────────────
+    # Key-free default (``fake``) so the chat endpoint and tests run without a
+    # hosted key. Mirrors the ``EMBEDDING_PROVIDER=fake`` convention. Real
+    # providers are gated on their key at ``build_llm_client`` time (HU-1405).
+    llm_provider: str = "fake"
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = ""
+    openrouter_model: str = ""
+    gemini_api_key: str = ""
+    gemini_base_url: str = ""
+    gemini_model: str = ""
+    llm_model: str = ""
+    llm_max_tokens: int = 512
+    llm_temperature: float = 0.7
+    llm_request_timeout_s: float = 60.0
 
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
@@ -162,6 +179,30 @@ class Settings(BaseSettings):
                 "GENERATOR_MAX_TOKENS": str(self.generator_max_tokens),
                 "GENERATOR_TEMPERATURE": str(self.generator_temperature),
                 "GENERATOR_REQUEST_TIMEOUT_S": str(self.generator_request_timeout_s),
+            }
+        )
+
+    def to_llm_config(self) -> LLMConfig:
+        """Build an :class:`LLMConfig` from these settings.
+
+        Reuses :meth:`LLMConfig.from_env` so provider parsing, the fake fallback,
+        and numeric coercion stay in one place with :mod:`huible.llm.client`.
+        """
+        from huible.llm.client import LLMConfig
+
+        return LLMConfig.from_env(
+            {
+                "LLM_PROVIDER": self.llm_provider,
+                "OPENROUTER_API_KEY": self.openrouter_api_key,
+                "OPENROUTER_BASE_URL": self.openrouter_base_url,
+                "OPENROUTER_MODEL": self.openrouter_model,
+                "GEMINI_API_KEY": self.gemini_api_key,
+                "GEMINI_BASE_URL": self.gemini_base_url,
+                "GEMINI_MODEL": self.gemini_model,
+                "LLM_MODEL": self.llm_model,
+                "LLM_MAX_TOKENS": str(self.llm_max_tokens),
+                "LLM_TEMPERATURE": str(self.llm_temperature),
+                "LLM_REQUEST_TIMEOUT_S": str(self.llm_request_timeout_s),
             }
         )
 
