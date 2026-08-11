@@ -75,10 +75,13 @@ from huible.api.schemas import (
     ChatResponse,
     ChatResponseData,
     ChatTrace,
+    ExcludedMemoryRefView,
     HealthCheck,
     HealthResponse,
     PersonaChatRequest,
     PersonaChatResponse,
+    SafetyEventView,
+    SessionMetaView,
 )
 from huible.api.settings import Settings, get_settings
 from huible.llm.client import LLMClient, build_llm_client
@@ -91,6 +94,13 @@ from huible.persona.context import (
     RelationshipTier,
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
+from huible.safety import (
+    CrisisClassifier,
+    DeterministicCrisisClassifier,
+    apply_affect_guard,
+    build_crisis_response,
+    classify_user_message,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -274,6 +284,8 @@ def create_app(
     generator: PersonaGeneratorClient | None = None,
     llm_client: LLMClient | None = None,
     context_builder: ContextBuilder | None = None,
+    crisis_classifier: CrisisClassifier | None = None,
+    crisis_resources: dict[str, str] | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
 ) -> FastAPI:
@@ -323,6 +335,13 @@ def create_app(
         resolved_settings.to_llm_config()
     )
     application.state.context_builder = context_builder or ContextBuilder()
+    # Runtime clinical guardrails (HU-1413 / HU-1407 §7.3). The crisis
+    # classifier is the G1 synchronous pre-generation check AND the shared G3
+    # affect signal. The deterministic impl is the default; tests inject a
+    # pinned instance. ``crisis_resources`` makes the warm-escalation line a
+    # config swap (regional line / human-handoff queue) rather than a re-build.
+    application.state.crisis_classifier = crisis_classifier or DeterministicCrisisClassifier()
+    application.state.crisis_resources = crisis_resources or {}
     application.state.start_time = start_time if start_time is not None else time.time()
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
@@ -498,24 +517,77 @@ def _register_routes(application: FastAPI) -> None:
                 },
             )
 
+        llm: LLMClient = application.state.llm_client
+        provider_label = str(getattr(llm, "provider", "unknown"))
+
+        # --- G1: synchronous crisis pre-check (before ContextBuilder.build) ---
+        # A crisis signal must NEVER reach the persona voice (HU-1407 §7.1 G1).
+        # The check is synchronous, pre-generation, and pre-retrieval: on a
+        # positive crisis signal the ContextBuilder is not called at all (no
+        # memory retrieval on a crisis turn), persona-voiced generation is
+        # skipped, and a warm non-persona escalation response is returned with a
+        # recorded safety_event on the trace.
+        crisis_result = classify_user_message(
+            body.message,
+            classifier=application.state.crisis_classifier,
+        )
+        if crisis_result.is_crisis:
+            escalation = build_crisis_response(
+                resources=application.state.crisis_resources,
+            )
+            _record_turn(application, body.conversation_id, body.message, escalation)
+            return PersonaChatResponse(
+                response=escalation,
+                trace=ChatTrace(
+                    provider=provider_label,
+                    safety_event=SafetyEventView(
+                        kind="crisis_escalation",
+                        signal=crisis_result.signal.value,
+                        affect=crisis_result.affect.value,
+                        matched=list(crisis_result.matched),
+                    ),
+                    session_meta=_session_meta(application, body.conversation_id),
+                ),
+            )
+
+        # --- Default / G3-distress path: retrieve + render + generate --------
+        # The shared affect signal grades sub-acute distress; the ContextBuilder
+        # branches the prompt (G3 dynamic half) and the affect guard suppresses
+        # any sarcastic/dismissive generation on the distress branch.
         ctx = await application.state.context_builder.build(
             persona=binding.persona,
             requester_tier=binding.requester_tier,
             backend=binding.backend,
             query_embedding_content=_embed(body.message),
             current_message=body.message,
+            user_affect=crisis_result.affect,
         )
 
         prompt = ctx.render()
-        llm: LLMClient = application.state.llm_client
         response_text = await llm.generate(prompt, system_prompt=ctx.system_prompt)
+
+        # G3 generation-time guard: on the distress branch, replace a sarcastic
+        # / dismissive generation with a safe grounded fallback. Conservative —
+        # only replaces on distress when a concrete pattern fires.
+        response_text, _suppressed = apply_affect_guard(
+            response_text, affect=crisis_result.affect
+        )
+
+        _record_turn(application, body.conversation_id, body.message, response_text)
 
         return PersonaChatResponse(
             response=response_text,
             trace=ChatTrace(
                 memory_refs=[str(node.id) for node in ctx.included_memories],
                 provenance_tiers=sorted({node.tier.value for node in ctx.included_memories}),
-                provider=str(getattr(llm, "provider", "unknown")),
+                excluded_memory_refs=[
+                    ExcludedMemoryRefView(id=ref.id, reason=ref.reason)
+                    for ref in ctx.excluded_memory_refs
+                ],
+                provider=provider_label,
+                framing_version=ctx.framing_version,
+                distress_grounding=ctx.distress_grounding,
+                session_meta=_session_meta(application, body.conversation_id),
             ),
         )
 
@@ -568,6 +640,23 @@ def _record_turn(
     history = application.state.conversations.setdefault(conversation_id, [])
     history.append(ConversationTurn(speaker="user", content=message))
     history.append(ConversationTurn(speaker="persona", content=reply))
+
+
+def _session_meta(
+    application: FastAPI, conversation_id: str | None
+) -> SessionMetaView:
+    """Build per-session observability metadata for the trace (G7).
+
+    Turn count is derived from the in-process conversation log (every user +
+    persona pair = one turn). Phase-1 emits the signal; it enforces nothing on
+    it (HU-1407 §7.1 G7). The dosage gate lands post-Phase-1.
+    """
+    if not conversation_id or not hasattr(application.state, "conversations"):
+        return SessionMetaView(turn_count=1)
+    history: list[ConversationTurn] = application.state.conversations.get(conversation_id, [])
+    # History holds [user, persona, user, persona, …] → turns = pairs rounded up.
+    turn_count = max(1, (len(history) + 1) // 2)
+    return SessionMetaView(turn_count=turn_count)
 
 
 def _mint_conversation_id() -> str:

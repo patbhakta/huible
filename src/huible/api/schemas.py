@@ -30,11 +30,14 @@ __all__ = [
     "ChatResponseData",
     "ChatTrace",
     "DataEnvelope",
+    "ExcludedMemoryRefView",
     "HealthCheck",
     "HealthResponse",
     "PersonaChatRequest",
     "PersonaChatResponse",
     "RelationshipTierLiteral",
+    "SafetyEventView",
+    "SessionMetaView",
 ]
 
 #: Admissible ``disclosure_tier`` request values (spec section 3.2).
@@ -140,7 +143,9 @@ class PersonaChatRequest(BaseModel):
 
     A minimal text-in contract for the Phase-1 integration milestone: the
     inbound ``message`` plus an optional ``relationship`` that selects the
-    requester's disclosure tier (default ``family``).
+    requester's disclosure tier (default ``family``). An optional
+    ``conversation_id`` threads the in-process session log so the G7 dosage
+    observability signal can be emitted on the trace.
     """
 
     message: str = Field(..., min_length=1, description="Inbound user message.")
@@ -150,6 +155,10 @@ class PersonaChatRequest(BaseModel):
             "Requester relationship to the persona: intimate | family | "
             "close_friend | acquaintance. Default: family."
         ),
+    )
+    conversation_id: str | None = Field(
+        default=None,
+        description="Opaque conversation id. Threads the in-process session log (G7).",
     )
 
     def requester_relationship(self) -> str:
@@ -162,18 +171,91 @@ class PersonaChatRequest(BaseModel):
         return tier
 
 
+class ExcludedMemoryRefView(BaseModel):
+    """A memory that was filtered out by the provenance firewall (G4 audit).
+
+    Exposed so fidelity tests can assert exclusions in *both* directions: an
+    admissible memory appears in ``memory_refs`` while a known-non-admissible
+    memory appears here with its exclusion reason (HU-1407 §7.1 G4).
+    """
+
+    id: str
+    reason: str
+
+
+class SafetyEventView(BaseModel):
+    """Recorded safety event for clinician/human review (G1).
+
+    A non-null ``safety_event`` on the trace means the G1 crisis path fired:
+    the user message carried a crisis signal, persona-voiced generation was
+    skipped, and the warm non-persona escalation response was returned. This is
+    a monitored safety event, not a normal turn.
+    """
+
+    kind: str = Field(
+        description="Safety-event kind. Phase-1: 'crisis_escalation' (G1)."
+    )
+    signal: str = Field(description="Classifier signal category (e.g. 'clear').")
+    affect: str = Field(description="Graded user affect (e.g. 'crisis').")
+    matched: list[str] = Field(
+        default_factory=list,
+        description="Pattern snippets that fired (audit only; never shown to user).",
+    )
+    resources_shown: bool = Field(
+        default=True,
+        description="Whether crisis-line resources were surfaced in the response.",
+    )
+
+
+class SessionMetaView(BaseModel):
+    """Per-session observability metadata (G7 — spec now, gate post-Phase-1).
+
+    Emitted on every trace so the dosage/over-use signal (H5/PGD) exists when
+    the dosage gate lands, with no re-instrumentation and no silent
+    observability gap (HU-1407 §7.1 G7). Phase-1 enforces nothing on it.
+    """
+
+    turn_count: int = Field(default=1, ge=1)
+    started_at: str | None = None
+    duration_seconds: float = 0.0
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
 
     ``memory_refs`` and ``provenance_tiers`` describe only the memories that
     passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
     LOW / QUARANTINE confidence memories are dropped by the context builder
-    before generation and therefore never appear here.
+    before generation and therefore never appear here; their ids and exclusion
+    reasons surface in ``excluded_memory_refs`` (G4 both-directions).
+
+    Runtime-clinical fields (HU-1413 / HU-1407 §7.3):
+
+    * ``safety_event`` — non-null when the G1 crisis path fired this turn.
+    * ``framing_version`` — the immutable reality-framing revision that held
+      during generation (G2 immutability is unit-tested against this).
+    * ``distress_grounding`` — True when the G3 dynamic distress branch ran.
+    * ``session_meta`` — per-session dosage observability (G7).
+    * ``risk_flags`` — reserved intake risk-flag surface (G8, observability only
+      at Phase-1; enforcement is a gating clinical review item pre-real-users).
     """
 
     memory_refs: list[str] = Field(default_factory=list)
     provenance_tiers: list[str] = Field(default_factory=list)
+    excluded_memory_refs: list[ExcludedMemoryRefView] = Field(default_factory=list)
     provider: str
+    safety_event: SafetyEventView | None = None
+    framing_version: int = 0
+    distress_grounding: bool = False
+    session_meta: SessionMetaView = Field(default_factory=SessionMetaView)
+    risk_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Reserved intake risk-flag surface (G8): loss_of_child, "
+            "minor_decedent, recent_loss, non_acceptance, proxy_user. "
+            "Observability-only at Phase-1."
+        ),
+    )
 
 
 class PersonaChatResponse(BaseModel):

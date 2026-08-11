@@ -51,12 +51,15 @@ from huible.memory.retrieval import (
 from huible.memory.retrieval import (
     ConversationTurn as RetrievalTurn,
 )
+from huible.safety.crisis import UserAffect
+from huible.safety.framing import get_distress_addendum, get_framing
 
 __all__ = [
     "CONFIDENCE_LEVEL_METADATA_KEY",
     "ConfidenceLevel",
     "ContextBuilder",
     "ConversationTurn",
+    "ExcludedMemoryRef",
     "PersonaConfig",
     "PromptContext",
     "RelationshipTier",
@@ -223,12 +226,34 @@ class ConversationTurn:
 
 
 @dataclass(slots=True)
+class ExcludedMemoryRef:
+    """Audit view of a memory that was filtered out by the provenance firewall.
+
+    Exposed in the response ``trace`` so fidelity tests (G4) can assert
+    exclusions in *both* directions: an episodic claim must carry a backing
+    ``memory_ref`` AND a known-non-admissible memory must appear here, not in
+    ``memory_refs``.
+    """
+
+    id: str
+    reason: str
+
+
+@dataclass(slots=True)
 class PromptContext:
     """Structured prompt context handed to the generator.
 
     ``included_memories`` and ``exclusion_counts`` are exposed for audit /
     observability so callers can prove the hard rules fired. They are evidence,
     not prompt text, and must not be concatenated into ``memory_blocks``.
+
+    Runtime-clinical fields (HU-1413 / HU-1407 §7.3):
+
+    * ``framing_version`` — the :mod:`huible.safety.framing` revision prepended
+      to ``system_prompt`` (G2 immutability is unit-tested against this).
+    * ``distress_grounding`` — True when the G3 dynamic distress-branch addendum
+      was appended to ``system_prompt`` this turn.
+    * ``excluded_memory_refs`` — structured exclusion audit (G4 both-directions).
     """
 
     system_prompt: str
@@ -237,7 +262,10 @@ class PromptContext:
     constraints: list[str]
     included_memories: list[MemoryNode] = field(default_factory=list)
     exclusion_counts: dict[str, int] = field(default_factory=dict)
+    excluded_memory_refs: list[ExcludedMemoryRef] = field(default_factory=list)
     current_message: str = ""
+    framing_version: int = 0
+    distress_grounding: bool = False
 
     def render(self) -> str:
         """Render the full flat prompt string for a generator.
@@ -306,21 +334,25 @@ def _filter_activated(
     activated: Sequence[ActivatedMemory],
     requester_scope: DisclosureScope,
     era_boundary: date | None,
-) -> tuple[list[ActivatedMemory], dict[str, int]]:
+) -> tuple[list[ActivatedMemory], dict[str, int], list[ExcludedMemoryRef]]:
     """Apply all hard gates to retrieval output.
 
-    Preserves retrieval's activation ordering. Returns the admissible subset and
-    a counts map keyed by exclusion reason for audit.
+    Preserves retrieval's activation ordering. Returns the admissible subset, a
+    counts map keyed by exclusion reason for audit, and the structured exclusion
+    refs (G4 both-directions: tests assert an excluded memory appears here, not
+    in ``memory_refs``).
     """
     admissible: list[ActivatedMemory] = []
     counts: dict[str, int] = {}
+    excluded: list[ExcludedMemoryRef] = []
     for am in activated:
         ok, reason = _check_admissible(am.node, requester_scope, era_boundary)
         if ok:
             admissible.append(am)
         else:
             counts[reason] = counts.get(reason, 0) + 1
-    return admissible, counts
+            excluded.append(ExcludedMemoryRef(id=str(am.node.id), reason=reason))
+    return admissible, counts, excluded
 
 
 # --- Rendering --------------------------------------------------------------
@@ -344,15 +376,27 @@ def _build_system_prompt(
     persona: PersonaConfig,
     tier: RelationshipTier,
     era_boundary: date | None,
-) -> tuple[str, list[str]]:
+    *,
+    user_affect: UserAffect = UserAffect.NEUTRAL,
+) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
-    Constraints encode INV-1 (era / knowledge boundary) and voice rules so they
-    reach the generator as explicit text, not just as filtered memories.
+    The immutable reality-framing block (G2/G3-static/G5/G9) is prepended to the
+    system prompt as model ground-truth — not as a negotiable constraint — so it
+    cannot be overridden by persona config or user-message prompt-injection
+    (clinically approved placement, HU-1407 §7.1 G2). When ``user_affect`` is
+    distress, the G3 dynamic grounding addendum is appended to flatten the
+    persona voice for that turn (HU-1407 §7.1 G3).
+
+    Returns ``(system_prompt, constraints, framing_version, distress_grounding)``
+    so callers can surface the framing revision + distress flag on the trace.
     """
+    framing = get_framing(persona.name)
     boundary_label = era_boundary.isoformat() if era_boundary else persona.era_knowledge_boundary
 
-    lines: list[str] = [f"You are embodying {persona.name}."]
+    lines: list[str] = [framing.text]
+    lines.append("")  # blank separator between framing and persona skeleton
+    lines.append(f"You are embodying {persona.name}.")
     if persona.age_at_death is not None:
         lines.append(f"You lived to {persona.age_at_death} years old.")
     if persona.voice_instructions:
@@ -365,13 +409,18 @@ def _build_system_prompt(
         lines.append(f"You died on {persona.death_date}.")
     lines.append(f"You are speaking with {tier.human_label}.")
 
+    distress_grounding = user_affect is UserAffect.DISTRESS
+    if distress_grounding:
+        lines.append("")
+        lines.append(get_distress_addendum())
+
     constraints: list[str] = [
         "Do not reference anything the persona would not have known.",
         "Speak naturally, in your own voice. Do not sound like a formal AI assistant.",
         "If a memory is uncertain or absent, stay silent on it rather than inventing detail.",
     ]
 
-    return "\n".join(lines), constraints
+    return "\n".join(lines), constraints, framing.version, distress_grounding
 
 
 # --- Builder ----------------------------------------------------------------
@@ -409,15 +458,22 @@ class ContextBuilder:
         requester_tier: RelationshipTier,
         conversation_history: Sequence[ConversationTurn] | None = None,
         current_message: str = "",
+        *,
+        user_affect: UserAffect = UserAffect.NEUTRAL,
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
         Exposed separately from :meth:`build` so callers (and tests) can drive
         the provenance / disclosure / era filters against a hand-built activated
         set without going through retrieval.
+
+        ``user_affect`` (G3 dynamic half) branches the system prompt: a distress
+        grade appends the affect-grounding addendum that flattens the persona
+        voice for that turn. The default (neutral) branch still enforces the
+        static tonal bounds baked into the immutable framing block (G3-static).
         """
         era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
-        admissible, exclusion_counts = _filter_activated(
+        admissible, exclusion_counts, excluded_refs = _filter_activated(
             activated,
             requester_scope=requester_tier.disclosure_scope,
             era_boundary=era_boundary,
@@ -428,7 +484,9 @@ class ContextBuilder:
             conversation_history or (),
             self.HISTORY_WINDOW,
         )
-        system_prompt, constraints = _build_system_prompt(persona, requester_tier, era_boundary)
+        system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(
+            persona, requester_tier, era_boundary, user_affect=user_affect
+        )
 
         return PromptContext(
             system_prompt=system_prompt,
@@ -437,7 +495,10 @@ class ContextBuilder:
             constraints=constraints,
             included_memories=[am.node for am in admissible],
             exclusion_counts=exclusion_counts,
+            excluded_memory_refs=excluded_refs,
             current_message=current_message,
+            framing_version=framing_version,
+            distress_grounding=distress_grounding,
         )
 
     async def build(
@@ -453,12 +514,17 @@ class ContextBuilder:
         retrieval_history: Sequence[RetrievalTurn] | None = None,
         current_message: str = "",
         retrieval_config: RetrievalConfig | None = None,
+        user_affect: UserAffect = UserAffect.NEUTRAL,
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
         Disclosure scoping is enforced at two layers: retrieval is invoked with
         the requester tier's disclosure scope, and the result is filtered again
         in :meth:`filter_and_render` as defense in depth.
+
+        ``user_affect`` (G3 dynamic half) is threaded into :meth:`filter_and_render`
+        so the shared crisis/distress signal (HU-1407 §7.1 G3 — one classifier,
+        two consumers) branches the persona voice for a distress turn.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         activated = await retrieve(
@@ -477,4 +543,5 @@ class ContextBuilder:
             requester_tier=requester_tier,
             conversation_history=conversation_history,
             current_message=current_message,
+            user_affect=user_affect,
         )
