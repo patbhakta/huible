@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 
 __all__ = [
     "ActivatedMemoryView",
+    "AlignmentView",
     "ChatRequest",
     "ChatResponse",
     "ChatResponseData",
@@ -284,10 +285,52 @@ class HandoffTicketView(BaseModel):
     )
 
 
+class AlignmentView(BaseModel):
+    """Generation-time claim->ref alignment report surfaced on the trace (§7.4.2).
+
+    Non-null on every persona-voiced turn (null on crisis turns, where no
+    generation ran). The alignment filter extracts claims (identity,
+    biographical, relationship, advice) from the persona reply, aligns each
+    against the memories that passed the G4 firewall + the persona vault, and
+    suppresses the turn safely when any un-grounded claim is present. This
+    view is the telemetry surface the Clinical Advisor requires: aggregate
+    ``ungrounded_claim_count`` / total ``claim_count`` for the un-grounded-claim
+    rate, and ``disposition`` for the suppress-vs-pass distribution.
+    """
+
+    claim_count: int = Field(
+        default=0,
+        ge=0,
+        description="Total claims extracted from the generated reply this turn.",
+    )
+    ungrounded_claim_count: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "Claims with no supporting retrieved ref / vault token. The "
+            "numerator of the un-grounded-claim rate."
+        ),
+    )
+    disposition: str = Field(
+        default="passed",
+        description=(
+            "'passed' when every claim was grounded (reply shown verbatim); "
+            "'suppressed' when at least one un-grounded claim replaced the "
+            "reply with the safe alignment fallback."
+        ),
+    )
+    ungrounded_by_category: dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "Un-grounded claim counts keyed by category: identity | "
+            "biographical | relationship | advice. Drives category-level "
+            "clinical review."
+        ),
+    )
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
-
-    ``memory_refs`` and ``provenance_tiers`` describe only the memories that
     passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
     LOW / QUARANTINE confidence memories are dropped by the context builder
     before generation and therefore never appear here; their ids and exclusion
@@ -305,6 +348,11 @@ class ChatTrace(BaseModel):
     * ``handoff`` — non-null when the turn was routed to the human-handoff queue
       (§7.4.1). Carries the full audit row (trigger signal, risk flags,
       timestamp, SLA target, outcome, clinical-review note).
+    * ``alignment`` — non-null on every persona-voiced turn (§7.4.2). Carries
+      the claim->ref alignment report: claim / un-grounded counts,
+      per-category un-grounded counts, and the disposition applied this turn.
+      Drives the un-grounded-claim rate + disposition telemetry the Clinical
+      Advisor requires. ``None`` on crisis turns (no generation ran).
     """
 
     memory_refs: list[str] = Field(default_factory=list)
@@ -329,6 +377,14 @@ class ChatTrace(BaseModel):
             "Human-handoff escalation record (§7.4.1). Non-null when the G1 "
             "crisis turn was routed to the staffed-responder queue. Carries the "
             "full audit row for clinical review."
+        ),
+    )
+    alignment: AlignmentView | None = Field(
+        default=None,
+        description=(
+            "Generation-time claim->ref alignment report (§7.4.2). Non-null on "
+            "every persona-voiced turn; null on crisis turns. Exposes the "
+            "un-grounded-claim rate and disposition for clinical review."
         ),
     )
 

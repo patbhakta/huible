@@ -71,6 +71,7 @@ from huible.api.auth import (
 )
 from huible.api.schemas import (
     ActivatedMemoryView,
+    AlignmentView,
     ChatRequest,
     ChatResponse,
     ChatResponseData,
@@ -101,6 +102,7 @@ from huible.safety import (
     HandoffQueue,
     InMemoryHandoffQueue,
     apply_affect_guard,
+    apply_alignment_guard,
     classify_user_message,
     escalate_to_human,
 )
@@ -609,6 +611,19 @@ def _register_routes(application: FastAPI) -> None:
             response_text, affect=crisis_result.affect
         )
 
+        # §7.4.2 generation-time claim->ref alignment filter. The retrieval-side
+        # G4 firewall guarantees the *prompt* only saw provenance-safe memory;
+        # this is the generation-side backstop for a confabulating generator —
+        # any factual / identity / advice claim in the reply must trace to a
+        # retrieved ref (or the persona vault), or the turn is failed safely to
+        # a claim-free reflection fallback. Runs on every persona-voiced turn
+        # (crisis already returned); the report feeds the trace alignment view
+        # for clinical review. See huible.safety.alignment.
+        alignment = apply_alignment_guard(
+            response_text, refs=ctx.included_memories, persona=binding.persona
+        )
+        response_text = alignment.text
+
         _record_turn(application, body.conversation_id, body.message, response_text)
 
         return PersonaChatResponse(
@@ -624,6 +639,12 @@ def _register_routes(application: FastAPI) -> None:
                 framing_version=ctx.framing_version,
                 distress_grounding=ctx.distress_grounding,
                 session_meta=_session_meta(application, body.conversation_id),
+                alignment=AlignmentView(
+                    claim_count=alignment.claim_count,
+                    ungrounded_claim_count=alignment.ungrounded_count,
+                    disposition=alignment.disposition,
+                    ungrounded_by_category=alignment.category_counts(),
+                ),
             ),
         )
 

@@ -17,12 +17,19 @@ traffic (HU-1421, §7.4 #1 / §10.1 fail-safe invariants):
   queue: routes a G1-flagged turn into an audited, staffed-responder queue with
   a defined SLA, a non-persona waiting UX, and a fail-safe that degrades to the
   G1 safe response when no human is available (never drops, never persona voice).
+* :mod:`huible.safety.alignment` — §7.4.2 generation-time claim->ref alignment
+  filter: any factual/identity claim in the persona's reply must be traceable
+  to a retrieved reference (or the persona vault), or be suppressed. The
+  generation-side backstop for a confabulating generator, complementing the
+  G4 retrieval-side provenance firewall.
 
 The chat endpoint (``huible.api.app``) wires these so that a crisis signal
 never reaches the persona voice (G1), every persona-voiced turn carries the
 immutable framing (G2/G5/G9), distress flattens the voice (G3), the response
-trace records the safety event / memory refs for audit (G4), and a crisis turn
-escalates to a real human with a monitored SLA (§7.4.1).
+trace records the safety event / memory refs for audit (G4), a crisis turn
+escalates to a real human with a monitored SLA (§7.4.1), and every
+persona-voiced reply is aligned against its retrieved refs so no unsupported
+claim reaches a grieving user (§7.4.2).
 """
 
 from huible.safety.affect import (
@@ -30,6 +37,19 @@ from huible.safety.affect import (
     SARCASTIC_DISMISSIVE_PATTERNS,
     apply_affect_guard,
     detect_sarcastic_dismissive,
+)
+from huible.safety.alignment import (
+    ADVICE_CLAIM_PATTERNS,
+    ALIGNMENT_FALLBACK_RESPONSE,
+    IDENTITY_CLAIM_PATTERNS,
+    AlignmentReport,
+    Claim,
+    ClaimCategory,
+    align_response,
+    apply_alignment_guard,
+    build_grounding_corpus,
+    extract_claims,
+    is_grounded,
 )
 from huible.safety.crisis import (
     DEFAULT_CRISIS_RESOURCES,
@@ -61,13 +81,19 @@ from huible.safety.handoff import (
 )
 
 __all__ = [
+    "ADVICE_CLAIM_PATTERNS",
+    "ALIGNMENT_FALLBACK_RESPONSE",
     "DEFAULT_CRISIS_RESOURCES",
     "DEFAULT_HANDOFF_SLA_SECONDS",
     "DISTRESS_FALLBACK_RESPONSE",
     "DISTRESS_GROUNDING_ADDENDUM",
     "FRAMING_VERSION",
+    "IDENTITY_CLAIM_PATTERNS",
     "REALITY_FRAMING_BLOCK",
     "SARCASTIC_DISMISSIVE_PATTERNS",
+    "AlignmentReport",
+    "Claim",
+    "ClaimCategory",
     "CrisisClassifier",
     "CrisisResult",
     "CrisisSignal",
@@ -79,12 +105,17 @@ __all__ = [
     "HandoffTicket",
     "InMemoryHandoffQueue",
     "UserAffect",
+    "align_response",
     "apply_affect_guard",
+    "apply_alignment_guard",
     "build_crisis_response",
+    "build_grounding_corpus",
     "build_handoff_acknowledgement",
     "classify_user_message",
     "detect_sarcastic_dismissive",
     "escalate_to_human",
+    "extract_claims",
     "get_distress_addendum",
     "get_framing",
+    "is_grounded",
 ]
