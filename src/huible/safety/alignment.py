@@ -39,11 +39,30 @@ alignment method, and disposition policy:
   of the memories that passed the G4 firewall (``included_memories``) plus
   the persona vault (name, voice instructions, era boundary). Identity /
   advice claims are un-groundable by policy. A biographical / relationship
-  claim is **grounded** iff at least one of its salient named entities appears
-  in the corpus; a claim with no salient entity is pure reflection and passes
-  (the filter must not flag "I remember those days fondly" or the warm
-  distress fallback). Sentence-level extraction keeps the check conservative:
-  only entity-anchored first-person sentences are treated as claims.
+  claim is **grounded** iff at least one of its salient tokens (named entity
+  or, for common-noun claims, content tokens) appears in the corpus; a
+  sentence with no factual cue is pure reflection and passes (the filter must
+  not flag "I remember those days fondly" or the warm distress fallback).
+
+  **HU-1461 Stage-0.6 hardening.** The Clinical Advisor's Stage-A adversarial
+  probe set quantified two blind-spot classes that are invisible against the
+  deterministic fake (which never emits them) but are the primary real-model
+  hallucination modes: (1) reality-blurring / soft-advice phrased off the
+  literal policy patterns (ID-02 / ID-03 / AD-02), and (2) biographical /
+  relationship claims built on common nouns that carry no capitalized entity
+  (BI-01 / BI-03 / RE-01 / RE-03). The policy patterns are broadened to the
+  paraphrased forms, and common-noun claims are detected lexically (kinship
+  noun, biography life-event verb, or shared-past-with-requester phrase) and
+  aligned by content-token overlap. Residual gap: a grounded named entity
+  whose sentence also carries un-grounded elaboration (RE-02: "Walter and I
+  were inseparable. We never had a single fight.") is grounded at sentence
+  granularity and cannot be caught without clause-level NLI — this is the
+  documented precondition for the LLM-as-judge hardening path (Clinical
+  Advisor criteria #3b), quantified by the Stage-A real-model probe.
+
+  Sentence-level extraction keeps the check conservative: only first-person
+  sentences carrying a named entity or a common-noun factual cue are treated
+  as claims.
 
 * **Disposition policy.** Fail-the-turn-safely (Phase-1). When any
   un-grounded claim is detected the whole reply is replaced with a safe,
@@ -207,6 +226,30 @@ IDENTITY_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
         re.IGNORECASE,
     ),
     re.compile(r"\bfrom\s+where\s+I\s+am\s+now\b", re.IGNORECASE),
+    # ── HU-1461 Stage-0.6 hardening (Clinical Advisor Stage-A probe ID-02 /
+    # ID-03). The literal patterns above are matched by the deterministic fake
+    # only because the fake never rephrases. A real generative voice reality-
+    # blurs in paraphrased wording ("I never truly left you", "I didn't go
+    # anywhere", "watching over you always") that evades every literal pattern
+    # above. Each construct below is an unambiguous continued-presence /
+    # afterlife-surveillance assertion the persona vault can never legitimately
+    # contain, so any match is an un-groundable identity (G2) policy claim.
+    re.compile(
+        r"\bI\s+(?:never|didn'?t|did\s+not)\s+(?:truly\s+|really\s+)?left\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bdidn'?t\s+go\s+anywhere\b", re.IGNORECASE),
+    re.compile(
+        r"\bwatching\s+over\s+(?:you|him|her|them|us|everyone|always)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\blooking\s+down\b", re.IGNORECASE),
+    re.compile(r"\bfrom\s+above\b", re.IGNORECASE),
+    re.compile(
+        r"\balways\s+(?:will|would)\s+be\s+"
+        r"(?:here|right\s+here|with\s+you|beside\s+you|near|close)\b",
+        re.IGNORECASE,
+    ),
 )
 
 ADVICE_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
@@ -217,6 +260,40 @@ ADVICE_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bwhat\s+I(?:'d|\s+would)\s+want\s+you\s+to\s+do\b", re.IGNORECASE),
     re.compile(r"\bwhat\s+(?:I|they)\s+would\s+want\b", re.IGNORECASE),
     re.compile(r"\b(?:my\s+advice|I\s+advise|I\s+recommend)\b", re.IGNORECASE),
+    # ── HU-1461 Stage-0.6 hardening (Clinical Advisor Stage-A probe AD-02 /
+    # AD-03). G9 forbids prescriptive directives, but a real generative voice
+    # phrases them softly — "it might help to cry", "have you tried writing",
+    # "consider seeing someone", "you'd be better off stopping those" — wording
+    # that evades the explicit-modal patterns above while still directing the
+    # bereaved to act. These are still prescriptions, so any match is an
+    # un-groundable advice (G9) policy claim. The clinical-referral subclass
+    # ("see a therapist / talk to someone") is high clinical severity and is
+    # matched explicitly so it can never reach the user un-mediated.
+    re.compile(r"\bit\s+(?:might|may|could)\s+help\s+to\b", re.IGNORECASE),
+    re.compile(
+        r"\bhave\s+you\s+(?:tried|considered|thought\s+(?:about|of))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bconsider\s+(?:seeing|talking|writing|reaching\s+out|finding|seeking|speaking)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\byou\s+(?:could|might|can)\s+"
+        r"(?:try|start|begin|see|talk|reach|reach\s+out|write|find|seek|consider)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:try|trying)\s+(?:writing|talking|to\s+write|to\s+talk|reaching|journaling)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:see|seeing|talk\s+to|talking\s+to|talking\s+with|reach\s+out\s+to|speak\s+with)\s+"
+        r"(?:someone|a\s+therapist|a\s+counselor|a\s+professional|a\s+doctor|"
+        r"a\s+psychiatrist|a\s+support\s+group)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\byou'?d\s+be\s+better\s+off\b", re.IGNORECASE),
 )
 
 
@@ -272,6 +349,68 @@ _STOPWORDS: frozenset[str] = frozenset(
     }
 )
 
+# ── HU-1461 Stage-0.6 hardening: common-noun claim detection ────────────────
+#
+# The entity-anchored branch below only fires on a *capitalized* named entity,
+# so a biographical/relationship hallucination built on common nouns — "I lost
+# a child too", "I worked as a nurse", "your mother and I were close", "the
+# summer you came to stay with us" — produced *no claim at all* under the fake
+# and was treated as pure reflection. A real generative voice emits these as
+# readily as named-entity claims (Clinical Advisor Stage-A probes BI-01 / BI-03
+# / RE-01 / RE-03). The three lexical cues below promote a first-person
+# sentence with no named entity into a claim so it goes through the same
+# grounding gate. Salient tokens for grounding are the sentence's content
+# tokens (via :func:`_corpus_tokens`), so a fabricated common-noun fact still
+# has to be present in the turn's retrieved refs + persona vault to pass.
+
+#: Familial / kinship referent nouns. A first-person sentence carrying one of
+#: these (and no named entity) is asserting a kinship relationship, not pure
+#: reflection. Narrower than :data:`RELATIONSHIP_TERMS` (which includes generic
+#: "we/us/our/together" used only for entity-anchored category classification)
+#: so warm empathy like "I'm right here with you" never triggers it.
+_KINSHIP_NOUNS: frozenset[str] = frozenset(
+    {
+        "child", "children", "son", "daughter", "baby", "mother", "mom",
+        "father", "dad", "parent", "parents", "sister", "brother", "sibling",
+        "wife", "husband", "spouse", "family", "grandchild", "grandmother",
+        "grandfather", "grandma", "grandpa", "aunt", "uncle", "cousin",
+        "niece", "nephew",
+    }
+)
+
+#: First-person past-tense life-event verbs. "I lived / worked / taught / lost
+#: / served / ..." asserts a biographical fact. ``remember`` is deliberately
+#: excluded — it is reflection ("I remember those days fondly"), not a factual
+#: assertion; a shared event with the *requester* is caught instead by
+#: :data:`_SHARED_PAST_PATTERN`. Past tense only: the persona is deceased, so a
+#: biographical assertion is naturally past tense, and present-tense "I live /
+#: work" reads as metaphor/reflection and would over-trigger on warm fallbacks.
+_BIOGRAPHY_CUE_PATTERN = re.compile(
+    r"\bI\s+"
+    r"(?:lived|worked|studied|grew\s+up|was\s+born|served|taught|"
+    r"married|raised|spent|went\s+to\s+(?:school|college|university)|built|"
+    r"owned|ran|founded|became|lost)\b",
+    re.IGNORECASE,
+)
+
+#: A specific shared event with the requester (second person). "the summer you
+#: came to stay with us", "when you were little", "you visited". This is the
+#: signature of an invented shared past (RE-03) that pure reflection never
+#: carries. Deliberately requester-anchored ("you …") plus the "stay with us"
+#: construct: generic "we had / we were / we went" is excluded because it
+#: false-fires on warm relationship reflection ("the time we had together")
+#: while the leak probes are all caught by the requester-event forms here (or by
+#: :data:`_KINSHIP_NOUNS` for RE-01).
+_SHARED_PAST_PATTERN = re.compile(
+    r"\b(?:"
+    r"you\s+(?:came|used\s+to|would|visited|stayed|told\s+me|told\s+us)|"
+    r"when\s+you\s+were\s+(?:little|small|young|a\s+(?:boy|girl|child|kid))|"
+    r"the\s+(?:summer|winter|spring|fall|autumn|year|day|time|weekend|month)\s+you|"
+    r"stay\s+with\s+us"
+    r")\b",
+    re.IGNORECASE,
+)
+
 
 def _split_sentences(text: str) -> list[str]:
     """Split ``text`` into trimmed, non-empty sentences."""
@@ -325,9 +464,11 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
     * **identity / advice** — any policy-pattern match inside its sentence is
       a claim (always un-groundable).
     * **biographical / relationship** — a sentence that carries a first-person
-      anchor AND at least one named entity (multi-word or single). Category is
-      ``relationship`` when the sentence also carries a kinship/shared-past
-      term, else ``biographical``. Sentences with no entity are pure
+      anchor AND either a named entity (multi-word or single) or a common-noun
+      factual cue (HU-1461 hardening: a kinship noun, a biography life-event
+      verb, or a shared-past-with-requester phrase). Category is ``relationship``
+      when the sentence carries a kinship/shared-past signal, else
+      ``biographical``. Sentences with no entity and no factual cue are pure
       reflection and yield no claim.
 
     ``persona_name`` excludes self-references from the entity set so a reply
@@ -336,6 +477,7 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
     if not text:
         return []
 
+    name_tokens = {p.lower() for p in persona_name.split()} if persona_name else set()
     claims: list[Claim] = []
     for sentence in _split_sentences(text):
         # Identity / advice policy claims (highest priority — always flagged).
@@ -349,6 +491,7 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
                 break
 
         # Entity-anchored factual claims (biographical / relationship).
+        entity_claim_added = False
         if _ANCHOR_PATTERN.search(sentence):
             multi, single = _extract_entities(sentence, persona_name=persona_name)
             entities = multi + single
@@ -364,6 +507,38 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
                 # same sentence already flagged as a policy claim.
                 if not any(c.text == sentence for c in claims):
                     claims.append(Claim(text=sentence, category=category, salient_entities=salient))
+                entity_claim_added = True
+
+        # Common-noun biographical / relationship claims (HU-1461 hardening).
+        # Only when no named entity anchored the sentence — otherwise the
+        # entity-anchored branch above already produced the claim. Catches the
+        # hallucination classes that are invisible under the deterministic fake
+        # but are primary real-model modes (BI-01 / BI-03 / RE-01 / RE-03).
+        if entity_claim_added or not _ANCHOR_PATTERN.search(sentence):
+            continue
+        if any(c.text == sentence for c in claims):
+            continue
+        words_lower = {w.strip("'\"").lower() for w in sentence.split()}
+        has_kinship = bool(words_lower & _KINSHIP_NOUNS)
+        bio_match = _BIOGRAPHY_CUE_PATTERN.search(sentence)
+        shared_match = _SHARED_PAST_PATTERN.search(sentence)
+        if not (has_kinship or bio_match or shared_match):
+            continue
+        # Salient tokens for grounding = the sentence's content tokens minus the
+        # persona's own name. A fabricated common-noun fact must still appear in
+        # the turn's retrieved refs + persona vault to pass (same gate as
+        # named-entity claims).
+        salient = tuple(t for t in _corpus_tokens(sentence) if t not in name_tokens)
+        if not salient:
+            continue
+        if shared_match:
+            category = ClaimCategory.RELATIONSHIP
+        elif bio_match:
+            category = ClaimCategory.BIOGRAPHICAL
+        else:
+            # Kinship noun with no life-event verb and no shared-past cue.
+            category = ClaimCategory.RELATIONSHIP
+        claims.append(Claim(text=sentence, category=category, salient_entities=salient))
     return claims
 
 
