@@ -787,6 +787,7 @@ def _register_routes(application: FastAPI) -> None:
             real_user_refused: bool = False,
             ungrounded_claims: int = 0,
             alignment_disposition: str | None = None,
+            ungrounded_by_category: dict[str, int] | None = None,
             risk_action: str | None = None,
             risk_flags: tuple[str, ...] = (),
             handoff_outcome: str | None = None,
@@ -803,6 +804,7 @@ def _register_routes(application: FastAPI) -> None:
                         real_user_refused=real_user_refused,
                         ungrounded_claims=ungrounded_claims,
                         alignment_disposition=alignment_disposition,
+                        ungrounded_by_category=ungrounded_by_category or {},
                         risk_action=risk_action,
                         risk_flags=risk_flags,
                         handoff_outcome=handoff_outcome,
@@ -1269,6 +1271,7 @@ def _register_routes(application: FastAPI) -> None:
             outcome="persona",
             ungrounded_claims=alignment.ungrounded_count,
             alignment_disposition=alignment.disposition,
+            ungrounded_by_category=alignment.category_counts(),
             risk_action=enforcement.action.value if enforcement.action else None,
             risk_flags=tuple(f.value for f in enforcement.fired_flags),
         )

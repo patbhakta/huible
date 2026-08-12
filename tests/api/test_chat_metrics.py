@@ -42,6 +42,23 @@ def _metric_total(text: str, name: str) -> float:
     return total
 
 
+def _labeled_value(text: str, name: str, **labels: str) -> float:
+    """Return the sample value for ``name`` with an exact ``labels`` match.
+
+    Returns 0.0 when the label set has not been initialized (no leak of that
+    category yet) — the clinically correct value for an unseen category.
+    """
+    labelset = ",".join(f'{k}="{v}"' for k, v in labels.items())
+    pattern = re.compile(rf"^{re.escape(name)}\{{{re.escape(labelset)}\}}\s+([0-9.eE+-]+)")
+    for line in text.splitlines():
+        if line.startswith("#"):
+            continue
+        m = pattern.match(line)
+        if m:
+            return float(m.group(1))
+    return 0.0
+
+
 def _make_client(*, mode: str = "open") -> TestClient:
     settings = Settings(persona_chat_real_user_mode=mode)
     backend, _ = _seeded_backend()
@@ -130,6 +147,7 @@ class TestMetricsEndpoint:
             "huible_handoff_outcomes_total",
             "huible_ungrounded_claims_total",
             "huible_alignment_dispositions_total",
+            "huible_alignment_ungrounded_claims_total",
             "huible_risk_enforcement_actions_total",
             "huible_risk_flag_fires_total",
             "huible_real_user_refused_total",
@@ -294,3 +312,74 @@ class TestCountersIncrement:
         )
         after = _metric_total(client.get("/metrics").text, "huible_real_user_refused_total")
         assert after > before, (before, after)
+
+
+class TestAlignmentCategoryTelemetry:
+    """HU-1461 — Clinical Advisor §7.4.2 monitoring ask.
+
+    The per-category un-grounded claim signal must reach Prometheus (not just the
+    per-turn ``trace.alignment`` JSON) so real-model drift in a single category
+    (identity/advice/biographical/relationship) is visible on the SLO dashboard.
+    """
+
+    def test_per_category_counter_reflects_record_chat_turn_input(self):
+        """A direct record_chat_turn call increments each category label exactly."""
+        from huible.api.metrics import ChatTurnOutcome, record_chat_turn
+
+        client = _make_client()
+        name = "huible_alignment_ungrounded_claims_total"
+        before_id = _labeled_value(client.get("/metrics").text, name, category="identity")
+        before_rel = _labeled_value(client.get("/metrics").text, name, category="relationship")
+        before_adv = _labeled_value(client.get("/metrics").text, name, category="advice")
+
+        record_chat_turn(
+            ChatTurnOutcome(
+                outcome="persona",
+                latency_s=0.01,
+                ungrounded_claims=3,
+                alignment_disposition="suppressed",
+                ungrounded_by_category={"identity": 2, "relationship": 1},
+            )
+        )
+
+        text = client.get("/metrics").text
+        # Only the categories present in the mapping moved.
+        assert _labeled_value(text, name, category="identity") - before_id == 2.0
+        assert _labeled_value(text, name, category="relationship") - before_rel == 1.0
+        # advice was not in the mapping → unchanged.
+        assert _labeled_value(text, name, category="advice") - before_adv == 0.0
+
+    def test_end_to_end_suppression_increments_biographical_category(self):
+        """A suppressed biographical claim through the chat path reaches Prometheus."""
+        # Build a client whose fake provider emits an un-grounded biographical
+        # claim (mirrors tests/api/test_chat_alignment.py).
+        backend, _ = _seeded_backend()
+        persona = _persona()
+        registry = InMemoryPersonaRegistry({persona.id: (persona, backend)})
+        keys = InMemoryApiKeyStore({API_KEY: PERSONA_ID}, read_env=False)
+        application = create_app(
+            api_key_store=keys,
+            persona_registry=registry,
+            llm_client=FakeLLMClient(
+                response="I lived in Marfa for twenty years.", persona_name="Chandler"
+            ),
+            settings=Settings(persona_chat_real_user_mode="open"),
+            start_time=0.0,
+        )
+        client = TestClient(application)
+
+        name = "huible_alignment_ungrounded_claims_total"
+        before = _labeled_value(client.get("/metrics").text, name, category="biographical")
+        conv = "sess-metrics-category-e2e"
+        _consent(client, conv)
+        r = client.post(
+            f"/api/v1/chat/{PERSONA_ID}",
+            json={"message": "where did you live?", "conversation_id": conv},
+            headers=_auth_headers(),
+        )
+        assert r.status_code == 200, r.text
+        # Sanity: the turn was suppressed (the claim was un-grounded).
+        assert r.json()["trace"]["alignment"]["disposition"] == "suppressed"
+
+        after = _labeled_value(client.get("/metrics").text, name, category="biographical")
+        assert after - before >= 1.0, (before, after)

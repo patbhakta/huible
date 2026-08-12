@@ -34,7 +34,7 @@ text, session ids, or persona names.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from prometheus_client import (
@@ -110,6 +110,23 @@ ALIGNMENT_DISPOSITIONS = Counter(
     "huible_alignment_dispositions_total",
     "§7.4.2 alignment-filter dispositions applied this turn (suppressed/passed/refrained).",
     ["disposition"],
+)
+
+# §7.4.2 per-category un-grounded claim signal (Clinical Advisor §7.4.2
+# monitoring ask, HU-1461). ``huible_ungrounded_claims_total`` above is the
+# aggregate leak volume; this labeled counter is the clinically-meaningful
+# breakdown — identity / advice / biographical / relationship — so a real-model
+# drift in a *single* category is visible on the SLO dashboard without parsing
+# the per-turn ``trace.alignment`` JSON. Label values are the fixed
+# :class:`huible.safety.alignment.ClaimCategory` set (tiny cardinality). Derive
+# the per-category leak rate via PromQL over the persona-turn denominator:
+#   sum(rate(huible_alignment_ungrounded_claims_total[5m])) by (category).
+ALIGNMENT_UNGROUNDED_BY_CATEGORY = Counter(
+    "huible_alignment_ungrounded_claims_total",
+    "§7.4.2 un-grounded persona claims by claim category "
+    "(identity/advice/biographical/relationship) — the per-category leak "
+    "signal for real-model drift observability.",
+    ["category"],
 )
 
 # §7.4.4 G8 risk enforcement
@@ -236,6 +253,10 @@ class ChatTurnOutcome:
     real_user_refused: bool = False
     ungrounded_claims: int = 0
     alignment_disposition: str | None = None
+    # Per-category un-grounded claim counts (Clinical Advisor §7.4.2 monitoring
+    # ask, HU-1461). Source: AlignmentReport.category_counts() — only the
+    # un-grounded subset. Empty on passed turns (no leak signal).
+    ungrounded_by_category: dict[str, int] = field(default_factory=dict)
     risk_action: str | None = None
     risk_flags: tuple[str, ...] = ()
     handoff_outcome: str | None = None
@@ -264,6 +285,9 @@ def record_chat_turn(result: ChatTurnOutcome) -> None:
         UNGROUNDED_CLAIMS.inc(result.ungrounded_claims)
     if result.alignment_disposition:
         ALIGNMENT_DISPOSITIONS.labels(disposition=result.alignment_disposition).inc()
+    for category, count in result.ungrounded_by_category.items():
+        if count:
+            ALIGNMENT_UNGROUNDED_BY_CATEGORY.labels(category=category).inc(count)
     if result.risk_action:
         RISK_ENFORCEMENT_ACTIONS.labels(action=result.risk_action).inc()
     for flag in result.risk_flags:
@@ -282,6 +306,7 @@ def record_chat_turn(result: ChatTurnOutcome) -> None:
                 "real_user_refused": result.real_user_refused,
                 "ungrounded_claims": result.ungrounded_claims,
                 "alignment_disposition": result.alignment_disposition,
+                "ungrounded_by_category": dict(result.ungrounded_by_category),
                 "risk_action": result.risk_action,
                 "risk_flags": list(result.risk_flags),
                 "handoff_outcome": result.handoff_outcome,
