@@ -401,11 +401,39 @@ _BIOGRAPHY_CUE_PATTERN = re.compile(
 #: false-fires on warm relationship reflection ("the time we had together")
 #: while the leak probes are all caught by the requester-event forms here (or by
 #: :data:`_KINSHIP_NOUNS` for RE-01).
+#:
+#: HU-1461 follow-up (Clinical Advisor findings 1 + 2): the bare ``came``
+#: alternative collided with the grief-companion rapport phrase "you came back
+#: today" (the user *returning to the conversation*) and over-suppressed warmth,
+#: so ``came`` is now restricted to ``came to (stay|visit|see)``. Verb coverage
+#: was broadened to the second-person past-tense content verbs
+#: (``sat/played/loved/...``) that the pure-second-person leak class rests on,
+#: with an optional adverb slot (``always/often/...``) for "you always sat". The
+#: requester-as-child form gained an optional "when" + ``so`` intensifier and the
+#: temporal anchor gained ordinal support ("the last time you"). The anchor gate
+#: in :func:`extract_claims` is bypassed when this pattern matches, so a
+#: shared-past assertion in pure second person still produces a claim.
 _SHARED_PAST_PATTERN = re.compile(
     r"\b(?:"
-    r"you\s+(?:came|used\s+to|would|visited|stayed|told\s+me|told\s+us)|"
-    r"when\s+you\s+were\s+(?:little|small|young|a\s+(?:boy|girl|child|kid))|"
-    r"the\s+(?:summer|winter|spring|fall|autumn|year|day|time|weekend|month)\s+you|"
+    # Second-person past-tense shared-event verbs. ``came`` is tightened to
+    # ``came to (stay|visit|see)``: bare "you came back/in/here" is rapport
+    # (the user arriving), not an invented shared past. The optional adverb
+    # slot covers "you always sat" / "you often visited".
+    r"you\s+(?:(?:always|often|usually|sometimes|never)\s+)?"
+    r"(?:came\s+to\s+(?:stay|visit|see)|visited|stayed|sat|stood|played|"
+    r"sang|loved|lived|grew\s+up)|"
+    # Past-habit / explicit tell (modal forms — no adverb slot). Bare ``would``
+    # is deliberately excluded: "I was hoping you would." is rapport
+    # continuation, not an invented shared past, and the bare modal over-fired.
+    r"you\s+(?:used\s+to|told\s+me|told\s+us)|"
+    # Requester-as-child, with or without "when" and an intensifier.
+    r"(?:when\s+)?you\s+were\s+(?:so\s+)?(?:little|small|young|tiny|"
+    r"a\s+(?:boy|girl|child|kid))|"
+    # Temporal anchor + "you" — supports "the summer you" and ordinals
+    # ("the last time you") the bare seasonal form missed.
+    r"the\s+(?:(?:last|first)\s+)?"
+    r"(?:summer|winter|spring|fall|autumn|year|day|time|weekend|month)\s+you|"
+    # Explicit shared-residence cue.
     r"stay\s+with\s+us"
     r")\b",
     re.IGNORECASE,
@@ -465,11 +493,14 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
       a claim (always un-groundable).
     * **biographical / relationship** — a sentence that carries a first-person
       anchor AND either a named entity (multi-word or single) or a common-noun
-      factual cue (HU-1461 hardening: a kinship noun, a biography life-event
-      verb, or a shared-past-with-requester phrase). Category is ``relationship``
-      when the sentence carries a kinship/shared-past signal, else
-      ``biographical``. Sentences with no entity and no factual cue are pure
-      reflection and yield no claim.
+      factual cue (a kinship noun, a biography life-event verb, or a
+      shared-past-with-requester phrase). A shared-past cue may stand without a
+      first-person anchor: the assertion is carried by the requester-anchored
+      shared-past construct itself ("You came to stay with us that winter."),
+      so the pure-second-person leak class is still caught. Category is
+      ``relationship`` when the sentence carries a kinship/shared-past signal,
+      else ``biographical``. Sentences with no entity and no factual cue are
+      pure reflection and yield no claim.
 
     ``persona_name`` excludes self-references from the entity set so a reply
     that simply names the persona does not become a claim.
@@ -514,7 +545,7 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
         # entity-anchored branch above already produced the claim. Catches the
         # hallucination classes that are invisible under the deterministic fake
         # but are primary real-model modes (BI-01 / BI-03 / RE-01 / RE-03).
-        if entity_claim_added or not _ANCHOR_PATTERN.search(sentence):
+        if entity_claim_added:
             continue
         if any(c.text == sentence for c in claims):
             continue
@@ -523,6 +554,16 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
         bio_match = _BIOGRAPHY_CUE_PATTERN.search(sentence)
         shared_match = _SHARED_PAST_PATTERN.search(sentence)
         if not (has_kinship or bio_match or shared_match):
+            continue
+        # Anchor gate. Kinship and biography cues are first-person assertions
+        # by construction (``_BIOGRAPHY_CUE_PATTERN`` requires a leading "I";
+        # kinship-noun claims carry "I/my/we/our") and need an explicit
+        # first-person anchor. A shared-past-with-requester cue is itself a
+        # first-person assertion — the persona claims a history with the user —
+        # and may carry no explicit pronoun ("You came to stay with us that
+        # winter."). Let a shared-past match bypass the anchor gate so the
+        # pure-second-person leak class (Clinical Advisor finding 2) is caught.
+        if not shared_match and not _ANCHOR_PATTERN.search(sentence):
             continue
         # Salient tokens for grounding = the sentence's content tokens minus the
         # persona's own name. A fabricated common-noun fact must still appear in
