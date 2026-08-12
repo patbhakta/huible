@@ -1,0 +1,170 @@
+# Prometheus alerting rules for the Huible persona-chat §3 SLO signals (HU-1463).
+#
+# Wires the launch-plan §4.1 rollback triggers to Prometheus alerting: handoff
+# breach, degrade rate > 0, alignment fail reaching a user, health degraded,
+# latency / error-budget burn. Load this file in your Prometheus instance:
+#
+#   prometheus.yml:
+#     rule_files:
+#       - /etc/prometheus/huible-alerts.yml
+#
+# All Huible metrics are emitted by `GET /metrics` on the app service. The
+# `huible_*` gauges are mirrored from the /api/v1/handoff/audit telemetry and
+# the /health probe on every scrape, so an alert here fires on the exact same
+# signal the JSON dashboard surfaces. See docs/09-deployment-ops-guide.md §7.3
+# for the full SLO table and the §3.5 paging path that turns a firing alert
+# into a real on-call page.
+#
+# Severity maps to the launch-plan ramp semantics:
+#   - halt alerts (severity: page)  → abort the current ramp stage immediately
+#     and run the §4.2 rollback procedure (flip PERSONA_CHAT_REAL_USER_TRAFFIC=off)
+#   - burn alerts (severity: ticket) → investigate before the next ramp advance
+#
+# Scrape config reference (not part of the rules):
+#   - job_name: huible
+#     metrics_path: /metrics
+#     static_configs: [{ targets: ['huible:8000'] }]
+
+groups:
+  - name: huible-slo
+    interval: 30s
+    rules:
+      # --- §3.1 guardrail-health SLOs (halt-the-ramp alerts) ----------------
+
+      # Launch-plan §4.1 + Stage-1 exit gate: every escalation must reach a
+      # human. A non-zero degrade rate means the fail-safe fired (no staffed
+      # responder) — real grieving-user traffic must halt.
+      - alert: HuibleHandoffDegradeRate
+        expr: huible_handoff_degrade_rate > 0
+        for: 1m
+        labels:
+          severity: page
+          slo: guardrail-health
+        annotations:
+          summary: "Huible handoff degrade rate > 0"
+          description: >
+            {{ $value | humanizePercentage }} of handoff escalations degraded
+            (no staffed responder reached). Launch-plan §4.1 rollback trigger:
+            halt the ramp and run the kill-switch rollback procedure.
+
+      # A pending ticket past its SLA target = a grieving user is waiting past
+      # the agreed target right now. Page immediately.
+      - alert: HuibleHandoffPendingBreached
+        expr: huible_handoff_pending_breached > 0
+        for: 1m
+        labels:
+          severity: page
+          slo: guardrail-health
+        annotations:
+          summary: "Huible handoff ticket past SLA"
+          description: >
+            {{ $value }} open handoff ticket(s) are past their SLA target with
+            no acknowledgement. Launch-plan §4.1 rollback trigger: page the
+            on-call responder and halt the ramp.
+
+      # Answered-within-SLA rate below the ramp threshold (Stage 1 ≥ 0.9,
+      # Stage 2+ ≥ 0.95). Use 0.9 as the conservative single threshold; tighten
+      # to 0.95 once Stage 2 advances.
+      - alert: HuibleHandoffAnsweredSLABurn
+        expr: huible_handoff_answered_within_sla_rate < 0.9
+        for: 5m
+        labels:
+          severity: page
+          slo: guardrail-health
+        annotations:
+          summary: "Huible answered-within-SLA below ramp threshold"
+          description: >
+            Answered-within-SLA rate is {{ $value | humanizePercentage }},
+            below the Stage-1 ≥ 0.9 ramp gate. Investigate responder coverage
+            before advancing or halt the ramp.
+
+      # §7.4.2 alignment filter: any un-grounded persona claim reaching a user
+      # is a launch-plan §4.1 rollback trigger ("halt"). The counter tracks
+      # claims detected as un-grounded; a non-zero rate on persona-voiced
+      # turns means the filter is leaking. Pair with the disposition counter
+      # (suppressed/passed/refrained) to confirm the leak is user-visible.
+      - alert: HuibleAlignmentLeak
+        expr: |
+          sum(rate(huible_ungrounded_claims_total[5m])) > 0
+          and on()
+          sum(rate(huible_alignment_dispositions_total{disposition="passed"}[5m])) > 0
+        for: 2m
+        labels:
+          severity: page
+          slo: guardrail-health
+        annotations:
+          summary: "Huible alignment filter leaking un-grounded claims"
+          description: >
+            Un-grounded persona claims are reaching users (alignment
+            disposition=passed while ungrounded_claims > 0). Launch-plan §4.1
+            rollback trigger: halt the ramp immediately.
+
+      # --- §3.2 service-health SLOs ----------------------------------------
+
+      # /health probe reports degraded (a wired DB check failed). The persona
+      # chat path depends on the DB; degraded is a halt-the-ramp trigger.
+      - alert: HuibleHealthDegraded
+        expr: huible_health_status == 0
+        for: 1m
+        labels:
+          severity: page
+          slo: service-health
+        annotations:
+          summary: "Huible /health probe degraded"
+          description: >
+            The /health probe is reporting degraded (a wired DB / pgvector
+            check is failing). Launch-plan §4.1 rollback trigger: halt the
+            ramp and investigate DB connectivity.
+
+      # Chat latency p95 burn — Stage 1 < 12s, Stage 2+ < 8s. Use the §4.1
+      # sustained-rollback threshold (20s for 10 min) as the page-level alert;
+      # tighten the threshold per stage as the ramp advances.
+      - alert: HuibleChatLatencyBurn
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(huible_chat_turn_latency_seconds_bucket[5m])) by (le)
+          ) > 20
+        for: 10m
+        labels:
+          severity: page
+          slo: service-health
+        annotations:
+          summary: "Huible chat latency p95 sustained above 20s"
+          description: >
+            Persona-chat p95 latency has been above 20s for 10 minutes.
+            Launch-plan §4.1 rollback trigger: halt the ramp.
+
+      # 5xx error rate burn — §4.1 sustained threshold > 5% for 10 min. The
+      # counter is labeled by status_class; the 5xx slice is the burn signal.
+      - alert: HuibleChatErrorBudgetBurn
+        expr: |
+          (
+            sum(rate(huible_chat_errors_total{status_class="5xx"}[5m]))
+            /
+            clamp_min(sum(rate(huible_chat_turns_total[5m])), 1)
+          ) > 0.05
+        for: 10m
+        labels:
+          severity: page
+          slo: service-health
+        annotations:
+          summary: "Huible 5xx error rate sustained above 5%"
+          description: >
+            Persona-chat 5xx error rate has exceeded 5% for 10 minutes.
+            Launch-plan §4.1 rollback trigger: halt the ramp.
+
+      # --- Stage 0.7 kill-switch engaged (informational, but alert if
+      # engaged during normal non-rollback operation) -----------------------
+      - alert: HuibleRealUserTrafficDisabled
+        expr: increase(huible_real_user_traffic_disabled_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: ticket
+          slo: service-health
+        annotations:
+          summary: "Huible real-user kill switch is engaged (503 refusals)"
+          description: >
+            The Stage 0.7 hard kill switch (PERSONA_CHAT_REAL_USER_TRAFFIC=off)
+            is refusing real-user turns with 503 SERVICE_DISABLED. Expected
+            during a rollback drill; unexpected during normal operation —
+            confirm the switch state matches intent.

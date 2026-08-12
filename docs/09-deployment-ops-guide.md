@@ -377,12 +377,61 @@ Huible outputs structured JSON logs to stdout. Each log line:
 
 ### 7.3 Recommended Metrics
 
-Track these via Prometheus or your observability platform:
+The app exposes a Prometheus scrape endpoint at `GET /metrics` (unauthenticated
+by design — contains only monotonic counters, a latency histogram, and SLO
+gauges; no PHI). Stage 0.3 (HU-1446) shipped the guardrail counters; Stage 0.8
+(HU-1463) added the §3 SLO *gauges* so the launch-plan §3.1/§3.2 SLO table and
+§4.1 rollback triggers are observable from a scrape alone.
+
+**Scrape config:**
+
+```yaml
+- job_name: huible
+  metrics_path: /metrics
+  static_configs:
+    - targets: ['huible:8000']
+```
+
+**Guardrail counters (Stage 0.3, HU-1446):**
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `huible_request_duration_seconds` | histogram | API request latency (by endpoint) |
-| `huible_request_errors_total` | counter | Error responses by status code |
+| `huible_chat_turns_total` | counter | Persona-chat turns by outcome |
+| `huible_chat_turn_latency_seconds` | histogram | Persona-chat turn wall-clock latency (handler entry → response) |
+| `huible_chat_errors_total` | counter | Persona-chat turns that raised (4xx/5xx) by status class |
+| `huible_crisis_fires_total` | counter | G1 crisis signals detected pre-generation |
+| `huible_handoff_outcomes_total` | counter | §7.4.1 handoff escalations by queue outcome (enqueued/degraded/answered/abandoned) |
+| `huible_consent_required_total` | counter | G6 first-use reality-framing consents required |
+| `huible_ungrounded_claims_total` | counter | §7.4.2 persona claims detected as un-grounded |
+| `huible_alignment_dispositions_total` | counter | §7.4.2 alignment-filter dispositions (suppressed/passed/refrained) |
+| `huible_risk_enforcement_actions_total` | counter | §7.4.4 G8 binding actions by action |
+| `huible_risk_flag_fires_total` | counter | §7.4.4 risk flags present on an enforced turn, by flag |
+| `huible_real_user_refused_total` | counter | Stage 0.1 ramp-gate refusals |
+| `huible_real_user_traffic_disabled_total` | counter | Stage 0.7 hard kill-switch refusals (503, primary rollback path) |
+| `huible_paging_failures_total` | counter | §3 Sev-1 page-send failures by trigger |
+| `huible_alert_oncall_configured` | gauge | `1` once the §3 Sev-1 alerts are wired to the on-call roster |
+
+**SLO gauges (Stage 0.8, HU-1463) — launch-plan §3 SLO table + §4.1 rollback triggers:**
+
+These gauges are mirrored from the `/api/v1/handoff/audit` telemetry and the
+`/health` probe on every scrape, so the Prometheus view cannot drift from the
+JSON dashboard. The alert rules in [`examples/prometheus-alerts.yml`](../examples/prometheus-alerts.yml)
+page on these gauges.
+
+| Metric | Type | Description | SLO / trigger |
+|--------|------|-------------|---------------|
+| `huible_handoff_degrade_rate` | gauge | §3.1 degrade rate (degraded / total) | Healthy = 0.0; > 0 halts ramp (§4.1) |
+| `huible_handoff_pending_breached` | gauge | Open tickets past SLA right now | Healthy = 0; any > 0 halts ramp (§4.1) |
+| `huible_handoff_pending_breach_rate` | gauge | pending_breached / pending | Healthy = 0.0 |
+| `huible_handoff_answered_within_sla_rate` | gauge | 1 − answered_breach_rate | ≥ 0.9 (S1), ≥ 0.95 (S2+) |
+| `huible_handoff_tickets_total` | gauge | Total tickets in audit log | context for the rates |
+| `huible_handoff_pending` | gauge | Open (ENQUEUED) tickets | queue-depth signal |
+| `huible_health_status` | gauge | `/health` status: 1 = ok, 0 = degraded | degraded halts ramp (§4.1) |
+
+**Historical / forward-looking metrics** (not yet wired; track via your observability platform when implemented):
+
+| Metric | Type | Description |
+|--------|------|-------------|
 | `huible_memories_ingested_total` | counter | Memories passing the five-gate firewall |
 | `huible_memories_quarantined_total` | counter | Memories sent to quarantine (by gate) |
 | `huible_memories_rejected_total` | counter | Memories rejected (by gate) |
@@ -390,6 +439,34 @@ Track these via Prometheus or your observability platform:
 | `huible_active_memories_total` | gauge | Active memory count per persona |
 | `huible_vector_index_size_bytes` | gauge | HNSW index size (per embedding type) |
 | `huible_db_pool_active_connections` | gauge | Database connection pool usage |
+
+### 7.3.1 Alert rules (Stage 0.8, HU-1463)
+
+The launch-plan §4.1 rollback triggers are wired to Prometheus alerting in
+[`examples/prometheus-alerts.yml`](../examples/prometheus-alerts.yml). Load it
+in your Prometheus instance:
+
+```yaml
+rule_files:
+  - /etc/prometheus/huible-alerts.yml
+```
+
+The file covers every §4.1 halt-the-ramp trigger:
+
+- **`HuibleHandoffDegradeRate`** — degrade rate > 0 (fail-safe fired).
+- **`HuibleHandoffPendingBreached`** — an open ticket is past SLA.
+- **`HuibleHandoffAnsweredSLABurn`** — answered-within-SLA below 0.9.
+- **`HuibleAlignmentLeak`** — §7.4.2 un-grounded claim reaching a user.
+- **`HuibleHealthDegraded`** — `/health` reports degraded.
+- **`HuibleChatLatencyBurn`** — chat p95 latency > 20s sustained 10 min.
+- **`HuibleChatErrorBudgetBurn`** — 5xx error rate > 5% sustained 10 min.
+- **`HuibleRealUserTrafficDisabled`** — kill-switch engaged (informational during drills).
+
+`severity: page` alerts map to the §7.5 paging path (the on-call roster wired
+in Stage 0.4); `severity: ticket` alerts are investigate-before-next-ramp-advance.
+A firing `page` alert during a ramp stage means: run the §4.2 rollback
+procedure (`PERSONA_CHAT_REAL_USER_TRAFFIC=off`) before advancing.
+
 
 ### 7.4 Log Aggregation
 

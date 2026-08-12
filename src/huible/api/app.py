@@ -76,6 +76,8 @@ from huible.api.metrics import (
     ChatTurnOutcome,
     metrics_response,
     record_chat_turn,
+    record_handoff_telemetry,
+    record_health_status,
     record_paging_failures,
 )
 from huible.api.paging import (
@@ -192,9 +194,7 @@ _DISCLOSURE_TO_TIER: dict[str, RelationshipTier] = {
 }
 
 #: Relationship name (request wire) -> requester RelationshipTier (context layer).
-_RELATIONSHIP_TO_TIER: dict[str, RelationshipTier] = {
-    tier.value: tier for tier in RelationshipTier
-}
+_RELATIONSHIP_TO_TIER: dict[str, RelationshipTier] = {tier.value: tier for tier in RelationshipTier}
 
 
 def _resolve_requester_tier(disclosure_tier: str) -> RelationshipTier:
@@ -340,10 +340,7 @@ def _init_safety_backends(
         consent_gate = PostgresConsentGate(url)
         conversation_store = PostgresConversationStore(url)
         risk_profile = PostgresRiskProfile(url)
-        logger.info(
-            "durable §7.4 safety backends wired "
-            "(handoff/consent/conversation/risk)"
-        )
+        logger.info("durable §7.4 safety backends wired (handoff/consent/conversation/risk)")
         return (
             queue,
             consent_gate,
@@ -352,9 +349,7 @@ def _init_safety_backends(
             [queue, consent_gate, conversation_store, risk_profile],
         )
     except Exception:  # pragma: no cover - defensive, misconfiguration only
-        logger.exception(
-            "failed to construct durable safety backends; falling back to in-memory"
-        )
+        logger.exception("failed to construct durable safety backends; falling back to in-memory")
         return (
             InMemoryHandoffQueue(
                 available_responders=settings.handoff_available_responders,
@@ -505,9 +500,7 @@ def create_app(
     application.state.generator = generator or make_generator_client(
         resolved_settings.to_generator_config()
     )
-    application.state.llm_client = llm_client or build_llm_client(
-        resolved_settings.to_llm_config()
-    )
+    application.state.llm_client = llm_client or build_llm_client(resolved_settings.to_llm_config())
     application.state.context_builder = context_builder or ContextBuilder()
     # Runtime clinical guardrails (HU-1413 / HU-1407 §7.3). The crisis
     # classifier is the G1 synchronous pre-generation check AND the shared G3
@@ -911,9 +904,7 @@ def _register_routes(application: FastAPI) -> None:
             persona_id,
             chat_settings.persona_chat_canary_personas_set,
         ):
-            refusal_provider = str(
-                getattr(application.state.llm_client, "provider", "unknown")
-            )
+            refusal_provider = str(getattr(application.state.llm_client, "provider", "unknown"))
             _record_turn(
                 application, body.conversation_id, body.message, REAL_USER_MODE_OFF_RESPONSE
             )
@@ -1072,8 +1063,7 @@ def _register_routes(application: FastAPI) -> None:
                         "code": "CONSENT_REQUIRED",
                         "status": 409,
                         "message": (
-                            "Reality-framing consent is required before this "
-                            "session can proceed."
+                            "Reality-framing consent is required before this session can proceed."
                         ),
                         "conversation_id": session_id,
                         "acknowledge_url": f"/api/v1/chat/{persona_id}/consent",
@@ -1237,18 +1227,14 @@ def _register_routes(application: FastAPI) -> None:
         prompt = ctx.render()
         system_prompt = ctx.system_prompt
         if enforcement.forces_reframe:
-            system_prompt = system_prompt + "\n\n" + build_reframe_addendum(
-                binding.persona.name
-            )
+            system_prompt = system_prompt + "\n\n" + build_reframe_addendum(binding.persona.name)
         response_text = await llm.generate(prompt, system_prompt=system_prompt)
 
         # G3 generation-time guard: on the distress branch (forced or graded),
         # replace a sarcastic / dismissive generation with a safe grounded
         # fallback. Conservative — only replaces on distress when a concrete
         # pattern fires.
-        response_text, _suppressed = apply_affect_guard(
-            response_text, affect=effective_affect
-        )
+        response_text, _suppressed = apply_affect_guard(response_text, affect=effective_affect)
 
         # §7.4.2 generation-time claim->ref alignment filter. The retrieval-side
         # G4 firewall guarantees the *prompt* only saw provenance-safe memory;
@@ -1400,9 +1386,7 @@ def _register_routes(application: FastAPI) -> None:
             )
 
         card_provider: ConsentCardProvider = application.state.consent_card_provider
-        card_version = body.card_version or card_provider.get_card(
-            binding.persona.name
-        ).version
+        card_version = body.card_version or card_provider.get_card(binding.persona.name).version
 
         gate: ConsentGate = application.state.consent_gate
         record = gate.record_acknowledgement(
@@ -1456,10 +1440,7 @@ def _register_routes(application: FastAPI) -> None:
             )
         except Exception:  # pragma: no cover - defensive
             logger.exception("SLA-breach re-page failed; queue read continues")
-        items = [
-            _queue_item_view(t, with_sla=True, now=now)
-            for t in queue.list_pending()
-        ]
+        items = [_queue_item_view(t, with_sla=True, now=now) for t in queue.list_pending()]
         return DataEnvelope(data=items)
 
     @application.post(
@@ -1553,9 +1534,7 @@ def _register_routes(application: FastAPI) -> None:
             data={
                 "mode": str(mode),
                 "is_off": mode == RealUserMode.OFF,
-                "canary_persona_count": len(
-                    admin_settings.persona_chat_canary_personas_set
-                ),
+                "canary_persona_count": len(admin_settings.persona_chat_canary_personas_set),
                 # Stage 0.7 hard kill switch (HU-1462).
                 "kill_switch": "on" if kill_switch_on else "off",
                 "kill_switch_enabled": kill_switch_on,
@@ -1606,9 +1585,7 @@ def _register_routes(application: FastAPI) -> None:
         # registered. The relationship tier is not meaningful for intake
         # (objective derivation is tier-independent), but we require the
         # persona to exist so flags cannot be recorded against an unknown id.
-        binding: PersonaBinding | None = registry.get(
-            body.persona_id, RelationshipTier.FAMILY
-        )
+        binding: PersonaBinding | None = registry.get(body.persona_id, RelationshipTier.FAMILY)
         if binding is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -1647,9 +1624,7 @@ def _register_routes(application: FastAPI) -> None:
                             "can be recorded for this session."
                         ),
                         "conversation_id": body.conversation_id,
-                        "acknowledge_url": (
-                            f"/api/v1/chat/{body.persona_id}/consent"
-                        ),
+                        "acknowledge_url": (f"/api/v1/chat/{body.persona_id}/consent"),
                     }
                 },
             ) from None
@@ -1679,10 +1654,36 @@ def _register_routes(application: FastAPI) -> None:
         §7.4.2 un-grounded claims + dispositions, §7.4.4 enforcement actions,
         Stage 0.1 kill-switch refusals). No PHI — labels are aggregate-safe.
 
+        Stage 0.8 (HU-1463): the scrape also mirrors the §3 SLO *gauges* —
+        handoff SLA telemetry (degrade rate, pending breach, answered-within-SLA
+        rate, queue depth) sourced from :func:`compute_handoff_telemetry` over
+        the wired queue's audit log, and the ``/health`` probe status — so the
+        launch-plan §3.1/§3.2 SLO table and §4.1 rollback triggers are
+        observable from a scrape alone. The alert rules in
+        ``examples/prometheus-alerts.yml`` page on these gauges. Computing them
+        on scrape keeps the Prometheus view identical to the
+        ``/api/v1/handoff/audit`` JSON dashboard.
+
         Unauthenticated by design (Prometheus convention); contains no user
-        data, only monotonic counters + a latency histogram. The §3 Sev-1
-        alerts page the 0.4 on-call once that roster is wired (HU-1447).
+        data, only monotonic counters + a latency histogram + SLO gauges. The
+        §3 Sev-1 alerts page the 0.4 on-call once that roster is wired
+        (HU-1447).
         """
+        # Mirror the §3 SLO gauges before generating the exposition so this
+        # scrape reflects the current queue + health state. Both calls are
+        # best-effort: a failure to compute telemetry must never break a
+        # scrape (the counters above still carry the signal).
+        try:
+            queue: HandoffQueue = application.state.handoff_queue
+            telemetry = compute_handoff_telemetry(queue.audit_log(), now=datetime.now(UTC))
+            record_handoff_telemetry(telemetry)
+        except Exception:  # pragma: no cover - defensive, scrape must not break
+            logger.exception("handoff telemetry gauge update failed")
+        try:
+            health_status = (await _health_data(application)).status
+            record_health_status(health_status)
+        except Exception:  # pragma: no cover - defensive, scrape must not break
+            logger.exception("health status gauge update failed")
         body, content_type = metrics_response()
         return Response(content=body, media_type=content_type)
 
@@ -1743,9 +1744,7 @@ def _record_turn(
     store.append_turn(conversation_id, ConversationTurn(speaker="persona", content=reply))
 
 
-def _session_meta(
-    application: FastAPI, conversation_id: str | None
-) -> SessionMetaView:
+def _session_meta(application: FastAPI, conversation_id: str | None) -> SessionMetaView:
     """Build per-session observability metadata for the trace (G7).
 
     Turn count is derived from the conversation history (every user + persona

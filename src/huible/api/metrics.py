@@ -5,7 +5,19 @@ real load: chat turns/latency/errors, G1 crisis fires, G6 consent-required,
 §7.4.1 handoff enqueue/degrade + SLA breach, §7.4.2 un-grounded-claim count +
 disposition, §7.4.4 enforcement-action distribution per risk flag. This module
 owns those instruments and a single :func:`record_chat_turn` entry point the
-chat handler calls at every exit (turn + guardrail fire bits in one place).
+chat handler calls at every exit (turn + guardrail-fire bits in one place).
+
+Stage 0.8 (HU-1463) adds the §3 SLO *gauges* on top of the guardrail counters:
+the handoff SLA telemetry (degrade rate, pending breach, answered-within-SLA
+rate) and the ``/health`` status are mirrored into Prometheus on every scrape
+so the launch-plan §3.1/§3.2 SLO table + §4.1 rollback triggers are observable
+without parsing the JSON dashboard. The gauges are set from the same
+:data:`huible.safety.handoff_monitoring.HandoffTelemetry` the
+``/api/v1/handoff/audit`` endpoint already returns, so the Prometheus view and
+the JSON dashboard cannot drift. The alert rules in
+``examples/prometheus-alerts.yml`` page on these gauges (degrade rate > 0,
+pending breach, answered-within-SLA below ramp threshold, health degraded,
+latency/error-budget burn).
 
 Clinical dependency (Clinical Advisor §3 note, recorded on HU-1446): the three
 Sev-1 alert conditions page the 0.4 on-call only once the roster + paging
@@ -43,6 +55,8 @@ __all__ = [
     "ChatTurnOutcome",
     "metrics_response",
     "record_chat_turn",
+    "record_handoff_telemetry",
+    "record_health_status",
     "record_paging_failures",
 ]
 
@@ -152,6 +166,58 @@ PAGING_FAILURES = Counter(
 )
 
 
+# --- Stage 0.8: §3 SLO gauges (HU-1463) -------------------------------------
+# These gauges mirror the handoff SLA telemetry that /api/v1/handoff/audit
+# already returns and the /health status. They are *set* on every /metrics
+# scrape by :func:`record_handoff_telemetry` / :func:`record_health_status`
+# (called from the /metrics handler in app.py) so the Prometheus view cannot
+# drift from the JSON dashboard. Together with the counters + histogram above
+# they cover every signal in the launch-plan §3.1 (guardrail-health) and §3.2
+# (service-health) SLO tables and every §4.1 rollback trigger. The alert rules
+# in examples/prometheus-alerts.yml page on these gauges.
+
+# §3.1 guardrail-health SLOs (handoff queue).
+HANDOFF_DEGRADE_RATE = Gauge(
+    "huible_handoff_degrade_rate",
+    "§3.1 handoff degrade rate (degraded / total). The fail-safe firing share. "
+    "Healthy = 0.0 (every escalation reached a human). Launch-plan §4.1 "
+    "rollback trigger: > 0 halts the ramp.",
+)
+HANDOFF_PENDING_BREACHED = Gauge(
+    "huible_handoff_pending_breached",
+    "§3.1 open (ENQUEUED) handoff tickets currently past their SLA target — "
+    "the live breach count. Healthy = 0. Launch-plan §4.1 rollback trigger: "
+    "any unacknowledged pending breach halts the ramp.",
+)
+HANDOFF_PENDING_BREACH_RATE = Gauge(
+    "huible_handoff_pending_breach_rate",
+    "§3.1 pending_breached / pending — live breach pressure over open tickets. Healthy = 0.0.",
+)
+HANDOFF_ANSWERED_WITHIN_SLA_RATE = Gauge(
+    "huible_handoff_answered_within_sla_rate",
+    "§3.1 answered-within-SLA rate (1 - answered_breach_rate). The direct "
+    "ramp-gate metric: >= 0.9 at Stage 1, >= 0.95 at Stage 2+. Higher is better.",
+)
+HANDOFF_TICKETS_TOTAL = Gauge(
+    "huible_handoff_tickets_total",
+    "Total handoff tickets in the audit log at last scrape (all outcomes). "
+    "Context gauge for the rates above.",
+)
+HANDOFF_PENDING = Gauge(
+    "huible_handoff_pending",
+    "Open (ENQUEUED) handoff tickets at last scrape. The queue-depth signal.",
+)
+
+# §3.2 service-health SLO: /health status. 1 = ok, 0 = degraded. Mirrors the
+# ``status`` field of GET /api/v1/health. Launch-plan §4.1 rollback trigger:
+# ``degraded`` halts the ramp.
+HEALTH_STATUS = Gauge(
+    "huible_health_status",
+    "§3.2 /health probe status: 1 = ok, 0 = degraded (a wired DB check failed). "
+    "Launch-plan §4.1 rollback trigger: degraded halts the ramp.",
+)
+
+
 @dataclass(slots=True)
 class ChatTurnOutcome:
     """Per-turn outcome labels for :func:`record_chat_turn`.
@@ -241,3 +307,45 @@ def record_paging_failures(trigger: str, count: int) -> None:
     if count <= 0:
         return
     PAGING_FAILURES.labels(trigger=trigger).inc(count)
+
+
+def record_handoff_telemetry(telemetry: object) -> None:
+    """Mirror the handoff SLA telemetry into the §3.1 SLO gauges (HU-1463).
+
+    Called by the ``/metrics`` handler on every scrape with the
+    :data:`huible.safety.handoff_monitoring.compute_handoff_telemetry` result
+    over the wired queue's audit log. Keeps the Prometheus view identical to
+    the ``/api/v1/handoff/audit`` JSON dashboard so the launch-plan §3.1
+    guardrail-health SLOs and §4.1 rollback triggers are observable from a
+    scrape alone. Tolerates a ``None`` telemetry (no-op) so the bare-app
+    bootstrap path stays metric-safe.
+
+    Reads the telemetry fields by attribute (duck-typed) rather than importing
+    the dataclass to avoid a cycle (``handoff_monitoring`` does not depend on
+    this module, and we keep it that way).
+    """
+    if telemetry is None:
+        return
+    HANDOFF_DEGRADE_RATE.set(getattr(telemetry, "degrade_rate", 0.0) or 0.0)
+    HANDOFF_PENDING_BREACHED.set(getattr(telemetry, "pending_breached", 0) or 0)
+    HANDOFF_PENDING_BREACH_RATE.set(getattr(telemetry, "pending_breach_rate", 0.0) or 0.0)
+    # The launch-plan §3.1 ramp gate reads "answered-within-SLA rate" (higher =
+    # better). The telemetry exposes the inverted miss rate
+    # (``answered_breach_rate``); convert here so the gauge name matches the
+    # SLO table direction.
+    answered_breach_rate = getattr(telemetry, "answered_breach_rate", 0.0) or 0.0
+    HANDOFF_ANSWERED_WITHIN_SLA_RATE.set(max(0.0, 1.0 - answered_breach_rate))
+    HANDOFF_TICKETS_TOTAL.set(getattr(telemetry, "total", 0) or 0)
+    HANDOFF_PENDING.set(getattr(telemetry, "pending", 0) or 0)
+
+
+def record_health_status(status: str) -> None:
+    """Mirror the ``/health`` probe status into the §3.2 health gauge (HU-1463).
+
+    Called by the ``/metrics`` handler on every scrape. ``status`` is the
+    ``status`` field of :class:`huible.api.schemas.HealthCheck` (``ok`` or
+    ``degraded``). 1 = ok, 0 = degraded — the convention Prometheus alerting
+    expects for a boolean service-health signal. Unknown values map to 0
+    (fail-safe: an unexpected status string is itself a degradation signal).
+    """
+    HEALTH_STATUS.set(1.0 if status == "ok" else 0.0)
