@@ -72,6 +72,7 @@ from huible.api.auth import (
 )
 from huible.api.metrics import (
     ALERT_ONCALL_CONFIGURED,
+    REAL_USER_TRAFFIC_DISABLED,
     ChatTurnOutcome,
     metrics_response,
     record_chat_turn,
@@ -93,7 +94,9 @@ from huible.api.paging import (
 from huible.api.real_user_gate import (
     REAL_USER_MODE_OFF_RESPONSE,
     REAL_USER_TRAFFIC_CLASS_HEADER,
+    SERVICE_DISABLED_MESSAGE,
     RealUserMode,
+    TrafficClass,
     is_real_user_turn_refused,
     parse_real_user_mode,
     traffic_class_from_header,
@@ -819,20 +822,89 @@ def _register_routes(application: FastAPI) -> None:
             _emit_turn(persona_id, outcome="forbidden", status_class="4xx")
             raise_forbidden()
 
-        # --- Stage 0.1: real-user ramp gate / kill switch (HU-1444) -----------
-        # Real grieving-user traffic is refused unless the runtime mode is
-        # canary/open AND (for canary) the persona is on the allowlist. This is
-        # the rollback spine for the HU-1436 rollout: one env flip
-        # (PERSONA_CHAT_REAL_USER_MODE=off) refuses grieving-user turns with a
-        # warm, non-persona response — never the deceased-persona voice.
-        # Internal/synthetic traffic (``X-Huible-Traffic-Class: internal``) is
-        # unaffected in every mode so the test suite and probes keep running
-        # when the switch is off. Absent/unknown header → ``real`` (the safe
-        # direction: an unmarked client is treated as a grieving user). Default
-        # to OFF on ambiguous signal (Clinical Advisor + PM ratified, plan §3).
+        # --- Stage 0.7: real-user hard kill switch (HU-1462, MANDATORY) -------
+        # PERSONA_CHAT_REAL_USER_TRAFFIC is the PRIMARY rollback path (launch
+        # plan §4.2) — a hard boolean that overrides the ramp gate below. When
+        # OFF (the default), every real-user turn returns HTTP 503
+        # SERVICE_DISABLED, independent of key-revocation propagation.
+        # Internal/synthetic traffic is unaffected so the test suite, probes,
+        # and the rollback dry-run (§4.3) keep running while real grieving-user
+        # traffic is hard-stopped. Crisis/handoff audit still records (§10.1
+        # invariant 5): the crisis classifier runs in the refusal path so a
+        # grieving user in crisis during a rollback is still routed to the
+        # §7.4.1 handoff queue, and the 503 body carries 988 resources. The
+        # ramp gate (PERSONA_CHAT_REAL_USER_MODE) is only reached when this
+        # switch is ON — it is the staged-exposure lever, not the brake.
         chat_settings: Settings = application.state.settings
-        real_user_mode = parse_real_user_mode(chat_settings.persona_chat_real_user_mode)
         traffic_class = traffic_class_from_header(real_user_traffic_class)
+        if (
+            not chat_settings.persona_chat_real_user_traffic_enabled
+            and traffic_class == TrafficClass.REAL
+        ):
+            # Crisis/handoff audit still records even under a hard rollback —
+            # a grieving user in crisis must still reach the queue + 988. The
+            # classifier is the same shared G1 signal; the persona voice is
+            # never reached (we raise 503 on every branch here).
+            crisis_result = classify_user_message(
+                body.message,
+                classifier=application.state.crisis_classifier,
+            )
+            if crisis_result.is_crisis:
+                _mark_crisis_session(application, body.conversation_id)
+                handoff_view = _escalate_and_build_trace(
+                    application,
+                    message=body.message,
+                    crisis_result=crisis_result,
+                    persona_id=persona_id,
+                    conversation_id=body.conversation_id,
+                    risk_flags=[],
+                )
+                # The handoff acknowledgement (988 + "a person will join" when
+                # paged) is the clinically correct 503 body for a crisis turn.
+                refusal_message = handoff_view.user_acknowledgement
+                _emit_turn(
+                    persona_id,
+                    outcome="crisis",
+                    crisis=True,
+                    handoff_outcome=handoff_view.outcome,
+                    status_class="5xx",
+                )
+                _log_chat_trace(application, body.conversation_id, action="handoff")
+            else:
+                refusal_message = SERVICE_DISABLED_MESSAGE
+                _emit_turn(
+                    persona_id,
+                    outcome="real_user_traffic_disabled",
+                    real_user_refused=True,
+                    status_class="5xx",
+                )
+                _log_chat_trace(application, body.conversation_id, action="refuse")
+            REAL_USER_TRAFFIC_DISABLED.inc()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "error": {
+                        "code": "SERVICE_DISABLED",
+                        "status": 503,
+                        "message": refusal_message,
+                        "crisis_detected": crisis_result.is_crisis,
+                        "resources_shown": True,
+                    }
+                },
+            )
+
+        # --- Stage 0.1: real-user ramp gate (HU-1444) ------------------------
+        # The staged-exposure lever — only reached when the Stage 0.7 hard kill
+        # switch (above) is ON. Real grieving-user traffic is refused unless the
+        # runtime mode is canary/open AND (for canary) the persona is on the
+        # allowlist. One env flip (PERSONA_CHAT_REAL_USER_MODE=off) refuses
+        # grieving-user turns with a warm, non-persona response — never the
+        # deceased-persona voice. Internal/synthetic traffic
+        # (``X-Huible-Traffic-Class: internal``) is unaffected in every mode so
+        # the test suite and probes keep running when the switch is off.
+        # Absent/unknown header → ``real`` (the safe direction). Default to OFF
+        # on ambiguous signal (Clinical Advisor + PM ratified, plan §3).
+        real_user_mode = parse_real_user_mode(chat_settings.persona_chat_real_user_mode)
         if is_real_user_turn_refused(
             real_user_mode,
             traffic_class,
@@ -1458,20 +1530,25 @@ def _register_routes(application: FastAPI) -> None:
     @application.get(
         "/api/v1/admin/real-user-mode",
         tags=["admin"],
-        summary="Real-user ramp-gate / kill-switch state (Stage 0.1, HU-1444).",
+        summary="Real-user ramp-gate + kill-switch state (Stage 0.1 + 0.7).",
     )
     async def real_user_mode_status(
         principal: ApiKeyPrincipal = Depends(authenticate),
     ) -> DataEnvelope:
-        """Current ``PERSONA_CHAT_REAL_USER_MODE`` + canary allowlist size.
+        """Current ``PERSONA_CHAT_REAL_USER_MODE`` + ``PERSONA_CHAT_REAL_USER_TRAFFIC``.
 
-        Read-only surface for the kill-switch drill and for monitoring to
-        confirm the switch is armed at the expected stage (plan §4/§5). The
-        switch is env-only at Stage 0 — flipping it requires a container
-        restart (settings are process-cached); live re-read is a follow-on.
+        Reports both composing controls: the Stage 0.7 hard kill switch
+        (``kill_switch`` on/off, HU-1462 — the primary rollback path) and the
+        Stage 0.1 ramp gate (``mode`` off/canary/open + canary allowlist size,
+        HU-1444). Read-only surface for the rollback dry-run (§4.3), the
+        kill-switch drill, and monitoring to confirm both switches are armed at
+        the expected stage (plan §4/§5). Both switches are env-only at Stage 0
+        — flipping either requires a container restart (settings are
+        process-cached); live re-read is a follow-on.
         """
         admin_settings: Settings = application.state.settings
         mode = parse_real_user_mode(admin_settings.persona_chat_real_user_mode)
+        kill_switch_on = admin_settings.persona_chat_real_user_traffic_enabled
         return DataEnvelope(
             data={
                 "mode": str(mode),
@@ -1479,6 +1556,9 @@ def _register_routes(application: FastAPI) -> None:
                 "canary_persona_count": len(
                     admin_settings.persona_chat_canary_personas_set
                 ),
+                # Stage 0.7 hard kill switch (HU-1462).
+                "kill_switch": "on" if kill_switch_on else "off",
+                "kill_switch_enabled": kill_switch_on,
             }
         )
 

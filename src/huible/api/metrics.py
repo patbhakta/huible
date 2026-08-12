@@ -118,6 +118,18 @@ REAL_USER_REFUSED = Counter(
     "PERSONA_CHAT_REAL_USER_MODE blocks.",
 )
 
+# Stage 0.7 hard kill switch (HU-1462, MANDATORY). Distinct from the ramp-gate
+# counter above: this counts 503 SERVICE_DISABLED refusals under
+# PERSONA_CHAT_REAL_USER_TRAFFIC=off — the primary rollback path (plan §4.2).
+# A non-zero value during normal (non-rollback) operation is itself an alert:
+# it means the emergency brake is engaged.
+REAL_USER_TRAFFIC_DISABLED = Counter(
+    "huible_real_user_traffic_disabled_total",
+    "Stage 0.7 hard kill-switch refusals — real-user turns refused with HTTP "
+    "503 SERVICE_DISABLED while PERSONA_CHAT_REAL_USER_TRAFFIC=off "
+    "(HU-1462 primary rollback path). Internal/synthetic traffic is unaffected.",
+)
+
 # Gauge for ops readiness (alert wiring target)
 ALERT_ONCALL_CONFIGURED = Gauge(
     "huible_alert_oncall_configured",

@@ -203,12 +203,27 @@ class Settings(BaseSettings):
     # ``open`` allows all. Internal/synthetic traffic
     # (``X-Huible-Traffic-Class: internal``) is unaffected in every mode so the
     # test suite and synthetic probes keep running when the switch is off. One
-    # env flip to ``off`` is the documented rollback action (plan §4); settings
-    # are process-cached so a flip requires a container restart — documented in
-    # the runbook. Unknown/blank values default to ``off`` (safe direction).
+    # env flip to ``off`` is the documented ramp-rollback action (plan §4);
+    # settings are process-cached so a flip requires a container restart —
+    # documented in the runbook. Unknown/blank values default to ``off`` (safe
+    # direction).
     persona_chat_real_user_mode: str = "off"
     # Comma-separated persona UUIDs permitted when mode = ``canary``.
     persona_chat_canary_personas: str = ""
+
+    # ── Real-user hard kill switch (Stage 0.7, HU-1462 — MANDATORY) ──────────
+    # The PRIMARY rollback path (launch plan §4.2). Distinct from the ramp gate
+    # above: this is a hard boolean that refuses *every* real-user turn with
+    # HTTP 503 ``SERVICE_DISABLED``, independent of key-revocation propagation.
+    # ``on``/``true``/``1``/``yes`` (case-insensitive) permit real-user traffic
+    # (still subject to the ramp gate); anything else (default ``off``) refuses
+    # it with 503. Crisis/handoff audit still records on a refused turn (§10.1
+    # invariant 5), and internal/synthetic traffic is unaffected — so the test
+    # suite, probes, and the rollback dry-run (§4.3) keep running while real
+    # grieving-user traffic is hard-stopped. One env flip to ``off`` is the
+    # documented emergency rollback action; settings are process-cached so a
+    # flip requires a container restart (same as the ramp gate).
+    persona_chat_real_user_traffic: str = "off"
 
     @field_validator("huible_log_level", mode="before")
     @classmethod
@@ -315,6 +330,19 @@ class Settings(BaseSettings):
                     "Ignoring non-UUID PERSONA_CHAT_CANARY_PERSONAS entry: %r", part
                 )
         return frozenset(allowed)
+
+    @property
+    def persona_chat_real_user_traffic_enabled(self) -> bool:
+        """Whether the hard kill switch (``PERSONA_CHAT_REAL_USER_TRAFFIC``) is ON.
+
+        ``True`` only for an explicit ON spelling; empty/unknown → ``False``
+        (OFF is the load-bearing safe default, HU-1462 §4.2). When OFF, the
+        chat path refuses every real-user turn with HTTP 503 while internal
+        traffic and crisis/handoff audit continue unaffected.
+        """
+        from huible.api.real_user_gate import parse_real_user_traffic_switch
+
+        return parse_real_user_traffic_switch(self.persona_chat_real_user_traffic)
 
     def to_generator_config(self) -> GeneratorConfig:
         """Build a :class:`GeneratorConfig` from these settings.
