@@ -170,10 +170,20 @@ def _persona(persona_id: UUID = CHANDLER_PERSONA_ID) -> PersonaConfig:
     )
 
 
-def _canary_settings(*, mode: str) -> Settings:
-    """The PM-ratified Stage 1 config (mode is the kill-switch lever)."""
+def _canary_settings(*, mode: str, real_user_traffic: str = "on") -> Settings:
+    """The PM-ratified Stage 1 config.
+
+    ``mode`` is the Stage-0.1 ramp-gate lever (``canary``/``off``) — the
+    staged-exposure dial. ``real_user_traffic`` is the Stage-0.7 hard kill
+    switch (HU-1462, the PRIMARY rollback path per plan §4.2): it must be
+    ``on`` for any real-user turn to reach the ramp gate. The canary config
+    the PM ratified has BOTH switches enabled (kill switch ON + ramp at
+    canary); the §4(d) drill flips each lever independently to prove both
+    rollback paths.
+    """
     return Settings(
         persona_chat_real_user_mode=mode,
+        persona_chat_real_user_traffic=real_user_traffic,
         persona_chat_canary_personas=str(CHANDLER_PERSONA_ID),
         handoff_available_responders=4,
         handoff_responder_pool="huible-pm,huible-tech-lead,clinical-advisor,ceo",
@@ -188,6 +198,7 @@ def _canary_settings(*, mode: str) -> Settings:
 def _make_app(
     *,
     mode: str = "canary",
+    real_user_traffic: str = "on",
     llm: FakeLLMClient | None = None,
     queue: InMemoryHandoffQueue | None = None,
     risk_profile: InMemoryRiskProfile | None = None,
@@ -203,7 +214,7 @@ def _make_app(
         llm_client=llm or FakeLLMClient(persona_name="Chandler"),
         handoff_queue=queue or InMemoryHandoffQueue(available_responders=4),
         risk_profile=risk_profile,
-        settings=_canary_settings(mode=mode),
+        settings=_canary_settings(mode=mode, real_user_traffic=real_user_traffic),
         start_time=0.0,
     )
     return TestClient(application)
@@ -452,50 +463,103 @@ def section_c_metrics(t: Transcript) -> None:
 
 
 def section_d_kill_switch(t: Transcript) -> None:
-    t.section("§4(d) Kill-switch drill — OFF refuses real users; resumption on restore")
-    # canary → allowed
-    c_canary = _make_app(mode="canary")
+    t.section("§4(d) Kill-switch drill — both rollback levers refuse real users")
+    # Plan §4.2 names TWO independent rollback levers; the operator runbook must
+    # prove both, because they have different blast radii and latencies:
+    #   (A) Stage-0.7 HARD kill switch — PERSONA_CHAT_REAL_USER_TRAFFIC=off →
+    #       HTTP 503 SERVICE_DISABLED for every real-user turn (primary path;
+    #       independent of key revocation; crisis still routes to §7.4.1).
+    #   (B) Stage-0.1 ramp gate — PERSONA_CHAT_REAL_USER_MODE=off → warm
+    #       non-persona refusal with 988 surfaced (200 body, softer rollback).
+
+    # ── (A) HARD kill switch drill (HU-1462, plan §4.2 PRIMARY path) ─────────
+    # Baseline: kill switch ON + canary → real-user turn allowed.
+    c_canary = _make_app(mode="canary", real_user_traffic="on")
     _consent(c_canary, "sess-ks1")
     code1, body1 = _chat(c_canary, "tell me about fishing", conv="sess-ks1")
     allowed1 = code1 == 200 and body1.get("response", "") != REAL_USER_MODE_OFF_RESPONSE
     t.check("canary: real-user turn on Chandler → allowed (persona voice)", allowed1,
             f"code={code1}")
 
-    # Flip PERSONA_CHAT_REAL_USER_MODE=off (process restart — settings are cached).
-    c_off = _make_app(mode="off")
-    code2, body2 = _chat(c_off, "tell me about fishing", conv="sess-ks2")
-    refused = (
-        code2 == 200
-        and body2.get("response") == REAL_USER_MODE_OFF_RESPONSE
-        and (body2.get("trace") or {}).get("safety_event", {}).get("kind") == "real_user_mode_off"
-        and "988" in body2.get("response", "")
+    # Flip PERSONA_CHAT_REAL_USER_TRAFFIC=off (process restart — settings cached).
+    # Every real-user turn must hard-stop with 503 SERVICE_DISABLED.
+    c_hard_off = _make_app(mode="canary", real_user_traffic="off")
+    code2, body2 = _chat(c_hard_off, "tell me about fishing", conv="sess-ks2")
+    err2 = ((body2 or {}).get("detail") or {}).get("error") or {}
+    hard_refused = (
+        code2 == 503
+        and err2.get("code") == "SERVICE_DISABLED"
+        and "988" in err2.get("message", "")
     )
     t.check(
-        "OFF: real-user turn → refused (warm non-persona response, 988 surfaced)",
-        refused,
-        f"code={code2}",
+        "HARD kill switch OFF: real-user turn → 503 SERVICE_DISABLED (988 surfaced)",
+        hard_refused,
+        f"code={code2} err={err2.get('code')!r}",
     )
 
-    # Internal/synthetic traffic unaffected in OFF mode (probes keep running).
-    code3, body3 = _chat(c_off, "probe", conv="sess-ks3", headers=_internal_headers())
+    # Internal/synthetic traffic unaffected by the HARD kill switch (probes run).
+    code3, body3 = _chat(c_hard_off, "probe", conv="sess-ks3", headers=_internal_headers())
     internal_ok = code3 in (200, 409) and (
         body3.get("response", "") != REAL_USER_MODE_OFF_RESPONSE
     )
-    t.check("OFF: internal/synthetic traffic unaffected", internal_ok, f"code={code3}")
+    t.check("HARD OFF: internal/synthetic traffic unaffected", internal_ok, f"code={code3}")
 
-    # Flip back to canary → resumption.
-    c_back = _make_app(mode="canary")
-    _consent(c_back, "sess-ks4")
-    code4, body4 = _chat(c_back, "tell me about fishing", conv="sess-ks4")
-    resumed = code4 == 200 and body4.get("response", "") != REAL_USER_MODE_OFF_RESPONSE
-    t.check("restore to canary: real-user turn → allowed again", resumed, f"code={code4}")
+    # Crisis still routes to §7.4.1 handoff under the HARD kill switch (§10.1
+    # invariant 5) — a grieving user in crisis during a rollback must still
+    # reach the staffed-responder queue; the 503 body carries 988.
+    c_hard_crisis = _make_app(mode="canary", real_user_traffic="off")
+    code3c, body3c = _chat(
+        c_hard_crisis, "I want to die, I have the pills", conv="sess-ks3c"
+    )
+    err3c = ((body3c or {}).get("detail") or {}).get("error") or {}
+    crisis_routed = (
+        code3c == 503
+        and err3c.get("code") == "SERVICE_DISABLED"
+        and err3c.get("crisis_detected") is True
+        and "988" in err3c.get("message", "")
+    )
+    t.check(
+        "HARD OFF: crisis turn still routes to handoff (crisis_detected=true, 988)",
+        crisis_routed,
+        f"code={code3c} crisis={err3c.get('crisis_detected')!r}",
+    )
 
-    # Admin status endpoint reflects the switch (monitoring surface).
+    # ── (B) Ramp-gate rollback drill (HU-1444, softer 200 warm refusal) ──────
+    # Flip PERSONA_CHAT_REAL_USER_MODE=off with the hard switch still ON.
+    c_off = _make_app(mode="off", real_user_traffic="on")
+    code4, body4 = _chat(c_off, "tell me about fishing", conv="sess-ks4")
+    refused = (
+        code4 == 200
+        and body4.get("response") == REAL_USER_MODE_OFF_RESPONSE
+        and (body4.get("trace") or {}).get("safety_event", {}).get("kind") == "real_user_mode_off"
+        and "988" in body4.get("response", "")
+    )
+    t.check(
+        "ramp OFF: real-user turn → warm non-persona refusal (988 surfaced)",
+        refused,
+        f"code={code4}",
+    )
+
+    # Internal/synthetic traffic unaffected in ramp-OFF mode (probes keep running).
+    code5, body5 = _chat(c_off, "probe", conv="sess-ks5", headers=_internal_headers())
+    internal_ok2 = code5 in (200, 409) and (
+        body5.get("response", "") != REAL_USER_MODE_OFF_RESPONSE
+    )
+    t.check("ramp OFF: internal/synthetic traffic unaffected", internal_ok2, f"code={code5}")
+
+    # Restore: flip back to canary → resumption.
+    c_back = _make_app(mode="canary", real_user_traffic="on")
+    _consent(c_back, "sess-ks6")
+    code6, body6 = _chat(c_back, "tell me about fishing", conv="sess-ks6")
+    resumed = code6 == 200 and body6.get("response", "") != REAL_USER_MODE_OFF_RESPONSE
+    t.check("restore to canary: real-user turn → allowed again", resumed, f"code={code6}")
+
+    # Admin status endpoint reflects the ramp lever (monitoring surface).
     status_off = c_off.get(
         "/api/v1/admin/real-user-mode", headers=_real_headers()
     ).json()["data"]
     t.check(
-        "admin /real-user-mode reports is_off=true under OFF",
+        "admin /real-user-mode reports is_off=true under ramp OFF",
         status_off.get("is_off") is True,
         f"mode={status_off.get('mode')!r}",
     )
