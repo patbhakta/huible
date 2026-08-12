@@ -14,7 +14,7 @@ Covers:
 These mirror the acceptance criteria of BHAA-1375:
 - a new onboarding stage ingests MELD audio feature vectors per utterance;
 - L0Record metadata carries per-utterance acoustic features;
-- structure.py OKF schema gains a vocal_patterns / prosody section;
+- structure.py persona schema gains a vocal_patterns / prosody section;
 - validated against a Chandler-filtered MELD subset fixture.
 """
 
@@ -316,9 +316,9 @@ def test_structure_writes_vocal_patterns_section(structure_module, tmp_path):
         "emotion_distribution": {"neutral": 0.5}, "dominant_emotion": "neutral",
         "source": "chandler_meld_audio.csv",
     }
-    docs = structure_module.write_okf_docs(
+    docs = structure_module.write_persona_docs(
         str(tmp_path), "chandler", extraction, 12, {"l3_profiles": [], "l2_scenarios": [],
-                                                    "l1_facts": [], "source": "mem"},
+                                                     "l1_facts": [], "source": "mem"},
         audio_profile,
     )
     assert docs
@@ -326,7 +326,7 @@ def test_structure_writes_vocal_patterns_section(structure_module, tmp_path):
     assert "## Vocal Patterns & Prosody" in profile_md
     assert "sarcastic drawl" in profile_md
     assert "stress on BE" in profile_md
-    # Multimodal source cited in frontmatter.
+    # Multimodal source cited in the body provenance footer.
     assert "acoustic-features" in profile_md
 
 
@@ -337,7 +337,7 @@ def test_structure_writes_vocal_patterns_section_text_only(structure_module, tmp
         "vocal_patterns": {},
         "relationships": {}, "memories": {},
     }
-    structure_module.write_okf_docs(
+    structure_module.write_persona_docs(
         str(tmp_path), "chandler", extraction, 12,
         {"l3_profiles": [], "l2_scenarios": [], "l1_facts": [], "source": "mem"},
         audio_profile=None,

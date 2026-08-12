@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """
-Huible Onboarding — Stage 4: VALIDATE
+Huible Onboarding — Stage 5: VALIDATE
 
-Validates OKF v0.2 conformance for a generated persona vault directory.
+Validates persona vault documents against the flat, Librarian-governed OKF
+frontmatter standard (the two-field model: ``tags`` + ``updated``). The older
+OKF v0.2 spec (``type``/``title``/``status``/``generated`` and its strict
+validator) was retired vault-wide; this validator was reconciled to the new
+standard (the generator in ``structure.py`` emits the same two-field model and
+carries provenance in the document body).
 
 Checks per vault:
   - Required files present: persona-profile.md, sample-dialog.md
   - YAML frontmatter present, delimited by ---
-  - Required frontmatter keys: type, title, status, generated (by + at), tags
+  - Required frontmatter keys: tags, updated
+  - `updated` looks like an ISO-8601 date (YYYY-MM-DD or full timestamp)
   - Required body sections per document type
   - Non-trivial content (no empty stubs)
 
@@ -46,7 +52,10 @@ REQUIRED_FILES = {
     },
 }
 
-REQUIRED_FRONTMATTER_TOP = ["type", "title", "status", "tags"]
+# Flat Librarian-governed OKF standard: only these two frontmatter keys are
+# required. The retired OKF v0.2 keys (type/title/status/generated) are no
+# longer enforced.
+REQUIRED_FRONTMATTER_TOP = ["tags", "updated"]
 FRONTMATTER_DELIM = "---"
 
 
@@ -137,7 +146,7 @@ def add_check(checks, name, key, status, detail=""):
 
 
 def validate_file(name, spec, filepath, checks):
-    """Validate a single OKF document. Returns list of check dicts."""
+    """Validate a single persona document. Returns list of check dicts."""
     if not os.path.exists(filepath):
         add_check(checks, name, "file_present", "fail", f"missing file: {name}")
         return checks
@@ -156,40 +165,33 @@ def validate_file(name, spec, filepath, checks):
 
     fm = parse_simple_yaml(fm_text)
 
-    # Required top-level frontmatter keys.
+    # Required top-level frontmatter keys (flat Librarian-governed OKF model).
     for key in REQUIRED_FRONTMATTER_TOP:
         if key in fm:
             add_check(checks, name, f"fm_{key}", "pass")
         else:
             add_check(checks, name, f"fm_{key}", "fail", f"missing frontmatter key: {key}")
 
-    # generated block (by + at).
-    for sub in ("by", "at"):
-        full = f"generated.{sub}"
-        if full in fm:
-            add_check(checks, name, f"fm_generated_{sub}", "pass")
-        else:
-            add_check(checks, name, f"fm_generated_{sub}", "fail", f"missing generated.{sub}")
-
-    # generated.at should look like an ISO-8601 timestamp.
-    at = fm.get("generated.at")
-    if at:
-        iso_ok = False
-        for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ"):
+    # `updated` should look like an ISO-8601 date (YYYY-MM-DD) or a full
+    # timestamp. Accept both so a hand-edited date or a generated timestamp pass.
+    updated = fm.get("updated")
+    if updated:
+        updated_ok = False
+        for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ"):
             try:
-                datetime.strptime(strip_quotes(at), fmt)
-                iso_ok = True
+                datetime.strptime(strip_quotes(updated), fmt)
+                updated_ok = True
                 break
             except ValueError:
                 pass
-        if iso_ok:
-            add_check(checks, name, "fm_generated_at_iso", "pass")
+        if updated_ok:
+            add_check(checks, name, "fm_updated_iso", "pass")
         else:
             add_check(
-                checks, name, "fm_generated_at_iso", "warn", f"generated.at not ISO-8601 Z: {at}"
+                checks, name, "fm_updated_iso", "warn", f"updated not ISO-8601 date: {updated}"
             )
     else:
-        add_check(checks, name, "fm_generated_at_iso", "skip", "generated.at absent")
+        add_check(checks, name, "fm_updated_iso", "skip", "updated absent")
 
     # Body: H1 present.
     h1s = re.findall(r"^#\s+(.+)$", body, flags=re.MULTILINE)
@@ -243,7 +245,7 @@ def validate_file(name, spec, filepath, checks):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Validate OKF v0.2 conformance for a persona vault"
+        description="Validate persona vault frontmatter + body conformance (flat OKF standard)"
     )
     parser.add_argument("--dir", required=True, help="Persona vault directory to validate")
     parser.add_argument("--output", help="Optional JSON report output path")
