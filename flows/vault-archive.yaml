@@ -1,0 +1,91 @@
+id: huible-vault-archive
+namespace: huible
+
+description: |
+  ## HUible Client Vault Archival
+  
+  Safely deprovisions and archives a client vault:
+  - Exports CouchDB database to JSON backup
+  - Archives (or purges) the GitHub repo
+  - Deletes CouchDB database + scoped user
+  - Archives local vault to tar.gz
+  - Updates registry to "archived" status
+  
+  **Triggers:** Manual, Webhook, or Subflow call
+
+labels:
+  component: vault
+  action: archive
+
+inputs:
+  - id: client_slug
+    type: STRING
+    description: "Client slug from provisioning (e.g. 'james-johnson-20260812')"
+    required: true
+  - id: purge
+    type: BOOLEAN
+    description: "Permanently delete GitHub repo instead of archiving it"
+    defaults: false
+  - id: keep_data
+    type: BOOLEAN
+    description: "Backup only — don't delete CouchDB or local files"
+    defaults: false
+
+triggers:
+  - id: webhook
+    type: io.kestra.plugin.core.trigger.Webhook
+    key: "huible-vault-archive-{{ secret('WEBHOOK_KEY') | default('prod') }}"
+
+variables:
+  script: "/root/repos/huible/scripts/vault_archive.py"
+
+tasks:
+  - id: validate-inputs
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      Archiving vault:
+        Client slug: {{ inputs.client_slug }}
+        Purge: {{ inputs.purge }}
+        Keep data: {{ inputs.keep_data }}
+
+  - id: archive-vault
+    type: io.kestra.core.tasks.scripts.Bash
+    description: "Run vault_archive.py — backup + deprovision + archive"
+    env:
+      COUCH_ADMIN_USER: obsidian
+      COUCH_ADMIN_PASS: ***REMOVED***
+      GITHUB_TOKEN: "{{ envs.GITHUB_TOKEN | default('') }}"
+      GITHUB_ORG: patbhakta
+    commands:
+      - |
+        ARGS="--client-slug {{ inputs.client_slug }}"
+        {{ inputs.purge }} && ARGS="$ARGS --purge"
+        {{ inputs.keep_data }} && ARGS="$ARGS --keep-data"
+        python3 {{ vars.script }} $ARGS
+    retry:
+      type: constant
+      interval: PT10S
+      maxAttempt: 2
+
+  - id: report-success
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      ✅ Vault archived successfully
+      
+      Client slug: {{ inputs.client_slug }}
+      Check archived: ls -la /root/repos/client-vaults/archived/
+
+outputs:
+  - id: result
+    type: STRING
+    value: "{{ outputs['archive-vault'].vars | default('check-logs') }}"
+
+errors:
+  - id: on-error
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      ❌ Vault archival FAILED for {{ inputs.client_slug }}
+      
+      Check:
+        - Client exists in registry: cat /root/repos/client-vaults/registry.json
+        - CouchDB running: systemctl status couchdb
