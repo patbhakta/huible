@@ -28,7 +28,7 @@ from pathlib import Path
 
 COUCH_URL = "http://localhost:5984"
 COUCH_ADMIN_USER = os.environ.get("COUCH_ADMIN_USER", "obsidian")
-COUCH_ADMIN_PASS = os.environ.get("COUCH_ADMIN_PASS", "***REMOVED***")
+COUCH_ADMIN_PASS = os.environ.get("COUCH_ADMIN_PASS", "")
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_ORG = os.environ.get("GITHUB_ORG", "patbhakta")

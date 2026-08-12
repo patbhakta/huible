@@ -56,7 +56,7 @@ tasks:
     description: "Run vault_archive.py"
     env:
       COUCH_ADMIN_USER: obsidian
-      COUCH_ADMIN_PASS: ***REMOVED***
+      COUCH_ADMIN_PASS: "{{ envs.COUCH_ADMIN_PASS }}"
       GITHUB_TOKEN: "{{ envs.GITHUB_TOKEN | default('') }}"
       GITHUB_ORG: patbhakta
     commands:
