@@ -10,8 +10,6 @@ description: |
   - Deletes CouchDB database + scoped user
   - Archives local vault to tar.gz
   - Updates registry to "archived" status
-  
-  **Triggers:** Manual, Webhook, or Subflow call
 
 labels:
   component: vault
@@ -20,37 +18,42 @@ labels:
 inputs:
   - id: client_slug
     type: STRING
-    description: "Client slug from provisioning (e.g. 'james-johnson-20260812')"
+    description: "Client slug from provisioning"
     required: true
   - id: purge
     type: BOOLEAN
-    description: "Permanently delete GitHub repo instead of archiving it"
+    description: "Permanently delete GitHub repo instead of archiving"
+    required: true
     defaults: false
   - id: keep_data
     type: BOOLEAN
-    description: "Backup only — don't delete CouchDB or local files"
+    description: "Backup only - do not delete CouchDB or local files"
+    required: true
     defaults: false
 
 triggers:
   - id: webhook
     type: io.kestra.plugin.core.trigger.Webhook
-    key: "huible-vault-archive-{{ secret('WEBHOOK_KEY') | default('prod') }}"
+    key: "huible-vault-archive-webhook"
 
 variables:
   script: "/root/repos/huible/scripts/vault_archive.py"
+  v_slug: "{{ trigger.body.client_slug is defined ? trigger.body.client_slug : inputs.client_slug }}"
+  v_purge: "{{ trigger.body.purge is defined ? trigger.body.purge : inputs.purge }}"
+  v_keep: "{{ trigger.body.keep_data is defined ? trigger.body.keep_data : inputs.keep_data }}"
 
 tasks:
   - id: validate-inputs
     type: io.kestra.plugin.core.log.Log
     message: |
       Archiving vault:
-        Client slug: {{ inputs.client_slug }}
-        Purge: {{ inputs.purge }}
-        Keep data: {{ inputs.keep_data }}
+        Client slug: {{ vars.v_slug }}
+        Purge: {{ vars.v_purge }}
+        Keep data: {{ vars.v_keep }}
 
   - id: archive-vault
     type: io.kestra.core.tasks.scripts.Bash
-    description: "Run vault_archive.py — backup + deprovision + archive"
+    description: "Run vault_archive.py"
     env:
       COUCH_ADMIN_USER: obsidian
       COUCH_ADMIN_PASS: ***REMOVED***
@@ -58,9 +61,9 @@ tasks:
       GITHUB_ORG: patbhakta
     commands:
       - |
-        ARGS="--client-slug {{ inputs.client_slug }}"
-        {{ inputs.purge }} && ARGS="$ARGS --purge"
-        {{ inputs.keep_data }} && ARGS="$ARGS --keep-data"
+        ARGS="--client-slug {{ vars.v_slug }}"
+        {{ vars.v_purge }} && ARGS="$ARGS --purge"
+        {{ vars.v_keep }} && ARGS="$ARGS --keep-data"
         python3 {{ vars.script }} $ARGS
     retry:
       type: constant
@@ -70,10 +73,8 @@ tasks:
   - id: report-success
     type: io.kestra.plugin.core.log.Log
     message: |
-      ✅ Vault archived successfully
-      
-      Client slug: {{ inputs.client_slug }}
-      Check archived: ls -la /root/repos/client-vaults/archived/
+      Vault archived: {{ vars.v_slug }}
+      Check: /root/repos/client-vaults/archived/
 
 outputs:
   - id: result
@@ -84,8 +85,5 @@ errors:
   - id: on-error
     type: io.kestra.plugin.core.log.Log
     message: |
-      ❌ Vault archival FAILED for {{ inputs.client_slug }}
-      
-      Check:
-        - Client exists in registry: cat /root/repos/client-vaults/registry.json
-        - CouchDB running: systemctl status couchdb
+      Vault archival FAILED for {{ vars.v_slug }}
+      Check registry: cat /root/repos/client-vaults/registry.json

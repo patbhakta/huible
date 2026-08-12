@@ -19,44 +19,47 @@ labels:
 inputs:
   - id: client_name
     type: STRING
-    description: "Display name of the client (e.g. 'Sarah Johnson')"
+    description: "Display name of the client"
     required: true
   - id: persona_name
     type: STRING
-    description: "Name of the deceased persona to memorialize (e.g. 'James Johnson')"
+    description: "Name of the deceased persona to memorialize"
     required: true
   - id: relationship
     type: STRING
-    description: "Client's relationship to persona (e.g. 'wife', 'son', 'friend')"
+    description: "Client relationship to persona (wife, son, friend, etc)"
     required: true
 
 triggers:
   - id: webhook
     type: io.kestra.plugin.core.trigger.Webhook
-    key: "huible-vault-create-{{ secret('WEBHOOK_KEY') | default('prod') }}"
+    key: "huible-vault-create-webhook"
 
 variables:
   script: "/root/repos/huible/scripts/vault_create.py"
+  v_client: "{{ trigger.body.client_name is defined ? trigger.body.client_name : inputs.client_name }}"
+  v_persona: "{{ trigger.body.persona_name is defined ? trigger.body.persona_name : inputs.persona_name }}"
+  v_relation: "{{ trigger.body.relationship is defined ? trigger.body.relationship : inputs.relationship }}"
 
 tasks:
   - id: validate-inputs
     type: io.kestra.plugin.core.log.Log
     message: |
       Provisioning vault:
-        Client: {{ inputs.client_name }}
-        Persona: {{ inputs.persona_name }}
-        Relationship: {{ inputs.relationship }}
+        Client: {{ vars.v_client }}
+        Persona: {{ vars.v_persona }}
+        Relationship: {{ vars.v_relation }}
 
   - id: provision-vault
     type: io.kestra.core.tasks.scripts.Bash
-    description: "Run vault_create.py — CouchDB + template + git + registry"
+    description: "Run vault_create.py"
     env:
       COUCH_ADMIN_USER: obsidian
       COUCH_ADMIN_PASS: ***REMOVED***
       GITHUB_TOKEN: "{{ envs.GITHUB_TOKEN | default('') }}"
       GITHUB_ORG: patbhakta
     commands:
-      - python3 {{ vars.script }} --client-name "{{ inputs.client_name }}" --persona-name "{{ inputs.persona_name }}" --relationship "{{ inputs.relationship }}"
+      - python3 {{ vars.script }} --client-name "{{ vars.v_client }}" --persona-name "{{ vars.v_persona }}" --relationship "{{ vars.v_relation }}"
     retry:
       type: constant
       interval: PT10S
@@ -65,13 +68,9 @@ tasks:
   - id: report-success
     type: io.kestra.plugin.core.log.Log
     message: |
-      ✅ Vault created successfully
-      
-      Client: {{ inputs.client_name }}
-      Persona: {{ inputs.persona_name }}
-      
-      LiveSync URL: https://brain.bhakta.us
-      Check registry: /root/repos/client-vaults/registry.json
+      Vault created for {{ vars.v_client }} (persona: {{ vars.v_persona }})
+      LiveSync: https://brain.bhakta.us
+      Registry: /root/repos/client-vaults/registry.json
 
 outputs:
   - id: result
@@ -82,9 +81,5 @@ errors:
   - id: on-error
     type: io.kestra.plugin.core.log.Log
     message: |
-      ❌ Vault creation FAILED for {{ inputs.client_name }}
-      
-      Check:
-        - CouchDB running: systemctl status couchdb
-        - GitHub token set: echo $GITHUB_TOKEN | head -c 4
-        - Registry dir exists: ls /root/repos/client-vaults/
+      Vault creation FAILED for {{ vars.v_client }}
+      Check CouchDB / GitHub token / registry dir
