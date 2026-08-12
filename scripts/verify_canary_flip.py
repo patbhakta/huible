@@ -4,8 +4,9 @@
 This is the reproducible operator runbook for the real-user persona-chat
 traffic flip. It boots the FastAPI app in the **exact canary configuration the
 PM ratified** (PERSONA_CHAT_REAL_USER_MODE=canary + Chandler UUID allowlisted +
-HANDOFF_AVAILABLE_RESPONDERS>=1 + HANDOFF_CANARY_START_TS set + the HU-1447
-4x12h on-call roster) and exercises every §4 acceptance item against the
+HANDOFF_AVAILABLE_RESPONDERS>=2 (plan rev 4 Option A Stage-1 minimum) +
+HANDOFF_CANARY_START_TS set + the HU-1447 4x12h on-call roster) and
+exercises every §4 acceptance item against the
 deterministic fake provider, the same code path a real invited canary user
 hits (no X-Huible-Traffic-Class header → traffic class REAL):
 
