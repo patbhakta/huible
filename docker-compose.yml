@@ -9,8 +9,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Bind to loopback only: Caddy fronts public ingress over the huible-net
+    # docker network (reverse_proxy app:8000), so the app must never be
+    # reachable on a public interface (would bypass TLS). Localhost admin
+    # (`curl http://localhost:8000/...`) still works. (docs/09 §8 hardening.)
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     networks:
       - huible-net
 
@@ -25,8 +29,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./docker/init-db:/docker-entrypoint-initdb.d
+    # Never expose Postgres on a public interface (docs/09 §8 hardening).
+    # The app reaches it over the huible-net docker network (POSTGRES_HOST=postgres),
+    # so bind the host port to loopback for local admin/backups only.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-huible}"]
       interval: 10s
