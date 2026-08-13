@@ -174,8 +174,11 @@ case "$rotate_code" in
   *)   fail "Rotation rejected" "HTTP ${rotate_code:-000} on config PUT. CouchDB UNCHANGED (verify with old cred below)."
        # Confirm we did NOT lock ourselves out: old cred should still work if PUT failed.
        recheck="$(http_code GET / "$COUCH_ADMIN_USER" "$OLD_PASS")"
-       [ "$recheck" = "200" ] && note "Old credential still authenticates — rotation did NOT apply, safe to retry." \
-                            || note "WARNING: old credential also fails now — check CouchDB logs/admin console."
+       if [ "$recheck" = "200" ]; then
+         note "Old credential still authenticates — rotation did NOT apply, safe to retry."
+       else
+         note "WARNING: old credential also fails now — check CouchDB logs/admin console."
+       fi
        die "rotation PUT returned ${rotate_code:-000}" ;;
 esac
 echo
