@@ -71,7 +71,14 @@ note() { echo "       $1"; }
 die()  { echo "RESULT: $1"; echo "=== Summary: $PASS passed, $FAIL failed ==="; exit 1; }
 
 echo "=== Git history scrubber (HU-1503 defense-in-depth) ==="
-echo "repo: $(pwd)  time: $(date -u +%FT%TZ)  tool-pref: $([ -n "$(command -v git-filter-repo || command -v git filter-repo 2>/dev/null)" ] && echo filter-repo || echo auto)"
+# Mirror the real detection below (command -v git-filter-repo OR `git filter-repo
+# --version`), not a bare `command -v git filter-repo` which spuriously matches
+# the `git` binary and always reports filter-repo.
+_scrub_pref=auto
+if command -v git-filter-repo >/dev/null 2>&1 || git filter-repo --version >/dev/null 2>&1; then
+  _scrub_pref=filter-repo
+fi
+echo "repo: $(pwd)  time: $(date -u +%FT%TZ)  tool-pref: $_scrub_pref"
 echo
 
 # ─── Resolve the target literal without ever printing it ─────────────────────
@@ -156,6 +163,14 @@ for ref in $(git for-each-ref --format='%(refname)' refs/heads); do
 done
 note "Heads also pinned under refs/backups/pre-scrub-${ts}/* (restore: git reset --hard <that ref>)."
 echo
+
+# git filter-repo removes the `origin` remote after rewriting (a deliberate
+# safety measure to force a conscious decision before pushing). The filter-branch
+# fallback does NOT. Snapshot the URL here so the opt-in PUSH=1 path can restore
+# it transparently instead of dying with "no origin" right after a successful
+# filter-repo rewrite.
+ORIG_REMOTE_URL="$(git remote get-url origin 2>/dev/null || true)"
+[ -n "$ORIG_REMOTE_URL" ] && note "Snapshot origin remote for post-rewrite restore: $ORIG_REMOTE_URL"
 
 # ─── Tool selection ──────────────────────────────────────────────────────────
 echo "## Selecting rewrite tool"
@@ -264,6 +279,13 @@ if [ "$PUSH" != "1" ]; then
   exit 0
 fi
 remote="$(git remote get-url origin 2>/dev/null || true)"
+# Restore origin if the filter-repo path removed it (filter-branch leaves it in
+# place). Without this, PUSH=1 always fails right after a successful filter-repo
+# rewrite because `git remote get-url origin` is empty.
+if [ -z "$remote" ] && [ -n "$ORIG_REMOTE_URL" ]; then
+  git remote add origin "$ORIG_REMOTE_URL" 2>/dev/null && note "Restored origin remote (filter-repo had removed it): $ORIG_REMOTE_URL"
+  remote="$ORIG_REMOTE_URL"
+fi
 [ -n "$remote" ] || { fail "No origin remote" "cannot force-push."; die "PUSH_FAILED — no origin."; }
 ok "origin remote present: $remote"
 if git push --force-with-lease origin --all >/dev/null 2>&1; then
