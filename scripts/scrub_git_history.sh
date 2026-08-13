@@ -163,10 +163,16 @@ echo "## Selecting rewrite tool"
 repl_dir="$(mktemp -d "${TMPDIR:-/tmp}/.scrub.XXXXXX")"; chmod 700 "$repl_dir"
 cleanup_repl() { rm -rf "$repl_dir"; }
 trap cleanup_repl EXIT
-repl_file="$repl_dir/replacements.txt"; chmod 600 "$repl_file"
+repl_file="$repl_dir/replacements.txt"
 # filter-repo --replace-text format: "old==>new". The literal lands in a 0600
 # file (already public per the premise, but kept out of transcripts/logs).
-printf '%s==>%s\n' "$SECRET_LITERAL" "$REPLACEMENT" > "$repl_file"
+printf '%s==>%s\n' "$SECRET_LITERAL" "$REPLACEMENT" > "$repl_file"; chmod 600 "$repl_file"
+# filter-branch fallback needs the literal and replacement as SEPARATE 0600
+# files: its tree-scrub helper reads RAW values, not the "old==>new" filter-repo
+# format. Passing replacements.txt there (and a never-created repl.txt) made the
+# fallback a silent no-op that then died at the post-check.
+lit_file="$repl_dir/literal.txt"; printf '%s' "$SECRET_LITERAL" > "$lit_file"; chmod 600 "$lit_file"
+repl_only="$repl_dir/replacement.txt"; printf '%s' "$REPLACEMENT" > "$repl_only"; chmod 600 "$repl_only"
 
 has_filter_repo=0
 if command -v git-filter-repo >/dev/null 2>&1; then
@@ -191,7 +197,7 @@ elif [ "$ALLOW_FILTER_BRANCH" = "1" ]; then
   # Helper that does the in-place replacement on the checked-out tree. The
   # literal is read from a 0600 file, never embedded in the helper source and
   # never echoed.
-  helper="$repl_dir/tree_scrub.sh"; chmod 700 "$helper"
+  helper="$repl_dir/tree_scrub.sh"
   cat > "$helper" <<'HELPER'
 #!/usr/bin/env bash
 set -u
@@ -206,13 +212,23 @@ git ls-files -z | while IFS= read -r -d '' f; do
   fi
 done
 HELPER
+  chmod 700 "$helper"
   export FILTER_BRANCH_SQUELCH_WARNING=1
-  if git filter-branch --force --prune-empty --tree-filter "bash '$helper' '$repl_file' '$repl_dir/repl.txt'" --tag-name-filter cat -- --all; then
+  if git filter-branch --force --prune-empty --tree-filter "bash '$helper' '$lit_file' '$repl_only'" --tag-name-filter cat -- --all; then
     ok "filter-branch rewrite completed."
   else
     fail "filter-branch failed" "exit non-zero; restore from $bundle before retrying."
     die "SCRUB_FAILED — filter-branch error."
   fi
+  # filter-branch leaves refs/original/* pointing at the PRE-rewrite commits.
+  # The post-check uses `git log --all`, which traverses those, so without this
+  # cleanup the fallback ALWAYS reports SCRUB_INCOMPLETE even when every real
+  # branch is clean. The bundle + refs/backups/* remain as recovery paths.
+  orig_count=0
+  while IFS= read -r _oref; do
+    git update-ref -d "$_oref" 2>/dev/null && orig_count=$((orig_count+1))
+  done < <(git for-each-ref --format='%(refname)' refs/original/)
+  [ "$orig_count" -gt 0 ] && note "Dropped $orig_count filter-branch backup ref(s) under refs/original/ (pre-rewrite copies) so the post-check is accurate."
 else
   echo
   echo "RESULT: PLAN_ONLY — no rewrite tool available."
