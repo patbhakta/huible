@@ -78,6 +78,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 import httpx
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from datetime import datetime
 
     from huible.safety.handoff import HandoffQueue, HandoffTicket
@@ -85,9 +86,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "DEFAULT_COVERAGE_PRESSURE_THRESHOLD",
     "PAGE_SEVERITY_CRISIS",
     "PAGE_SEVERITY_SEV1",
     "PAGE_TRIGGER_CONSENT_BYPASS",
+    "PAGE_TRIGGER_COVERAGE_PRESSURE",
     "PAGE_TRIGGER_CRISIS_ENQUEUE",
     "PAGE_TRIGGER_DEGRADED_NET",
     "PAGE_TRIGGER_SLA_BREACH",
@@ -102,6 +105,7 @@ __all__ = [
     "WebhookPager",
     "build_pager",
     "build_roster",
+    "escalate_coverage_pressure",
     "escalate_sla_breaches",
     "page_degraded_net",
     "page_sev1_signal",
@@ -150,6 +154,16 @@ PAGE_TRIGGER_DEGRADED_NET: str = "degraded_net"
 #: consent (the consent gate was bypassed/skipped for a real-user turn).
 #: Detected post-hoc on the persona path.
 PAGE_TRIGGER_CONSENT_BYPASS: str = "consent_bypass"
+
+#: Coverage-pressure trigger (HU-1428 AC #2 / Condition 3 stage-gate): the
+#: count of escalations that degraded because they arrived outside the Tier-2
+#: coverage window (``degrade_reason="outside_coverage_hours"``) crossed the
+#: operator threshold. A sustained non-zero rate means grieving users are
+#: hitting the closed window — the signal to extend coverage to Option B
+#: (``HANDOFF_COVERAGE_MODE=always``). Pages at :data:`PAGE_SEVERITY_SEV1` so
+#: the ceiling can act on the coverage-gap trend, distinct from a per-user
+#: crisis page.
+PAGE_TRIGGER_COVERAGE_PRESSURE: str = "coverage_pressure"
 
 #: HTTP timeout for outbound page POSTs (Telnyx / email / webhook). Kept short
 #: so a slow transport never stalls a clinical turn — the chat path pages
@@ -921,3 +935,52 @@ def escalate_sla_breaches(
                 )
             count += 1
     return count
+
+
+#: Default coverage-pressure threshold: page the ceiling once this many
+#: escalations have degraded because they arrived outside the Tier-2 coverage
+#: window. Conservative default — a single off-shift degrade is expected under
+#: Option A (business hours); the threshold surfaces a *trend*, not one event.
+#: Operators tune via the ``HANDOFF_COVERAGE_PRESSURE_THRESHOLD`` env knob.
+DEFAULT_COVERAGE_PRESSURE_THRESHOLD: int = 3
+
+
+def escalate_coverage_pressure(
+    pager: Pager,
+    tickets: Iterable[HandoffTicket],
+    *,
+    window: str,
+    threshold: int = DEFAULT_COVERAGE_PRESSURE_THRESHOLD,
+) -> int:
+    """Page Sev-1 when off-shift (outside-coverage) degrades cross ``threshold``.
+
+    The HU-1428 AC #2 / Condition-3 stage-gate: under the Tier-2 coverage
+    window (Option A, business hours), an escalation that arrives off-shift
+    degrades to the G1 safe response — clinically correct, but it means a
+    grieving user did not reach a HUible responder. A sustained count of these
+    is the signal that coverage hours should be extended (Option B /
+    ``HANDOFF_COVERAGE_MODE=always``). This function surfaces that signal as a
+    single Sev-1 page via :func:`page_sev1_signal` so the ceiling can act on
+    the trend.
+
+    ``tickets`` is the audit log (any iterable of :class:`HandoffTicket`).
+    ``threshold`` defaults to
+    :data:`DEFAULT_COVERAGE_PRESSURE_THRESHOLD`; ``0`` disables the gate (never
+    pages). Pure over ``ticket.degrade_reason`` — the count comes from
+    :func:`huible.safety.handoff_monitoring.count_outside_coverage_degrades`.
+
+    Returns the count of outside-coverage degrades (the pressure signal), whether
+    or not the threshold was breached. The page is fire-and-forget on the pager
+    transport, identical to the other Sev-1 helpers.
+    """
+    from huible.safety.handoff_monitoring import count_outside_coverage_degrades
+
+    pressure = count_outside_coverage_degrades(tickets)
+    if threshold > 0 and pressure >= threshold:
+        page_sev1_signal(
+            pager,
+            ticket=None,
+            trigger=PAGE_TRIGGER_COVERAGE_PRESSURE,
+            window=window,
+        )
+    return pressure

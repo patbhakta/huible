@@ -34,6 +34,7 @@ def _ticket(
     sla_target_seconds: int = 300,
     created_at: datetime = NOW,
     resolved_at: datetime | None = None,
+    degrade_reason: str | None = None,
 ) -> HandoffTicket:
     t = HandoffTicket(
         id=f"hh-{created_at.isoformat()}",
@@ -45,6 +46,7 @@ def _ticket(
     )
     t.created_at = created_at.isoformat()
     t.outcome = outcome
+    t.degrade_reason = degrade_reason
     if resolved_at is not None:
         t.resolved_at = resolved_at.isoformat()
     return t
@@ -172,6 +174,56 @@ class TestHandoffTelemetry:
         assert tel.answered == 2
         assert tel.answered_breached_sla == 1
         assert tel.answered_breach_rate == 0.5
+
+
+# --- degrade-reason breakdown (HU-1428 AC #2 / Condition 3 stage-gate) ------
+
+
+class TestDegradeReasonBreakdown:
+    def test_outside_coverage_degrades_are_counted(self):
+        # Two off-shift degrades + one no-roster degrade + one answered.
+        tickets = [
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="outside_coverage_hours"),
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="outside_coverage_hours"),
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="no_responder_available"),
+            _ticket(outcome=HandoffOutcome.ANSWERED, resolved_at=NOW),
+        ]
+        tel = compute_handoff_telemetry(tickets, now=NOW)
+        assert tel.degraded == 3
+        assert tel.degraded_outside_coverage == 2
+        assert tel.degraded_no_responder == 1
+        # outside_coverage_degrade_rate = 2 off-shift / 4 total
+        assert tel.outside_coverage_degrade_rate == 0.5
+
+    def test_no_outside_coverage_degrades_is_zero_rate(self):
+        # Pre-staffing / Option B: every degrade is no-roster, none off-shift.
+        tickets = [
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="no_responder_available"),
+            _ticket(outcome=HandoffOutcome.ENQUEUED),
+        ]
+        tel = compute_handoff_telemetry(tickets, now=NOW)
+        assert tel.degraded_outside_coverage == 0
+        assert tel.degraded_no_responder == 1
+        assert tel.outside_coverage_degrade_rate == 0.0
+
+    def test_empty_audit_log_has_zeroed_breakdown(self):
+        tel = compute_handoff_telemetry([], now=NOW)
+        assert tel.degraded_outside_coverage == 0
+        assert tel.degraded_no_responder == 0
+        assert tel.outside_coverage_degrade_rate == 0.0
+
+    def test_count_outside_coverage_degrades_helper(self):
+        from huible.safety.handoff_monitoring import count_outside_coverage_degrades
+
+        tickets = [
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="outside_coverage_hours"),
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="no_responder_available"),
+            _ticket(outcome=HandoffOutcome.DEGRADED, degrade_reason="outside_coverage_hours"),
+            _ticket(outcome=HandoffOutcome.ENQUEUED),
+            _ticket(outcome=HandoffOutcome.ANSWERED, resolved_at=NOW),
+        ]
+        assert count_outside_coverage_degrades(tickets) == 2
+        assert count_outside_coverage_degrades([]) == 0
 
 
 # --- resolved_at stamping on resolve() --------------------------------------

@@ -29,6 +29,16 @@ The functions are pure and take a ticket sequence (e.g. ``queue.audit_log()`` or
 deterministic and key-free. They depend only on the :class:`HandoffTicket` data
 model, so a real backend (Postgres / Redis / external paging) gets the same
 monitoring for free once it populates the same fields.
+
+Degrade-reason breakdown (HU-1428 AC #2 / Condition 3 stage-gate): the
+:class:`HandoffTelemetry` also splits the degraded count by ``degrade_reason``
+into ``outside_coverage_hours`` (an escalation arrived off-shift under the
+Tier-2 coverage window) vs ``no_responder_available`` (no roster seat). The
+outside-coverage share — :attr:`HandoffTelemetry.outside_coverage_degrade_rate`
+— is the Condition-3 signal: a sustained non-zero rate means grieving users are
+hitting the closed window and coverage should be extended to Option B
+(``HANDOFF_COVERAGE_MODE=always``). It is the input to the coverage-pressure
+Sev-1 escalation in :mod:`huible.api.paging`.
 """
 
 from __future__ import annotations
@@ -40,12 +50,23 @@ from datetime import UTC, datetime
 from huible.safety.handoff import HandoffOutcome, HandoffTicket
 
 __all__ = [
+    "DEGRADE_REASON_NO_RESPONDER",
+    "DEGRADE_REASON_OUTSIDE_COVERAGE",
     "HandoffTelemetry",
     "SLAStatus",
     "compute_handoff_telemetry",
+    "count_outside_coverage_degrades",
     "sla_status",
     "was_answered_within_sla",
 ]
+
+
+#: Degrade reasons stamped by :meth:`HandoffQueue.enqueue` (mirrors the literals
+#: in :mod:`huible.safety.handoff` / the durable store). Surfaced here so the
+#: telemetry + escalation logic does not hard-code magic strings at the call
+#: site. See HU-1428 AC #2 / Condition 3.
+DEGRADE_REASON_OUTSIDE_COVERAGE: str = "outside_coverage_hours"
+DEGRADE_REASON_NO_RESPONDER: str = "no_responder_available"
 
 
 def _parse_iso(ts: str) -> datetime:
@@ -136,16 +157,51 @@ class HandoffTelemetry:
     pending_breached: int
     #: Resolved tickets whose wait exceeded SLA — historical miss count.
     answered_breached_sla: int
+    #: Degraded because the escalation arrived outside the Tier-2 coverage
+    #: window (``degrade_reason="outside_coverage_hours"``). The Condition-3
+    #: stage-gate signal: grieving users hitting the closed window.
+    degraded_outside_coverage: int
+    #: Degraded because no responder was on the roster
+    #: (``degrade_reason="no_responder_available"``). Pre-staffing / roster gap.
+    degraded_no_responder: int
     #: Degraded / total — the fail-safe firing share.
     degrade_rate: float
     #: pending_breached / pending — live breach pressure.
     pending_breach_rate: float
     #: answered_breached_sla / answered — historical responder miss rate.
     answered_breach_rate: float
+    #: degraded_outside_coverage / total — the share of all escalations that
+    #: degraded because they arrived off-shift. The Condition-3 headline: a
+    #: sustained non-zero rate is the signal to extend coverage hours (Option B
+    #: / ``HANDOFF_COVERAGE_MODE=always``). ``0.0`` under Option B or pre-staffing.
+    outside_coverage_degrade_rate: float
 
 
 def _safe_rate(numerator: int, denominator: int) -> float:
     return numerator / denominator if denominator else 0.0
+
+
+def count_outside_coverage_degrades(
+    tickets: Iterable[HandoffTicket],
+) -> int:
+    """Count degraded tickets that arrived outside the Tier-2 coverage window.
+
+    The Condition-3 stage-gate input (HU-1428 AC #2): the number of grieving
+    users who hit the closed window and degraded to the G1 safe response. This
+    is the pressure signal the coverage-pressure Sev-1 escalation
+    (:func:`huible.api.paging.escalate_coverage_pressure`) thresholds against.
+
+    Pure over ``ticket.degrade_reason`` (stamped by every
+    :meth:`HandoffQueue.enqueue` backend). Tickets that degraded for any other
+    reason (no roster seat, queue error) are not counted here — only the
+    off-shift signal.
+    """
+    return sum(
+        1
+        for t in tickets
+        if t.outcome is HandoffOutcome.DEGRADED
+        and t.degrade_reason == DEGRADE_REASON_OUTSIDE_COVERAGE
+    )
 
 
 def compute_handoff_telemetry(
@@ -163,6 +219,7 @@ def compute_handoff_telemetry(
     by_outcome: dict[str, int] = {}
     pending = answered = degraded = abandoned = 0
     pending_breached = answered_breached_sla = 0
+    degraded_outside_coverage = degraded_no_responder = 0
     total = 0
     for ticket in tickets:
         total += 1
@@ -177,6 +234,10 @@ def compute_handoff_telemetry(
                 answered_breached_sla += 1
         elif ticket.outcome is HandoffOutcome.DEGRADED:
             degraded += 1
+            if ticket.degrade_reason == DEGRADE_REASON_OUTSIDE_COVERAGE:
+                degraded_outside_coverage += 1
+            elif ticket.degrade_reason == DEGRADE_REASON_NO_RESPONDER:
+                degraded_no_responder += 1
         elif ticket.outcome is HandoffOutcome.ABANDONED:
             abandoned += 1
     return HandoffTelemetry(
@@ -188,7 +249,10 @@ def compute_handoff_telemetry(
         abandoned=abandoned,
         pending_breached=pending_breached,
         answered_breached_sla=answered_breached_sla,
+        degraded_outside_coverage=degraded_outside_coverage,
+        degraded_no_responder=degraded_no_responder,
         degrade_rate=_safe_rate(degraded, total),
         pending_breach_rate=_safe_rate(pending_breached, pending),
         answered_breach_rate=_safe_rate(answered_breached_sla, answered),
+        outside_coverage_degrade_rate=_safe_rate(degraded_outside_coverage, total),
     )

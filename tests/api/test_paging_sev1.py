@@ -26,8 +26,10 @@ import pytest
 
 from huible.api.metrics import record_paging_failures
 from huible.api.paging import (
+    DEFAULT_COVERAGE_PRESSURE_THRESHOLD,
     PAGE_SEVERITY_SEV1,
     PAGE_TRIGGER_CONSENT_BYPASS,
+    PAGE_TRIGGER_COVERAGE_PRESSURE,
     PAGE_TRIGGER_DEGRADED_NET,
     PAGE_TRIGGER_SLA_BREACH,
     PAGE_TRIGGER_UNGROUNDED_LEAK,
@@ -39,6 +41,7 @@ from huible.api.paging import (
     TelnyxSmsPager,
     build_multichannel_pager,
     build_roster,
+    escalate_coverage_pressure,
     escalate_sla_breaches,
     page_degraded_net,
     page_sev1_signal,
@@ -52,6 +55,7 @@ def _ticket(
     outcome: HandoffOutcome = HandoffOutcome.ENQUEUED,
     seconds_old: int = 60,
     sla_target_seconds: int = 300,
+    degrade_reason: str | None = None,
 ) -> HandoffTicket:
     created = datetime.now(UTC) - timedelta(seconds=seconds_old)
     ticket = HandoffTicket(
@@ -64,6 +68,7 @@ def _ticket(
     )
     ticket.created_at = created.isoformat()
     ticket.outcome = outcome
+    ticket.degrade_reason = degrade_reason
     ticket.responder_id = "clinical-advisor" if outcome is HandoffOutcome.ENQUEUED else None
     return ticket
 
@@ -599,6 +604,84 @@ class TestRosterAwareEscalation:
         # primary + secondary + ceiling(ceo) into the channel contacts.
         assert "ceo" in seen["seats"]
         assert "huible-pm" in seen["seats"]
+
+
+# --- Coverage-pressure escalation (HU-1428 AC #2 / Condition 3) ------------
+
+
+class TestCoveragePressureEscalation:
+    def _rec(self):
+        recorded: list = []
+
+        class _Rec:
+            def page(self, ticket, *, severity, window, trigger="x", **kw):
+                recorded.append((ticket.id, severity, trigger))
+                return 0
+
+        return _Rec(), recorded
+
+    def _off_shift_degrades(self, n: int) -> list[HandoffTicket]:
+        return [
+            _ticket(
+                ticket_id=f"hh-oc-{i}",
+                outcome=HandoffOutcome.DEGRADED,
+                degrade_reason="outside_coverage_hours",
+            )
+            for i in range(n)
+        ]
+
+    def test_pages_sev1_at_threshold(self):
+        pager, recorded = self._rec()
+        tickets = self._off_shift_degrades(DEFAULT_COVERAGE_PRESSURE_THRESHOLD)
+        pressure = escalate_coverage_pressure(pager, tickets, window="always")
+        assert pressure == DEFAULT_COVERAGE_PRESSURE_THRESHOLD
+        assert len(recorded) == 1
+        _, sev, trig = recorded[0]
+        assert sev == PAGE_SEVERITY_SEV1
+        assert trig == PAGE_TRIGGER_COVERAGE_PRESSURE
+
+    def test_pages_above_threshold(self):
+        pager, recorded = self._rec()
+        tickets = self._off_shift_degrades(DEFAULT_COVERAGE_PRESSURE_THRESHOLD + 2)
+        pressure = escalate_coverage_pressure(pager, tickets, window="always")
+        assert pressure == DEFAULT_COVERAGE_PRESSURE_THRESHOLD + 2
+        # Exactly one aggregate page (a trend signal, not one per ticket).
+        assert len(recorded) == 1
+
+    def test_no_page_below_threshold(self):
+        pager, recorded = self._rec()
+        tickets = self._off_shift_degrades(DEFAULT_COVERAGE_PRESSURE_THRESHOLD - 1)
+        pressure = escalate_coverage_pressure(pager, tickets, window="always")
+        assert pressure == DEFAULT_COVERAGE_PRESSURE_THRESHOLD - 1
+        assert recorded == []
+
+    def test_no_responder_degrades_do_not_count(self):
+        pager, recorded = self._rec()
+        tickets = [
+            _ticket(
+                ticket_id=f"hh-nr-{i}",
+                outcome=HandoffOutcome.DEGRADED,
+                degrade_reason="no_responder_available",
+            )
+            for i in range(DEFAULT_COVERAGE_PRESSURE_THRESHOLD + 5)
+        ]
+        pressure = escalate_coverage_pressure(pager, tickets, window="always")
+        assert pressure == 0
+        assert recorded == []
+
+    def test_threshold_zero_disables_gate(self):
+        pager, recorded = self._rec()
+        tickets = self._off_shift_degrades(50)
+        pressure = escalate_coverage_pressure(pager, tickets, window="always", threshold=0)
+        assert pressure == 50
+        assert recorded == []
+
+    def test_custom_threshold_pages(self):
+        pager, recorded = self._rec()
+        tickets = self._off_shift_degrades(2)
+        pressure = escalate_coverage_pressure(pager, tickets, window="always", threshold=2)
+        assert pressure == 2
+        assert len(recorded) == 1
 
 
 # --- Failure counter -------------------------------------------------------
