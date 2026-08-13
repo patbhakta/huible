@@ -19,6 +19,10 @@
 #   - SECRET-SAFE: never prints any password value (old or new). Only length,
 #     presence, and CouchDB's stored PBKDF2 hash prefix are logged — the full
 #     transcript is safe to paste into the HU-1500 issue as evidence.
+#   - PROCESS-LIST-SAFE: credentials never enter any child-process argv. Curl
+#     auth is read from a 0600 --config file, the rotation body from a @file,
+#     and the Kestra env rewrite is pure bash (no sed/awk) — so `ps`/`/proc`
+#     never reveals the new credential during rotation.
 #   - PRE-CHECK: aborts if the old password does not authenticate, so we never
 #     leave CouchDB in a half-rotated / locked-out state.
 #   - POST-CHECK: proves the new password authenticates AND that the old one no
@@ -57,6 +61,27 @@ DRY_RUN="${DRY_RUN:-0}"
 KESTRA_ENV_FILE="${KESTRA_ENV_FILE:-}"
 KESTRA_SVC="${KESTRA_SVC:-kestra}"
 
+# Secret-safe credential channel: curl auth + request bodies are written to
+# 0600 files under a private 0700 temp dir and read via curl --config / @file,
+# so NO credential value ever appears in any child-process argv (ps / /proc).
+# Passing secrets via `curl -u` / `curl -d` / `sed s|...|...|` would leak them
+# to the process list — unacceptable in a script whose entire purpose (HU-1500)
+# is secret remediation.
+_SECRET_DIR="$(mktemp -d "${TMPDIR:-/tmp}/.couchrot.XXXXXX")"
+chmod 700 "$_SECRET_DIR"
+cleanup_secrets() { rm -rf "$_SECRET_DIR"; }
+trap cleanup_secrets EXIT
+# Escape \ and " for a curl-config quoted value (printf %s is a safe builtin).
+_cfg_escape() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+# Write a 0600 curl --config file authenticating as $1:$2; echo its path.
+auth_cfg() { # 1=user 2=pass
+  local u p f
+  u="$(_cfg_escape "$1")"; p="$(_cfg_escape "$2")"
+  f="$(mktemp "$_SECRET_DIR/auth.XXXXXX")"; chmod 600 "$f"
+  printf 'user = "%s:%s"\n' "$u" "$p" > "$f"
+  echo "$f"
+}
+
 PASS=0; FAIL=0
 ok()   { echo "  [PASS] $1"; PASS=$((PASS+1)); }
 fail() { echo "  [FAIL] $1 — $2"; FAIL=$((FAIL+1)); }
@@ -65,12 +90,14 @@ die()  { echo "RESULT: ROTATE_FAILED — $1"; echo "=== Summary: $PASS passed, $
 
 # Redacted curl: wraps curl but strips any Authorization / password material
 # from stderr so a -v trace never leaks the credential into the transcript.
-# The body is never echoed either.
+# The body is never echoed either. Auth is read from a 0600 curl --config file
+# (auth_cfg) so the password never enters the process list via `-u`.
 http_code() { # 1=method 2=path 3=user 4=pass  -> echoes HTTP status code
+  local _acfg; _acfg="$(auth_cfg "$3" "$4")"
   curl -sS -o /dev/null -w '%{http_code}' \
     --connect-timeout 8 --max-time 15 \
+    --config "$_acfg" \
     -X "$1" \
-    -u "$3:$4" \
     -H 'Content-Type: application/json' \
     "${COUCH_URL}$2" 2>/dev/null || true
 }
@@ -129,14 +156,18 @@ echo
 # ─── 3. Rotate: PUT the new plaintext to CouchDB config (auto-hashed PBKDF2) ──
 echo "## Rotate CouchDB admin password"
 # CouchDB accepts a plaintext value on config write and stores it as a PBKDF2
-# hash automatically. Body is a JSON-encoded string: "newpass".
-rotate_body="\"$NEW_PASS\""
+# hash automatically. Body is a JSON-encoded string: "newpass". The body is
+# written to a 0600 file and sent via --data-binary @file so the new credential
+# never enters curl's argv (process list); auth uses a --config file likewise.
+rotate_body_file="$(mktemp "$_SECRET_DIR/body.XXXXXX")"; chmod 600 "$rotate_body_file"
+printf '"%s"' "$NEW_PASS" > "$rotate_body_file"
+rotate_old_cfg="$(auth_cfg "$COUCH_ADMIN_USER" "$OLD_PASS")"
 rotate_code="$(curl -sS -o /dev/null -w '%{http_code}' \
   --connect-timeout 8 --max-time 20 \
   -X PUT \
-  -u "$COUCH_ADMIN_USER:$OLD_PASS" \
+  --config "$rotate_old_cfg" \
   -H 'Content-Type: application/json' \
-  -d "$rotate_body" \
+  --data-binary "@$rotate_body_file" \
   "${COUCH_URL}/_node/_local/_config/admins/$COUCH_ADMIN_USER" 2>/dev/null || true)"
 case "$rotate_code" in
   200) ok "CouchDB admin password rotated (PUT .../admins/$COUCH_ADMIN_USER → 200)." ;;
@@ -190,14 +221,19 @@ fi
 
 KESTRA_UPDATED=0
 if [ -n "$KESTRA_ENV_FILE" ] && [ -f "$KESTRA_ENV_FILE" ]; then
-  # Atomic in-place rewrite: replace or append the COUCH_ADMIN_PASS line.
-  # The value is written with 0600 perms; the file's existing perms are preserved.
-  tmp="$(mktemp)"
+  # Atomic in-place rewrite: replace or append the COUCH_ADMIN_PASS line. The
+  # substitution is done with pure bash (no sed/awk child process) so the new
+  # credential never enters any process argv. Output goes to a 0600 temp file.
+  tmp="$(mktemp "$_SECRET_DIR/env.XXXXXX")"
   chmod 600 "$tmp"
-  if grep -q '^COUCH_ADMIN_PASS=' "$KESTRA_ENV_FILE" 2>/dev/null; then
-    sed "s|^COUCH_ADMIN_PASS=.*|COUCH_ADMIN_PASS=$NEW_PASS|" "$KESTRA_ENV_FILE" > "$tmp"
-  else
-    cp "$KESTRA_ENV_FILE" "$tmp" 2>/dev/null || : > "$tmp"
+  _had_line=0
+  while IFS= read -r _line || [ -n "$_line" ]; do
+    case "$_line" in
+      COUCH_ADMIN_PASS=*) printf 'COUCH_ADMIN_PASS=%s\n' "$NEW_PASS" >> "$tmp"; _had_line=1 ;;
+      *) printf '%s\n' "$_line" >> "$tmp" ;;
+    esac
+  done < "$KESTRA_ENV_FILE"
+  if [ "$_had_line" != "1" ]; then
     printf 'COUCH_ADMIN_PASS=%s\n' "$NEW_PASS" >> "$tmp"
   fi
   # Backup the old env file, then swap.
