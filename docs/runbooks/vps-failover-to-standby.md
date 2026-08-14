@@ -240,7 +240,9 @@ IPs (`100.109.142.4`, `100.75.34.75`):
 
 If the public DNS for `HUIBLE_DOMAIN` pointed at `.243`, repoint it to `.245`
 (`208.84.102.245`). ⚠ The real `HUIBLE_DOMAIN` value is stranded in the `.243`
-`.env` — obtain it from the board/operator before this step. TLS: the system
+`.env` — obtain it from the board/operator before this step (open ask-question
+interaction on HU-1501, created 2026-08-14, collects it alongside DNS-repoint
+ownership). TLS: the system
 Caddy on `.245` will auto-provision a cert for the domain once the site block
 exists.
 
