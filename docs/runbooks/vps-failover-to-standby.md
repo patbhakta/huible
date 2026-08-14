@@ -165,29 +165,36 @@ The prepared block lives in the repo:
 [`deploy/caddy-standby/huible-site.caddy`](../../deploy/caddy-standby/huible-site.caddy)
 — it proxies `{$HUIBLE_DOMAIN}` → `127.0.0.1:8000` over the same route surface
 as the compose Caddyfile (`/api/v1/health`, `/api/v1/*`, `/static/*`, else
-404). Requires the board-supplied `HUIBLE_DOMAIN` (see §3.6).
+404). `HUIBLE_DOMAIN` executes at `localhost` parity for this cutover (no
+public domain exists yet — see §6 DNS item); public ingress is a post-cutover
+follow-up on the pending launch-readiness decision.
 
 ```bash
-# from a checkout of this repo, to the standby:
 HUIBLE_DOMAIN=<board-supplied>    # export for the validate step's env expansion
-scp deploy/caddy-standby/huible-site.caddy root@208.84.102.245:/etc/caddy/huible-site.caddy
-ssh root@208.84.102.245
-  grep -q 'import huible-site.caddy' /etc/caddy/Caddyfile || \
-      echo 'import huible-site.caddy' >> /etc/caddy/Caddyfile
-  caddy validate --config /etc/caddy/Caddyfile    # MUST pass — gate before reload
-  systemctl reload caddy                          # reload (zero-downtime), never restart
+# On .245 directly (the agent host IS .245 — see note below):
+cp deploy/caddy-standby/huible-site.caddy /etc/caddy/huible-site.caddy
+grep -q 'import huible-site.caddy' /etc/caddy/Caddyfile || \
+    echo 'import huible-site.caddy' >> /etc/caddy/Caddyfile
+caddy validate --config /etc/caddy/Caddyfile    # MUST pass — gate before reload
+systemctl reload caddy                          # reload (zero-downtime), never restart
 ```
 
 **Verify (after DNS repoint, §3.6):** `curl -s https://$HUIBLE_DOMAIN/api/v1/health`
 returns the ok payload. TLS is auto-provisioned by Caddy for the domain once
 DNS resolves to `.245`.
 
-> Operational note (2026-08-14): the exact `/etc/caddy` layout on `.245`
-> (import dirs vs single file) is unverified — shell access was not available
-> for recon. The `grep || echo >> …` form above is layout-agnostic; if
-> `/etc/caddy/Caddyfile` is itself generated/imported differently, place the
-> block wherever the existing site blocks (`kestra`, `brain`, `paperclip`,
-> `investinme`) live. `caddy validate` is the gate either way.
+> Operational note (updated 2026-08-14, pre-flight): **the Paperclip agent host
+> IS `.245`** (`hostname -f` = `ip-208-84-102-245.my-advin.com`; public
+> `208.84.102.245`, tailnet `100.101.235.117`). All runbook commands run
+> **locally** — no SSH/scp hop, and root SSH to self is key-denied anyway
+> (`.245` does not run the Tailscale SSH server). The `/etc/caddy` layout is
+> now confirmed: **single-file `/etc/caddy/Caddyfile`** with inline site blocks
+> (`paperclip.bhakta.us`, `investinme.club`, `edu.investinme.club`,
+> `doit.investinme.club`, `school.bhakta.us`, `golf.bhakta.us`,
+> `kestra.bhakta.us`, `brain.bhakta.us`) and no existing imports. The
+> `import huible-site.caddy` append + `caddy validate` pattern was
+> **dry-run validated green** against a copy of the live Caddyfile on
+> 2026-08-14 (`Valid configuration`, with `HUIBLE_DOMAIN=localhost`).
 
 ### 3.2 Seed / restore data
 
@@ -269,12 +276,11 @@ IPs (`100.109.142.4`, `100.75.34.75`):
 - Any external integrations that point at `.243`.
 
 If the public DNS for `HUIBLE_DOMAIN` pointed at `.243`, repoint it to `.245`
-(`208.84.102.245`). ⚠ The real `HUIBLE_DOMAIN` value is stranded in the `.243`
-`.env` — obtain it from the board/operator before this step (open ask-question
-interaction on HU-1501, created 2026-08-14, collects it alongside DNS-repoint
-ownership). TLS: the system
-Caddy on `.245` will auto-provision a cert for the domain once the site block
-exists.
+(`208.84.102.245`). Reassessed 2026-08-14: **no public DNS record existed for
+the app** (see §6 DNS item) — this step is a no-op for this cutover; public
+ingress stays gated on the pending launch-readiness board decision. TLS: the
+system Caddy on `.245` will auto-provision a cert for the domain once a real
+domain is chosen, DNS resolves to `.245`, and the site block is reloaded.
 
 ---
 
@@ -335,10 +341,21 @@ If the primary VPS comes back online after the failover:
   (approval `5e713a10`, same decision that names the second operator /
   credential deposit). No plaintext credential ever enters git — that is the
   HU-1500 leak class.
-- **DNS automation:** the cutover still requires a manual DNS repoint, and the
-  real `HUIBLE_DOMAIN` value is stranded on `.243` — the board/operator must
-  supply it before cutover. Consider a lower-TTL record or a floating IP for
-  faster future failovers.
+- **DNS automation:** ~~the cutover still requires a manual DNS repoint, and
+  the real `HUIBLE_DOMAIN` value is stranded on `.243` — the board/operator
+  must supply it before cutover.~~ **Reassessed 2026-08-14 (pre-flight):** no
+  public DNS record or domain ever existed for the Huible app — the vault
+  infrastructure table (`VPS/infrastructure.md`) lists domains only for
+  paperclip/kestra/investinme/brain, and the docs/09 §8 checklist item
+  "HUIBLE_DOMAIN is set to a real domain with DNS A record" was still an open
+  pre-launch item (tracked by [HU-1464] sign-off / launch readiness). Prod on
+  `.243` served the app on `127.0.0.1:8000` behind compose Caddy, reached over
+  the tailnet. **Cutover therefore executes at domain parity
+  (`HUIBLE_DOMAIN=localhost`, as staged in `.env.failover`) with no DNS
+  repoint** — public ingress/TLS remains gated on the pre-existing
+  launch-readiness board decision, unaffected by this failover. Consider a
+  lower-TTL record or a floating IP once a real domain is chosen, for faster
+  future failovers.
 - ~~**System Caddy vs compose Caddy (new, 2026-08-14):** `.245`'s system Caddy
   binds `80`/`443`. Decide the proxy path (site block vs stopping system
   Caddy) before starting the compose stack.~~
