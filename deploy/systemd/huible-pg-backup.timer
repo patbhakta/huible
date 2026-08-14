@@ -1,0 +1,12 @@
+# Installed by scripts/setup_pg_backup.sh (HU-1672 AC #1, docs/09 §9.2f).
+[Unit]
+Description=Run Huible app Postgres backup daily
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=30m
+Unit=huible-pg-backup.service
+
+[Install]
+WantedBy=timers.target

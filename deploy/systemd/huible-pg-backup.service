@@ -1,0 +1,19 @@
+# Installed by scripts/setup_pg_backup.sh (HU-1672 AC #1, docs/09 §9.2f).
+# __REPO_DIR__ is replaced with the absolute repo checkout path at install
+# time; the installed copy lands in /etc/systemd/system/.
+[Unit]
+Description=Huible app Postgres daily backup (pg_dump -> /backups/pg)
+Documentation=file://%REPO_DIR%/docs/09-deployment-ops-guide.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=__REPO_DIR__
+ExecStart=__REPO_DIR__/scripts/backup_pg_dump.sh
+# Hardening: minimal ambient privilege; docker socket access is required.
+User=root
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ReadWritePaths=/backups

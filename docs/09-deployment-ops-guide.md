@@ -559,6 +559,7 @@ Run through this checklist before going live.
 ### Infrastructure
 
 - [ ] Host firewall allows only 80, 443 (and 22 for SSH)
+- [ ] On the standby .245: ufw allowlist applied via `deploy/ufw/huible-allowlist.sh` (22/80/443 + tailscale iface, break-glass-gated enable; §9.2f sibling, HU-1672 AC #2)
 - [ ] Automatic security updates are enabled on the host
 - [ ] Disk monitoring alerts are set (< 20% free triggers alert)
 
@@ -644,6 +645,28 @@ install -m 644 "$dir/config.yml" /root/.kestra/config.yml
 systemctl restart kestra
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # expect 200/307
 ```
+
+**App Postgres automated backup + restore proof on the standby .245 (§9.2f, HU-1672):**
+
+The §9.2 cron snippets above are the generic path; on the failover standby
+(.245) the installed automation is a systemd timer driving
+`scripts/backup_pg_dump.sh` (custom-format dump via `docker compose exec`, so
+the pg_dump client always matches the pgvector pg17 server; sha256 sidecar;
+30-day retention in `/backups/pg/`). One command installs and proves it
+(idempotent, run post-cutover from the repo checkout):
+
+```bash
+bash scripts/setup_pg_backup.sh
+# -> BACKUP_SETUP_PASS: timer enabled (daily, Persistent=true) +
+#    immediate first dump + RESTORE_PROOF_PASS round-trip
+```
+
+The restore path is tested, not assumed: `scripts/verify_backup_restore.sh`
+sha256-verifies the newest dump, restores it into a scratch database inside
+the container, compares public-schema table + row counts against live, then
+drops the scratch DB (live data untouched). Re-run it after any restore-method
+change, or monthly as a backup-integrity drill. Manual restore procedure stays
+§9.3 below.
 
 ### 9.3 Restore Procedure
 
