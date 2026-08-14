@@ -26,6 +26,32 @@ note() { echo "       $1"; }
 # True if a docker compose service is up. $1 = service name.
 svc_up() { docker compose ps --services --filter "status=running" 2>/dev/null | grep -qx "$1"; }
 
+# Layout detection: a DEDICATED prod host runs Caddy as a compose service
+# (huible-caddy container); the STANDBY/shared layout (.245 failover, runbook
+# §3.1b) excludes compose-caddy via a profile and fronts ingress with the
+# host's systemd Caddy. Several checks below are layout-aware so the failover
+# suite (execute_failover.sh §4) reports a truthful verdict on .245 instead of
+# false-failing on containers/listeners that are absent-by-design there.
+# Truth sources, in order: (1) the compose project the RUNNING huible-app
+# container was started from (its config_files label), (2) the staged
+# `.env -> .env.failover` symlink (same signal as execute_failover.sh G3).
+# Unknown -> DEDICATED (strict mode) so ambiguity can never soften the checks.
+DEDICATED_LAYOUT=1
+_cfg_files="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' huible-app 2>/dev/null || true)"
+_layout_src=""
+if [ -n "$_cfg_files" ]; then
+  if echo "$_cfg_files" | grep -q "docker-compose.failover.yml"; then
+    DEDICATED_LAYOUT=0; _layout_src="running stack config_files label"
+  fi
+elif [ "$(readlink -f .env 2>/dev/null)" = "$(pwd)/.env.failover" ]; then
+  DEDICATED_LAYOUT=0; _layout_src=".env -> .env.failover symlink (stack not running yet)"
+fi
+if [ "$DEDICATED_LAYOUT" = "1" ]; then
+  note "layout: DEDICATED — compose caddy expected (src: ${_layout_src:-unknown -> strict default})"
+else
+  note "layout: STANDBY/SHARED — system Caddy fronts ingress (src: $_layout_src)"
+fi
+
 echo "=== docs/09 §8 production hardening — live verification ==="
 echo "host: $(hostname)  time: $(date -u +%FT%TZ)"
 echo
@@ -56,13 +82,32 @@ else
 fi
 
 # Only 80/443/22 should be listening on external interfaces.
+# Loopback = 127.0.0.0/8 (incl. systemd-resolved 127.0.0.53/.54) and ::1.
 if command -v ss >/dev/null 2>&1; then
-  pub_listeners="$(ss -tlnH 2>/dev/null | awk '{print $4}' | grep -vE '^(127\.0\.0\.1|\[?::1\]?):' || true)"
+  pub_listeners="$(ss -tlnH 2>/dev/null | awk '{print $4}' | grep -vE '^(127\.|\[?::1\]?:|\[::1\])' || true)"
+  # Huible stack ports must NEVER be publicly bound (hard fail in any layout).
+  huible_leak="$(echo "$pub_listeners" | grep -E ':(8000|5432|5433)$' || true)"
+  if [ -n "$huible_leak" ]; then
+    fail "Huible stack port publicly bound" "found: $(echo "$huible_leak" | tr '\n' ' ') — app/PG must bind loopback only (docs/09 §8 Network)."
+  else
+    ok "Huible stack ports (8000/5432/5433) not publicly bound."
+  fi
   leak="$(echo "$pub_listeners" | grep -vE ':(80|443|22)$' || true)"
   if [ -z "$leak" ]; then
     ok "No unexpected public listeners (only 80/443/22 on external interfaces)."
+  elif [ "$DEDICATED_LAYOUT" = "1" ]; then
+    fail "Unexpected public listener(s)" "found: $(echo "$leak" | tr '\n' ' ') — dedicated prod host must expose only 80/443/22."
   else
-    fail "Unexpected public listener(s)" "found: $(echo "$leak" | tr '\n' ' ')"
+    # Shared standby host: pre-existing non-Huible services (Kestra :8080,
+    # CouchDB tailnet :5984, other tooling) are documented on .245 — record
+    # them, plus firewall posture, as §8 follow-ups instead of failing the
+    # failover suite on facts the cutover cannot change.
+    note "Shared-host non-stack listeners (pre-existing on .245, §8 follow-up): $(echo "$leak" | tr '\n' ' ')"
+    if ufw status 2>/dev/null | grep -q "Status: active"; then
+      ok "Host firewall (ufw) active — non-stack listeners gated by firewall policy."
+    else
+      note "Host firewall (ufw) INACTIVE — non-stack listeners are network-reachable; schedule §8 firewall hardening post-cutover."
+    fi
   fi
 else
   note "'ss' unavailable — verify host firewall manually (ufw allow 80,443,22 only)."
@@ -180,8 +225,11 @@ echo
 # ─── Application ─────────────────────────────────────────────────────────────
 echo "## Application"
 
-# Restart policy per container must be unless-stopped.
-for c in app postgres caddy; do
+# Restart policy per container must be unless-stopped. On the STANDBY/shared
+# layout there is no huible-caddy container by design (systemd Caddy fronts
+# ingress, runbook §3.1b) — check the systemd unit's active+enabled state,
+# which is the equivalent resilience guarantee.
+for c in app postgres; do
   rp="$(docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' "huible-$c" 2>/dev/null || true)"
   if [ "$rp" = "unless-stopped" ]; then
     ok "huible-$c restart policy = unless-stopped."
@@ -189,6 +237,20 @@ for c in app postgres caddy; do
     fail "huible-$c restart policy" "is '$rp' — set restart: unless-stopped (docs/09 §8 Application)."
   fi
 done
+if [ "$DEDICATED_LAYOUT" = "1" ]; then
+  rp="$(docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' "huible-caddy" 2>/dev/null || true)"
+  if [ "$rp" = "unless-stopped" ]; then
+    ok "huible-caddy restart policy = unless-stopped."
+  else
+    fail "huible-caddy restart policy" "is '$rp' — set restart: unless-stopped (docs/09 §8 Application)."
+  fi
+else
+  if systemctl is-active --quiet caddy && systemctl is-enabled --quiet caddy; then
+    ok "system caddy active+enabled (standby ingress resilience)."
+  else
+    fail "system caddy not active+enabled" "standby layout depends on the host Caddy unit for ingress (runbook §3.1b)."
+  fi
+fi
 
 # Health endpoint via the app (loopback).
 h="$(curl -fsS --max-time 5 http://127.0.0.1:8000/api/v1/health 2>/dev/null || true)"
