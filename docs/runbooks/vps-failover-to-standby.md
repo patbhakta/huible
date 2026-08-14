@@ -258,10 +258,16 @@ bash scripts/verify_prod_external.sh
 bash scripts/verify_prod_hardening.sh
 ```
 
-> Note: `verify_vps_recovery.sh` defaults to `.243`. Override the env vars to
-> target `.245` when verifying the failover:
+> Note: `verify_vps_recovery.sh` defaults every target to `.243`. On a standby
+> failover **all five** target vars must be overridden — the two Tailscale-node
+> names default to the `.243` nodes (`ip-208-84-102-243`, `kestra-on-vps`) and
+> their checks are hard FAILs while `.243` is down, so a partial override would
+> wrongly report `VPS_NOT_READY` for a healthy `.245`. Correct standby command
+> (verified against live `.245` state on 2026-08-14 — CouchDB answers on the
+> tailnet IP, Kestra binds `*:8080`, single tailnet node serves both roles):
 > ```bash
-> VPS_PUBLIC=208.84.102.245 VPS_TS_IP=100.101.235.117 \
+> VPS_PUBLIC=208.84.102.245 VPS_TS_IP=100.101.235.117 KESTRA_TS_IP=100.101.235.117 \
+> TS_NODE_VPS=ip-208-84-102-245 TS_NODE_KESTRA=ip-208-84-102-245 \
 >   bash scripts/verify_vps_recovery.sh
 > ```
 
@@ -287,10 +293,18 @@ If the primary VPS comes back online after the failover:
   replication relationship with the `.243` instance, or is independent.~~
   **Closed 2026-08-14:** independent live store — no `_replicator` docs, no
   scheduler jobs; 4160 docs of real vault data. See §3.3.
-- **Kestra config backup:** `.243`'s `/etc/kestra/kestra.env` remains stranded
+- ~~**Kestra config backup:** `.243`'s `/etc/kestra/kestra.env` remains stranded
   (host down), but `.245` now carries a working, rotated env at
   `/opt/kestra/kestra.env`. Fold that file into the `docs/09` §9 backup
-  strategy (secret-safe location) so it is not itself a single-host SPOF.
+  strategy (secret-safe location) so it is not itself a single-host SPOF.~~
+  **Closed 2026-08-14 (local layer):** `scripts/backup_kestra_config.sh` now
+  snapshots the rotated env + server config daily (cron 03:30 UTC) to
+  `/backups/kestra-config/` — 0600, sha256-sealed, 30-day retention, restore
+  procedure in `docs/09` §9.2e. **Residual (tracked):** off-host copy is
+  deliberately disabled until the board names a secret-safe destination
+  (approval `5e713a10`, same decision that names the second operator /
+  credential deposit). No plaintext credential ever enters git — that is the
+  HU-1500 leak class.
 - **DNS automation:** the cutover still requires a manual DNS repoint, and the
   real `HUIBLE_DOMAIN` value is stranded on `.243` — the board/operator must
   supply it before cutover. Consider a lower-TTL record or a floating IP for

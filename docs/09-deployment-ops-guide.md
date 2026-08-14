@@ -574,6 +574,7 @@ Run through this checklist before going live.
 | PostgreSQL | WAL archiving | Continuous | 7 days |
 | Config files | Git | On change | Infinite |
 | Caddy data | Backup volume | Weekly | 4 weeks |
+| Kestra config (rotated env + server config) | `scripts/backup_kestra_config.sh` — versioned 0600 copies + sha256 manifest | Daily (cron 03:30 UTC) | 30 days |
 
 ### 9.2 Backup Procedure
 
@@ -613,6 +614,35 @@ docker compose exec postgres rm /tmp/huible_backup.dump
 ```bash
 # Add to crontab
 0 4 * * * find /backups/huible -name "huible_*.dump" -mtime +30 -delete
+```
+
+**Kestra config backup (secret-safe, §9.2e):**
+
+`/opt/kestra/kestra.env` holds the **only** copy of the rotated CouchDB admin
+credential (generated during the HU-1500 rotation) — losing it means losing
+admin access to the live vault store. `scripts/backup_kestra_config.sh`
+snapshots it together with `/root/.kestra/config.yml` into
+`/backups/kestra-config/<UTC-stamp>/` (mode 0600, sha256-sealed, 30-day
+retention, first snapshot 2026-08-14). Daily cron installed:
+
+```bash
+30 3 * * * /root/repos/huible/scripts/backup_kestra_config.sh >> /var/log/kestra-config-backup.log 2>&1
+```
+
+**Never** commit or upload these copies — plaintext credential material in git
+is the HU-1500 leak class. Off-host redundancy stays **off** until the board
+designates a secret-safe destination (pending approval `5e713a10`); the script
+then takes `KESTRA_BACKUP_REMOTE=<rsync target>` to sync each snapshot out.
+
+**Kestra config restore:**
+
+```bash
+dir=/backups/kestra-config/<stamp>
+(cd "$dir" && sha256sum -c SHA256SUMS)   # must pass before trusting the copy
+install -m 600 "$dir/kestra.env" /opt/kestra/kestra.env
+install -m 644 "$dir/config.yml" /root/.kestra/config.yml
+systemctl restart kestra
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # expect 200/307
 ```
 
 ### 9.3 Restore Procedure
