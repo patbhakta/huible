@@ -210,6 +210,14 @@ standby:
 - `:8080` responds (307 → UI); the API is auth-protected.
 - Env `/opt/kestra/kestra.env` carries the rotated `COUCH_ADMIN_PASS` (HU-1500
   verified Kestra is consuming the new credential).
+- Live flows `huible/huible-vault-create` and `huible/huible-vault-archive`
+  source the credential via `{{ envs.COUCH_ADMIN_PASS }}` — a dead hardcoded
+  `b756e723…` literal (pre-rotation hotfix divergence from the repo files)
+  was purged from live flow sources on 2026-08-14 (HU-1501, revisions 14 / 8;
+  verified: env credential → HTTP 200, dead literal → HTTP 401). Repo
+  `flows/vault-{create,archive}.yaml` were already clean and match this
+  intent; live revisions still differ in shape from the repo files, so
+  reconcile before any bulk re-apply.
 
 Cutover action reduces to **verify + flows check**:
 
