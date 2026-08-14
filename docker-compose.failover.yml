@@ -1,0 +1,18 @@
+# Failover override for the standby host 208.84.102.245 (HU-1501 DR path).
+#
+# The standby runs a host-installed PostgreSQL on 127.0.0.1:5432 (Kestra
+# persistence depends on it), so the compose Postgres cannot bind the same
+# host port. This override remaps the compose Postgres host binding to
+# 127.0.0.1:5433 (the container still listens on 5432 inside the compose
+# network, so the app's DATABASE_URL is unaffected).
+#
+# Usage (board-authorized cutover only, see docs/runbooks/vps-failover-to-standby.md §3):
+#   ln -sf .env.failover .env
+#   docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d
+#
+# Host-side access for psql/pg_dump then uses port 5433:
+#   psql "postgresql://huible:<POSTGRES_PASSWORD>@127.0.0.1:5433/huible"
+services:
+  postgres:
+    ports: !override
+      - "127.0.0.1:5433:5432"

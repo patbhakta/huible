@@ -70,10 +70,25 @@ collisions before starting the app stack:
 
 | Port | In use by | Failover action |
 |------|-----------|-----------------|
-| `127.0.0.1:5432` | system PostgreSQL (host-installed, pid `postgres`) | **Conflict.** Either stop the system PG or remap the compose PG to `127.0.0.1:5433` and set `POSTGRES_PORT=5433` in `.env`. |
+| `127.0.0.1:5432` | system PostgreSQL (host-installed, pid `postgres`) | **Resolved.** Committed override `docker-compose.failover.yml` remaps the compose PG host binding to `127.0.0.1:5433` (validated via `docker compose config` on 2026-08-14; `!override` replaces the base mapping, so no collision). System PG keeps 5432 — Kestra persistence depends on it. |
 | `127.0.0.1:5984` + `100.101.235.117:5984` | `couchdb-livesync` container (`couchdb:3`, up) | **Already satisfies the CouchDB requirement** — see §3.3. |
-| `127.0.0.1:2019` | system Caddy (admin API) | No conflict with compose Caddy (which uses 80/443). |
-| `80` / `443` | free | Compose Caddy can bind here. |
+| `127.0.0.1:2019` | system Caddy (admin API) | ⚠ Revisit at cutover: system Caddy already binds `80`/`443`, so the compose Caddy service **cannot** also bind them. Either stop system Caddy or proxy through it. |
+| `*:8080` | **Kestra already running** (systemd `kestra.service`, java) | **Already satisfies the Kestra requirement** — see §3.4. |
+| `80` / `443` | system Caddy (`caddy`, pid on host) | Not free — compose Caddy conflicts. Prefer the existing system Caddy (add a site block proxying to `127.0.0.1:8000`) instead of the compose Caddy service. |
+
+### Already-running production services on `.245` (verified 2026-08-14)
+
+The standby is further along than a bare host — these are live right now:
+
+| Service | State on `.245` | Detail |
+|---------|-----------------|--------|
+| Kestra | **running** (systemd `kestra.service`) | `:8080` responds (307 → UI); API auth-protected; standalone mode with Postgres persistence (`/root/.kestra/config.yml`, starter `/opt/kestra/start.sh`); env `/opt/kestra/kestra.env` (rotated credential, mode 600) |
+| CouchDB | **running** (container `couchdb-livesync`) | v3.5.2, admin `obsidian`, holds the **live vault store** `obsidian-livesync` — see §3.3 |
+| Caddy | **running** (system service) | binds `:80`/`:443`; system Caddy, not compose |
+| PostgreSQL | **running** (system) | `127.0.0.1:5432`; used by Kestra persistence |
+
+**Remaining gap for full failover is the Huible app stack only** (compose
+`app` on `127.0.0.1:8000` + its pgvector Postgres on `127.0.0.1:5433`).
 
 ### Docker images already cached on `.245`
 
@@ -88,24 +103,26 @@ network-related).
 These steps do not move traffic or start production services. They reduce the
 post-approval execution time from hours to minutes.
 
-1. **Confirm the repo is current** on `.245`:
-   ```bash
-   git -C /root/repos/huible fetch origin
-   git -C /root/repos/huible status        # must be clean
-   git -C /root/repos/huible log --oneline -1 origin/main
-   ```
-2. **Stage a failover `.env`** (do not overwrite the prod `.env` on `.243` —
-   that file is unreachable. Build a fresh one):
-   ```bash
-   cp /root/repos/huible/.env.example /root/repos/huible/.env.failover
-   # Edit .env.failover:
-   #   POSTGRES_PASSWORD = <fresh strong secret>
-   #   HUIBLE_DOMAIN     = <the public domain>
-   #   Generate API_KEYS as needed.
-   ```
-3. **Resolve the PG port conflict** — either plan to stop the system PostgreSQL
-   (`sudo systemctl stop postgresql`) or set `POSTGRES_PORT=5433` in
-   `.env.failover` and remap the host port in a compose override.
+1. **Confirm the repo is current** on `.245` — ✅ done 2026-08-14 (clean at the
+   failover-runbook commit).
+2. **Stage a failover `.env`** — ✅ done 2026-08-14: `.env.failover` staged on
+   `.245` (gitignored, mode 600) with a **fresh** `POSTGRES_PASSWORD` (openssl
+   rand; never existed on `.243`). **One input still missing:** the real
+   `HUIBLE_DOMAIN` — the value was stranded in the `.243` `.env`, so the
+   board/operator must supply it before cutover (DNS repoint needs it too).
+   `LLM_PROVIDER` intentionally left `fake` pending board approval `74a0ff8b`.
+3. **Resolve the PG port conflict** — ✅ done 2026-08-14: committed
+   `docker-compose.failover.yml` remaps compose PG to `127.0.0.1:5433`.
+   Merge-validated via `docker compose config` (base + override + failover env):
+   PG host port `5433`, app `127.0.0.1:8000`, no collision with system PG.
+
+Bring-up command at cutover becomes:
+
+```bash
+cd /root/repos/huible
+ln -sf .env.failover .env   # compose requires the literal .env (env_file: .env)
+docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d
+```
 
 ---
 
@@ -118,10 +135,16 @@ fails.
 
 ```bash
 cd /root/repos/huible
-# Use the failover env (port-remapped if needed).
-ln -sf .env.failover .env
-docker compose up -d
+ln -sf .env.failover .env   # compose requires the literal .env (env_file: .env)
+docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d
 ```
+
+⚠ **Caddy note:** system Caddy already owns `80`/`443` on `.245`. Do **not**
+let the compose `caddy` service bind them (conflict). Either start only the
+needed services (`docker compose ... up -d app postgres`) and add a site block
+to the system Caddy proxying `HUIBLE_DOMAIN` → `127.0.0.1:8000`, or stop system
+Caddy first. Prefer the site-block path — Kestra's ingress on `.245` may already
+depend on system Caddy.
 
 **Verify:**
 ```bash
@@ -153,58 +176,48 @@ docker compose exec app python -m scripts.seed_data \
 ```
 Document the data-loss window in the incident thread.
 
-### 3.3 CouchDB
+### 3.3 CouchDB — ✅ already live on `.245`, independent of `.243` (verified 2026-08-14)
 
-`.245` already runs CouchDB (`couchdb-livesync`, `couchdb:3`) bound to the
-tailnet IP `100.101.235.117:5984`. Two scenarios:
+Definitive finding (closes the §6 open question): the `couchdb-livesync`
+container on `.245` holds the **live vault store**:
 
-- **If this instance already holds the live vault data** (e.g. it was the
-  active LiveSync target): verify and proceed.
-  ```bash
-  curl -s http://100.101.235.117:5984/_all_dbs | python3 -m json.tool
-  ```
-- **If it is a fresh instance**: recreate the vault databases via the
-  `huible-vault-create` Kestra flow after Kestra is up (§3.4), or manually
-  provision per `scripts/vault_create.py`.
+- Database `obsidian-livesync`: **4160 docs / 14.4 MB on disk** (update_seq
+  4362), containing the real vault content (`vps/*`, `work-extra/*`, …).
+- `_replicator` has **0 docs** and `_scheduler/jobs` is empty → **no
+  replication relationship with `.243`**, configured or past. This instance is
+  the independent live target, not a mirror.
+- The exposed admin credential from HU-1500 has **already been rotated here**
+  (2026-08-14, verified complete under HU-1500; the rotated value lives in
+  `/opt/kestra/kestra.env` on `.245`, mode 600, and Kestra is consuming it).
 
-In both cases, run the credential rotation immediately (the exposed admin
-password from HU-1500 must be neutralized):
+Cutover action for CouchDB reduces to: verify the DB responds and doc count is
+sane — no restore, no rotation, no re-seed needed.
+
 ```bash
-# On .245, against the local CouchDB:
-export COUCH_ADMIN_PASS='<current live password>'
-COUCH_URL=http://localhost:5984 COUCH_ADMIN_USER=obsidian \
-  bash scripts/rotate_couch_admin_pass.sh
+source /opt/kestra/kestra.env
+curl -s -u "obsidian:$COUCH_ADMIN_PASS" http://localhost:5984/obsidian-livesync \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print("docs:", d["doc_count"])'
+# expect ~4160
 ```
 
-### 3.4 Kestra
+### 3.4 Kestra — ✅ already running on `.245` (verified 2026-08-14)
 
-Kestra is **not** in the app `docker-compose.yml`. Stand it up on `.245`:
+Kestra does **not** need to be stood up. It runs as a systemd service on the
+standby:
 
-1. Deploy Kestra (Docker is the fastest path on `.245`):
-   ```bash
-   # Pull the official Kestra image.
-   docker pull kestra/kestra:latest-full
-   # Run with a data volume and the tailnet-visible port.
-   docker run -d --name kestra \
-     --restart unless-stopped \
-     -p 8080:8080 \
-     -v kestra_data:/app/storage \
-     -v /root/repos/huible/flows:/app/flows:ro \
-     kestra/kestra:latest-full server
-   ```
-2. Recreate the Kestra env file with fresh secrets (the old
-   `/etc/kestra/kestra.env` is stranded on `.243`):
-   ```bash
-   # /root/repos/huible/.kestra.env  (chmod 600)
-   # COUCH_ADMIN_PASS=<rotated value from §3.3>
-   # GITHUB_TOKEN=<token with repo scope to patbhakta>
-   ```
-3. Register the Huible flows from `flows/*.yaml` (namespace `huible`) via the
-   Kestra CLI or UI at `http://208.84.102.245:8080`.
+- Unit: `kestra.service` (`loaded active running`), standalone mode, Postgres
+  persistence, config `/root/.kestra/config.yml`, starter `/opt/kestra/start.sh`.
+- `:8080` responds (307 → UI); the API is auth-protected.
+- Env `/opt/kestra/kestra.env` carries the rotated `COUCH_ADMIN_PASS` (HU-1500
+  verified Kestra is consuming the new credential).
 
-**Verify:**
+Cutover action reduces to **verify + flows check**:
+
 ```bash
-curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/   # expect 200/302
+systemctl is-active kestra.service            # expect: active
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # expect 200/307
+# Confirm the huible-namespace flows are present (UI or authenticated API);
+# re-apply flows/*.yaml if any are missing after the standby restart.
 ```
 
 ### 3.5 Tailscale / DNS cutover
@@ -217,8 +230,11 @@ IPs (`100.109.142.4`, `100.75.34.75`):
   public ingress URL changes).
 - Any external integrations that point at `.243`.
 
-If the public DNS for `HUIBLE_DOMAIN` pointed at `.243`, repoint it to
-`.245` (`208.84.102.245`). Caddy will auto-provision a new TLS cert.
+If the public DNS for `HUIBLE_DOMAIN` pointed at `.243`, repoint it to `.245`
+(`208.84.102.245`). ⚠ The real `HUIBLE_DOMAIN` value is stranded in the `.243`
+`.env` — obtain it from the board/operator before this step. TLS: the system
+Caddy on `.245` will auto-provision a cert for the domain once the site block
+exists.
 
 ---
 
@@ -257,10 +273,18 @@ If the primary VPS comes back online after the failover:
 
 ## 6. Open items
 
-- **Kestra config backup:** `/etc/kestra/kestra.env` on `.243` is not captured
-  in this repo or in `docs/09` §9 backups. Add it to the backup strategy so the
-  secrets needed to rebuild Kestra are not stranded on a single host.
-- **CouchDB data backup:** verify whether `couchdb-livesync` on `.245` has a
-  replication/backoff relationship with the `.243` instance, or is independent.
-- **DNS automation:** the cutover currently requires a manual DNS repoint;
-  consider a lower-TTL record or a floating IP for faster future failovers.
+- ~~**CouchDB data backup:** verify whether `couchdb-livesync` on `.245` has a
+  replication relationship with the `.243` instance, or is independent.~~
+  **Closed 2026-08-14:** independent live store — no `_replicator` docs, no
+  scheduler jobs; 4160 docs of real vault data. See §3.3.
+- **Kestra config backup:** `.243`'s `/etc/kestra/kestra.env` remains stranded
+  (host down), but `.245` now carries a working, rotated env at
+  `/opt/kestra/kestra.env`. Fold that file into the `docs/09` §9 backup
+  strategy (secret-safe location) so it is not itself a single-host SPOF.
+- **DNS automation:** the cutover still requires a manual DNS repoint, and the
+  real `HUIBLE_DOMAIN` value is stranded on `.243` — the board/operator must
+  supply it before cutover. Consider a lower-TTL record or a floating IP for
+  faster future failovers.
+- **System Caddy vs compose Caddy (new, 2026-08-14):** `.245`'s system Caddy
+  binds `80`/`443`. Decide the proxy path (site block vs stopping system
+  Caddy) before starting the compose stack.
