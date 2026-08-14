@@ -6,6 +6,14 @@
 # 127.0.0.1:5433 (the container still listens on 5432 inside the compose
 # network, so the app's DATABASE_URL is unaffected).
 #
+# The standby's SYSTEM Caddy already owns host 80/443 (Kestra ingress depends
+# on it), so the compose caddy service is excluded here via a profile: a plain
+# `docker compose up -d` starts only app + postgres. Public ingress for the
+# app is a system-Caddy site block (deploy/caddy-standby/huible-site.caddy,
+# installed at cutover per runbook §3.4) proxying to the app's loopback
+# binding 127.0.0.1:8000. To force the compose caddy anyway (NOT recommended
+# on this host): docker compose --profile compose-caddy up -d.
+#
 # Usage (board-authorized cutover only, see docs/runbooks/vps-failover-to-standby.md §3):
 #   ln -sf .env.failover .env
 #   docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d
@@ -16,3 +24,6 @@ services:
   postgres:
     ports: !override
       - "127.0.0.1:5433:5432"
+  caddy:
+    profiles:
+      - compose-caddy

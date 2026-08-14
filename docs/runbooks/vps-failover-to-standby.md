@@ -72,7 +72,7 @@ collisions before starting the app stack:
 |------|-----------|-----------------|
 | `127.0.0.1:5432` | system PostgreSQL (host-installed, pid `postgres`) | **Resolved.** Committed override `docker-compose.failover.yml` remaps the compose PG host binding to `127.0.0.1:5433` (validated via `docker compose config` on 2026-08-14; `!override` replaces the base mapping, so no collision). System PG keeps 5432 — Kestra persistence depends on it. |
 | `127.0.0.1:5984` + `100.101.235.117:5984` | `couchdb-livesync` container (`couchdb:3`, up) | **Already satisfies the CouchDB requirement** — see §3.3. |
-| `127.0.0.1:2019` | system Caddy (admin API) | ⚠ Revisit at cutover: system Caddy already binds `80`/`443`, so the compose Caddy service **cannot** also bind them. Either stop system Caddy or proxy through it. |
+| `127.0.0.1:2019` | system Caddy (admin API) | Resolved 2026-08-14: compose Caddy is excluded on this host (`compose-caddy` profile in `docker-compose.failover.yml`); system Caddy keeps `80`/`443` and fronts the app via the §3.1b site block. |
 | `*:8080` | **Kestra already running** (systemd `kestra.service`, java) | **Already satisfies the Kestra requirement** — see §3.4. |
 | `80` / `443` | system Caddy (`caddy`, pid on host) | Not free — compose Caddy conflicts. Prefer the existing system Caddy (add a site block proxying to `127.0.0.1:8000`) instead of the compose Caddy service. |
 
@@ -139,16 +139,16 @@ ln -sf .env.failover .env   # compose requires the literal .env (env_file: .env)
 docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d
 ```
 
-⚠ **Caddy note:** system Caddy already owns `80`/`443` on `.245`. Do **not**
-let the compose `caddy` service bind them (conflict). Either start only the
-needed services (`docker compose ... up -d app postgres`) and add a site block
-to the system Caddy proxying `HUIBLE_DOMAIN` → `127.0.0.1:8000`, or stop system
-Caddy first. Prefer the site-block path — Kestra's ingress on `.245` may already
-depend on system Caddy.
+**Caddy path (decided 2026-08-14):** the compose `caddy` service is
+**excluded on this host** — `docker-compose.failover.yml` pins it behind the
+`compose-caddy` profile, so the default `up -d` starts only `app` + `postgres`
+(merge-validated: no `80`/`443` binding conflict with the system Caddy).
+Public ingress is the **system Caddy site block** installed in §3.1b. Do not
+stop the system Caddy — Kestra's ingress on `.245` depends on it.
 
 **Verify:**
 ```bash
-docker compose ps                         # app, postgres, caddy = Up
+docker compose ps                         # app, postgres = Up (caddy excluded on standby)
 curl -s http://127.0.0.1:8000/api/v1/health
 # expect: {"data":{"status":"ok","version":"0.1.0"}}
 docker compose exec postgres pg_isready -U huible
@@ -158,6 +158,36 @@ Run Alembic migrations if the PG volume is fresh:
 ```bash
 docker compose exec app alembic upgrade head
 ```
+
+### 3.1b Install the system-Caddy site block (public ingress)
+
+The prepared block lives in the repo:
+[`deploy/caddy-standby/huible-site.caddy`](../../deploy/caddy-standby/huible-site.caddy)
+— it proxies `{$HUIBLE_DOMAIN}` → `127.0.0.1:8000` over the same route surface
+as the compose Caddyfile (`/api/v1/health`, `/api/v1/*`, `/static/*`, else
+404). Requires the board-supplied `HUIBLE_DOMAIN` (see §3.6).
+
+```bash
+# from a checkout of this repo, to the standby:
+HUIBLE_DOMAIN=<board-supplied>    # export for the validate step's env expansion
+scp deploy/caddy-standby/huible-site.caddy root@208.84.102.245:/etc/caddy/huible-site.caddy
+ssh root@208.84.102.245
+  grep -q 'import huible-site.caddy' /etc/caddy/Caddyfile || \
+      echo 'import huible-site.caddy' >> /etc/caddy/Caddyfile
+  caddy validate --config /etc/caddy/Caddyfile    # MUST pass — gate before reload
+  systemctl reload caddy                          # reload (zero-downtime), never restart
+```
+
+**Verify (after DNS repoint, §3.6):** `curl -s https://$HUIBLE_DOMAIN/api/v1/health`
+returns the ok payload. TLS is auto-provisioned by Caddy for the domain once
+DNS resolves to `.245`.
+
+> Operational note (2026-08-14): the exact `/etc/caddy` layout on `.245`
+> (import dirs vs single file) is unverified — shell access was not available
+> for recon. The `grep || echo >> …` form above is layout-agnostic; if
+> `/etc/caddy/Caddyfile` is itself generated/imported differently, place the
+> block wherever the existing site blocks (`kestra`, `brain`, `paperclip`,
+> `investinme`) live. `caddy validate` is the gate either way.
 
 ### 3.2 Seed / restore data
 
@@ -309,6 +339,21 @@ If the primary VPS comes back online after the failover:
   real `HUIBLE_DOMAIN` value is stranded on `.243` — the board/operator must
   supply it before cutover. Consider a lower-TTL record or a floating IP for
   faster future failovers.
-- **System Caddy vs compose Caddy (new, 2026-08-14):** `.245`'s system Caddy
+- ~~**System Caddy vs compose Caddy (new, 2026-08-14):** `.245`'s system Caddy
   binds `80`/`443`. Decide the proxy path (site block vs stopping system
-  Caddy) before starting the compose stack.
+  Caddy) before starting the compose stack.~~
+  **Closed 2026-08-14 — site-block path, prepared:** compose caddy excluded on
+  the standby via the `compose-caddy` profile in `docker-compose.failover.yml`
+  (merge-validated: default stack = `app` + `postgres` only, ports
+  `127.0.0.1:8000` / `127.0.0.1:5433`, no `80`/`443` binding). Prepared site
+  block at `deploy/caddy-standby/huible-site.caddy` + install/reload procedure
+  in §3.1b. System Caddy is never stopped (Kestra ingress depends on it).
+  Grounding probe: system Caddy answers `:80` with 308→https (auto-HTTPS),
+  `:443` TLS only for its named sites — consistent with the site-block model.
+- **Operational caveat (new, 2026-08-14):** Kestra **script-task** executions
+  (`io.kestra.plugin.scripts.shell.Script`) hang `RUNNING` with no task logs on
+  `.245`'s standalone Kestra (observed with both the default Docker runner and
+  `Process`). Flow CRUD/API access works fine. Do **not** build cutover-time
+  verification on Kestra script tasks on this host; use direct SSH/compose
+  commands. Probe flow + executions were deleted (namespace = the 2 prod flows
+  only).
