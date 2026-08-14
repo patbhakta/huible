@@ -7,3 +7,6 @@ __pycache__/
 .env.*
 !.env.example
 node_modules/
+
+# Failover evidence logs (scripts/execute_failover.sh)
+logs/
