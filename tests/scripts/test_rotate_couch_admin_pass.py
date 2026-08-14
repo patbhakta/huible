@@ -75,7 +75,7 @@ class _MockCouchDB:
             def log_message(self, *args: object) -> None:  # silence
                 return
 
-            def do_GET(self) -> None:  # noqa: N802 - http handler
+            def do_GET(self) -> None:
                 if self._authed_user() is not None:
                     self.send_response(200)
                     self.end_headers()
@@ -84,7 +84,7 @@ class _MockCouchDB:
                     self.send_response(401)
                     self.end_headers()
 
-            def do_PUT(self) -> None:  # noqa: N802 - http handler
+            def do_PUT(self) -> None:
                 if self._authed_user() is None:
                     self.send_response(401)
                     self.end_headers()
@@ -175,7 +175,9 @@ def test_dry_run_happy_path_reaches_ok(mock_couch: _MockCouchDB) -> None:
     assert mock_couch.put_calls == []
 
 
-def test_full_rotation_changes_credential_and_env_file(mock_couch: _MockCouchDB, tmp_path: Path) -> None:
+def test_full_rotation_changes_credential_and_env_file(
+    mock_couch: _MockCouchDB, tmp_path: Path
+) -> None:
     env_file = tmp_path / "kestra.env"
     old_pw = mock_couch.current_password
     env_file.write_text(

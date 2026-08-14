@@ -26,8 +26,6 @@ import os
 import subprocess
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "scrub_git_history.sh"
 
@@ -41,11 +39,14 @@ def _make_repo(repo: Path, literal: str | None, *, dirty: bool = False) -> Path:
     is left in the working tree to trip the clean-tree guard.
     """
     subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
-    subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@huible.local"], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "config", "user.email", "test@huible.local"], check=True
+    )
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
     (repo / "README.md").write_text("# project\n", encoding="utf-8")
     if literal is not None:
-        (repo / "config.env").write_text(f"COUCH_ADMIN_PASS={literal}\nOTHER=keep\n", encoding="utf-8")
+        secret = f"COUCH_ADMIN_PASS={literal}\nOTHER=keep\n"
+        (repo / "config.env").write_text(secret, encoding="utf-8")
     subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
     subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", "initial"], check=True)
     (repo / "doc.txt").write_text("no secrets here\n", encoding="utf-8")
