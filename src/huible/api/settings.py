@@ -232,6 +232,16 @@ class Settings(BaseSettings):
             v = v.strip().upper()
         return v
 
+    @field_validator("embedding_provider", mode="before")
+    @classmethod
+    def _normalize_embedding_provider(cls, v: Any) -> Any:
+        # Blank (unset-in-template but present, e.g. ``EMBEDDING_PROVIDER=`` in
+        # a staged env file) means "not configured" — the documented key-free
+        # default ``fake`` applies rather than an explicit empty string.
+        if isinstance(v, str) and not v.strip():
+            return "fake"
+        return v
+
     # --- derived views -------------------------------------------------------
 
     @property

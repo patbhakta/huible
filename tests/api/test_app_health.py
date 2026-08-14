@@ -138,6 +138,24 @@ class TestSettings:
         assert s.generator_provider == "mock"
         assert s.embedding_provider == "fake"
 
+    def test_blank_embedding_provider_falls_back_to_fake(self):
+        s = Settings(embedding_provider="")
+        assert s.embedding_provider == "fake"
+
+    def test_env_example_parses_without_comment_pollution(self):
+        # python-dotenv keeps an inline ``# comment`` as the literal value when
+        # the assignment is empty (``VAR=   # comment``), which silently
+        # overrides defaults (HU-1644 pre-flight false-reds). The template must
+        # keep comments on their own lines.
+        from pathlib import Path
+
+        from dotenv import dotenv_values
+
+        example = Path(__file__).resolve().parents[2] / ".env.example"
+        values = dotenv_values(example)
+        polluted = {k: v for k, v in values.items() if v and v.strip().startswith("#")}
+        assert polluted == {}
+
     def test_effective_database_url_ignores_foreign_postgres_scheme(self):
         # A plain postgres:// control-plane URL must not be treated as Huible's.
         s = Settings(database_url="postgres://paperclip:pw@127.0.0.1:5432/paperclip")
