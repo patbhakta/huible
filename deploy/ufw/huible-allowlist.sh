@@ -66,7 +66,7 @@ ufw default allow outgoing
 ufw allow 22/tcp  comment 'ssh'
 ufw allow 80/tcp  comment 'system caddy http'
 ufw allow 443/tcp comment 'system caddy https'
-ufw allow in on "$TS_IFACE" comment 'tailnet: kestra 8080 + couchdb 5984'
+ufw allow in on "$TS_IFACE" comment 'tailnet: kestra 8080 + couchdb 5984 + fns 9000'
 ufw --force enable
 ok "ufw enabled with allowlist (22, 80, 443, $TS_IFACE)"
 
@@ -79,6 +79,12 @@ code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://$TS_IP:5984/
 echo "$code" | grep -qE '200|401' \
   && ok "CouchDB :5984 reachable on tailnet ($code)" \
   || bad "CouchDB :5984 NOT reachable on tailnet (got ${code:-none})"
+# HU-1681: FNS device sync rides the same blanket tailscale0 rule; verify it so a
+# future port-specific tightening of this allowlist fails fast at apply time.
+code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://$TS_IP:9000/api/health" || true)"
+echo "$code" | grep -q '200' \
+  && ok "FNS :9000 health reachable on tailnet ($code)" \
+  || bad "FNS :9000 NOT reachable on tailnet (got ${code:-none}) — HU-1681 device sync breaks"
 code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8000/ || true)"
 [ "$code" != "000" ] && [ -n "$code" ] \
   && ok "app :8000 reachable on loopback ($code)" \
