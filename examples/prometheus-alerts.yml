@@ -168,3 +168,33 @@ groups:
             is refusing real-user turns with 503 SERVICE_DISABLED. Expected
             during a rollback drill; unexpected during normal operation —
             confirm the switch state matches intent.
+
+  # --- §8 host-disk monitoring (HU-1742) -----------------------------------
+  #
+  # docs/09 §8 Infrastructure item: "Disk monitoring alerts are set
+  # (< 20% free triggers alert)". node_exporter (compose `monitoring` profile)
+  # reports the host filesystems backing the pgdata named volume and /backups
+  # on .245; pseudo-filesystems (tmpfs/overlay/etc.) are excluded. Alert
+  # delivery to the human pager rides the §7.5 operator-provisioned webhook
+  # path; this rule is the firing signal.
+  - name: huible-infra
+    interval: 30s
+    rules:
+      - alert: HuibleDiskFreeLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"}
+            /
+            node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"}
+          ) < 0.20
+        for: 5m
+        labels:
+          severity: page
+          slo: service-health
+        annotations:
+          summary: "Huible host disk below 20% free ({{ $labels.mountpoint }})"
+          description: >
+            Only {{ $value | humanizePercentage }} free on the host filesystem
+            mounted at {{ $labels.mountpoint }} — on .245 this backs the
+            pgdata volume and /backups. Free space or extend the disk before
+            Postgres or the daily backup job fails (docs/09 §8 disk item).

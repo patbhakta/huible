@@ -61,10 +61,54 @@ services:
     networks:
       - huible-net
 
+  # Monitoring profile (HU-1742, docs/09 §8 disk item): Prometheus +
+  # node_exporter for the HuibleDiskFreeLow (< 20% free) host-disk alert and
+  # the app §7.3 metrics. Loopback binds ONLY — no new public listeners (ufw
+  # default-deny; verified by scripts/verify_prod_hardening.sh Monitoring
+  # block). Enable with: docker compose --profile monitoring up -d
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.9.1
+    container_name: huible-node-exporter
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    command:
+      - --path.rootfs=/host/root
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+    # Host filesystem visibility: node_exporter must read the REAL host mounts
+    # (pgdata named volume + /backups live on the host root fs), not the
+    # container's own overlay view.
+    pid: host
+    volumes:
+      - /:/host/root:ro,rslave
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    ports:
+      - "127.0.0.1:9100:9100"
+    networks:
+      - huible-net
+
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    container_name: huible-prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./examples/prometheus-alerts.yml:/etc/prometheus/huible-alerts.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks:
+      - huible-net
+
 volumes:
   pgdata:
   caddy_data:
   caddy_config:
+  prometheus_data:
 
 networks:
   huible-net:

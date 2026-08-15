@@ -1,0 +1,32 @@
+# Prometheus config for the Huible compose `monitoring` profile (HU-1742,
+# docs/09 §8 disk item). Started on the standby `.245` with:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.failover.yml \
+#     --profile monitoring up -d
+#
+# Scrapes the app `/metrics` endpoint (docs/09 §7.3 scrape config; the in-
+# compose service name is `app`) and node_exporter for host-disk metrics.
+# Alert rules are bind-mounted from examples/prometheus-alerts.yml (mounted as
+# /etc/prometheus/huible-alerts.yml), including the §8 HuibleDiskFreeLow
+# (< 20% free) rule backed by node_filesystem_avail_bytes/size_bytes.
+#
+# Alert *delivery* to the human pager is the operator-provisioned §7.5 webhook
+# path — intentionally NOT configured here (no Alertmanager by design, see
+# HU-1742 scope).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/huible-alerts.yml
+
+scrape_configs:
+  - job_name: huible
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["app:8000"]
+
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]

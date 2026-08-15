@@ -75,6 +75,7 @@ collisions before starting the app stack:
 | `127.0.0.1:2019` | system Caddy (admin API) | Resolved 2026-08-14: compose Caddy is excluded on this host (`compose-caddy` profile in `docker-compose.failover.yml`); system Caddy keeps `80`/`443` and fronts the app via the §3.1b site block. |
 | `*:8080` | **Kestra already running** (systemd `kestra.service`, java) | **Already satisfies the Kestra requirement** — see §3.4. |
 | `80` / `443` | system Caddy (`caddy`, pid on host) | Not free — compose Caddy conflicts. Prefer the existing system Caddy (add a site block proxying to `127.0.0.1:8000`) instead of the compose Caddy service. |
+| `127.0.0.1:9090` / `127.0.0.1:9100` | Huible monitoring (`huible-prometheus`, `huible-node-exporter`, HU-1742) | No conflict — loopback-only. Started via the compose `monitoring` profile (`docker compose -f docker-compose.yml -f docker-compose.failover.yml --profile monitoring up -d`); §8 disk alert `HuibleDiskFreeLow` evaluates here. No public listener added. |
 
 ### Already-running production services on `.245` (verified 2026-08-14)
 

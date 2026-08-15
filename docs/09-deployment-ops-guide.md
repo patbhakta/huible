@@ -462,6 +462,20 @@ The file covers every §4.1 halt-the-ramp trigger:
 - **`HuibleChatErrorBudgetBurn`** — 5xx error rate > 5% sustained 10 min.
 - **`HuibleRealUserTrafficDisabled`** — kill-switch engaged (informational during drills).
 
+**Infrastructure alert (HU-1742, §8 disk item):**
+
+- **`HuibleDiskFreeLow`** — host filesystem below 20% free (`node_filesystem_avail_bytes / node_filesystem_size_bytes` from node_exporter; pseudo-fs excluded, `for: 5m`, `severity: page`). On `.245` the watched fs backs the pgdata volume and `/backups`.
+
+**Live deployment (`.245`, HU-1742):** the compose file ships a `monitoring` profile
+(`prometheus` + `node-exporter`, both `restart: unless-stopped`, **loopback binds only**
+— `127.0.0.1:9090`/`9100`, no new public listeners; ufw unchanged). Config at
+[`docker/prometheus/prometheus.yml`](../docker/prometheus/prometheus.yml), rules mounted
+from [`examples/prometheus-alerts.yml`](../examples/prometheus-alerts.yml). Enable with
+`docker compose --profile monitoring up -d`. Live checks are wired into
+[`scripts/verify_prod_hardening.sh`](../scripts/verify_prod_hardening.sh) (Monitoring
+block: containers + restart policy, loopback binds, rule health, target health, disk
+ratio, evaluator state).
+
 `severity: page` alerts map to the §7.5 paging path (the on-call roster wired
 in Stage 0.4); `severity: ticket` alerts are investigate-before-next-ramp-advance.
 A firing `page` alert during a ramp stage means: run the §4.2 rollback
@@ -531,11 +545,10 @@ queue, so the on-call must not be told one was).
 Run through this checklist before going live.
 
 > **Stage-0.9 sign-off (HU-1464) — 2026-08-15, prod host `.245` (standby layout, post HU-1715 cutover).**
-> 14/18 items verified live on the real-user env: `scripts/verify_prod_hardening.sh` **17 passed / 0 failed → ALL_LIVE_CHECKS_PASS** @ 18:18:36Z; backup timer + restore proof + ufw allowlist per HU-1672 §8-completion run @ 18:15Z. Evidence: item annotations below.
-> 4 items remain open, tracked as follow-up issues under HU-1464:
+> 15/18 items verified live on the real-user env: `scripts/verify_prod_hardening.sh` **25 passed / 0 failed → ALL_LIVE_CHECKS_PASS** @ 18:37:25Z (incl. the HU-1742 disk-monitoring block); backup timer + restore proof + ufw allowlist per HU-1672 §8-completion run @ 18:15Z. Evidence: item annotations below.
+> 3 items remain open, tracked as follow-up issues under HU-1464:
 > - **Real `HUIBLE_DOMAIN` + public-CA TLS** — operator-blocked on the domain answer card (`3745dd93` on HU-1501, pending since 2026-08-14). Until then ingress serves `https://localhost` (Caddy internal-CA cert, obtained 18:04:21Z), health 200.
 > - **`API_KEYS` issuance** — enforcement is live and fail-closed (empty store → `401 AUTH_REQUIRED` on all persona-scoped endpoints); keys are issued at first real-user onboarding, which cannot precede the domain.
-> - **Disk monitoring** — alert-rules artifact exists (Stage 0.8) but contains no disk rule and no Prometheus/node_exporter is deployed on `.245`; needs the monitoring deployment follow-up.
 
 ### Network
 
@@ -568,7 +581,7 @@ Run through this checklist before going live.
 - [x] Host firewall allows only 80, 443 (and 22 for SSH) — *live: ufw active, default deny incoming, allowlist exactly 22/80/443 + `tailscale0` (in-kernel `iptables -S INPUT` policy DROP verified, HU-1672)*
 - [x] On the standby .245: ufw allowlist applied via `deploy/ufw/huible-allowlist.sh` (22/80/443 + tailscale iface, break-glass-gated enable; §9.2f sibling, HU-1672 AC #2) — *live: applied + post-checks green 18:15Z (HU-1672)*
 - [x] Automatic security updates are enabled on the host — *live: `unattended-upgrades` active on .245*
-- [ ] Disk monitoring alerts are set (< 20% free triggers alert) — *PENDING: Stage-0.8 rules artifact shipped but has no disk rule; no Prometheus/node_exporter deployed on .245 — monitoring deployment follow-up*
+- [x] Disk monitoring alerts are set (< 20% free triggers alert) — *live on `.245` (HU-1742): `HuibleDiskFreeLow` loaded+healthy in Prometheus (`127.0.0.1:9090`), node_exporter + app targets up, evaluator live — verified **firing** on the real 6.8%-free rootfs @ 18:41Z, restart-safe (`unless-stopped`), loopback binds only, ufw unchanged; verifier Monitoring block 8/8 PASS*
 
 ---
 

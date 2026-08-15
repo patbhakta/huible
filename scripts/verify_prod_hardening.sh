@@ -262,6 +262,69 @@ fi
 
 echo
 
+# ─── Monitoring (disk alert, HU-1742) ───────────────────────────────────────
+echo "## Monitoring (disk)"
+
+# Prometheus + node_exporter from the compose `monitoring` profile must be up
+# with unless-stopped (docs/09 §8 disk item: "< 20% free triggers alert").
+for c in prometheus node-exporter; do
+  rp="$(docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' "huible-$c" 2>/dev/null || true)"
+  if [ "$rp" = "unless-stopped" ]; then
+    ok "huible-$c restart policy = unless-stopped."
+  else
+    fail "huible-$c not running with unless-stopped" "start the monitoring profile: docker compose --profile monitoring up -d (docs/09 §8 disk item)."
+  fi
+done
+
+# Monitoring ports must stay loopback-only (no new public listeners).
+for ce in "huible-prometheus 9090" "huible-node-exporter 9100"; do
+  cn="${ce% *}"; cp="${ce#* }"
+  bind="$(docker port "$cn" "$cp/tcp" 2>/dev/null | head -1 || true)"
+  if echo "$bind" | grep -q '^127.0.0.1:'; then
+    ok "$cn binds loopback only ($bind)."
+  else
+    fail "$cn port $cp not loopback-bound" "got '${bind:-not published}' — monitoring must not add public listeners (docs/09 §8 Network)."
+  fi
+done
+
+# Prometheus API: disk rule loaded + healthy, all scrape targets up.
+prom() { curl -fsS --max-time 5 "http://127.0.0.1:9090/api/v1/$1" 2>/dev/null || true; }
+if command -v jq >/dev/null 2>&1; then
+  rh="$(prom rules | jq -r '.data.groups[].rules[]? | select(.name=="HuibleDiskFreeLow") | .health' 2>/dev/null | head -1)"
+  if [ "$rh" = "ok" ]; then
+    ok "HuibleDiskFreeLow rule loaded and healthy in live Prometheus."
+  else
+    fail "HuibleDiskFreeLow rule not healthy" "health='${rh:-not found}' — check the rule_files mount + examples/prometheus-alerts.yml."
+  fi
+  tj="$(prom targets | jq -r '[.data.activeTargets[]?.health] | if length > 0 and all(. == "up") then "up" else "down" end' 2>/dev/null)"
+  if [ "$tj" = "up" ]; then
+    ok "All Prometheus scrape targets up (huible + node)."
+  else
+    fail "Prometheus scrape target(s) down" "inspect: curl -s 127.0.0.1:9090/api/v1/targets"
+  fi
+  # Current disk posture — informational: a firing alert means ops action is
+  # needed (free space), not that the monitoring control is missing.
+  fr="$(curl -fsSG --max-time 5 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"})' 2>/dev/null | jq -r '.data.result[]? | "\(.value[1] | tonumber * 1000 | round / 10)% free on \(.metric.mountpoint) (\(.metric.fstype))"' 2>/dev/null || true)"
+  if [ -n "$fr" ]; then
+    ok "Disk-free ratio queryable via node_exporter ($fr)."
+  else
+    fail "Disk-free ratio not queryable" "node_exporter scrape broken — check the node job target."
+  fi
+  astate="$(prom alerts | jq -r '.data.alerts[]? | select(.labels.alertname=="HuibleDiskFreeLow") | .state' 2>/dev/null | head -1)"
+  if [ -n "$astate" ]; then
+    ok "HuibleDiskFreeLow live in the evaluator (state: $astate)."
+    if [ "$astate" = "firing" ]; then
+      note "ALERT FIRING — host disk is below 20% free: free space / extend the volume now."
+    fi
+  else
+    note "HuibleDiskFreeLow not pending/firing (all watched filesystems above 20% free)."
+  fi
+else
+  note "'jq' unavailable — verify rule/targets manually via 127.0.0.1:9090/api/v1/{rules,targets}."
+fi
+
+echo
+
 # ─── TLS (Caddy, host-side signal) ──────────────────────────────────────────
 echo "## TLS"
 echo "  NOTE: definitive TLS proof is an EXTERNAL check:"
