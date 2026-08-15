@@ -55,8 +55,13 @@ reload Caddy — **only after HU-1644 is terminal**.
 
 ### S5. Retire the old stack — only after S3 validated on all devices
 
+> Executor: `scripts/retire_livesync_stack.sh` — hard-gated on
+> `scripts/verify_fns_device_sync.sh` passing; dry-run by default,
+> `CONFIRM=yes` to execute. Idempotent (safe to re-run).
+
 1. `docker stop couchdb-livesync && docker rm couchdb-livesync` (image `couchdb:3` may stay cached for rollback)
-2. Remove `brain.bhakta.us` block from `/root/repos/huible/Caddyfile` + reload
+2. Remove `brain.bhakta.us` block from `/etc/caddy/Caddyfile` (the live config;
+   `/root/repos/huible/Caddyfile` is the app template only) + validate + reload
    (keep the dump + any file-level backup for 30+ days before deleting)
 3. Kestra — **decided: retire** (HU-1706, option A; repo files already removed):
    - delete the deployed flows `huible/huible-vault-create` and
