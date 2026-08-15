@@ -11,6 +11,8 @@
 # This is the THIRD step in the HU-1501 recovery trio:
 #   1. scripts/verify_vps_recovery.sh   → proves the VPS + services are back
 #   2. scripts/rotate_couch_admin_pass.sh → kills the exposed credential (HU-1500)
+#      (rotation executed + verified 2026-08-14; script retired with the
+#      CouchDB stack in HU-1706)
 #   3. scripts/scrub_git_history.sh     → THIS: purges the literal from history
 # Run AFTER rotation is confirmed dead. Scrubbing before rotation is pointless —
 # it would only hide a value that is still live.

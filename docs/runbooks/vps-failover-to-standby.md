@@ -255,6 +255,11 @@ standby:
   `flows/vault-{create,archive}.yaml` were already clean and match this
   intent; live revisions still differ in shape from the repo files, so
   reconcile before any bulk re-apply.
+- **2026-08-15 (HU-1706):** these two flows and their scripts are **retired**
+  with the CouchDB stack — repo sources deleted; HU-1681 S5 deletes the
+  deployed flows, drops `COUCH_ADMIN_PASS` from `kestra.env`, and restarts
+  `kestra.service`. Future client provisioning moves to FNS REST
+  ([HU-1707](/HU/issues/HU-1707)).
 
 Cutover action reduces to **verify + flows check**:
 

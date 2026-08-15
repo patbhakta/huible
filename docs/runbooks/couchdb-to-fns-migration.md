@@ -56,7 +56,20 @@ reload Caddy — **only after HU-1644 is terminal**.
 1. `docker stop couchdb-livesync && docker rm couchdb-livesync` (image `couchdb:3` may stay cached for rollback)
 2. Remove `brain.bhakta.us` block from `/root/repos/huible/Caddyfile` + reload
    (keep the dump + any file-level backup for 30+ days before deleting)
-3. Kestra: remove `COUCH_ADMIN_PASS` from `/opt/kestra/kestra.env` and any flows referencing CouchDB (`flows/vault-create.yaml`, `flows/vault-archive.yaml` need re-pointing or retirement — check with Tech Lead; they may move to FNS REST/MCP)
+3. Kestra — **decided: retire** (HU-1706, option A; repo files already removed):
+   - delete the deployed flows `huible/huible-vault-create` and
+     `huible/huible-vault-archive` via UI/API (repo sources removed in the
+     HU-1706 branch; live revisions were the only remaining copies)
+   - remove `COUCH_ADMIN_PASS` from `/opt/kestra/kestra.env` (it is the only
+     var in that file) and `systemctl restart kestra.service`
+   - update `scripts/execute_failover.sh` CouchDB checks (env-var grep +
+     doc-count curls + container checks) to treat the retired stack as
+     healthy/skip — NOT before S5 executes; the script must stay intact for
+     the HU-1644 cutover window
+   - optional host debris: untracked `scripts/livesync/node_modules/`
+     (PouchDB-era leftovers, never committed) may be deleted
+   - client provisioning rewrite against FNS REST is deferred until a real
+     client onboards — [HU-1707](/HU/issues/HU-1707)
 
 ## Rollback
 

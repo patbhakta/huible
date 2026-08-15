@@ -133,7 +133,9 @@ Lead runs, **in order**, on the recovered VPS:
 1. `scripts/verify_vps_recovery.sh` — proves ICMP/SSH/Kestra/CouchDB/Tailscale
    are back (must print `VPS_RECOVERED`).
 2. `scripts/rotate_couch_admin_pass.sh` — kills the exposed CouchDB credential
-   (HU-1500).
+   (HU-1500). **Already executed + verified 2026-08-14 (HU-1501); script
+   retired with the CouchDB stack (HU-1706). Skip when CouchDB is
+   decommissioned — the credential no longer exists.**
 3. `scripts/scrub_git_history.sh` — purges the literal from all history
    (HU-1503).
 
