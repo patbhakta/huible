@@ -91,18 +91,19 @@ docker image inspect pgvector/pgvector:pg17 >/dev/null 2>&1 && ok "pgvector/pgve
 systemctl is-active --quiet kestra.service && ok "kestra.service active" || bad "kestra.service not active"
 curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8080/ | grep -qE '200|307' \
   && ok "Kestra :8080 responds (200/307)" || bad "Kestra :8080 not responding"
-docker ps --format '{{.Names}}' | grep -q couchdb-livesync && ok "couchdb-livesync container up" || bad "couchdb-livesync container down"
+if docker ps --format '{{.Names}}' | grep -q couchdb-livesync; then
+  ok "couchdb-livesync container up"
+else
+  ok "couchdb-livesync absent — retired 2026-08-15 (HU-1681 S5); FNS is the vault sync stack"
+fi
 systemctl is-active --quiet caddy && ok "system caddy active" || bad "system caddy not active"
 
-# G7 — CouchDB live store sanity (runbook §3.3: verify only, no restore).
-if [ -f /opt/kestra/kestra.env ] && grep -q '^COUCH_ADMIN_PASS=' /opt/kestra/kestra.env; then
-  set -a; source /opt/kestra/kestra.env; set +a
-  DOCS=$(curl -s --max-time 5 -u "obsidian:$COUCH_ADMIN_PASS" http://localhost:5984/obsidian-livesync \
-    | python3 -c 'import json,sys; print(json.load(sys.stdin).get("doc_count",0))' 2>/dev/null || echo 0)
-  [ "${DOCS:-0}" -ge 4000 ] && ok "CouchDB obsidian-livesync doc_count=$DOCS (>=4000, live store intact)" \
-    || bad "CouchDB doc_count=$DOCS (<4000) — live store suspect; do not cutover"
+# G7 — Vault sync sanity. LiveSync/CouchDB retired 2026-08-15 (HU-1681 S5);
+# FNS (fast-note-sync) is the vault stack — verify it instead of CouchDB.
+if curl -s --max-time 5 http://localhost:9000/api/health | grep -q '"status":"healthy"'; then
+  ok "FNS /api/health healthy (vault sync stack, post-LiveSync-retirement)"
 else
-  bad "/opt/kestra/kestra.env missing COUCH_ADMIN_PASS — cannot verify CouchDB"
+  bad "FNS :9000 not healthy — vault sync stack suspect; do not cutover"
 fi
 
 # G8 — Caddy site block staged and validatable against a copy of the live
@@ -177,10 +178,9 @@ HUIBLE_DOMAIN=localhost caddy validate --config /etc/caddy/Caddyfile >/dev/null 
   || bad "Caddyfile validation failed AFTER install — site block present but not reloaded; inspect /etc/caddy manually"
 gate "ingress left in unknown state"
 
-echo "## §3.3/§3.4 — CouchDB + Kestra verify" | tee -a "$LOG"
-DOCS=$(curl -s --max-time 5 -u "obsidian:$COUCH_ADMIN_PASS" http://localhost:5984/obsidian-livesync \
-  | python3 -c 'import json,sys; print(json.load(sys.stdin).get("doc_count",0))' 2>/dev/null || echo 0)
-[ "${DOCS:-0}" -ge 4000 ] && ok "CouchDB doc_count=$DOCS" || bad "CouchDB doc_count=$DOCS"
+echo "## §3.3/§3.4 — FNS + Kestra verify (LiveSync retired 2026-08-15, HU-1681 S5)" | tee -a "$LOG"
+curl -s --max-time 5 http://localhost:9000/api/health | grep -q '"status":"healthy"' \
+  && ok "FNS /api/health healthy" || bad "FNS not healthy"
 systemctl is-active --quiet kestra.service && ok "kestra active post-cutover" || bad "kestra inactive post-cutover"
 
 echo "## §4 — post-cutover verification suite (standby overrides)" | tee -a "$LOG"
