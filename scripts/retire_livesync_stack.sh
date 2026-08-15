@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # HU-1681 S5 — retire the LiveSync/CouchDB stack. PRE-STAGED, DO NOT RUN until
-# Pat's S3 card (fcdf1603) is accepted AND scripts/verify_fns_device_sync.sh
-# exits 0. That verifier is a HARD GATE inside this script: S3 must be
-# server-side validated (device traffic + git auto-push + inventory) before
-# anything here executes.
+# Pat's S3 card is accepted AND scripts/verify_fns_device_sync.sh exits 0, OR
+# the CEO default trigger fires (HU-1750 comment 4442e588): silence through
+# 2026-08-16 21:00 UTC → run with CONFIRM=yes BYPASS_DEVICE_GATE=HU-1750-4442e588.
+# The verifier stays a HARD GATE inside this script: S3 must be server-side
+# validated (device traffic + git auto-push + inventory) before anything here
+# executes — the scoped bypass below tolerates ONLY the 3 device-side fails
+# while all 7 server-side passes hold.
 #
 # Runbook source: docs/runbooks/couchdb-to-fns-migration.md §S5 (decision A from
 # HU-1706). Runs ON the standby .245 (this agent host), root.
@@ -48,11 +51,29 @@ info() { echo "    $1"; }
 echo "=== HU-1681 S5 retirement (dry-run: $([ "$CONFIRM" = "yes" ] && echo NO || echo YES)) @ $(date -u +%FT%TZ) ==="
 
 # ─── Gate 1: S3 server-side validation must pass ─────────────────────────────
+# BYPASS_DEVICE_GATE=HU-1750-4442e588 enables the ONE-TIME scoped bypass from
+# the CEO decision (HU-1750 comment 4442e588, 2026-08-15): tolerates exactly
+# the 3 device-side verifier fails, ONLY while all 7 server-side passes hold.
+# Any server-side regression → halt + re-open the decision. Nothing else passes.
 step "Gate 1/2: running S3 verifier ($VERIFIER)"
 if [ ! -x "$VERIFIER" ] && [ ! -f "$VERIFIER" ]; then
   echo "FATAL: verifier not found at $VERIFIER"; exit 2
 fi
-if ! bash "$VERIFIER"; then
+VERIFIER_OUT="$(bash "$VERIFIER" 2>&1)"; VRC=$?
+echo "$VERIFIER_OUT"
+if [ "$VRC" -eq 0 ]; then
+  info "S3 verifier passed — full device-side validation."
+elif [ "${BYPASS_DEVICE_GATE:-}" = "HU-1750-4442e588" ]; then
+  srv_regression="$(printf '%s\n' "$VERIFIER_OUT" | grep '\[FAIL\]' | grep -Ev 'no plugin traffic after the S2 flip|no note/file sync from any device|git tip still at canary' || true)"
+  srv_pass="$(printf '%s\n' "$VERIFIER_OUT" | grep -c '\[PASS\]')"
+  if [ -z "$srv_regression" ] && [ "${srv_pass:-0}" -ge 7 ]; then
+    info "CEO-scoped bypass ACTIVE (HU-1750 4442e588): only the 3 device-side fails present, ${srv_pass}/7 server-side passes hold."
+  else
+    echo "FATAL: server-side regression under bypass — HALT, re-open the HU-1750 decision."
+    printf '%s\n' "$srv_regression"
+    exit 3
+  fi
+else
   echo "FATAL: S3 verifier failed — S5 retirement is NOT unblocked. Do not bypass."
   exit 3
 fi
