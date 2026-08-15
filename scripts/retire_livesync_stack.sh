@@ -126,10 +126,15 @@ fi
 
 step "S5a/3: restart kestra and verify"
 systemctl restart kestra
-sleep 5
+# Java boot takes ~10s — fixed sleep caused false FATALs; poll up to 60s instead
+kcode=""
+for i in $(seq 1 30); do
+  kcode="$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "$KESTRA_URL/" 2>/dev/null)"
+  case "$kcode" in 200|307) break ;; esac
+  sleep 2
+done
 systemctl is-active --quiet kestra && info "kestra.service active" || { echo "FATAL: kestra inactive after restart"; exit 6; }
-kcode="$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "$KESTRA_URL/" 2>/dev/null)"
-case "$kcode" in 200|307) info "Kestra :8080 responds ($kcode)" ;; *) echo "FATAL: Kestra :8080 returned $kcode"; exit 6 ;; esac
+case "$kcode" in 200|307) info "Kestra :8080 responds ($kcode)" ;; *) echo "FATAL: Kestra :8080 returned $kcode after 60s wait"; exit 6 ;; esac
 
 # ─── S5b: CouchDB container + Caddy block ────────────────────────────────────
 step "S5b/1: stop and remove $COUCH_CONTAINER"
