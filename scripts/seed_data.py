@@ -22,6 +22,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from pgvector.asyncpg import register_vector
+
 try:
     import asyncpg
 except ImportError:
@@ -288,7 +290,8 @@ def generate_edges(memory_ids: list[str], count: int, seed_val: int = 42) -> lis
 async def run_seed(url: str, memory_count: int, edge_count: int) -> None:
     conn = await asyncpg.connect(url)
     try:
-        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector IF NOT EXISTS")
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        await register_vector(conn)
 
         existing = await conn.fetchval("SELECT count(*) FROM personas WHERE id = $1", PERSONA_UUID)
         if existing:
@@ -337,25 +340,30 @@ async def run_seed(url: str, memory_count: int, edge_count: int) -> None:
                     emb_content,
                     emb_sensory,
                     emb_affect,
-                    mem["memory_date"],
+                    date.fromisoformat(mem["memory_date"]),
                     mem["source_type"],
                     mem["disclosure_scope"],
                     mem["metadata"],
                 ))
 
-            result = await conn.executemany(
+            await conn.executemany(
                 """
                 INSERT INTO memories
                     (persona_id, tier, content, content_type,
                      embedding_content, embedding_sensory, embedding_affect,
                      memory_date, source_type, disclosure_scope, metadata)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $10, $11)
-                RETURNING id
-                """,
+                """
+                ,
                 rows,
             )
-            memory_ids.extend(r[0] for r in result if r)
             print(f"  Inserted {min(batch_start + batch_size, len(memories))}/{len(memories)} memories")
+
+        # asyncpg executemany does not return rows; collect ids post-insert
+        memory_rows = await conn.fetch(
+            "SELECT id FROM memories WHERE persona_id = $1 ORDER BY id", PERSONA_UUID
+        )
+        memory_ids.extend(str(r["id"]) for r in memory_rows)
 
         print(f"Inserted {len(memory_ids)} memories total")
 

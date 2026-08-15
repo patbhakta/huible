@@ -18,7 +18,7 @@
 #   caddy validate --config /etc/caddy/Caddyfile   # MUST pass before reload
 #   systemctl reload caddy                         # reload, never restart
 
-{$HUIBLE_DOMAIN} {
+{$HUIBLE_DOMAIN:localhost} {
 	# Health / liveness
 	handle /api/v1/health {
 		reverse_proxy 127.0.0.1:8000
