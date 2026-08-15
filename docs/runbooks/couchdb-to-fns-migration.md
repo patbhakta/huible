@@ -8,7 +8,9 @@ Issue: HU-1681 (CEO decision Aug 14). All commands run **locally on .245**
 **Do not collide with HU-1644 prod cutover** (gate 2026-08-15 12:00 UTC).
 Any step that touches shared ingress on .245 (Caddy reload, ufw, Docker
 network changes beyond the isolated FNS container) waits until HU-1644
-reaches a terminal state.
+reaches a terminal state. **Update 2026-08-15: HU-1644 was cancelled
+(stand-down — cutover premise broke, zero prod changes made); the collision
+constraint is permanently satisfied.**
 
 ## Current verified state (2026-08-14 ~23:10 UTC)
 
@@ -16,7 +18,7 @@ reaches a terminal state.
 |------|-------|
 | CouchDB `obsidian-livesync` | up (couchdb:3, v3.5.2), 4,160 docs, port 5984 tailnet+loopback only |
 | Full backup dump | **DONE** — `/data/backups/couchdb-livesync/obsidian-livesync-fulldump-20260814T231213Z.json.gz` (7.4 MB, sha256 `a14d7c57ecf27458044e118e5c69658abb8a8662cbbc8eb5f7309e85c02e86e4`, 4160/4160 rows, 0 deleted, 0 attachments) |
-| FNS container | up — `haierkeys/fast-note-sync-service:latest` (v3.6.1), launched **manually from an interactive session** 2026-08-14T23:09Z, stock config (`/data/fast-note-sync/config/config.yaml`), health OK, SQLite connected |
+| FNS container | up — `haierkeys/fast-note-sync-service:latest` (v3.6.1), **managed by `docker compose` since 2026-08-15T08:37Z (S2 done)**, stock config (`/data/fast-note-sync/config/config.yaml`), health OK, SQLite connected |
 | FNS exposure | 9000 bound to `100.101.235.117` + `127.0.0.1` only — tailnet-scoped, not public |
 | FNS auth | FNS internal token auth (config auto-generated `auth-token-key`; never copy this into docs/git) |
 | Caddy | `brain.bhakta.us` block still proxies :5984 (untouched) |
@@ -24,19 +26,19 @@ reaches a terminal state.
 
 ## Remaining steps (in order)
 
-### S2. Adopt FNS under compose management (no functional change)
+### S2. Adopt FNS under compose management — ✅ DONE 2026-08-15T08:37Z
 
-The running container was started by hand. Adopt it declaratively:
+Executed via `docker stop fast-note-sync && docker rm fast-note-sync &&
+docker compose up -d` from `deploy/fast-note-sync/`. Precondition review that
+unblocked execution: Pat's pts/0 shell idle 12h+ (JCPU 0.00s, nothing running),
+the container was shim-owned/daemonized (not attached to the shell),
+`restart: unless-stopped` already set, zero plugin/device clients existed, and
+[HU-1644](/HU/issues/HU-1644) had reached terminal (cancelled) state.
 
-    cd /root/repos/huible/deploy/fast-note-sync
-    docker stop fast-note-sync && docker rm fast-note-sync
-    docker compose up -d
-    curl -s http://127.0.0.1:9000/api/health   # expect status:true, database:connected
-
-Data survives: state lives in `/data/fast-note-sync/{config,storage}` host volumes,
-so a container replace is non-destructive. **Coordinate first** — Pat was
-interactively testing FNS at deploy time; confirm the session is done before
-touching the container.
+Post-adoption verification: health `status:true, database:connected` (v3.6.1);
+ports identical (`127.0.0.1:9000`, `100.101.235.117:9000`); SQLite WAL files
+and `storage/vault/u_1` note history intact (host volumes untouched);
+`com.docker.compose.project=fast-note-sync` label present.
 
 ### S3. Pat installs `obsidian-fast-note-sync` plugin on devices
 
