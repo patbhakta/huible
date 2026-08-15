@@ -530,38 +530,45 @@ queue, so the on-call must not be told one was).
 
 Run through this checklist before going live.
 
+> **Stage-0.9 sign-off (HU-1464) — 2026-08-15, prod host `.245` (standby layout, post HU-1715 cutover).**
+> 14/18 items verified live on the real-user env: `scripts/verify_prod_hardening.sh` **17 passed / 0 failed → ALL_LIVE_CHECKS_PASS** @ 18:18:36Z; backup timer + restore proof + ufw allowlist per HU-1672 §8-completion run @ 18:15Z. Evidence: item annotations below.
+> 4 items remain open, tracked as follow-up issues under HU-1464:
+> - **Real `HUIBLE_DOMAIN` + public-CA TLS** — operator-blocked on the domain answer card (`3745dd93` on HU-1501, pending since 2026-08-14). Until then ingress serves `https://localhost` (Caddy internal-CA cert, obtained 18:04:21Z), health 200.
+> - **`API_KEYS` issuance** — enforcement is live and fail-closed (empty store → `401 AUTH_REQUIRED` on all persona-scoped endpoints); keys are issued at first real-user onboarding, which cannot precede the domain.
+> - **Disk monitoring** — alert-rules artifact exists (Stage 0.8) but contains no disk rule and no Prometheus/node_exporter is deployed on `.245`; needs the monitoring deployment follow-up.
+
 ### Network
 
-- [ ] `POSTGRES_PASSWORD` is a strong, unique secret (not the `.env.example` default)
-- [ ] PostgreSQL port 5432 is NOT exposed to the public internet (remove `ports:` mapping or bind to `127.0.0.1:5432`)
-- [ ] `HUIBLE_DOMAIN` is set to a real domain with DNS A record
-- [ ] Caddy TLS is active (verify with `curl https://<domain>/api/v1/health`)
+- [x] `POSTGRES_PASSWORD` is a strong, unique secret (not the `.env.example` default) — *live: non-default, 48 chars (verifier Secrets block)*
+- [x] PostgreSQL port 5432 is NOT exposed to the public internet (remove `ports:` mapping or bind to `127.0.0.1:5432`) — *live: loopback bind `127.0.0.1:5433`, ufw default-deny + 22/80/443/tailnet allowlist*
+- [ ] `HUIBLE_DOMAIN` is set to a real domain with DNS A record — *OPERATOR-BLOCKED: domain card `3745dd93` (HU-1501) pending; `.env.failover` carries the `localhost` placeholder*
+- [ ] Caddy TLS is active (verify with `curl https://<domain>/api/v1/health`) — *PARTIAL: TLS pipeline live (`https://localhost/api/v1/health` → 200, Caddy cert obtained 18:04:21Z, issuer local); public-CA cert for the real domain lands with the DNS A record (runbook §3.6)*
 
 ### Secrets
 
-- [ ] `.env` is not committed to version control (`.gitignore` includes `.env`)
-- [ ] API keys for embedding/advisory providers are set via environment, not hardcoded
-- [ ] `API_KEYS` is set for persona-scoped authentication
+- [x] `.env` is not committed to version control (`.gitignore` includes `.env`) — *live: gitignored + not tracked (verifier)*
+- [x] API keys for embedding/advisory providers are set via environment, not hardcoded — *repo: env-only via `.env`/compose; no keys in tree (Stage-0.9 repo audit)*
+- [ ] `API_KEYS` is set for persona-scoped authentication — *PENDING: store empty (fail-closed — all persona endpoints return 401); keys issued at first real-user onboarding, after the domain lands*
 
 ### Database
 
-- [ ] `pgdata` volume is backed by a persistent disk
-- [ ] Backup cron job is configured (see Section 9)
-- [ ] `pgvector` extension is enabled: `SELECT * FROM pg_extension WHERE extname = 'vector'`
+- [x] `pgdata` volume is backed by a persistent disk — *live: named volume declared (verifier); host volume on .245 persistent disk*
+- [x] Backup cron job is configured (see Section 9) — *live: `huible-pg-backup.timer` daily (Persistent, next fire 2026-08-16 00:10 UTC) + first dump 18M sha256-verified 18:12Z + restore round-trip 11 tables / 4052 rows (HU-1672)*
+- [x] `pgvector` extension is enabled: `SELECT * FROM pg_extension WHERE extname = 'vector'` — *live: enabled (verifier; health `pgvector: ok`)*
 
 ### Application
 
-- [ ] `HUIBLE_ENV=production`
-- [ ] `HUIBLE_LOG_LEVEL=INFO` (not `DEBUG`)
-- [ ] Container restart policy is `unless-stopped`
-- [ ] Health checks pass on all three services
+- [x] `HUIBLE_ENV=production` — *live: `.env.failover`*
+- [x] `HUIBLE_LOG_LEVEL=INFO` (not `DEBUG`) — *live: `.env.failover`*
+- [x] Container restart policy is `unless-stopped` — *live: `huible-app`/`huible-postgres` unless-stopped; system caddy active+enabled (verifier)*
+- [x] Health checks pass on all three services — *live: app+postgres Up (healthy); `https://localhost/api/v1/health` → 200 `database: ok, pgvector: ok` @ 18:18Z*
 
 ### Infrastructure
 
-- [ ] Host firewall allows only 80, 443 (and 22 for SSH)
-- [ ] On the standby .245: ufw allowlist applied via `deploy/ufw/huible-allowlist.sh` (22/80/443 + tailscale iface, break-glass-gated enable; §9.2f sibling, HU-1672 AC #2)
-- [ ] Automatic security updates are enabled on the host
-- [ ] Disk monitoring alerts are set (< 20% free triggers alert)
+- [x] Host firewall allows only 80, 443 (and 22 for SSH) — *live: ufw active, default deny incoming, allowlist exactly 22/80/443 + `tailscale0` (in-kernel `iptables -S INPUT` policy DROP verified, HU-1672)*
+- [x] On the standby .245: ufw allowlist applied via `deploy/ufw/huible-allowlist.sh` (22/80/443 + tailscale iface, break-glass-gated enable; §9.2f sibling, HU-1672 AC #2) — *live: applied + post-checks green 18:15Z (HU-1672)*
+- [x] Automatic security updates are enabled on the host — *live: `unattended-upgrades` active on .245*
+- [ ] Disk monitoring alerts are set (< 20% free triggers alert) — *PENDING: Stage-0.8 rules artifact shipped but has no disk rule; no Prometheus/node_exporter deployed on .245 — monitoring deployment follow-up*
 
 ---
 
