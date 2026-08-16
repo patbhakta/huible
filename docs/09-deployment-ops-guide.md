@@ -550,6 +550,13 @@ Run through this checklist before going live.
 > - **Real `HUIBLE_DOMAIN` + public-CA TLS** — operator-blocked on the domain answer card (`3745dd93` on HU-1501, pending since 2026-08-14). Until then ingress serves `https://localhost` (Caddy internal-CA cert, obtained 18:04:21Z), health 200.
 > - **`API_KEYS` issuance** — enforcement is live and fail-closed (empty store → `401 AUTH_REQUIRED` on all persona-scoped endpoints); keys are issued at first real-user onboarding, which cannot precede the domain.
 
+> **Loopback health-probe contract (pre-domain, `.245`) — 2026-08-16.**
+> Until the real domain lands, the Caddy-fronted loopback probe is `curl -sk https://localhost/api/v1/health` and **only** that form:
+> - the internal-CA cert is not in the system trust store → `-k` is required (without it curl exits `000` / `unknown CA`, which is NOT an outage);
+> - Caddy holds a cert for SNI `localhost` only → `https://127.0.0.1/...` aborts the TLS handshake (`tlsv1 alert internal error`), also NOT an outage;
+> - cert-name-independent alternative: `curl -fsS http://127.0.0.1:8000/api/v1/health` (app container direct, bypasses Caddy — used by `scripts/verify_prod_hardening.sh`).
+> Recorded after the 2026-08-16 21:2xZ monitor pass tripped both false-000 traps; same false-positive class as HU-1777/HU-1823.
+
 ### Network
 
 - [x] `POSTGRES_PASSWORD` is a strong, unique secret (not the `.env.example` default) — *live: non-default, 48 chars (verifier Secrets block)*
