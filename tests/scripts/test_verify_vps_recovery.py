@@ -1,26 +1,27 @@
-"""Tests for ``scripts/verify_vps_recovery.sh`` (HU-1501 closure gate).
+"""Tests for ``scripts/verify_vps_recovery.sh`` (prod posture verifier).
 
-This is the FIRST step of the HU-1501 recovery trio — it proves the production
-VPS is actually back (ICMP + SSH + Kestra + CouchDB + Tailscale) *before* the
-HU-1500 credential rotation runs or any flow is re-enabled. A false "recovered"
-here would point the rotation runbook at a half-up box and silently corrupt the
-recovery, so the properties that matter most are:
+Guards the canonical-addresses contract that twice prevented-worth of false
+incidents depends on (HU-1777, HU-1823):
 
-- **gate strictness**: a single hard FAIL → ``VPS_NOT_READY`` / exit 1, never
-  "proceed with HU-1500";
-- **soft-vs-hard classification**: CouchDB being localhost-bound on the tailnet
-  IP is a *note*, not a failure (the rotation runs on-box); a missing/offline
-  Tailscale node *is* a failure;
-- **TCP-open ≠ HTTP-alive**: Kestra's port accepting a connection is not enough
-  — the HTTP probe must return a real status code;
+- **defaults target CURRENT prod** (.245 since the HU-1715 cutover) — never the
+  decommissioned .243;
+- **legacy refusal**: probing .243 without ``PROBE_LEGACY_243=1`` exits 2 with
+  guidance, not a scary ``VPS_NOT_READY``;
+- **retired stack**: Kestra/CouchDB checks are skipped (note, not failure) in
+  default mode since HU-1706/HU-1681 retired the LiveSync stack, and the edge
+  ``:80 → 308`` Caddy health pin (HU-1672) is checked instead;
+- **gate strictness**: a single hard FAIL → ``VPS_NOT_READY`` / exit 1;
+- **legacy opt-in**: with ``PROBE_LEGACY_243=1`` the old .243 checks
+  (Kestra/CouchDB included) still work for archaeology/power-cycle
+  verification of the old box;
 - **graceful degradation**: on a host without the ``tailscale`` CLI the verifier
   still runs and emits a note instead of crashing.
 
-The script has no test harness of its own and talks to the network via
-``ping``/``curl``/``tailscale``, so these tests shadow those three commands with
-fixture stubs driven by scenario env vars (no real network, no real hosts). The
-production target IPs are intentionally left at their defaults so the tests also
-lock in the prod targets documented in the script header.
+The script talks to the network via ``ping``/``curl``/``tailscale``, so these
+tests shadow those three commands with fixture stubs driven by scenario env
+vars (no real network, no real hosts). The production target IPs are
+intentionally left at their defaults so the tests also lock in the prod targets
+documented in the script header.
 """
 
 from __future__ import annotations
@@ -36,20 +37,20 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "verify_vps_recovery.sh"
 
 # curl-stub env keys, one per ``host:port`` the verifier probes (prod defaults).
-SSH22 = "CURL_208_84_102_243_22"
-KESTRA_PUB = "CURL_208_84_102_243_8080"
-KESTRA_TS = "CURL_100_75_34_75_8080"
-COUCH_TS = "CURL_100_109_142_4_5984"
+SSH22 = "CURL_208_84_102_245_22"
+EDGE80 = "CURL_208_84_102_245_80"
+# Legacy (.243) keys used only in PROBE_LEGACY_243 mode.
+LEGACY_SSH22 = "CURL_208_84_102_243_22"
+LEGACY_KESTRA_PUB = "CURL_208_84_102_243_8080"
+LEGACY_COUCH_TS = "CURL_100_109_142_4_5984"
 
 _TS_ONLINE = (
     "100.101.235.117 ip-208-84-102-245 root@ -\n"
-    "100.109.142.4   ip-208-84-102-243  root@ -\n"
     "100.75.34.75    kestra-on-vps      root@ -\n"
 )
 _TS_OFFLINE = (
-    "100.101.235.117 ip-208-84-102-245 root@ -\n"
-    "100.109.142.4   ip-208-84-102-243  root@ offline; last seen 2d ago\n"
-    "100.75.34.75    kestra-on-vps      root@ offline; last seen 2d ago\n"
+    "100.101.235.117 ip-208-84-102-245 root@ offline; last seen 2d ago\n"
+    "100.75.34.75    kestra-on-vps      root@ -\n"
 )
 
 # ── Stub binaries ────────────────────────────────────────────────────────────
@@ -73,6 +74,8 @@ rest="${last#http://}"
 hostport="${rest%%/*}"
 host="${hostport%%:*}"
 port="${hostport##*:}"
+# curl defaults to :80 when the URL carries no explicit port.
+if [ "$port" = "$hostport" ]; then port=80; fi
 hkey="$(printf '%s' "$host" | tr '.' '_')"
 key="CURL_${hkey}_${port}"
 val="${!key:-refuse}"
@@ -106,7 +109,7 @@ exit 0
 TAILSCALE_STUB = """\
 #!/usr/bin/env bash
 # emulate `tailscale status` — prints the TS_STATUS_OUT fixture verbatim.
-printf '%s\n' "${TS_STATUS_OUT:-}"
+printf '%s\\n' "${TS_STATUS_OUT:-}"
 exit 0
 """
 
@@ -143,15 +146,34 @@ def _run(bin_dir: Path, scenario: dict[str, str]) -> subprocess.CompletedProcess
 
 
 def _green() -> dict[str, str]:
-    """Every probe healthy → the only scenario that may yield VPS_RECOVERED."""
+    """Every default-mode probe healthy → the only scenario that may yield VPS_RECOVERED."""
     return {
         "PING_RESULT": "0",
         SSH22: "ok",
-        KESTRA_PUB: "http:200",
-        KESTRA_TS: "ok",
-        COUCH_TS: 'body:{"couchdb":"Welcome","version":"3.3.2"}',
+        EDGE80: "http:308",
         "TS_STATUS_OUT": _TS_ONLINE,
     }
+
+
+# ── Canonical-addresses guard ────────────────────────────────────────────────
+
+
+def test_defaults_target_current_prod_not_legacy_243(bin_dir: Path) -> None:
+    """Bare run must probe .245 (current prod) — never the decommissioned .243."""
+    result = _run(bin_dir, _green())
+    assert result.returncode == 0, result.stdout
+    assert "target: 208.84.102.245" in result.stdout
+    assert "208.84.102.243" not in result.stdout.replace("208.84.102.243 is DECOMMISSIONED", "")
+
+
+def test_legacy_243_refused_without_opt_in(bin_dir: Path) -> None:
+    """Probing .243 by explicit override must exit 2 with guidance, not VPS_NOT_READY."""
+    result = _run(bin_dir, {**_green(), "VPS_PUBLIC": "208.84.102.243"})
+    assert result.returncode == 2
+    assert "DECOMMISSIONED" in result.stderr
+    assert "PROBE_LEGACY_243=1" in result.stderr
+    assert "HU-1823" in result.stderr
+    assert "VPS_NOT_READY" not in result.stdout
 
 
 # ── Happy path ───────────────────────────────────────────────────────────────
@@ -161,13 +183,21 @@ def test_all_green_yields_vps_recovered(bin_dir: Path) -> None:
     result = _run(bin_dir, _green())
     assert result.returncode == 0, result.stdout
     assert "RESULT: VPS_RECOVERED" in result.stdout
-    assert "proceed with HU-1500" in result.stdout
     assert "0 failed" in result.stdout
     # Each hard-gate section reported a PASS.
     assert "ICMP replies" in result.stdout
     assert "SSH :22 open" in result.stdout
-    assert "Kestra HTTP responds" in result.stdout
-    assert "is online" in result.stdout  # both tailscale nodes
+    assert "308" in result.stdout  # edge health pin
+    assert "is online" in result.stdout  # tailscale node(s)
+
+
+def test_retired_stack_skipped_by_default_with_note(bin_dir: Path) -> None:
+    """Kestra/CouchDB are retired (HU-1706/HU-1681) — skipped, not failed."""
+    result = _run(bin_dir, _green())
+    assert result.returncode == 0, result.stdout
+    assert "retired with the LiveSync stack" in result.stdout
+    assert "Kestra HTTP not responding" not in result.stdout
+    assert "0 failed" in result.stdout
 
 
 # ── Gate strictness: any hard FAIL → NOT_READY ──────────────────────────────
@@ -179,43 +209,33 @@ def test_host_still_down_reports_not_ready(bin_dir: Path) -> None:
         {
             "PING_RESULT": "1",
             SSH22: "refuse",
-            KESTRA_PUB: "timeout",
-            KESTRA_TS: "refuse",
-            COUCH_TS: "timeout",
+            EDGE80: "timeout",
             "TS_STATUS_OUT": _TS_OFFLINE,
         }
     )
     result = _run(bin_dir, scenario)
     assert result.returncode == 1
     assert "RESULT: VPS_NOT_READY" in result.stdout
-    assert "do not proceed" in result.stdout
     assert "ICMP unreachable" in result.stdout
     assert "SSH :22 closed" in result.stdout
-    assert "Kestra :8080 closed" in result.stdout
 
 
-def test_kestra_down_but_host_up_blocks_recovery(bin_dir: Path) -> None:
-    """Host booted but Kestra did not return — recovery must NOT proceed."""
+def test_edge_not_308_fails_even_if_ports_up(bin_dir: Path) -> None:
+    """Caddy answering :80 with anything but the 308 pin is an edge failure."""
     scenario = _green()
-    scenario[KESTRA_PUB] = "refuse"
-    scenario[KESTRA_TS] = "refuse"
+    scenario[EDGE80] = "http:200"
     result = _run(bin_dir, scenario)
     assert result.returncode == 1
-    assert "Kestra :8080 closed" in result.stdout
+    assert "Edge :80 unexpected code" in result.stdout
     assert "RESULT: VPS_NOT_READY" in result.stdout
-    # The host itself is reachable, so this is a Kestra-only outage.
-    assert "ICMP replies" in result.stdout
-    assert "SSH :22 open" in result.stdout
 
 
-def test_kestra_port_open_but_http_dead_fails(bin_dir: Path) -> None:
-    """TCP accepts but the HTTP daemon returns nothing — port-open is not enough."""
+def test_edge_dead_fails(bin_dir: Path) -> None:
     scenario = _green()
-    scenario[KESTRA_PUB] = "http:000"
+    scenario[EDGE80] = "http:000"
     result = _run(bin_dir, scenario)
     assert result.returncode == 1
-    assert "Kestra :8080 open on" in result.stdout  # port probe passed
-    assert "Kestra HTTP not responding" in result.stdout
+    assert "Edge :80 not responding" in result.stdout
     assert "RESULT: VPS_NOT_READY" in result.stdout
 
 
@@ -230,31 +250,70 @@ def test_tailscale_node_offline_fails(bin_dir: Path) -> None:
 
 def test_tailscale_node_missing_fails(bin_dir: Path) -> None:
     scenario = _green()
-    scenario["TS_STATUS_OUT"] = (
-        "100.101.235.117 ip-208-84-102-245 root@ -\n"
-        "100.109.142.4   ip-208-84-102-243  root@ -\n"
-    )  # kestra-on-vps line omitted entirely
+    scenario["TS_STATUS_OUT"] = ""  # node line omitted entirely
     result = _run(bin_dir, scenario)
     assert result.returncode == 1
     assert "missing" in result.stdout
-    assert "kestra-on-vps" in result.stdout
+    assert "ip-208-84-102-245" in result.stdout
     assert "RESULT: VPS_NOT_READY" in result.stdout
 
 
-# ── Soft-vs-hard classification ──────────────────────────────────────────────
+# ── Legacy opt-in keeps the old .243 semantics available ────────────────────
 
 
-def test_couchdb_localhost_bound_is_soft_note_not_failure(bin_dir: Path) -> None:
-    """CouchDB is typically localhost-bound on the VPS — that must NOT block."""
+def test_legacy_opt_in_green_includes_retired_stack_checks(bin_dir: Path) -> None:
     scenario = _green()
-    scenario[COUCH_TS] = "refuse"
+    scenario.update(
+        {
+            "PROBE_LEGACY_243": "1",
+            "VPS_PUBLIC": "208.84.102.243",
+            "VPS_TS_IP": "100.109.142.4",
+            "KESTRA_TS_IP": "100.75.34.75",
+            "TS_NODE_VPS": "ip-208-84-102-243",
+            "TS_NODE_KESTRA": "kestra-on-vps",
+            LEGACY_SSH22: "ok",
+            LEGACY_KESTRA_PUB: "http:200",
+            LEGACY_COUCH_TS: 'body:{"couchdb":"Welcome","version":"3.3.2"}',
+            "TS_STATUS_OUT": (
+                "100.109.142.4   ip-208-84-102-243  root@ -\n"
+                "100.75.34.75    kestra-on-vps      root@ -\n"
+            ),
+        }
+    )
     result = _run(bin_dir, scenario)
     assert result.returncode == 0, result.stdout
     assert "RESULT: VPS_RECOVERED" in result.stdout
-    assert "localhost-bound" in result.stdout
-    assert "rotation must run on-box" in result.stdout
-    # The closed CouchDB port is a note, not a counted failure.
+    assert "Kestra HTTP responds" in result.stdout
+    assert "CouchDB responds" in result.stdout
     assert "0 failed" in result.stdout
+
+
+def test_legacy_opt_in_kestra_down_blocks(bin_dir: Path) -> None:
+    scenario = _green()
+    scenario.update(
+        {
+            "PROBE_LEGACY_243": "1",
+            "VPS_PUBLIC": "208.84.102.243",
+            "VPS_TS_IP": "100.109.142.4",
+            "KESTRA_TS_IP": "100.75.34.75",
+            "TS_NODE_VPS": "ip-208-84-102-243",
+            "TS_NODE_KESTRA": "kestra-on-vps",
+            LEGACY_SSH22: "ok",
+            LEGACY_KESTRA_PUB: "refuse",
+            LEGACY_COUCH_TS: "refuse",
+            "TS_STATUS_OUT": (
+                "100.109.142.4   ip-208-84-102-243  root@ -\n"
+                "100.75.34.75    kestra-on-vps      root@ -\n"
+            ),
+        }
+    )
+    result = _run(bin_dir, scenario)
+    assert result.returncode == 1
+    assert "Kestra :8080 closed" in result.stdout
+    assert "RESULT: VPS_NOT_READY" in result.stdout
+    # Host itself reachable: ICMP/SSH still pass.
+    assert "ICMP replies" in result.stdout
+    assert "SSH :22 open" in result.stdout
 
 
 # ── Graceful degradation without the tailscale CLI ──────────────────────────

@@ -99,6 +99,13 @@ be executed by anyone but the primary operator.**
 
 ## 5. Break-glass power-on procedure
 
+> **2026-08-16 (HU-1823):** this runbook was written for the `.243`-era prod.
+> Since the HU-1715 cutover, prod runs on `.245` and `.243` is decommissioned —
+> before invoking any break-glass step, confirm the outage is against the
+> **canonical** address (`docs/runbooks/vps-failover-to-standby.md` § Canonical
+> addresses). HU-1777 and HU-1823 were both false incidents from probing
+> non-prod IPs while prod was green.
+
 > Prerequisites: §4 credential deposit is complete AND a break-glass operator
 > is designated. If either is missing, escalate to the board (§7) instead — do
 > not improvise credentials.
@@ -107,7 +114,9 @@ be executed by anyone but the primary operator.**
    ```bash
    bash scripts/verify_vps_recovery.sh
    ```
-   A `RESULT: VPS_NOT_READY` / exit 1 confirms the box is still down.
+   Defaults target current prod (`.245`); `RESULT: VPS_NOT_READY` / exit 1 on
+   those targets confirms a real outage. (The script refuses bare `.243`
+   targets — use `PROBE_LEGACY_243=1` only for the old box.)
 2. **Attempt primary operator once more.** Send a WhatsApp ping via the Hermes
    bridge and re-check the pending Paperclip power-on confirmation. Wait for the
    agreed SLA (default 2h).

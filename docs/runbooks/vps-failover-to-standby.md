@@ -316,21 +316,22 @@ domain is chosen, DNS resolves to `.245`, and the site block is reloaded.
 Run the full launch-verification suite before declaring the failover complete:
 
 ```bash
-bash scripts/verify_vps_recovery.sh   # will need VPS_PUBLIC=208.84.102.245 override
+bash scripts/verify_vps_recovery.sh   # defaults target .245 (current prod) since HU-1823
 bash scripts/verify_prod_external.sh
 bash scripts/verify_prod_hardening.sh
 ```
 
-> Note: `verify_vps_recovery.sh` defaults every target to `.243`. On a standby
-> failover **all five** target vars must be overridden — the two Tailscale-node
-> names default to the `.243` nodes (`ip-208-84-102-243`, `kestra-on-vps`) and
-> their checks are hard FAILs while `.243` is down, so a partial override would
-> wrongly report `VPS_NOT_READY` for a healthy `.245`. Correct standby command
-> (verified against live `.245` state on 2026-08-14 — CouchDB answers on the
-> tailnet IP, Kestra binds `*:8080`, single tailnet node serves both roles):
+> Note (updated 2026-08-16, HU-1823): `verify_vps_recovery.sh` now **defaults
+> to the current prod targets** (`.245` / `100.101.235.117` /
+> `ip-208-84-102-245`) and skips the retired Kestra/CouchDB checks (notes, not
+> failures — HU-1706/HU-1681), adding the edge `:80 → 308` pin instead. A bare
+> run is the correct standby verification. Probing the decommissioned `.243`
+> requires `PROBE_LEGACY_243=1` and exits 2 without it — that guard exists
+> because defaulting to `.243` opened the HU-1823 false incident while prod was
+> green. Legacy command, kept for archaeology only:
 > ```bash
-> VPS_PUBLIC=208.84.102.245 VPS_TS_IP=100.101.235.117 KESTRA_TS_IP=100.101.235.117 \
-> TS_NODE_VPS=ip-208-84-102-245 TS_NODE_KESTRA=ip-208-84-102-245 \
+> PROBE_LEGACY_243=1 VPS_PUBLIC=208.84.102.243 VPS_TS_IP=100.109.142.4 \
+> KESTRA_TS_IP=100.75.34.75 TS_NODE_VPS=ip-208-84-102-243 TS_NODE_KESTRA=kestra-on-vps \
 >   bash scripts/verify_vps_recovery.sh
 > ```
 
