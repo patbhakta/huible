@@ -22,6 +22,27 @@ chain frozen). Verified against the actual standby state on 2026-08-14.
 
 ---
 
+## ⚠ Canonical addresses (single source of truth — HU-1777)
+
+Since the 2026-08-15 cutover (HU-1715), **production is served from
+`208.84.102.245`** (this standby host; reverse DNS
+`ip-208-84-102-245.my-advin.com`, tailnet `100.101.235.117`).
+
+- **Prod edge public IP: `208.84.102.245`** — Caddy :80/:443, SSH :22,
+  ufw allowlist 22/80/443 (HU-1672). Health pin: HTTP `:80` → `308`.
+- Old prod `.243` (`208.84.102.243`) is **decommissioned/dark** — do not probe
+  it for prod posture.
+- Huible owns **no OVH infrastructure** and no host in `158.69.0.0/16`. On
+  2026-08-16 an incident (HU-1777) was opened from probes against
+  `158.69.122.245` — a third-party OVH box — while the real edge was green the
+  entire time.
+
+When probing prod, take the IP from this section verbatim. If a probe target
+came from anywhere else, verify it against this list before declaring an
+outage.
+
+---
+
 ## 0. Production topology on the primary VPS (`.243`)
 
 These are the services that must be reproduced on the standby:
