@@ -1,0 +1,15 @@
+# Route the headless one-shot profile's model requests through the zai
+# (GLM) OpenAI-compatible endpoint on the llm-pi-ai adapter.
+# Catalog route: endpoint/protocol/models come from pi-ai's installed
+# "zai" provider; only the credential reference is added.
+- id: llm-pi-ai
+  config:
+    providers:
+      zai:
+        apiKeyEnv: GLM_API_KEY
+
+# Point the headless one-shot default at the zai route.
+- id: agent-default-model
+  config:
+    provider: zai
+    model: glm-4.7
