@@ -184,6 +184,22 @@ class PostgresMemoryBackend(MemoryBackend):
         disclosure_scope: DisclosureScope | None,
     ) -> list[SearchResult]:
         col = getattr(MemoryRow, column_name)
+        # Dimension contract (HU-1435): the API's token-hash query embedder
+        # (64-dim, fake Stage-1 posture) may not match the stored vector
+        # dimension (e.g. 1536-dim seeded memories). Postgres raises DataError
+        # on a mismatched cosine_distance, which 500-ed the chat turn during
+        # flip verification. Degrade gracefully: skip that column's search
+        # (persona voice still serves) and leave a loud breadcrumb instead.
+        col_dim = getattr(col.type, "dim", None)
+        if col_dim is not None and len(query_embedding) != col_dim:
+            logger.warning(
+                "vector search skipped: query dim %d != %s dim %d "
+                "(query embedder / stored-vector mismatch)",
+                len(query_embedding),
+                column_name,
+                col_dim,
+            )
+            return []
         # NOTE(HU-1435): ``col.cosine_distance(...)`` (pgvector's SQLAlchemy
         # operator) is not reachable through the ``_PortableVector``
         # TypeDecorator — ``InstrumentedAttribute`` exposes only the impl
