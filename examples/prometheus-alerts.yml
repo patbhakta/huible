@@ -34,20 +34,53 @@ groups:
       # Launch-plan §4.1 + Stage-1 exit gate: every escalation must reach a
       # human. A non-zero degrade rate means the fail-safe fired (no staffed
       # responder) — real grieving-user traffic must halt.
+      #
+      # §7.4 alert-enablement point (HU-1880): paging is gated on the live
+      # roster being staffed (huible_handoff_available_responders > 0).
+      # Pre-staffing, no_responder_available degrades are the clinically
+      # correct G1 fail-safe — expected state, tracked by the ticket-severity
+      # rule below, never paged. Paging arms automatically the moment ops sets
+      # HANDOFF_AVAILABLE_RESPONDERS > 0 (roster staffing = enablement point).
+      # See docs/runbooks/handoff-alert-enablement.md for the go-live sequence
+      # and baseline-reset semantics.
       - alert: HuibleHandoffDegradeRate
-        expr: huible_handoff_degrade_rate > 0
+        expr: huible_handoff_degrade_rate > 0 and on() huible_handoff_available_responders > 0
         for: 1m
         labels:
           severity: page
           slo: guardrail-health
         annotations:
-          summary: "Huible handoff degrade rate > 0"
+          summary: "Huible handoff degrade rate > 0 (roster staffed)"
           description: >
             {{ $value | humanizePercentage }} of handoff escalations over the
-            rolling telemetry window (default 24h) degraded (no staffed
-            responder reached). Launch-plan §4.1 rollback trigger: halt the
-            ramp and run the kill-switch rollback procedure. Historical
-            degrades outside the window do not fire this alert (HU-1865).
+            rolling telemetry window (default 24h) degraded while the roster
+            was staffed — a responder was configured but escalations still
+            failed to reach a human. Launch-plan §4.1 rollback trigger: halt
+            the ramp and run the kill-switch rollback procedure. Historical
+            degrades outside the window do not fire this alert (HU-1865);
+            pre-staffing degrades page no one (HU-1880 — ticket rule below).
+
+      # §7.4 pre-staffing visibility (HU-1880): degrade rate > 0 while the
+      # roster is unstaffed is the expected fail-safe state (this is why the
+      # §7.4 operational gate exists), not a launch-blocking incident. Track
+      # at ticket severity so ops sees queue pressure in review without a
+      # 24/7 page that can never be actioned until HU-1432 staffs the roster.
+      - alert: HuibleHandoffDegradeRateUnstaffed
+        expr: huible_handoff_degrade_rate > 0 and on() huible_handoff_available_responders == 0
+        for: 15m
+        labels:
+          severity: ticket
+          slo: guardrail-health
+        annotations:
+          summary: "Huible handoff degrades with no staffed roster (expected pre-staffing)"
+          description: >
+            {{ $value | humanizePercentage }} of escalations over the rolling
+            telemetry window degraded with zero available responders — the
+            expected G1 fail-safe while the roster is unstaffed (§7.4
+            operational gate). Expected pre-staffing; will be triaged in ops
+            review. If real-user traffic is live while this fires, halt the
+            ramp: degrades under real traffic are a §4.1 rollback trigger
+            regardless of staffing.
 
       # A pending ticket past its SLA target = a grieving user is waiting past
       # the agreed target right now. Page immediately.

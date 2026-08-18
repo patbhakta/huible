@@ -439,6 +439,7 @@ page on these gauges.
 | `huible_handoff_answered_within_sla_rate` | gauge | 1 − answered_breach_rate | ≥ 0.9 (S1), ≥ 0.95 (S2+) |
 | `huible_handoff_tickets_total` | gauge | Tickets in the rolling window | context for the rates |
 | `huible_handoff_pending` | gauge | Open (ENQUEUED) tickets | queue-depth signal |
+| `huible_handoff_available_responders` | gauge | Live queue staffing (`HANDOFF_AVAILABLE_RESPONDERS`, HU-1880) | > 0 arms degrade paging; 0 = pre-staffing fail-safe (ticket severity) |
 | `huible_health_status` | gauge | `/health` status: 1 = ok, 0 = degraded | degraded halts ramp (§4.1) |
 
 **Historical / forward-looking metrics** (not yet wired; track via your observability platform when implemented):
@@ -466,7 +467,12 @@ rule_files:
 
 The file covers every §4.1 halt-the-ramp trigger:
 
-- **`HuibleHandoffDegradeRate`** — degrade rate > 0 (fail-safe fired).
+- **`HuibleHandoffDegradeRate`** — degrade rate > 0 **while the roster is staffed**
+  (`huible_handoff_available_responders > 0`, HU-1880): paging arms exactly at
+  roster staffing. Pre-staffing degrades are the expected G1 fail-safe —
+  tracked by the ticket-severity `HuibleHandoffDegradeRateUnstaffed` rule, never
+  paged. Go-live sequence + baseline-reset semantics:
+  [`docs/runbooks/handoff-alert-enablement.md`](../runbooks/handoff-alert-enablement.md).
 - **`HuibleHandoffPendingBreached`** — an open ticket is past SLA.
 - **`HuibleHandoffAnsweredSLABurn`** — answered-within-SLA below 0.9.
 - **`HuibleAlignmentLeak`** — §7.4.2 un-grounded claim reaching a user.

@@ -228,6 +228,21 @@ HANDOFF_PENDING = Gauge(
     "huible_handoff_pending",
     "Open (ENQUEUED) handoff tickets at last scrape. The queue-depth signal.",
 )
+# Roster-staffing signal (HU-1880 — §7.4 alert-enablement point). Mirrors the
+# live queue's available-responder count on every scrape. The alert rules gate
+# HuibleHandoffDegradeRate *paging* on this gauge > 0: pre-staffing degrades
+# are the clinically-correct G1 fail-safe (expected, tracked at ticket
+# severity — never paged); paging arms exactly when the roster is staffed, so
+# the enablement point is roster staffing by construction, no timing decision
+# baked into code.
+HANDOFF_AVAILABLE_RESPONDERS = Gauge(
+    "huible_handoff_available_responders",
+    "§7.4.1 available responders on the live handoff queue at last scrape "
+    "(HANDOFF_AVAILABLE_RESPONDERS). The §7.4 alert-enablement signal: "
+    "HuibleHandoffDegradeRate pages only when this is > 0 (roster staffed); "
+    "pre-staffing degrades are the expected G1 fail-safe and page no one "
+    "(HU-1880).",
+)
 
 # §3.2 service-health SLO: /health status. 1 = ok, 0 = degraded. Mirrors the
 # ``status`` field of GET /api/v1/health. Launch-plan §4.1 rollback trigger:
@@ -366,6 +381,18 @@ def record_handoff_telemetry(telemetry: object) -> None:
     HANDOFF_ANSWERED_WITHIN_SLA_RATE.set(max(0.0, 1.0 - answered_breach_rate))
     HANDOFF_TICKETS_TOTAL.set(getattr(telemetry, "total", 0) or 0)
     HANDOFF_PENDING.set(getattr(telemetry, "pending", 0) or 0)
+
+
+def record_handoff_responder_readiness(available_responders: object) -> None:
+    """Mirror the live queue staffing into the §7.4 enablement gauge (HU-1880).
+
+    Called by the ``/metrics`` handler on every scrape with the wired queue's
+    ``available_responders``. The alert rules gate degrade-rate *paging* on
+    this gauge > 0 — the enablement point is roster staffing itself, so the
+    page arms the moment ops sets ``HANDOFF_AVAILABLE_RESPONDERS`` without a
+    code change or timing decision.
+    """
+    HANDOFF_AVAILABLE_RESPONDERS.set(int(available_responders or 0))
 
 
 def record_health_status(status: str) -> None:

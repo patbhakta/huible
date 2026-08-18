@@ -166,6 +166,7 @@ class TestMetricsEndpoint:
             "huible_handoff_answered_within_sla_rate",
             "huible_handoff_tickets_total",
             "huible_handoff_pending",
+            "huible_handoff_available_responders",
         ):
             assert name in text, f"missing SLO gauge {name}"
         # Service-health (§3.2) gauge.
@@ -274,6 +275,38 @@ class TestSloGauges:
         text2 = client.get("/metrics").text
         assert _metric_total(text2, "huible_handoff_tickets_total") == 1.0
         assert _metric_total(text2, "huible_handoff_pending") == 1.0
+
+
+class TestAlertEnablementGauge:
+    """HU-1880 (§7.4 alert-enablement point): the staffing gauge mirrors the
+    live queue on every scrape — the degrade-rate page rule arms exactly at
+    roster staffing, and pre-staffing degrades page no one."""
+
+    def test_responders_gauge_zero_on_unstaffed_queue(self):
+        # The key-free default roster (0 responders) is the pre-staffing
+        # fail-safe: every escalation degrades and the page rule must stay
+        # disarmed (the 2026-08-18 25-minute no-action page incident).
+        queue = InMemoryHandoffQueue(available_responders=0)
+        client = _make_client_with_queue(queue)
+        text = client.get("/metrics").text
+        assert _metric_total(text, "huible_handoff_available_responders") == 0.0
+
+    def test_responders_gauge_mirrors_staffed_queue(self):
+        queue = InMemoryHandoffQueue(available_responders=3)
+        client = _make_client_with_queue(queue)
+        text = client.get("/metrics").text
+        assert _metric_total(text, "huible_handoff_available_responders") == 3.0
+
+    def test_responders_gauge_tracks_staffing_change_across_scrapes(self):
+        # Enablement is by construction, not by deploy-time snapshot: the
+        # gauge follows the queue's live staffing on every scrape (a roster
+        # change = a new queue wiring, same as the env-change redeploy path).
+        unstaffed = _make_client_with_queue(InMemoryHandoffQueue(available_responders=0))
+        text1 = unstaffed.get("/metrics").text
+        assert _metric_total(text1, "huible_handoff_available_responders") == 0.0
+        staffed = _make_client_with_queue(InMemoryHandoffQueue(available_responders=2))
+        text2 = staffed.get("/metrics").text
+        assert _metric_total(text2, "huible_handoff_available_responders") == 2.0
 
 
 class TestCountersIncrement:

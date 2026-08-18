@@ -77,6 +77,7 @@ from huible.api.metrics import (
     ChatTurnOutcome,
     metrics_response,
     record_chat_turn,
+    record_handoff_responder_readiness,
     record_handoff_telemetry,
     record_health_status,
     record_paging_failures,
@@ -1797,6 +1798,12 @@ def _register_routes(application: FastAPI) -> None:
                 window_seconds=application.state.settings.handoff_telemetry_window_seconds,
             )
             record_handoff_telemetry(telemetry)
+            # §7.4 alert-enablement signal (HU-1880): mirror the live queue
+            # staffing so the degrade-rate page rule arms exactly at roster
+            # staffing (pre-staffing degrades are the expected G1 fail-safe).
+            record_handoff_responder_readiness(
+                getattr(queue, "available_responders", 0)
+            )
         except Exception:  # pragma: no cover - defensive, scrape must not break
             logger.exception("handoff telemetry gauge update failed")
         try:
