@@ -193,6 +193,9 @@ class InMemoryPersonaRegistry:
     def register(self, persona: PersonaConfig, backend: MemoryBackend) -> None:
         self._personas[persona.id] = (persona, backend)
 
+    def __len__(self) -> int:
+        return len(self._personas)
+
     def get(
         self, persona_id: UUID, requester_tier: RelationshipTier
     ) -> PersonaBinding | None:

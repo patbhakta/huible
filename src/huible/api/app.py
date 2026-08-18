@@ -47,6 +47,7 @@ returns 200; chat will 401 until keys are seeded (correct behavior).
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import time
@@ -145,6 +146,7 @@ from huible.persona.context import (
     CONFIDENCE_LEVEL_METADATA_KEY,
     ContextBuilder,
     ConversationTurn,
+    PersonaConfig,
     RelationshipTier,
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
@@ -374,12 +376,78 @@ def _init_safety_backends(
         )
 
 
+async def _hydrate_persona_registry(application: FastAPI) -> int:
+    """Register persisted personas into the runtime registry at boot (HU-1435).
+
+    The default :class:`InMemoryPersonaRegistry` starts empty and nothing in
+    the request path reads the ``personas`` table, so without this hook a
+    DB-seeded deploy serves ``404 PERSONA_NOT_FOUND`` for every chat turn —
+    the exact gap the real-user flip verification caught on prod. Best-effort:
+    a DB failure logs and leaves the registry empty (chat 404s, health still
+    reports the DB check) rather than crashing startup. Skipped when the
+    registry was injected pre-seeded (tests, harnesses) — hydration only
+    fills the empty default.
+    """
+    settings: Settings = application.state.settings
+    registry = application.state.persona_registry
+    backend: MemoryBackend | None = getattr(application.state, "memory_backend", None)
+    url = settings.effective_database_url
+    try:
+        registry_preseeded = len(registry) > 0
+    except TypeError:  # exotic injected registry: assume caller-managed
+        registry_preseeded = True
+    if not url or backend is None or registry_preseeded:
+        return 0
+    import asyncpg
+
+    try:
+        # asyncpg rejects SQLAlchemy driver suffixes (``postgresql+asyncpg``).
+        dsn = url.split("://", 1)
+        url = f"postgresql://{dsn[1]}" if len(dsn) == 2 else url
+        conn = await asyncpg.connect(url)
+    except Exception:  # pragma: no cover - defensive: DB down at boot
+        logger.exception("persona registry hydration: DB connect failed; chat will 404")
+        return 0
+    try:
+        rows = await conn.fetch(
+            "SELECT id, name, voice_instructions, era_knowledge_boundary,"
+            " age_at_death, death_date FROM personas"
+        )
+        await conn.close()
+    except Exception:  # pragma: no cover - defensive: schema not migrated yet
+        logger.exception("persona registry hydration: query failed; chat will 404")
+        with contextlib.suppress(Exception):
+            await conn.close()
+        return 0
+    for row in rows:
+        era = row["era_knowledge_boundary"]
+        death = row["death_date"]
+        registry.register(
+            PersonaConfig(
+                id=row["id"],
+                name=row["name"],
+                voice_instructions=row["voice_instructions"] or "",
+                era_knowledge_boundary=str(era) if era else "2020-01-01",
+                age_at_death=row["age_at_death"],
+                death_date=str(death) if death else None,
+            ),
+            backend,
+        )
+    await conn.close()
+    if rows:
+        logger.info(
+            "persona registry hydrated from database: %d persona(s)", len(rows)
+        )
+    return len(rows)
+
+
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Startup/shutdown: configure logging and manage the memory backend."""
     settings: Settings = application.state.settings
     configure_logging(settings)
     application.state.memory_backend = await _init_memory_backend(settings)
+    await _hydrate_persona_registry(application)
     try:
         yield
     finally:
