@@ -97,6 +97,11 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     openrouter_base_url: str = ""
     openrouter_model: str = ""
+    # Board-approved hard monthly cap in USD (HU-1774 sweep 2026-08-18, item
+    # 3); ``<= 0`` disables local cap enforcement. Durable spend ledger path
+    # is bind-mounted in docker-compose.yml (app-state volume).
+    openrouter_monthly_budget_usd: float = 50.0
+    openrouter_spend_state_path: str = "/var/lib/huible/openrouter-spend.json"
     gemini_api_key: str = ""
     gemini_base_url: str = ""
     gemini_model: str = ""
@@ -388,6 +393,8 @@ class Settings(BaseSettings):
                 "OPENROUTER_API_KEY": self.openrouter_api_key,
                 "OPENROUTER_BASE_URL": self.openrouter_base_url,
                 "OPENROUTER_MODEL": self.openrouter_model,
+                "OPENROUTER_MONTHLY_BUDGET_USD": str(self.openrouter_monthly_budget_usd),
+                "OPENROUTER_SPEND_STATE_PATH": self.openrouter_spend_state_path,
                 "GEMINI_API_KEY": self.gemini_api_key,
                 "GEMINI_BASE_URL": self.gemini_base_url,
                 "GEMINI_MODEL": self.gemini_model,

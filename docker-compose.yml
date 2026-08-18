@@ -15,6 +15,11 @@ services:
     # (`curl http://localhost:8000/...`) still works. (docs/09 §8 hardening.)
     ports:
       - "127.0.0.1:8000:8000"
+    # Durable app runtime state (OpenRouter monthly spend ledger for the
+    # board-approved $50/mo hard cap, HU-1461): bind-mounted so container
+    # recreation cannot reset month-to-date accrual.
+    volumes:
+      - ./docker/runtime/app-state:/var/lib/huible
     networks:
       - huible-net
 

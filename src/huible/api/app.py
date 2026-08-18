@@ -133,7 +133,12 @@ from huible.api.schemas import (
     SessionMetaView,
 )
 from huible.api.settings import Settings, get_settings
-from huible.llm.client import LLMClient, build_llm_client
+from huible.llm.client import FakeLLMClient as _FakeLLMClient
+from huible.llm.client import (
+    LLMBudgetExceededError,
+    LLMClient,
+    build_llm_client,
+)
 from huible.memory.protocol import MemoryBackend
 from huible.memory.store import PostgresMemoryBackend
 from huible.persona.context import (
@@ -430,6 +435,25 @@ async def _health_data(application: FastAPI) -> HealthCheck:
     generator = application.state.generator
     provider_label = getattr(generator, "__class__", type(generator)).__name__
     checks["generator"] = "ready (mock)" if "Mock" in provider_label else "ready"
+
+    # OpenRouter monthly spend cap (HU-1461, board decision 2026-08-18):
+    # surface month-to-date accrued USD vs the budget as a compact string,
+    # matching the pinned loopback health-probe contract (checks values are
+    # plain strings like "ready (mock)"). Monitoring alerts on the
+    # "exhausted" prefix before the fake-voice fallback trips.
+    llm = getattr(application.state, "llm_client", None)
+    spend = getattr(llm, "spend", None)
+    if spend is not None:
+        try:
+            snap = spend.snapshot()  # type: ignore[attr-defined]
+            state = "exhausted (fake-voice fallback)" if snap["exhausted"] else "ok"
+            checks["llm_budget"] = (
+                f"{state} ({snap['month_to_date_usd']:.4f}/{snap['budget_usd']:.2f} "
+                f"USD, month {snap['month']})"
+            )
+        except Exception:  # pragma: no cover - defensive; never fail /health
+            logger.exception("llm spend snapshot failed")
+            checks["llm_budget"] = "unknown"
 
     uptime = max(0.0, time.time() - float(application.state.start_time))
     return HealthCheck(
@@ -1230,7 +1254,25 @@ def _register_routes(application: FastAPI) -> None:
         system_prompt = ctx.system_prompt
         if enforcement.forces_reframe:
             system_prompt = system_prompt + "\n\n" + build_reframe_addendum(binding.persona.name)
-        response_text = await llm.generate(prompt, system_prompt=system_prompt)
+        budget_fallback = False
+        try:
+            response_text = await llm.generate(prompt, system_prompt=system_prompt)
+        except LLMBudgetExceededError:
+            # Board-approved degraded posture (HU-1774 decision sweep
+            # 2026-08-18, item 3: "$50/mo hard cap; fake voice stays as
+            # rollback"): when the OpenRouter monthly budget is exhausted
+            # the turn is served by the deterministic fake voice instead of
+            # erroring — the persona surface stays up while the operator
+            # tops up or raises the cap. Only the budget error is caught;
+            # transient hosted errors keep raising so monitoring sees them.
+            logger.error(
+                "persona-chat llm budget exhausted (persona=%s); serving fake-voice fallback",
+                persona_id,
+            )
+            budget_fallback = True
+            fallback = _FakeLLMClient(persona_name=binding.persona.name)
+            response_text = await fallback.generate(prompt, system_prompt=system_prompt)
+            provider_label = f"{provider_label}->fake(budget)"
 
         # G3 generation-time guard: on the distress branch (forced or graded),
         # replace a sarcastic / dismissive generation with a safe grounded
@@ -1268,7 +1310,7 @@ def _register_routes(application: FastAPI) -> None:
         _record_turn(application, body.conversation_id, body.message, response_text)
         _emit_turn(
             persona_id,
-            outcome="persona",
+            outcome="persona_budget_fallback" if budget_fallback else "persona",
             ungrounded_claims=alignment.ungrounded_count,
             alignment_disposition=alignment.disposition,
             ungrounded_by_category=alignment.category_counts(),

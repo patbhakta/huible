@@ -43,6 +43,8 @@ from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
+from huible.llm.budget import MonthlySpendTracker
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -51,8 +53,11 @@ __all__ = [
     "DEFAULT_LLM_PROVIDER",
     "DEFAULT_OPENROUTER_BASE_URL",
     "DEFAULT_OPENROUTER_MODEL",
+    "DEFAULT_OPENROUTER_MONTHLY_BUDGET_USD",
+    "DEFAULT_OPENROUTER_SPEND_STATE_PATH",
     "FakeLLMClient",
     "GeminiLLMClient",
+    "LLMBudgetExceededError",
     "LLMClient",
     "LLMConfig",
     "LLMConfigError",
@@ -75,6 +80,18 @@ class LLMConfigError(RuntimeError):
 
     A missing key is a startup / configuration failure, never a silent fall-back
     to a real endpoint — callers must either set the key or switch providers.
+    """
+
+
+class LLMBudgetExceededError(LLMError):
+    """Raised when the OpenRouter monthly spend cap is already exhausted.
+
+    Board decision 2026-08-18 (HU-1774 sweep, item 3): OpenRouter is approved
+    with a $50/month hard cap. Once month-to-date accrued spend reaches the
+    budget, :class:`OpenRouterLLMClient` refuses to place further calls — the
+    cap is enforced *before* the request, so no additional spend is possible.
+    Callers should serve the approved degraded posture (fake voice) on this
+    error; see the chat handler's budget fallback.
     """
 
 
@@ -103,6 +120,10 @@ DEFAULT_LLM_PROVIDER = LLMProvider.FAKE
 DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 #: Matches the distillation CLI's model choice (``huible.distillation.cli``).
 DEFAULT_OPENROUTER_MODEL = "google/gemini-3-flash-preview"
+#: Board-approved hard monthly cap (HU-1774 decision sweep 2026-08-18, item 3).
+DEFAULT_OPENROUTER_MONTHLY_BUDGET_USD = 50.0
+#: Durable spend ledger; deployment bind-mounts a writable volume here.
+DEFAULT_OPENROUTER_SPEND_STATE_PATH = "/var/lib/huible/openrouter-spend.json"
 
 DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 #: A known-good current native Gemini model id; override via ``LLM_MODEL``.
@@ -148,6 +169,8 @@ class LLMConfig:
     openrouter_api_key: str = ""
     openrouter_base_url: str = DEFAULT_OPENROUTER_BASE_URL
     openrouter_model: str = DEFAULT_OPENROUTER_MODEL
+    openrouter_monthly_budget_usd: float = DEFAULT_OPENROUTER_MONTHLY_BUDGET_USD
+    openrouter_spend_state_path: str = DEFAULT_OPENROUTER_SPEND_STATE_PATH
     gemini_api_key: str = ""
     gemini_base_url: str = DEFAULT_GEMINI_BASE_URL
     gemini_model: str = DEFAULT_GEMINI_MODEL
@@ -162,6 +185,8 @@ class LLMConfig:
 
         Reads ``LLM_PROVIDER`` (``fake`` | ``openrouter`` | ``gemini``),
         ``OPENROUTER_API_KEY`` / ``OPENROUTER_BASE_URL`` / ``OPENROUTER_MODEL``,
+        ``OPENROUTER_MONTHLY_BUDGET_USD`` (hard monthly cap; ``<= 0`` disables)
+        and ``OPENROUTER_SPEND_STATE_PATH`` (durable spend ledger),
         ``GEMINI_API_KEY`` / ``GEMINI_BASE_URL`` / ``GEMINI_MODEL``,
         ``LLM_MODEL``, ``LLM_MAX_TOKENS``, ``LLM_TEMPERATURE``, and
         ``LLM_REQUEST_TIMEOUT_S``.
@@ -224,6 +249,11 @@ class LLMConfig:
             openrouter_api_key=(env.get("OPENROUTER_API_KEY") or "").strip(),
             openrouter_base_url=openrouter_base or DEFAULT_OPENROUTER_BASE_URL,
             openrouter_model=openrouter_model,
+            openrouter_monthly_budget_usd=_float(
+                "OPENROUTER_MONTHLY_BUDGET_USD", DEFAULT_OPENROUTER_MONTHLY_BUDGET_USD
+            ),
+            openrouter_spend_state_path=(env.get("OPENROUTER_SPEND_STATE_PATH") or "").strip()
+            or DEFAULT_OPENROUTER_SPEND_STATE_PATH,
             gemini_api_key=(env.get("GEMINI_API_KEY") or "").strip(),
             gemini_base_url=gemini_base or DEFAULT_GEMINI_BASE_URL,
             gemini_model=gemini_model,
@@ -331,6 +361,15 @@ class OpenRouterLLMClient:
     (matching the distillation CLI) so the hosted path is consistent across
     the engine. The HTTP transport is injectable so tests exercise the full
     request path without a live endpoint.
+
+    Carries the board-approved $50/month hard cap (HU-1774 decision sweep
+    2026-08-18, item 3): each successful call accrues its reported
+    ``usage.cost`` (USD) into a durable per-month ledger
+    (:class:`huible.llm.budget.MonthlySpendTracker`), and once month-to-date
+    spend reaches ``openrouter_monthly_budget_usd`` every further
+    :meth:`generate` raises :class:`LLMBudgetExceededError` *before* any
+    network call — the cap is a wall, not a meter. ``budget <= 0`` disables
+    the cap. The :attr:`spend` tracker is exposed for /health surfacing.
     """
 
     def __init__(
@@ -348,6 +387,10 @@ class OpenRouterLLMClient:
         self._transport = transport
         # Self-describing provider label, surfaced in the chat response trace.
         self.provider: str = LLMProvider.OPENROUTER.value
+        self.spend = MonthlySpendTracker(
+            budget_usd=config.openrouter_monthly_budget_usd,
+            state_path=config.openrouter_spend_state_path,
+        )
 
     async def generate(
         self,
@@ -356,6 +399,20 @@ class OpenRouterLLMClient:
         system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
+        if self.spend.is_exhausted():
+            snapshot = self.spend.snapshot()
+            logger.error(
+                "OpenRouter monthly budget exhausted; refusing hosted call "
+                "(cap=%.2f USD, month-to-date=%.6f USD, month=%s). "
+                "Serve the approved fake-voice fallback or raise the budget.",
+                snapshot["budget_usd"],
+                snapshot["month_to_date_usd"],
+                snapshot["month"],
+            )
+            raise LLMBudgetExceededError(
+                f"OpenRouter monthly budget of {snapshot['budget_usd']:.2f} USD "
+                f"exhausted (month-to-date {snapshot['month_to_date_usd']:.6f} USD)"
+            )
         payload = self._build_payload(prompt, system_prompt, kwargs)
         url = self._chat_completions_url()
         headers = self._headers()
@@ -367,6 +424,7 @@ class OpenRouterLLMClient:
             timeout_s=timeout,
             transport=self._transport,
         )
+        self.spend.record_cost(_extract_cost(data))
         return self._extract_content(data, url)
 
     def _chat_completions_url(self) -> str:
@@ -421,6 +479,23 @@ class OpenRouterLLMClient:
         if not isinstance(content, str) or not content.strip():
             raise LLMError(f"LLM at {url} returned empty content")
         return content
+
+
+def _extract_cost(data: Mapping[str, Any]) -> float:
+    """Pull the USD cost OpenRouter reports on a paid-key completion.
+
+    OpenRouter includes ``usage.cost`` (USD) on chat completions billed to
+    the key. Missing/unusable values return ``0.0`` — the local ledger then
+    under-counts, and the console-side key spend limit remains the outer
+    wall, so a missing field can never *disable* the cap, only soften local
+    metering.
+    """
+    try:
+        cost = data["usage"]["cost"]  # type: ignore[index]
+        value = float(cost)
+        return value if value > 0 else 0.0
+    except (KeyError, TypeError, ValueError):
+        return 0.0
 
 
 # --- Gemini provider (native REST, no SDK) ----------------------------------
@@ -556,6 +631,8 @@ _LLM_CONFIG_FIELDS: frozenset[str] = frozenset(
         "openrouter_api_key",
         "openrouter_base_url",
         "openrouter_model",
+        "openrouter_monthly_budget_usd",
+        "openrouter_spend_state_path",
         "gemini_api_key",
         "gemini_base_url",
         "gemini_model",

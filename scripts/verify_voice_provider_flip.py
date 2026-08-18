@@ -54,6 +54,7 @@ import httpx
 
 from huible.api.settings import Settings
 from huible.llm.client import (
+    LLMBudgetExceededError,
     LLMConfigError,
     LLMProvider,
     build_llm_client,
@@ -225,6 +226,67 @@ def posture_g_rollback(t: Transcript) -> None:
     )
 
 
+def posture_h_budget_wall(t: Transcript) -> None:
+    t.section("(H) $50/mo hard cap — budget exhaustion blocks the hosted call pre-network")
+    import tempfile
+    from pathlib import Path
+
+    from huible.llm.client import LLMConfig, OpenRouterLLMClient
+
+    hits: list = []
+
+    def handler(request):  # pragma: no cover - mock only
+        hits.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-budget",
+                "choices": [
+                    {"index": 0, "message": {"role": "assistant", "content": "One more story."}}
+                ],
+                "usage": {"cost": 1.0},
+            },
+        )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = LLMConfig(
+            provider=LLMProvider.OPENROUTER,
+            openrouter_api_key=OPENROUTER_API_KEY,
+            openrouter_monthly_budget_usd=1.0,
+            openrouter_spend_state_path=str(Path(tmp) / "spend.json"),
+        )
+        client = OpenRouterLLMClient(cfg, transport=httpx.MockTransport(handler))
+        first = asyncio.run(client.generate("one more story"))
+        t.check("budgeted call 1 succeeds (accrues usage.cost)", first == "One more story.")
+        blocked = False
+        try:
+            asyncio.run(client.generate("and another"))
+        except LLMBudgetExceededError:
+            blocked = True
+        t.check("call 2 at cap → LLMBudgetExceededError", blocked)
+        t.check("transport fired exactly once (cap blocks pre-network)", len(hits) == 1)
+
+
+def posture_i_budget_env(t: Transcript) -> None:
+    t.section("(I) Budget env plumbing — default $50 (board-approved), override honored")
+    from huible.llm.client import LLMConfig
+
+    default_cfg = LLMConfig.from_env({"LLM_PROVIDER": "openrouter"})
+    t.check(
+        "default OPENROUTER_MONTHLY_BUDGET_USD == 50 (board decision 2026-08-18)",
+        default_cfg.openrouter_monthly_budget_usd == 50.0,
+        f"value={default_cfg.openrouter_monthly_budget_usd}",
+    )
+    override_cfg = LLMConfig.from_env(
+        {"LLM_PROVIDER": "openrouter", "OPENROUTER_MONTHLY_BUDGET_USD": "25"}
+    )
+    t.check(
+        "OPENROUTER_MONTHLY_BUDGET_USD=25 override parsed",
+        override_cfg.openrouter_monthly_budget_usd == 25.0,
+        f"value={override_cfg.openrouter_monthly_budget_usd}",
+    )
+
+
 def section_config(t: Transcript) -> None:
     t.add("=" * 78)
     t.add("HUIBLE — Voice-axis provider-flip rehearsal (HU-1461, PM partial unblock)")
@@ -244,6 +306,8 @@ def main() -> int:
     posture_e_openrouter_keyed(t)
     posture_f_settings_bridge(t)
     posture_g_rollback(t)
+    posture_h_budget_wall(t)
+    posture_i_budget_env(t)
 
     t.add("", "=" * 78)
     if t.failures:
