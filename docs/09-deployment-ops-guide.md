@@ -143,6 +143,14 @@ HANDOFF_COVERAGE_MODE=always
 HANDOFF_PAGER_PROVIDER=log   # flip to webhook once the pager URL is provisioned
 ```
 
+**Synthetic/verification tickets** (deploy checks, drills) that escalate into
+the queue are closed via the dedicated runbook — outcome `abandoned` with a
+`SYNTHETIC:` provenance note, never `answered` (which would fake the
+`answered_within_sla_rate` ramp gate), and never by re-resolving a terminal
+ticket (which overwrites audit evidence). One command:
+`bash scripts/resolve_handoff_ticket.sh <ticket_id> --note "deploy-check HU-18xx"`.
+Full procedure: `docs/runbooks/handoff-synthetic-ticket-closure.md` (HU-1866).
+
 Setting `HANDOFF_AVAILABLE_RESPONDERS>0` flips the `huible_alert_oncall_configured`
 gauge to `1` (the §3 Sev-1 alerts are now wired to a real on-call). Defaults stay
 at the fail-safe (`0` responders) so an unconfigured deploy never falsely pages or
