@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from sqlalchemy import func, select, text, update
+from sqlalchemy import func, literal_column, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from huible.memory.models import (
@@ -184,11 +184,23 @@ class PostgresMemoryBackend(MemoryBackend):
         disclosure_scope: DisclosureScope | None,
     ) -> list[SearchResult]:
         col = getattr(MemoryRow, column_name)
+        # NOTE(HU-1435): ``col.cosine_distance(...)`` (pgvector's SQLAlchemy
+        # operator) is not reachable through the ``_PortableVector``
+        # TypeDecorator — ``InstrumentedAttribute`` exposes only the impl
+        # (LargeBinary) comparator set, so the operator raised AttributeError
+        # the first time this search ran against real Postgres during the
+        # real-user flip verification. Build the distance expression with an
+        # explicit ``literal_column`` instead: pgvector (>=0.7) ships the
+        # ``cosine_distance(vector, vector)`` function used here. The query
+        # vector is rendered as a float literal (numeric-only, not user
+        # input), so there is no injection surface.
+        qvec = "[" + ",".join(f"{float(x):.8g}" for x in query_embedding) + "]"
+        table_name = MemoryRow.__tablename__
+        similarity = literal_column(
+            f"(1 - cosine_distance({table_name}.{column_name}, '{qvec}'::vector))"
+        ).label("similarity")
         stmt = (
-            select(
-                MemoryRow,
-                (1 - col.cosine_distance(query_embedding)).label("similarity"),
-            )
+            select(MemoryRow, similarity)
             .where(MemoryRow.persona_id == persona_id)
             .where(MemoryRow.is_active.is_(True))
             .where(col.isnot(None))
