@@ -1788,7 +1788,14 @@ def _register_routes(application: FastAPI) -> None:
         # scrape (the counters above still carry the signal).
         try:
             queue: HandoffQueue = application.state.handoff_queue
-            telemetry = compute_handoff_telemetry(queue.audit_log(), now=datetime.now(UTC))
+            telemetry = compute_handoff_telemetry(
+                queue.audit_log(),
+                now=datetime.now(UTC),
+                # Rolling window (HU-1865): the §4.1 gauges page on *current*
+                # queue health; the /api/v1/handoff/audit dashboard keeps the
+                # all-time view.
+                window_seconds=application.state.settings.handoff_telemetry_window_seconds,
+            )
             record_handoff_telemetry(telemetry)
         except Exception:  # pragma: no cover - defensive, scrape must not break
             logger.exception("handoff telemetry gauge update failed")

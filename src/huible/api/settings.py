@@ -158,6 +158,15 @@ class Settings(BaseSettings):
     # when the URL is empty so credentials land at deploy time.
     handoff_pager_provider: str = "log"
     handoff_pager_webhook_url: str = ""
+    # Rolling window (seconds) for the §3.1 telemetry *gauges* mirrored at
+    # /metrics (huible_handoff_* — HU-1865). The alerting gauges reflect
+    # current queue health, not all-time history: an all-time cumulative
+    # degrade_rate is permanently pinned above zero by a single historical
+    # degrade (observed 2026-08-18 — one pre-staffing no_responder_available
+    # degrade held HuibleHandoffDegradeRate at 100% and paged for 25 minutes,
+    # HU-1865). Default 24h. The /api/v1/handoff/audit dashboard is
+    # unaffected (all-time view).
+    handoff_telemetry_window_seconds: int = 86400
     # ── Stage 0.4a Sev-1 paging channel (HU-1451) ───────────────────────────
     # The four §3 Sev-1 triggers (crisis enqueue + ack-SLA miss + un-grounded
     # claim leak + degraded net + consent bypass) page a real human channel,

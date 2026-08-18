@@ -176,6 +176,100 @@ class TestHandoffTelemetry:
         assert tel.answered_breach_rate == 0.5
 
 
+# --- rolling-window telemetry (HU-1865) --------------------------------------
+
+
+class TestTelemetryWindow:
+    """window_seconds restricts aggregation to recently-created tickets.
+
+    Production rationale (2026-08-18 incident): the all-time cumulative
+    degrade_rate fed to HuibleHandoffDegradeRate is permanently pinned above
+    zero by a single historical degrade. The /metrics gauges pass a rolling
+    window so the §4.1 alert reflects current queue health.
+    """
+
+    def test_old_degrade_outside_window_no_longer_pins_rate(self):
+        # 26h-old degrade + fresh answered ticket: all-time rate 0.5, but the
+        # 24h window sees only the fresh ticket → 0.0.
+        tickets = [
+            _ticket(
+                outcome=HandoffOutcome.DEGRADED,
+                created_at=NOW - timedelta(hours=26),
+                degrade_reason="no_responder_available",
+            ),
+            _ticket(
+                outcome=HandoffOutcome.ANSWERED,
+                created_at=NOW - timedelta(hours=1),
+                resolved_at=NOW - timedelta(minutes=30),
+            ),
+        ]
+        windowed = compute_handoff_telemetry(
+            tickets, now=NOW, window_seconds=24 * 3600
+        )
+        assert windowed.total == 1
+        assert windowed.degraded == 0
+        assert windowed.degrade_rate == 0.0
+        # All-time view (dashboard semantics) is unchanged.
+        all_time = compute_handoff_telemetry(tickets, now=NOW)
+        assert all_time.total == 2
+        assert all_time.degrade_rate == 0.5
+
+    def test_recent_degrade_inside_window_still_fires(self):
+        tickets = [
+            _ticket(
+                outcome=HandoffOutcome.DEGRADED,
+                created_at=NOW - timedelta(hours=2),
+                degrade_reason="no_responder_available",
+            )
+        ]
+        tel = compute_handoff_telemetry(tickets, now=NOW, window_seconds=24 * 3600)
+        assert tel.total == 1
+        assert tel.degrade_rate == 1.0
+
+    def test_window_boundary_is_inclusive(self):
+        # Ticket created exactly at the cutoff stays inside the window.
+        tickets = [
+            _ticket(
+                outcome=HandoffOutcome.DEGRADED,
+                created_at=NOW - timedelta(seconds=3600),
+            )
+        ]
+        tel = compute_handoff_telemetry(tickets, now=NOW, window_seconds=3600)
+        assert tel.total == 1
+        assert tel.degrade_rate == 1.0
+
+    def test_empty_window_is_zeroed(self):
+        # Every ticket outside the window → zeroed telemetry, not an error.
+        tickets = [
+            _ticket(
+                outcome=HandoffOutcome.DEGRADED,
+                created_at=NOW - timedelta(hours=48),
+            )
+        ]
+        tel = compute_handoff_telemetry(tickets, now=NOW, window_seconds=3600)
+        assert tel.total == 0
+        assert tel.degrade_rate == 0.0
+
+    def test_none_window_matches_all_time(self):
+        tickets = [
+            _ticket(outcome=HandoffOutcome.DEGRADED, created_at=NOW - timedelta(hours=48)),
+            _ticket(
+                outcome=HandoffOutcome.ANSWERED,
+                created_at=NOW - timedelta(hours=1),
+                resolved_at=NOW,
+            ),
+        ]
+        assert compute_handoff_telemetry(tickets, now=NOW) == compute_handoff_telemetry(
+            tickets, now=NOW, window_seconds=None
+        )
+
+    def test_non_positive_window_is_rejected(self):
+        import pytest
+
+        with pytest.raises(ValueError):
+            compute_handoff_telemetry([], now=NOW, window_seconds=0)
+
+
 # --- degrade-reason breakdown (HU-1428 AC #2 / Condition 3 stage-gate) ------
 
 

@@ -196,9 +196,12 @@ PAGING_FAILURES = Counter(
 # §3.1 guardrail-health SLOs (handoff queue).
 HANDOFF_DEGRADE_RATE = Gauge(
     "huible_handoff_degrade_rate",
-    "§3.1 handoff degrade rate (degraded / total). The fail-safe firing share. "
-    "Healthy = 0.0 (every escalation reached a human). Launch-plan §4.1 "
-    "rollback trigger: > 0 halts the ramp.",
+    "§3.1 handoff degrade rate (degraded / total) over the rolling telemetry "
+    "window (HANDOFF_TELEMETRY_WINDOW_SECONDS, default 24h — HU-1865). The "
+    "fail-safe firing share of *recent* escalations. Healthy = 0.0 (every "
+    "escalation reached a human). Launch-plan §4.1 rollback trigger: > 0 "
+    "halts the ramp. Historical degrades outside the window no longer pin "
+    "this gauge.",
 )
 HANDOFF_PENDING_BREACHED = Gauge(
     "huible_handoff_pending_breached",
@@ -217,8 +220,9 @@ HANDOFF_ANSWERED_WITHIN_SLA_RATE = Gauge(
 )
 HANDOFF_TICKETS_TOTAL = Gauge(
     "huible_handoff_tickets_total",
-    "Total handoff tickets in the audit log at last scrape (all outcomes). "
-    "Context gauge for the rates above.",
+    "Handoff tickets in the rolling telemetry window "
+    "(HANDOFF_TELEMETRY_WINDOW_SECONDS, default 24h) at last scrape "
+    "(all outcomes). Context gauge for the rates above — HU-1865.",
 )
 HANDOFF_PENDING = Gauge(
     "huible_handoff_pending",

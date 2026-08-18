@@ -43,9 +43,11 @@ groups:
         annotations:
           summary: "Huible handoff degrade rate > 0"
           description: >
-            {{ $value | humanizePercentage }} of handoff escalations degraded
-            (no staffed responder reached). Launch-plan §4.1 rollback trigger:
-            halt the ramp and run the kill-switch rollback procedure.
+            {{ $value | humanizePercentage }} of handoff escalations over the
+            rolling telemetry window (default 24h) degraded (no staffed
+            responder reached). Launch-plan §4.1 rollback trigger: halt the
+            ramp and run the kill-switch rollback procedure. Historical
+            degrades outside the window do not fire this alert (HU-1865).
 
       # A pending ticket past its SLA target = a grieving user is waiting past
       # the agreed target right now. Page immediately.

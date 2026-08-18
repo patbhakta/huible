@@ -45,7 +45,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from huible.safety.handoff import HandoffOutcome, HandoffTicket
 
@@ -208,14 +208,37 @@ def compute_handoff_telemetry(
     tickets: Iterable[HandoffTicket],
     *,
     now: datetime | None = None,
+    window_seconds: int | None = None,
 ) -> HandoffTelemetry:
     """Compute aggregate SLA + outcome telemetry over ``tickets``.
 
     ``tickets`` is any iterable of :class:`HandoffTicket` (typically
     ``queue.audit_log()``). ``now`` is injected for deterministic breach
     detection on open tickets (defaults to current UTC).
+
+    ``window_seconds`` restricts the aggregation to tickets **created** within
+    the trailing window (``created_at >= now - window_seconds``); ``None``
+    (the default) aggregates all-time. The alerting path passes a rolling
+    window (``HANDOFF_TELEMETRY_WINDOW_SECONDS``, default 24h) so the §4.1
+    gauges reflect *current* queue health: an all-time cumulative
+    ``degrade_rate`` is permanently pinned above zero by a single historical
+    degrade — observed in production 2026-08-18 when one pre-staffing
+    ``no_responder_available`` degrade (the expected fail-safe while the
+    roster is unstaffed) held ``HuibleHandoffDegradeRate`` at 100% and paged
+    for 25 minutes with no path back to quiet (HU-1865). The
+    ``/api/v1/handoff/audit`` dashboard keeps the all-time view so the full
+    audit trail remains visible to the Clinical Advisor sign-off.
     """
     now = now or datetime.now(UTC)
+    if window_seconds is not None:
+        if window_seconds <= 0:
+            raise ValueError(
+                f"window_seconds must be positive, got {window_seconds!r}"
+            )
+        cutoff = now - timedelta(seconds=window_seconds)
+        tickets = (
+            t for t in tickets if _parse_iso(t.created_at) >= cutoff
+        )
     by_outcome: dict[str, int] = {}
     pending = answered = degraded = abandoned = 0
     pending_breached = answered_breached_sla = 0

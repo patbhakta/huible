@@ -205,6 +205,23 @@ class TestSloGauges:
         assert _metric_total(text, "huible_handoff_degrade_rate") == 1.0
         assert _metric_total(text, "huible_handoff_tickets_total") == 1.0
 
+    def test_degrade_rate_gauge_excludes_degrades_outside_window(self):
+        # HU-1865: the gauge aggregates the rolling telemetry window
+        # (default 24h). A degrade older than the window must not pin it —
+        # the 2026-08-18 incident had the all-time cumulative rate paging at
+        # 100% indefinitely after one pre-staffing degrade.
+        queue = InMemoryHandoffQueue(available_responders=0)
+        _seed_ticket(
+            queue,
+            ticket_id="t-stale-degrade",
+            outcome=HandoffOutcome.DEGRADED,
+            seconds_old=25 * 3600,  # outside the default 24h window
+        )
+        client = _make_client_with_queue(queue)
+        text = client.get("/metrics").text
+        assert _metric_total(text, "huible_handoff_degrade_rate") == 0.0
+        assert _metric_total(text, "huible_handoff_tickets_total") == 0.0
+
     def test_pending_breached_gauge_rises_on_overdue_ticket(self):
         queue = InMemoryHandoffQueue(available_responders=1)
         # Created 10 minutes ago, SLA target 300s → past SLA now.

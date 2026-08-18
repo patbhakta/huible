@@ -415,16 +415,21 @@ gauges; no PHI). Stage 0.3 (HU-1446) shipped the guardrail counters; Stage 0.8
 
 These gauges are mirrored from the `/api/v1/handoff/audit` telemetry and the
 `/health` probe on every scrape, so the Prometheus view cannot drift from the
-JSON dashboard. The alert rules in [`examples/prometheus-alerts.yml`](../examples/prometheus-alerts.yml)
+JSON dashboard. The alerting gauges aggregate a **rolling telemetry window**
+(`HANDOFF_TELEMETRY_WINDOW_SECONDS`, default 24h — HU-1865) so they reflect
+*current* queue health; a historical degrade outside the window no longer pins
+`HuibleHandoffDegradeRate` above zero (the 2026-08-18 incident: one
+pre-staffing degrade paged at 100% indefinitely). The audit dashboard itself
+keeps the all-time view. The alert rules in [`examples/prometheus-alerts.yml`](../examples/prometheus-alerts.yml)
 page on these gauges.
 
 | Metric | Type | Description | SLO / trigger |
 |--------|------|-------------|---------------|
-| `huible_handoff_degrade_rate` | gauge | §3.1 degrade rate (degraded / total) | Healthy = 0.0; > 0 halts ramp (§4.1) |
+| `huible_handoff_degrade_rate` | gauge | §3.1 degrade rate (degraded / total) over the rolling window | Healthy = 0.0; > 0 halts ramp (§4.1) |
 | `huible_handoff_pending_breached` | gauge | Open tickets past SLA right now | Healthy = 0; any > 0 halts ramp (§4.1) |
 | `huible_handoff_pending_breach_rate` | gauge | pending_breached / pending | Healthy = 0.0 |
 | `huible_handoff_answered_within_sla_rate` | gauge | 1 − answered_breach_rate | ≥ 0.9 (S1), ≥ 0.95 (S2+) |
-| `huible_handoff_tickets_total` | gauge | Total tickets in audit log | context for the rates |
+| `huible_handoff_tickets_total` | gauge | Tickets in the rolling window | context for the rates |
 | `huible_handoff_pending` | gauge | Open (ENQUEUED) tickets | queue-depth signal |
 | `huible_health_status` | gauge | `/health` status: 1 = ok, 0 = degraded | degraded halts ramp (§4.1) |
 
