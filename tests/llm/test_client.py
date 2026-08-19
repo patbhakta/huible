@@ -411,6 +411,32 @@ async def test_zai_round_trip_request_shape_and_content(tmp_path: Any) -> None:
     assert "conversation_id" not in cap.payload
 
 
+async def test_zai_thinking_disabled_by_default_and_overridable(tmp_path: Any) -> None:
+    cap, transport = _zai_transport("reply")
+    client = ZaiLLMClient(
+        _zai_config(zai_token_state_path=str(tmp_path / "t.json")), transport=transport
+    )
+    await client.generate(PROMPT, system_prompt=SYSTEM)
+    # Persona-voice-safe default: reasoning tokens cannot starve the reply.
+    assert cap.payload["thinking"] == {"type": "disabled"}
+
+    cap2, transport2 = _zai_transport("reply")
+    client = ZaiLLMClient(
+        _zai_config(zai_thinking="enabled", zai_token_state_path=str(tmp_path / "t2.json")),
+        transport=transport2,
+    )
+    await client.generate(PROMPT, system_prompt=SYSTEM)
+    assert cap2.payload["thinking"] == {"type": "enabled"}
+
+
+def test_from_env_parses_zai_thinking() -> None:
+    cfg = LLMConfig.from_env({"ZAI_THINKING": "enabled"})
+    assert cfg.zai_thinking == "enabled"
+    # Invalid values fall back to the safe default, never crash.
+    cfg = LLMConfig.from_env({"ZAI_THINKING": "maybe"})
+    assert cfg.zai_thinking == "disabled"
+
+
 async def test_zai_accrues_tokens_and_logs_cost_line(tmp_path: Any, caplog: Any) -> None:
     _, transport = _zai_transport(
         "reply", usage={"prompt_tokens": 100, "completion_tokens": 40, "total_tokens": 140}

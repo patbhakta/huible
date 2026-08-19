@@ -116,6 +116,8 @@ class Settings(BaseSettings):
     zai_model: str = ""
     zai_daily_token_limit: int = 200000
     zai_token_state_path: str = "/var/lib/huible/zai-tokens.json"
+    # glm thinking shares max_tokens; persona voice opts out by default.
+    zai_thinking: str = "disabled"
     llm_model: str = ""
     llm_max_tokens: int = 512
     llm_temperature: float = 0.7
@@ -421,6 +423,7 @@ class Settings(BaseSettings):
                 "ZAI_MODEL": self.zai_model,
                 "ZAI_DAILY_TOKEN_LIMIT": str(self.zai_daily_token_limit),
                 "ZAI_TOKEN_STATE_PATH": self.zai_token_state_path,
+                "ZAI_THINKING": self.zai_thinking,
                 "LLM_MODEL": self.llm_model,
                 "LLM_MAX_TOKENS": str(self.llm_max_tokens),
                 "LLM_TEMPERATURE": str(self.llm_temperature),

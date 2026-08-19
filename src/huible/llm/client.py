@@ -64,6 +64,7 @@ __all__ = [
     "DEFAULT_ZAI_BASE_URL",
     "DEFAULT_ZAI_DAILY_TOKEN_LIMIT",
     "DEFAULT_ZAI_MODEL",
+    "DEFAULT_ZAI_THINKING",
     "DEFAULT_ZAI_TOKEN_STATE_PATH",
     "FakeLLMClient",
     "GeminiLLMClient",
@@ -168,6 +169,12 @@ DEFAULT_ZAI_MODEL = "glm-5.3"
 DEFAULT_ZAI_DAILY_TOKEN_LIMIT = 200_000
 #: Durable daily-token ledger; deployment bind-mounts a writable volume here.
 DEFAULT_ZAI_TOKEN_STATE_PATH = "/var/lib/huible/zai-tokens.json"
+#: glm-5.3 defaults to thinking-on, and its reasoning tokens share the
+#: ``max_tokens`` budget — a persona-voice turn can burn the whole budget on
+#: reasoning and return empty content. The persona voice needs no chain of
+#: thought, so the zai client disables thinking by default; set
+#: ``ZAI_THINKING=enabled`` to opt back in.
+DEFAULT_ZAI_THINKING = "disabled"
 
 
 # --- Protocol ---------------------------------------------------------------
@@ -219,6 +226,7 @@ class LLMConfig:
     zai_model: str = DEFAULT_ZAI_MODEL
     zai_daily_token_limit: int = DEFAULT_ZAI_DAILY_TOKEN_LIMIT
     zai_token_state_path: str = DEFAULT_ZAI_TOKEN_STATE_PATH
+    zai_thinking: str = DEFAULT_ZAI_THINKING
     max_tokens: int = 512
     temperature: float = 0.7
     request_timeout_s: float = 60.0
@@ -320,6 +328,7 @@ class LLMConfig:
             zai_daily_token_limit=_int("ZAI_DAILY_TOKEN_LIMIT", DEFAULT_ZAI_DAILY_TOKEN_LIMIT),
             zai_token_state_path=(env.get("ZAI_TOKEN_STATE_PATH") or "").strip()
             or DEFAULT_ZAI_TOKEN_STATE_PATH,
+            zai_thinking=_zai_thinking(env),
             max_tokens=_int("LLM_MAX_TOKENS", 512),
             temperature=_float("LLM_TEMPERATURE", 0.7),
             request_timeout_s=_float("LLM_REQUEST_TIMEOUT_S", 60.0),
@@ -792,6 +801,11 @@ class ZaiLLMClient:
             "temperature": _resolve(kwargs, "temperature", self._config.temperature),
             "max_tokens": _resolve(kwargs, "max_tokens", self._config.max_tokens),
         }
+        # Provider dialect (see DEFAULT_ZAI_THINKING): glm thinking shares the
+        # max_tokens budget; the persona voice opts out by default. setdefault
+        # keeps an explicit config.extra / caller override authoritative.
+        if self._config.zai_thinking in {"enabled", "disabled"}:
+            payload.setdefault("thinking", {"type": self._config.zai_thinking})
         if self._config.extra:
             for key, value in self._config.extra.items():
                 payload.setdefault(key, value)
@@ -811,6 +825,22 @@ class ZaiLLMClient:
         if not isinstance(content, str) or not content.strip():
             raise LLMError(f"LLM at {url} returned empty content")
         return content
+
+
+def _zai_thinking(env: Mapping[str, str]) -> str:
+    """Parse ``ZAI_THINKING`` (``enabled`` | ``disabled``).
+
+    Invalid values warn and fall back to the persona-voice-safe default
+    (``disabled``) so a typo can never silently resurrect empty-content
+    turns from reasoning-token burn.
+    """
+    raw = (env.get("ZAI_THINKING") or "").strip().lower()
+    if not raw:
+        return DEFAULT_ZAI_THINKING
+    if raw in {"enabled", "disabled"}:
+        return raw
+    logger.warning("Unknown ZAI_THINKING %r; using %s", raw, DEFAULT_ZAI_THINKING)
+    return DEFAULT_ZAI_THINKING
 
 
 def _extract_usage(data: Mapping[str, Any]) -> dict[str, int]:
@@ -890,6 +920,7 @@ _LLM_CONFIG_FIELDS: frozenset[str] = frozenset(
         "zai_model",
         "zai_daily_token_limit",
         "zai_token_state_path",
+        "zai_thinking",
         "max_tokens",
         "temperature",
         "request_timeout_s",
