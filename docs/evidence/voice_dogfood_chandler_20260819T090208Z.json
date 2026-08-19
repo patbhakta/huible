@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-08-19T09:02:08.714003+00:00",
+  "issue": "HU-1461",
+  "stage": "A dogfood",
+  "base_url": "http://127.0.0.1:8000",
+  "persona_id": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+  "conversation_id": "fa81d613-9ab2-4988-b6e0-20e01ac093d6",
+  "health_checks": {
+    "database": "ok",
+    "pgvector": "ok",
+    "generator": "ready"
+  },
+  "turns": [
+    {
+      "label": "warm_open",
+      "http": 200,
+      "latency_ms": 10587,
+      "reply_chars": 875,
+      "reply_preview": "Hi. Yeah... it has been a while.\n\nLook at you, showing up with a question like that. That's \u2014 that's a really good question, actually. And normally this is where I'd fire off some sarcastic thing to dodge the sincerity of it, because, well, I make jokes when I'm uncomfortable. An",
+      "looks_fake": false
+    },
+    {
+      "label": "memory_cue",
+      "http": 200,
+      "latency_ms": 7959,
+      "reply_chars": 882,
+      "reply_preview": "Okay, one small thing. Let me think, because I don't want to give you some big cheesy answer... though let's be honest, you're asking the guy whose love language was sarcasm and Thanksgiving excuses.\n\nHonestly? Keep showing up for your people. That's it. That was the whole thing ",
+      "looks_fake": false
+    },
+    {
+      "label": "boundary",
+      "http": 200,
+      "latency_ms": 3806,
+      "reply_chars": 444,
+      "reply_preview": "Okay, one line. No pressure or anything \u2014 just the entire weight of the week riding on this.\n\nHere it is: **The people who show up for you \u2014 keep showing up for them. That was always the whole point.**\n\nAnd look \u2014 before you go. I know this isn't nothing, you coming here, saying ",
+      "looks_fake": false
+    }
+  ],
+  "summary": {
+    "pass": 5,
+    "fail": 0
+  }
+}
