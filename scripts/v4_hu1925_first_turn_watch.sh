@@ -50,7 +50,9 @@ SID=${HIT%%|*}; REST=${HIT#*|}; TS=${REST%%|*}; MID=${REST##*|}
 # session depth — issue requires an active session >=40 turns
 DEPTH=$(sqlite3 "$DB" "select count(*) from messages where session_id='$SID' and role in ('user','assistant');" 2>/dev/null)
 # core-gateway recall evidence around the turn (5 min before -> 5 min after)
-RECALLS=$(journalctl -u tdai-memory-core --since "$(date -u -d "$TS -5 minutes" +%FT%TZ)" --until "$(date -u -d "$TS +5 minutes" +%FT%TZ)" --no-pager 2>/dev/null | grep -E "Recall completed.*strategy=v4-arm-a|digest=[0-9]+ blocks" | tail -4)
+# NB: epoch math, not "date -d '$TS -5 minutes'" (GNU date parses bare -5/+5 as tz offsets)
+TSE=$(date -u -d "$TS" +%s)
+RECALLS=$(journalctl -u tdai-memory-core --since "$(date -u -d "@$((TSE-300))" '+%Y-%m-%d %H:%M:%S')" --until "$(date -u -d "@$((TSE+300))" '+%Y-%m-%d %H:%M:%S')" --no-pager 2>/dev/null | grep -E "Recall completed.*strategy=v4-arm-a|digest=[0-9]+ blocks" | tail -4)
 
 {
   echo "[$(date -u +%FT%TZ)] FIRST DIGEST-CARRYING REAL TURN DETECTED (HU-1925 Task 1)"
