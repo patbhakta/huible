@@ -1824,19 +1824,19 @@ def _embed(message: str) -> list[float]:
     Mirrors :func:`huible.conversation.simple_embedding` semantics so retrieval
     hits memories that share keywords with the inbound turn. Kept local to the
     API layer to avoid coupling the HTTP path to the demo conversation module.
-    """
-    import hashlib
 
-    dim = 64
-    words = [w.strip(".,!?;:\"'()[]") for w in message.lower().split() if len(w) > 2]
-    vec = [0.0] * dim
-    for word in words:
-        h = int(hashlib.md5(word.encode("utf-8")).hexdigest(), 16)
-        vec[h % dim] += 1.0
-    norm = sum(x * x for x in vec) ** 0.5
-    if norm > 1e-6:
-        vec = [x / norm for x in vec]
-    return vec
+    The vector is emitted at the ``memories.embedding_content`` schema dim
+    (1536) so the HU-1435 dimension guard lets the pgvector cosine search run:
+    a 64-dim Stage-1 query vector against the 1536-dim column silently skipped
+    every search (activated memories always empty). Keyword-overlap semantics
+    are unchanged — the token hash simply spreads over 1536 buckets, and the
+    provisioned persona memories are stored with this same function/dim
+    (HU-1909). A real embedding provider swaps both sides later via
+    ``EMBEDDING_PROVIDER``.
+    """
+    from huible.conversation import simple_embedding
+
+    return simple_embedding(message, dim=1536)
 
 
 def _conversation_store(application: FastAPI) -> ConversationStore:

@@ -12,12 +12,15 @@ from huible.memory.models import (
     QuarantineRow,
 )
 from huible.memory.protocol import (
+    ContentType,
     DisclosureScope,
     MemoryBackend,
     MemoryEdge,
     MemoryNode,
+    MemoryTier,
     QuarantineEntry,
     SearchResult,
+    SourceType,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,12 +51,30 @@ class PostgresMemoryBackend(MemoryBackend):
         return self._session_factory()
 
     def _row_to_node(self, row: MemoryRow) -> MemoryNode:
+        """Hydrate a DB row into a :class:`MemoryNode` with enum fields coerced.
+
+        SQLAlchemy returns raw column strings for the enum-backed varchar
+        columns; the :class:`MemoryNode` contract (and every consumer — e.g.
+        retrieval's motif clustering reading ``content_type.value``) expects
+        the protocol enums. The dim-skip guard (HU-1435) previously left the
+        Postgres read path unretrievable, so this coercion gap only surfaced
+        once 1536-dim vector search actually ran (HU-1909).
+        """
+
+        def _coerce(value, enum_cls):
+            if isinstance(value, enum_cls):
+                return value
+            try:
+                return enum_cls(str(value))
+            except ValueError:
+                return value
+
         return MemoryNode(
             id=row.id,
             persona_id=row.persona_id,
-            tier=row.tier,
+            tier=_coerce(row.tier, MemoryTier),
             content=row.content,
-            content_type=row.content_type,
+            content_type=_coerce(row.content_type, ContentType),
             embedding_content=row.embedding_content,
             embedding_sensory=row.embedding_sensory,
             embedding_affect=row.embedding_affect,
@@ -61,9 +82,9 @@ class PostgresMemoryBackend(MemoryBackend):
             valid_to=row.valid_to,
             memory_date=row.memory_date,
             source_date=row.source_date,
-            source_type=row.source_type,
+            source_type=_coerce(row.source_type, SourceType),
             source_ref=row.source_ref or {},
-            disclosure_scope=row.disclosure_scope,
+            disclosure_scope=_coerce(row.disclosure_scope, DisclosureScope),
             supersedes=row.supersedes,
             superseded_by=row.superseded_by,
             version=row.version,
