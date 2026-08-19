@@ -82,8 +82,9 @@ for g in $NEW_GISTS; do
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
-    blocks = d.get("blocks") or d.get("gists") or []
-    if isinstance(d, list): blocks = d
+    blocks = d.get("blocks") or d.get("gists") or [] if isinstance(d, dict) else d
+    if isinstance(d, dict):
+        pass
     n = len(blocks) if isinstance(blocks, list) else 1
     arc = bool(d.get("arc") if isinstance(d, dict) else (blocks and getattr(blocks[-1], "get", lambda k: None)("arc")))
     miss = "contractMiss" in json.dumps(d)
