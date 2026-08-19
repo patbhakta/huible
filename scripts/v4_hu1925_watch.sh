@@ -9,8 +9,12 @@
 #      <session-memory-v4> + core-gateway "Recall completed ... strategy=v4-arm-a".
 #   2. Gist maintenance: new gists/<session>.json with arc/bullets validated,
 #      contractMiss flagged if present.
-#   3. Quality signals: v4->v3 fallback warns ("recall failed"), strategy=v3
-#      recalls on prod, z.ai 429 counts in hermes journal.
+# 3. Quality signals: v4->v3 fallback warns ("recall failed"), strategy=v3
+#    recalls on prod, z.ai 429 counts in hermes journal.
+# 4. Write-path health (Task 2 dependency): completed turns only sync to
+#    gateway L0 after the assistant reply lands (mirror skips interrupted /
+#    429-failed turns by design #15218). Gists need 40 L0 turns/session, so
+#    track conversation/add calls + new L0 rows to explain gist dormancy.
 # Rollback lever (only on evidence, human/PM decision): set MEMORY_TDAI_READ_PATH=v3
 # in tdai-memory-core unit env + systemctl restart tdai-memory-core.
 set -uo pipefail
@@ -90,6 +94,11 @@ FALLBACKS=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/nu
 R429=$(journalctl --user -u hermes-gateway --since "$SINCE" --no-pager 2>/dev/null | grep -c 'Usage limit reached')
 log "quality signals: recall-fallback-warns=$FALLBACKS zai-429=$R429"
 
+# 4. Write-path health
+CONV_ADDS=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -c 'REQUEST_START POST /v3/conversation/add')
+NEW_L0=$(sqlite3 -readonly /root/.memory-tencentdb/memory-tdai/vectors.db "select count(*) from l0_conversations where recorded_at >= '$SINCE';" 2>/dev/null || echo 0)
+log "write-path: conversation_add=$CONV_ADDS new_l0_rows=$NEW_L0"
+
 cat > "$SNAP" <<EOF
 {
   "probe_at": "$(date -u +%FT%TZ)",
@@ -103,7 +112,9 @@ cat > "$SNAP" <<EOF
   "last_prepend": "${PREPEND_CHARS#prepend=}",
   "new_gists": "$(echo "$NEW_GISTS" | xargs echo -n)",
   "fallback_warns": $FALLBACKS,
-  "zai_429": $R429
+  "zai_429": $R429,
+  "conv_adds": $CONV_ADDS,
+  "new_l0_rows": $NEW_L0
 }
 EOF
 
