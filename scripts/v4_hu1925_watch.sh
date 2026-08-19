@@ -73,7 +73,10 @@ V4_TURNS=$(sqlite3 "$STATE_DB" "select count(*) from messages where timestamp >=
 REC_V4=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -c 'Recall completed.*strategy=v4-arm-a')
 REC_V3=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -c 'Recall completed.*strategy=v3')
 PREPEND_CHARS=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -o 'Recall completed.*prepend=[0-9]* chars, strategy=v4-arm-a' | tail -1 | grep -o 'prepend=[0-9]*' | head -1)
-log "recalls since baseline: v4-arm-a=$REC_V4 v3=$REC_V3 last=$PREPEND_CHARS"
+# digest block count from the v4-arm-a recall debug line — the signal that
+# gists actually landed in prepend_context (Task 1 digest-on-real-turn check).
+DIGEST_BLOCKS=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -o '\[v4-arm-a\].*digest=[0-9]* blocks' | tail -1 | grep -o 'digest=[0-9]*' | grep -o '[0-9]*')
+log "recalls since baseline: v4-arm-a=$REC_V4 v3=$REC_V3 last=$PREPEND_CHARS digest_blocks=${DIGEST_BLOCKS:-none}"
 log "request dumps: with-v4=$v4_dumps without-v4=$v3_dumps"
 
 # 2. Gist maintenance
@@ -119,6 +122,7 @@ cat > "$SNAP" <<EOF
   "recalls_v4": $REC_V4,
   "recalls_v3": $REC_V3,
   "last_prepend": "${PREPEND_CHARS#prepend=}",
+  "digest_blocks": ${DIGEST_BLOCKS:-null},
   "new_gists": "$(echo "$NEW_GISTS" | xargs echo -n)",
   "fallback_warns": $FALLBACKS,
   "zai_429": $R429,
