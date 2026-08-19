@@ -11,23 +11,78 @@ Covers the HU-1403 acceptance criteria:
 - Settings defaults are key-free (mock generator / fake embeddings) and the
   effective DB URL ignores a foreign (non-asyncpg) ``DATABASE_URL``.
 - CORS preflight is answered.
+
+These tests are hermetic (HU-1936): they run against the documented key-free
+defaults regardless of the host's deployment configuration. On the ops host
+the checkout doubles as the deploy dir — ``.env`` is a symlink to the live
+failover config (real generator provider + keys) and provider/DB vars are
+exported in the shell — which previously flipped the key-free-default
+assertions to false-reds. The autouse fixture below isolates them.
 """
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from huible.api.app import app, create_app
-from huible.api.settings import Settings
+from huible.api.settings import Settings, get_settings
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+#: Ambient env vars that would flip the key-free defaults asserted in this
+#: module. Stripped for every test here so the suite is hermetic on hosts
+#: where the checkout doubles as the deploy dir (live ``.env`` symlink plus
+#: exported provider / DB vars) — HU-1936.
+_HERMETIC_ENV_KEYS = (
+    # Persona generator: provider label on /health + to_generator_config().
+    "GENERATOR_PROVIDER",
+    "GENERATOR_BASE_URL",
+    "GENERATOR_MODEL",
+    "GENERATOR_API_KEY",
+    "GENERATOR_MAX_TOKENS",
+    "GENERATOR_TEMPERATURE",
+    "GENERATOR_REQUEST_TIMEOUT_S",
+    "GENERATOR_EXTRA_JSON",
+    # Embedding provider key-free default.
+    "EMBEDDING_PROVIDER",
+    # Database wiring: the "skipped" health checks require no usable URL.
+    "DATABASE_URL",
+    "POSTGRES_HOST",
+    "POSTGRES_PORT",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_DB",
+)
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_key_free_env(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> AsyncIterator[None]:
+    """Isolate every test in this module from deployment configuration.
+
+    ``Settings.model_config`` loads ``env_file=".env"`` relative to the
+    process CWD, so on the ops host a bare ``Settings()`` / ``create_app()``
+    picked up the live failover config (real generator provider) and the
+    key-free-default assertions failed. Run each test from an empty CWD, strip
+    the ambient provider / DB overrides, and reset the process-wide settings
+    cache around the test so ``get_settings()`` resolves the key-free defaults
+    here and the ambient config again for the rest of the suite.
+    """
+    monkeypatch.chdir(tmp_path)
+    for key in _HERMETIC_ENV_KEYS:
+        monkeypatch.delenv(key, raising=False)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 class _FakeBackend:
