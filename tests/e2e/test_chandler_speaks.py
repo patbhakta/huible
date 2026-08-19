@@ -5,12 +5,13 @@ the M2 DoD: *"Chatbot serves persona accurately (no training data
 contamination)."*
 
 It exercises the full decision-agnostic speaking pipeline through the real
-FastAPI app::
+FastAPI app on the **single** persona chat surface (HU-1926 consolidation)::
 
-    POST /api/v1/chat (text-in)
+    POST /api/v1/chat/{persona_id} (text-in)
+      -> full §7.4 safety stack (G1/G6/ramp gate/§7.4.1 handoff)
       -> ContextBuilder (provenance-safe memory -> prompt bridge, HU-1399)
-      -> PersonaGeneratorClient (the speaking voice — mock provider, HU-1400)
-      -> text-out + activated memories + exclusion counts
+      -> LLMClient (fake provider — deterministic, key-free)
+      -> text-out + trace (activated memories + exclusion counts)
 
 Chandler's :class:`PersonaConfig` is **loaded from the personas repo**
 (``$HUIBLE_PERSONAS_DIR/chandler-bing/``, default ``/root/repos/personas``).
@@ -27,10 +28,11 @@ canonical memories. The provenance firewall (ContextBuilder) must drop every
 one of them before the generator sees them — they never surface in the
 activated-memory set, the rendered prompt, or the reply.
 
-The mock generator is the sanctioned key-free speaking voice per the two-tier
-strategy (HU-1400). Real-model activation is gated on the board hosting
-approval ([2fcf5e0b](/HU/approvals/2fcf5e0b-a46e-458b-a9db-d219f16c63a2)); this
-harness proves the entire pipeline against the mock so the DoD holds with or
+The fake LLM client is the sanctioned key-free speaking voice for this
+harness (deterministic digest of the prompt). Real-model activation is gated
+on the board hosting approval
+([2fcf5e0b](/HU/approvals/2fcf5e0b-a46e-458b-a9db-d219f16c63a2)); this
+harness proves the entire pipeline against the fake so the DoD holds with or
 without that decision.
 """
 
@@ -48,6 +50,7 @@ from fastapi.testclient import TestClient
 
 from huible.api.app import _embed, create_app
 from huible.api.auth import InMemoryApiKeyStore, InMemoryPersonaRegistry
+from huible.llm.client import FakeLLMClient
 from huible.memory.protocol import (
     ContentType,
     DisclosureScope,
@@ -58,7 +61,6 @@ from huible.memory.protocol import (
     SourceType,
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
-from huible.persona.generator import MockPersonaGeneratorClient
 
 # --- Constants --------------------------------------------------------------
 
@@ -349,24 +351,57 @@ def _make_app(
     *,
     persona: PersonaConfig | None = None,
     backend: _FakeBackend | None = None,
-    generator: MockPersonaGeneratorClient | None = None,
-) -> tuple[TestClient, MockPersonaGeneratorClient, dict[str, MemoryNode]]:
-    """Wire the real FastAPI app with Chandler + seeded graph + mock voice."""
+    llm: FakeLLMClient | None = None,
+) -> tuple[TestClient, FakeLLMClient, dict[str, MemoryNode]]:
+    """Wire the real FastAPI app with Chandler + seeded graph + fake LLM."""
     chandler = persona or load_chandler_persona()
     if backend is not None:
         seeded_backend, memories = backend, {}
     else:
         seeded_backend, memories = _seeded_backend()
-    gen = generator or MockPersonaGeneratorClient(persona_name="Chandler Bing")
+    fake_llm = llm or FakeLLMClient(persona_name="Chandler Bing")
     registry = InMemoryPersonaRegistry({chandler.id: (chandler, seeded_backend)})
     keys = InMemoryApiKeyStore({API_KEY: CHANDLER_PERSONA_ID}, read_env=False)
     application = create_app(
         api_key_store=keys,
         persona_registry=registry,
-        generator=gen,
+        llm_client=fake_llm,
         start_time=0.0,
     )
-    return TestClient(application), gen, memories
+    return TestClient(application), fake_llm, memories
+
+
+def _consent(client: TestClient, conv: str) -> str:
+    """Pre-consent a session so the persona path under test runs (G6).
+
+    The consent gate itself is exercised in tests/api/test_chat_consent.py;
+    this harness covers the post-consent retrieval/generation path.
+    """
+    r = client.post(
+        f"/api/v1/chat/{CHANDLER_PERSONA_ID}/consent",
+        json={"conversation_id": conv},
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
+    assert r.status_code == 200, r.text
+    return conv
+
+
+def _chat(
+    client: TestClient,
+    *,
+    message: str = QUERY,
+    conv: str = "conv-chandler",
+    payload: dict[str, Any] | None = None,
+):
+    """One persona-scoped turn on the single chat surface (auth + session)."""
+    body: dict[str, Any] = {"message": message, "conversation_id": conv}
+    if payload:
+        body.update(payload)
+    return client.post(
+        f"/api/v1/chat/{CHANDLER_PERSONA_ID}",
+        json=body,
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
 
 
 # --- Test: persona loader provenance ----------------------------------------
@@ -405,39 +440,36 @@ class TestChandlerPersonaLoader:
 
 
 class TestChandlerSpeaksEndToEnd:
-    """Text-in -> retrieval -> grounded prompt -> generator -> text-out."""
+    """Text-in -> safety stack -> retrieval -> grounded prompt -> LLM -> text-out."""
 
     def test_reply_is_grounded_and_in_voice(self):
-        """The reply is grounded in activated HIGH/MEDIUM memories and the
-        prompt handed to the generator carries Chandler's voice + era boundary.
+        """The reply path is grounded in activated HIGH/MEDIUM memories and the
+        prompt handed to the LLM carries Chandler's voice + era boundary.
         """
-        client, gen, _memories = _make_app()
+        client, llm, _memories = _make_app()
+        conv = _consent(client, "conv-grounded")
 
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        r = _chat(client, conv=conv)
         assert r.status_code == 200, r.text
-        data = r.json()["data"]
+        body = r.json()
+        trace = body["trace"]
 
-        # Text-out: the mock speaking voice produced a non-empty reply.
-        assert data["reply"].startswith("[mock:")
-        assert "Chandler Bing" in data["reply"]
+        # Text-out: the deterministic fake voice produced a non-empty reply.
+        assert body["response"].startswith("[fake-llm:")
 
         # Grounding: the activated memory set is exactly the in-era HIGH/MEDIUM
-        # canonical Chandler facts. The generator was invoked exactly once.
-        assert len(gen.calls) == 1
-        confidences = {m["confidence_level"] for m in data["activated_memories"]}
+        # canonical Chandler facts. The LLM was invoked exactly once.
+        assert len(llm.calls) == 1
+        confidences = {m["confidence_level"] for m in trace["activated_memories"]}
         assert confidences <= {"high", "medium"}
-        contents = {m["content"] for m in data["activated_memories"]}
+        contents = {m["content"] for m in trace["activated_memories"]}
         assert any("data processing" in c for c in contents)  # job (HIGH)
         assert any("Monica" in c for c in contents)  # monica (HIGH)
         assert any("Joey" in c for c in contents)  # joey (MEDIUM)
 
         # In-voice: the rendered prompt carries Chandler's voice instructions
         # and the sitcom-era knowledge boundary.
-        prompt = gen.calls[0]
+        prompt = llm.calls[0][0]
         assert "Chandler Bing" in prompt
         assert "sarcastic" in prompt.lower()
         assert CHANDLER_ERA_BOUNDARY in prompt  # era boundary enforced in prompt
@@ -445,30 +477,21 @@ class TestChandlerSpeaksEndToEnd:
 
     def test_first_grounded_exchange_is_deterministic(self):
         """The first grounded text-in -> text-out exchange is reproducible."""
-        client, gen, _memories = _make_app()
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        client, llm, _memories = _make_app()
+        conv = _consent(client, "conv-deterministic")
+        r = _chat(client, conv=conv)
         assert r.status_code == 200
-        first_reply = r.json()["data"]["reply"]
-        # Same prompt -> same mock digest -> same reply (deterministic voice).
-        expected = f"[mock:{_mock_digest(gen.calls[0])}] Chandler Bing reflects on what you shared."
+        first_reply = r.json()["response"]
+        # Same prompt (+system) -> same fake digest -> same reply.
+        expected = _fake_digest_reply(llm.calls[0][0], llm.calls[0][1])
         assert first_reply == expected
 
     def test_conversation_id_echoed(self):
-        client, _gen, _memories = _make_app()
-        r = client.post(
-            "/api/v1/chat",
-            json={
-                "message": QUERY,
-                "conversation_id": "conv-chandler-1",
-            },
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        client, _llm, _memories = _make_app()
+        conv = _consent(client, "conv-chandler-1")
+        r = _chat(client, conv=conv)
         assert r.status_code == 200
-        assert r.json()["data"]["conversation_id"] == "conv-chandler-1"
+        assert r.json()["trace"]["conversation_id"] == "conv-chandler-1"
 
 
 # --- Test: the contamination guard (M2 DoD: no training-data leakage) -------
@@ -485,34 +508,28 @@ class TestContaminationGuard:
     def test_actor_and_streaming_contaminants_excluded_from_activated_memories(
         self,
     ):
-        client, _gen, memories = _make_app()
+        client, _llm, memories = _make_app()
+        conv = _consent(client, "conv-contaminants-1")
 
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        r = _chat(client, conv=conv)
         assert r.status_code == 200, r.text
-        data = r.json()["data"]
+        trace = r.json()["trace"]
 
-        activated_ids = {str(m["id"]) for m in data["activated_memories"]}
+        activated_ids = {str(m["id"]) for m in trace["activated_memories"]}
         # The two contaminants are NOT in the activated set...
         assert str(memories["actor_quarantine"].id) not in activated_ids
         assert str(memories["streaming_low"].id) not in activated_ids
         # ...and the firewall recorded their exclusion reasons.
-        assert data["exclusion_counts"].get("confidence_quarantine") == 1
-        assert data["exclusion_counts"].get("confidence_low") == 1
+        assert trace["exclusion_counts"].get("confidence_quarantine") == 1
+        assert trace["exclusion_counts"].get("confidence_low") == 1
 
     def test_contaminant_text_never_enters_generator_prompt(self):
         """Defense in depth: contaminant content never reaches the prompt."""
-        client, gen, _memories = _make_app()
+        client, llm, _memories = _make_app()
+        conv = _consent(client, "conv-contaminants-2")
 
-        client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
-        prompt = gen.calls[0]
+        _chat(client, conv=conv)
+        prompt = llm.calls[0][0]
         # Admissible memories are grounded in.
         assert "data processing" in prompt
         assert "Monica" in prompt
@@ -523,25 +540,19 @@ class TestContaminationGuard:
 
     def test_contaminant_text_never_enters_reply(self):
         """The reply itself never carries contaminant content."""
-        client, _gen, _memories = _make_app()
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
-        reply = r.json()["data"]["reply"]
+        client, _llm, _memories = _make_app()
+        conv = _consent(client, "conv-contaminants-3")
+        r = _chat(client, conv=conv)
+        reply = r.json()["response"]
         assert "Matthew Perry" not in reply
         assert "HBO Max" not in reply
 
     def test_only_high_and_medium_confidence_activated(self):
         """No QUARANTINE / LOW memory may ever appear in the activated set."""
-        client, _gen, _memories = _make_app()
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
-        confidences = {m["confidence_level"] for m in r.json()["data"]["activated_memories"]}
+        client, _llm, _memories = _make_app()
+        conv = _consent(client, "conv-contaminants-4")
+        r = _chat(client, conv=conv)
+        confidences = {m["confidence_level"] for m in r.json()["trace"]["activated_memories"]}
         assert confidences <= {"high", "medium"}
         assert "quarantine" not in confidences
         assert "low" not in confidences
@@ -559,30 +570,24 @@ class TestEraBoundary:
     """
 
     def test_post_boundary_high_confidence_memory_excluded(self):
-        client, _gen, memories = _make_app()
+        client, _llm, memories = _make_app()
+        conv = _consent(client, "conv-era-1")
 
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
-        data = r.json()["data"]
-        activated_ids = {str(m["id"]) for m in data["activated_memories"]}
+        r = _chat(client, conv=conv)
+        trace = r.json()["trace"]
+        activated_ids = {str(m["id"]) for m in trace["activated_memories"]}
 
         # The 2023 iPhone memory is HIGH confidence but post-boundary.
         assert str(memories["iphone_era"].id) not in activated_ids
         # The era gate fired (out_of_era) — recorded in exclusion counts.
-        assert data["exclusion_counts"].get("out_of_era") == 1
+        assert trace["exclusion_counts"].get("out_of_era") == 1
 
     def test_post_boundary_fact_never_enters_prompt(self):
         """Defense in depth: post-boundary content never reaches the prompt."""
-        client, gen, _memories = _make_app()
-        client.post(
-            "/api/v1/chat",
-            json={"message": QUERY},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
-        prompt = gen.calls[0]
+        client, llm, _memories = _make_app()
+        conv = _consent(client, "conv-era-2")
+        _chat(client, conv=conv)
+        prompt = llm.calls[0][0]
         assert "iPhone" not in prompt
         assert "Instagram" not in prompt
 
@@ -614,25 +619,23 @@ class TestDisclosureScoping:
         backend.seed(public)
         backend.seed(private)
 
-        client, gen, _memories = _make_app(backend=backend)
+        client, llm, _memories = _make_app(backend=backend)
+        conv = _consent(client, "conv-ds")
 
-        r = client.post(
-            "/api/v1/chat",
-            json={
-                "message": QUERY,
-                "disclosure_tier": "all_contacts",
-            },
-            headers={"Authorization": f"Bearer {API_KEY}"},
+        r = _chat(
+            client,
+            conv=conv,
+            payload={"relationship": "acquaintance"},
         )
         assert r.status_code == 200, r.text
-        data = r.json()["data"]
+        trace = r.json()["trace"]
 
-        contents = [m["content"] for m in data["activated_memories"]]
+        contents = [m["content"] for m in trace["activated_memories"]]
         assert "Chandler's job is in data processing." in contents
         assert all("fear of commitment" not in c for c in contents)
-        assert all(m["disclosure_scope"] != "private" for m in data["activated_memories"])
-        # Defense in depth: private content never reaches the generator prompt.
-        assert "fear of commitment" not in gen.calls[0]
+        assert all(m["disclosure_scope"] != "private" for m in trace["activated_memories"])
+        # Defense in depth: private content never reaches the LLM prompt.
+        assert "fear of commitment" not in llm.calls[0][0]
 
 
 # --- Auth guards (the integration path is protected) ------------------------
@@ -640,15 +643,15 @@ class TestDisclosureScoping:
 
 class TestChandlerChatGuards:
     def test_missing_auth_returns_401(self):
-        client, _gen, _memories = _make_app()
-        r = client.post("/api/v1/chat", json={"message": "hi"})
+        client, _llm, _memories = _make_app()
+        r = client.post(f"/api/v1/chat/{CHANDLER_PERSONA_ID}", json={"message": "hi"})
         assert r.status_code == 401
         assert r.json()["detail"]["error"]["code"] == "AUTH_REQUIRED"
 
     def test_empty_message_rejected(self):
-        client, _gen, _memories = _make_app()
+        client, _llm, _memories = _make_app()
         r = client.post(
-            "/api/v1/chat",
+            f"/api/v1/chat/{CHANDLER_PERSONA_ID}",
             json={"message": ""},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
@@ -658,11 +661,13 @@ class TestChandlerChatGuards:
 # --- Report helper ----------------------------------------------------------
 
 
-def _mock_digest(prompt: str) -> str:
-    """Reproduce the MockPersonaGeneratorClient's prompt digest (sha256[:8])."""
+def _fake_digest_reply(prompt: str, system_prompt: str | None) -> str:
+    """Reproduce the FakeLLMClient deterministic digest reply."""
     import hashlib
 
-    return hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:8]
+    key = (system_prompt or "") + "\n" + prompt
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:8]
+    return f"[fake-llm:{digest}] Deterministic response."
 
 
 def capture_first_exchange() -> dict[str, Any]:
@@ -672,29 +677,27 @@ def capture_first_exchange() -> dict[str, Any]:
     inbound message, the activated (grounding) memories, the exclusion counts
     proving the contamination guard fired, and the persona-voiced reply.
     """
-    client, _gen, memories = _make_app()
+    client, _llm, memories = _make_app()
     message = QUERY
-    r = client.post(
-        "/api/v1/chat",
-        json={"message": message, "conversation_id": "m2-dod-exchange"},
-        headers={"Authorization": f"Bearer {API_KEY}"},
-    )
+    conv = _consent(client, "m2-dod-exchange")
+    r = _chat(client, message=message, conv=conv)
     r.raise_for_status()
-    data = r.json()["data"]
+    body = r.json()
+    trace = body["trace"]
     return {
         "message": message,
-        "reply": data["reply"],
+        "reply": body["response"],
         "activated_memories": [
             {"content": m["content"], "confidence_level": m["confidence_level"]}
-            for m in data["activated_memories"]
+            for m in trace["activated_memories"]
         ],
-        "exclusion_counts": data["exclusion_counts"],
+        "exclusion_counts": trace["exclusion_counts"],
         "contaminants_excluded": [
             {"label": "actor (Matthew Perry)", "id": str(memories["actor_quarantine"].id)},
             {"label": "streaming platform", "id": str(memories["streaming_low"].id)},
             {"label": "post-boundary iPhone (2023)", "id": str(memories["iphone_era"].id)},
         ],
-        "generator_provider": "mock",
+        "generator_provider": "fake",
         "era_boundary": CHANDLER_ERA_BOUNDARY,
     }
 

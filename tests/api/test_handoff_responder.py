@@ -192,6 +192,9 @@ class TestAudit:
         data = resp.json()["data"]
         ids = [t["ticket_id"] for t in data["tickets"]]
         assert set(ids) == {"hh-deg", "hh-ok"}
+        # HU-1926 finding 2: rows also carry the ticket id under `id` so
+        # §10.1 consumers reading that key see the audit key, not null.
+        assert all(t["id"] == t["ticket_id"] for t in data["tickets"])
         tel = data["telemetry"]
         assert tel["total"] == 2
         assert tel["by_outcome"]["degraded"] == 1

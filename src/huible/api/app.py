@@ -5,11 +5,16 @@ Server foundation (HU-1403) plus the M2 chat wiring (HU-1401 / HU-1406). Exposes
 * ``GET /health`` — top-level liveness / readiness probe with service +
   version + DB/pgvector connectivity (HU-1403).
 * ``GET /api/v1/health`` — same probe under the versioned prefix (HU-1401).
-* ``POST /api/v1/chat`` — text-in -> text-out persona chat via the
-  PersonaGeneratorClient speaking voice (HU-1401).
-* ``POST /api/v1/chat/{persona_id}`` — persona-scoped chat wired to the
-  runtime LLM client (HU-1406 Phase-1 integration milestone:
-  text -> retrieval -> LLM -> text). Returns a structured ``trace``.
+* ``POST /api/v1/chat`` — DEPRECATED (HU-1926): permanent 308 redirect to
+  ``/api/v1/chat/{persona_id}``. The generic route no longer generates; it
+  exists only so callers wired to the retired surface land on the
+  safety-stacked one. It performs no persona generation by construction.
+* ``POST /api/v1/chat/{persona_id}`` — the **single** persona chat surface,
+  wired to the runtime LLM client (HU-1406 Phase-1 integration milestone:
+  text -> retrieval -> LLM -> text) and carrying the full §7.4 safety stack:
+  G1 crisis pre-filter, G6 consent gate, the HU-1444 real-user ramp gate +
+  HU-1462 kill switch, §7.4.1 handoff escalation, and §7.4.4 risk-flag
+  enforcement. Returns a structured ``trace``.
 
 The app factory (:func:`create_app`) wires:
 
@@ -59,6 +64,7 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from huible.api.auth import (
     ApiKeyPrincipal,
@@ -73,6 +79,7 @@ from huible.api.auth import (
 )
 from huible.api.metrics import (
     ALERT_ONCALL_CONFIGURED,
+    GENERIC_CHAT_SHIM_REDIRECTS,
     REAL_USER_TRAFFIC_DISABLED,
     ChatTurnOutcome,
     metrics_response,
@@ -109,8 +116,6 @@ from huible.api.schemas import (
     ActivatedMemoryView,
     AlignmentView,
     ChatRequest,
-    ChatResponse,
-    ChatResponseData,
     ChatTrace,
     ConsentAcknowledgeData,
     ConsentAcknowledgeRequest,
@@ -196,30 +201,8 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["app", "configure_logging", "create_app"]
 
-#: Disclosure-scope (request wire) -> requester RelationshipTier (context layer).
-_DISCLOSURE_TO_TIER: dict[str, RelationshipTier] = {
-    tier.disclosure_scope.value: tier for tier in RelationshipTier
-}
-
 #: Relationship name (request wire) -> requester RelationshipTier (context layer).
 _RELATIONSHIP_TO_TIER: dict[str, RelationshipTier] = {tier.value: tier for tier in RelationshipTier}
-
-
-def _resolve_requester_tier(disclosure_tier: str) -> RelationshipTier:
-    """Map a request ``disclosure_tier`` to the requester RelationshipTier."""
-    tier = _DISCLOSURE_TO_TIER.get(disclosure_tier)
-    if tier is None:  # pragma: no cover - schema pre-validates, defensive only
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "error": {
-                    "code": "VALIDATION_ERROR",
-                    "status": 400,
-                    "message": f"Invalid disclosure_tier: {disclosure_tier!r}",
-                }
-            },
-        )
-    return tier
 
 
 def _resolve_relationship(relationship: str) -> RelationshipTier:
@@ -436,9 +419,7 @@ async def _hydrate_persona_registry(application: FastAPI) -> int:
         )
     await conn.close()
     if rows:
-        logger.info(
-            "persona registry hydrated from database: %d persona(s)", len(rows)
-        )
+        logger.info("persona registry hydrated from database: %d persona(s)", len(rows))
     return len(rows)
 
 
@@ -754,31 +735,46 @@ def _register_routes(application: FastAPI) -> None:
 
     @application.post(
         "/api/v1/chat",
-        response_model=ChatResponse,
+        response_model=None,
+        status_code=status.HTTP_308_PERMANENT_REDIRECT,
         tags=["Chat"],
-        summary="Persona chat (text-in -> text-out)",
+        summary="DEPRECATED — 308 to /api/v1/chat/{persona_id} (the single safety-stacked surface)",
+        deprecated=True,
     )
     async def chat(
         body: ChatRequest,
         principal: ApiKeyPrincipal = Depends(authenticate),
-        registry: PersonaRegistry = Depends(get_persona_registry),
-    ) -> ChatResponse:
-        """Persona chat endpoint.
+    ) -> Response:
+        """Deprecated generic chat shim — consolidates the chat surface (HU-1926).
 
-        Wiring: inbound message -> ContextBuilder -> PersonaGeneratorClient
-        -> reply. The ContextBuilder hard-excludes LOW / QUARANTINE /
-        missing-confidence memories, so the reply is grounded in provenance-safe
-        HIGH/MEDIUM L1 memory only.
+        This route previously ran a parallel persona pipeline with **none** of
+        the §7.4 safety stack: no G1 crisis pre-filter, no G6 consent gate, no
+        HU-1444 real-user ramp gate, no §7.4.1 handoff escalation. A synthetic
+        crisis probe reached the persona LLM here unaudited (HU-1911 Stage-A
+        dogfood finding 1), so the route no longer generates anything.
+
+        It now answers every authenticated request with HTTP 308
+        ``Permanent Redirect`` to ``/api/v1/chat/{persona_id}`` — the
+        persona-scoped surface that carries the full G1/G6/ramp-gate/§7.4.1
+        stack. 308 preserves the method and body, so redirect-following
+        clients re-POST the same JSON to the safety-stacked surface; the
+        scoped request contract is ``{"message", "relationship",
+        "conversation_id"}`` (an old ``disclosure_tier`` of
+        private/family/close_friends/all_contacts maps to the equivalent
+        relationship intimate/family/close_friend/acquaintance, and the
+        response envelope is the scoped ``{response, trace}`` shape).
 
         Auth: persona-scoped bearer key (401 when missing/unknown). If the
         request specifies ``persona_id`` it must match the key's scope (403).
+        The disclosure tier is still validated here (400) so an invalid tier
+        fails fast instead of silently redirecting to a defaulted one.
         """
         target_persona_id = body.persona_id or principal.persona_id
         if target_persona_id != principal.persona_id:
             raise_forbidden()
 
         try:
-            disclosure_tier = body.requester_disclosure()
+            body.requester_disclosure()
         except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -791,42 +787,21 @@ def _register_routes(application: FastAPI) -> None:
                 },
             ) from exc
 
-        requester_tier = _resolve_requester_tier(disclosure_tier)
-        binding: PersonaBinding | None = registry.get(target_persona_id, requester_tier)
-        if binding is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": {
-                        "code": "PERSONA_NOT_FOUND",
-                        "status": 404,
-                        "message": f"No persona registered for id {target_persona_id}",
-                    }
-                },
-            )
-
-        ctx = await application.state.context_builder.build(
-            persona=binding.persona,
-            requester_tier=binding.requester_tier,
-            backend=binding.backend,
-            query_embedding_content=_embed(body.message),
-            conversation_history=_history(application, body.conversation_id),
-            current_message=body.message,
+        GENERIC_CHAT_SHIM_REDIRECTS.inc()
+        logger.warning(
+            "generic /api/v1/chat shim redirect (HU-1926): persona=%s "
+            "conversation_id=%s — caller should migrate to /api/v1/chat/{persona_id}",
+            principal.persona_id,
+            body.conversation_id,
         )
-
-        prompt = ctx.render()
-        generator: PersonaGeneratorClient = application.state.generator
-        reply = await generator.generate(prompt)
-
-        _record_turn(application, body.conversation_id, body.message, reply)
-
-        return ChatResponse(
-            data=ChatResponseData(
-                reply=reply,
-                conversation_id=body.conversation_id or _mint_conversation_id(),
-                activated_memories=[_view(node) for node in ctx.included_memories],
-                exclusion_counts=dict(ctx.exclusion_counts),
-            )
+        return RedirectResponse(
+            url=f"/api/v1/chat/{principal.persona_id}",
+            status_code=status.HTTP_308_PERMANENT_REDIRECT,
+            headers={
+                "Deprecation": "true",
+                "Sunset": "Wed, 01 Oct 2026 00:00:00 GMT",
+                "Link": (f'</api/v1/chat/{principal.persona_id}>; rel="successor-version"'),
+            },
         )
 
     @application.post(
@@ -1440,6 +1415,9 @@ def _register_routes(application: FastAPI) -> None:
                     ExcludedMemoryRefView(id=ref.id, reason=ref.reason)
                     for ref in ctx.excluded_memory_refs
                 ],
+                activated_memories=[_view(node) for node in ctx.included_memories],
+                exclusion_counts=dict(ctx.exclusion_counts),
+                conversation_id=session_id,
                 provider=provider_label,
                 framing_version=ctx.framing_version,
                 distress_grounding=ctx.distress_grounding,
@@ -1806,9 +1784,7 @@ def _register_routes(application: FastAPI) -> None:
             # §7.4 alert-enablement signal (HU-1880): mirror the live queue
             # staffing so the degrade-rate page rule arms exactly at roster
             # staffing (pre-staffing degrades are the expected G1 fail-safe).
-            record_handoff_responder_readiness(
-                getattr(queue, "available_responders", 0)
-            )
+            record_handoff_responder_readiness(getattr(queue, "available_responders", 0))
         except Exception:  # pragma: no cover - defensive, scrape must not break
             logger.exception("handoff telemetry gauge update failed")
         try:
@@ -2198,6 +2174,7 @@ def _queue_item_view(
             seconds_overdue=status_.seconds_overdue,
         )
     return HandoffQueueItemView(
+        id=ticket.id,
         ticket_id=ticket.id,
         outcome=ticket.outcome.value,
         trigger_signal=ticket.trigger_signal,

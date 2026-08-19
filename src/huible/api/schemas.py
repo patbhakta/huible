@@ -76,8 +76,7 @@ class ChatRequest(BaseModel):
         ),
     )
     conversation_id: str | None = Field(
-        default=None,
-        description="Opaque conversation id. Echoed back; new id minted when absent."
+        default=None, description="Opaque conversation id. Echoed back; new id minted when absent."
     )
 
     def requester_disclosure(self) -> str:
@@ -203,9 +202,7 @@ class SafetyEventView(BaseModel):
     a monitored safety event, not a normal turn.
     """
 
-    kind: str = Field(
-        description="Safety-event kind. Phase-1: 'crisis_escalation' (G1)."
-    )
+    kind: str = Field(description="Safety-event kind. Phase-1: 'crisis_escalation' (G1).")
     signal: str = Field(description="Classifier signal category (e.g. 'clear').")
     affect: str = Field(description="Graded user affect (e.g. 'crisis').")
     matched: list[str] = Field(
@@ -326,6 +323,13 @@ class HandoffQueueItemView(BaseModel):
     without the SLA status for historical rows.
     """
 
+    id: str = Field(
+        description=(
+            "Unique escalation ticket id (alias of ticket_id; carried on every "
+            "audit row so §10.1 consumers reading `id` see the audit key, "
+            "HU-1926 finding 2)."
+        )
+    )
     ticket_id: str = Field(description="Unique escalation ticket id (audit key).")
     outcome: str = Field(
         description="Escalation outcome: enqueued | degraded | answered | abandoned."
@@ -403,9 +407,7 @@ class HandoffTelemetryView(BaseModel):
 class HandoffResolveRequest(BaseModel):
     """Body of ``POST /api/v1/handoff/tickets/{ticket_id}/resolve`` (responder action)."""
 
-    outcome: str = Field(
-        description="Finalization outcome: 'answered' or 'abandoned'."
-    )
+    outcome: str = Field(description="Finalization outcome: 'answered' or 'abandoned'.")
     responder_id: str | None = Field(
         default=None,
         description="Staffed responder id claiming/finalizing the ticket.",
@@ -554,6 +556,17 @@ class ChatTrace(BaseModel):
     memory_refs: list[str] = Field(default_factory=list)
     provenance_tiers: list[str] = Field(default_factory=list)
     excluded_memory_refs: list[ExcludedMemoryRefView] = Field(default_factory=list)
+    # HU-1926 chat-surface consolidation: the persona-scoped path is the single
+    # chat surface, so the trace carries the full grounding views (contents +
+    # confidence + disclosure scope) and exclusion counts that the retired
+    # generic /api/v1/chat envelope used to expose — plus the session id the
+    # turn bound to (echo surface for clients that thread conversation_id).
+    activated_memories: list[ActivatedMemoryView] = Field(default_factory=list)
+    exclusion_counts: dict[str, int] = Field(default_factory=dict)
+    conversation_id: str | None = Field(
+        default=None,
+        description="Session id the turn bound to (echoed; minted when absent).",
+    )
     provider: str
     safety_event: SafetyEventView | None = None
     framing_version: int = 0
@@ -621,9 +634,7 @@ class ConsentCardView(BaseModel):
     view is the wire shape the card provider fills in.
     """
 
-    version: int = Field(
-        description="Monotonically-increasing card revision (drift / audit pin)."
-    )
+    version: int = Field(description="Monotonically-increasing card revision (drift / audit pin).")
     title: str = Field(description="Short card heading shown to the user.")
     body: str = Field(description="Reality-framing + consent copy shown to the user.")
     acknowledge_instructions: str = Field(
@@ -722,9 +733,7 @@ class RiskIntakeData(BaseModel):
     """The ``data`` payload of a successful intake response — audit view."""
 
     persona_id: UUID
-    conversation_id: str = Field(
-        description="Session id the intake was recorded against."
-    )
+    conversation_id: str = Field(description="Session id the intake was recorded against.")
     consent_acknowledgment_id: str | None = Field(
         default=None,
         description="Audit key of the G6 consent record that authorized this intake.",

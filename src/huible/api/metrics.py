@@ -161,6 +161,18 @@ REAL_USER_TRAFFIC_DISABLED = Counter(
     "(HU-1462 primary rollback path). Internal/synthetic traffic is unaffected.",
 )
 
+# HU-1926 chat-surface consolidation: the generic POST /api/v1/chat is a
+# deprecated 308 shim onto the persona-scoped surface. This counter is the
+# migration telemetry — any non-zero value after consumer migration means a
+# caller is still wired to the retired surface and must be moved before
+# cohort exposure.
+GENERIC_CHAT_SHIM_REDIRECTS = Counter(
+    "huible_generic_chat_shim_redirects_total",
+    "Hits on the deprecated generic POST /api/v1/chat, answered with HTTP 308 "
+    "to /api/v1/chat/{persona_id} (HU-1926). The shim performs no persona "
+    "generation; every hit is a caller that still needs migrating.",
+)
+
 # Gauge for ops readiness (alert wiring target)
 ALERT_ONCALL_CONFIGURED = Gauge(
     "huible_alert_oncall_configured",

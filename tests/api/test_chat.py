@@ -1,16 +1,19 @@
-"""Tests for ``huible.api.app`` — FastAPI server + POST /api/v1/chat.
+"""Tests for ``huible.api.app`` — FastAPI server + POST /api/v1/chat/{persona_id}.
 
-Covers the HU-1401 acceptance criteria:
+Covers the HU-1401 acceptance criteria against the **single** persona chat
+surface (HU-1926 consolidation: the generic ``POST /api/v1/chat`` is a 308
+redirect shim onto this route — its behavior is covered in
+``test_chat_surface_consolidation.py``):
 
 - ``GET /api/v1/health`` returns 200 with a ``data`` envelope.
-- ``POST /api/v1/chat`` returns a grounded persona reply.
+- ``POST /api/v1/chat/{persona_id}`` returns a grounded persona reply.
 - Unauthenticated request -> ``401 AUTH_REQUIRED``; bad key -> ``401``.
-- Valid key but wrong persona scope (``persona_id`` mismatch) -> ``403 FORBIDDEN``.
-- Contamination guard: LOW / QUARANTINE memories never appear in the reply's
-  ``activated_memories`` source set, **and** never enter the prompt sent to the
-  generator (provenance-safe bridge, HU-1399).
+- Valid key but wrong persona scope (path ``persona_id`` mismatch) -> ``403 FORBIDDEN``.
+- Contamination guard: LOW / QUARANTINE memories never appear in the trace's
+  ``activated_memories`` source set, **and** never enter the prompt sent to
+  the LLM (provenance-safe bridge, HU-1399).
 - Disclosure scoping (INV-DS): an acquaintance never receives a private memory.
-- ``conversation_id`` is echoed / minted.
+- ``conversation_id`` is echoed / minted on the trace.
 """
 
 from __future__ import annotations
@@ -24,6 +27,7 @@ from fastapi.testclient import TestClient
 
 from huible.api.app import _embed, create_app
 from huible.api.auth import InMemoryApiKeyStore, InMemoryPersonaRegistry
+from huible.llm.client import FakeLLMClient
 from huible.memory.protocol import (
     ContentType,
     DisclosureScope,
@@ -34,7 +38,6 @@ from huible.memory.protocol import (
     SourceType,
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
-from huible.persona.generator import MockPersonaGeneratorClient
 
 PERSONA_ID = uuid4()
 OTHER_PERSONA_ID = uuid4()
@@ -150,10 +153,9 @@ def _seeded_backend() -> _FakeBackend:
 def _make_app(
     *,
     persona_id: UUID = PERSONA_ID,
-    generator: MockPersonaGeneratorClient | None = None,
-) -> tuple[TestClient, MockPersonaGeneratorClient]:
+) -> tuple[TestClient, FakeLLMClient]:
     backend = _seeded_backend()
-    gen = generator or MockPersonaGeneratorClient(persona_name="Chandler")
+    llm = FakeLLMClient(persona_name="Chandler")
     persona = _persona(persona_id)
     registry = InMemoryPersonaRegistry({persona.id: (persona, backend)})
     keys = InMemoryApiKeyStore(
@@ -162,10 +164,42 @@ def _make_app(
     application = create_app(
         api_key_store=keys,
         persona_registry=registry,
-        generator=gen,
+        llm_client=llm,
         start_time=0.0,
     )
-    return TestClient(application), gen
+    return TestClient(application), llm
+
+
+def _consent(client: TestClient, conv: str) -> str:
+    """Pre-consent a session so the persona path under test runs (G6).
+
+    The consent gate itself is exercised in test_chat_consent.py; this suite
+    covers the post-consent retrieval/generation path.
+    """
+    r = client.post(
+        f"/api/v1/chat/{PERSONA_ID}/consent",
+        json={"conversation_id": conv},
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
+    assert r.status_code == 200, r.text
+    return conv
+
+
+def _chat(
+    client: TestClient,
+    *,
+    message: str,
+    conv: str,
+    payload: dict[str, Any] | None = None,
+):
+    body = {"message": message, "conversation_id": conv}
+    if payload:
+        body.update(payload)
+    return client.post(
+        f"/api/v1/chat/{PERSONA_ID}",
+        json=body,
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -202,14 +236,14 @@ class TestHealth:
 class TestAuth:
     def test_no_authorization_header_returns_401(self):
         client, _ = _make_app()
-        r = client.post("/api/v1/chat", json={"message": "tell me about fishing"})
+        r = client.post(f"/api/v1/chat/{PERSONA_ID}", json={"message": "tell me about fishing"})
         assert r.status_code == 401
         assert r.json()["detail"]["error"]["code"] == "AUTH_REQUIRED"
 
     def test_unknown_key_returns_401(self):
         client, _ = _make_app()
         r = client.post(
-            "/api/v1/chat",
+            f"/api/v1/chat/{PERSONA_ID}",
             json={"message": "hi"},
             headers={"Authorization": "Bearer bogus"},
         )
@@ -219,7 +253,7 @@ class TestAuth:
     def test_non_bearer_scheme_returns_401(self):
         client, _ = _make_app()
         r = client.post(
-            "/api/v1/chat",
+            f"/api/v1/chat/{PERSONA_ID}",
             json={"message": "hi"},
             headers={"Authorization": "Basic abc"},
         )
@@ -228,19 +262,19 @@ class TestAuth:
     def test_wrong_persona_scope_returns_403(self):
         client, _ = _make_app()
         r = client.post(
-            "/api/v1/chat",
-            json={"message": "hi", "persona_id": str(OTHER_PERSONA_ID)},
+            f"/api/v1/chat/{OTHER_PERSONA_ID}",
+            json={"message": "hi"},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
         assert r.status_code == 403
         assert r.json()["detail"]["error"]["code"] == "FORBIDDEN"
 
     def test_key_scoped_to_other_persona_cannot_reach_default(self):
-        """A key for persona B explicitly requesting persona A is 403."""
+        """A key for persona B hitting persona A's route is 403."""
         client, _ = _make_app()
         r = client.post(
-            "/api/v1/chat",
-            json={"message": "hi", "persona_id": str(PERSONA_ID)},
+            f"/api/v1/chat/{PERSONA_ID}",
+            json={"message": "hi"},
             headers={"Authorization": f"Bearer {OTHER_API_KEY}"},
         )
         assert r.status_code == 403
@@ -253,34 +287,29 @@ class TestAuth:
 
 class TestChatHappyPath:
     def test_chat_returns_reply_and_activated_memories(self):
-        client, gen = _make_app()
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": "tell me about fishing on the lake"},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        client, llm = _make_app()
+        conv = _consent(client, "conv-happy")
+        r = _chat(client, message="tell me about fishing on the lake", conv=conv)
         assert r.status_code == 200, r.text
-        data = r.json()["data"]
-        assert data["reply"]
-        # Generator was called exactly once with a rendered prompt.
-        assert len(gen.calls) == 1
+        body = r.json()
+        assert body["response"]
+        # LLM was called exactly once with a rendered prompt.
+        assert len(llm.calls) == 1
+        trace = body["trace"]
         # Only HIGH/MEDIUM memories surfaced.
-        confidences = {m["confidence_level"] for m in data["activated_memories"]}
+        confidences = {m["confidence_level"] for m in trace["activated_memories"]}
         assert confidences <= {"high", "medium"}
-        assert len(data["activated_memories"]) == 2  # one HIGH + one MEDIUM
+        assert len(trace["activated_memories"]) == 2  # one HIGH + one MEDIUM
         # LOW/QUARANTINE were excluded (contamination guard fired).
-        assert data["exclusion_counts"].get("confidence_low") == 1
-        assert data["exclusion_counts"].get("confidence_quarantine") == 1
+        assert trace["exclusion_counts"].get("confidence_low") == 1
+        assert trace["exclusion_counts"].get("confidence_quarantine") == 1
 
     def test_chat_passes_only_provenance_safe_memory_to_generator(self):
-        """The prompt sent to the generator must not contain LOW/QUARANTINE text."""
-        client, gen = _make_app()
-        client.post(
-            "/api/v1/chat",
-            json={"message": "tell me about fishing on the lake"},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
-        prompt = gen.calls[0]
+        """The prompt sent to the LLM must not contain LOW/QUARANTINE text."""
+        client, llm = _make_app()
+        conv = _consent(client, "conv-prompt")
+        _chat(client, message="tell me about fishing on the lake", conv=conv)
+        prompt = llm.calls[0][0]
         assert "Lake Travis" in prompt  # HIGH admitted
         assert "kept his rods" in prompt  # MEDIUM admitted
         assert "fished the Gulf" not in prompt  # LOW excluded
@@ -288,27 +317,35 @@ class TestChatHappyPath:
 
     def test_conversation_id_echoed_when_provided(self):
         client, _ = _make_app()
-        r = client.post(
-            "/api/v1/chat",
-            json={"message": "fishing", "conversation_id": "conv-42"},
-            headers={"Authorization": f"Bearer {API_KEY}"},
-        )
+        conv = _consent(client, "conv-42")
+        r = _chat(client, message="fishing", conv=conv)
         assert r.status_code == 200
-        assert r.json()["data"]["conversation_id"] == "conv-42"
+        assert r.json()["trace"]["conversation_id"] == "conv-42"
 
     def test_conversation_id_minted_when_absent(self):
         client, _ = _make_app()
+        # No conversation_id on the first turn: the consent 409 carries the
+        # minted session id, and the acknowledged retry reuses it.
         r = client.post(
-            "/api/v1/chat",
+            f"/api/v1/chat/{PERSONA_ID}",
             json={"message": "fishing"},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
-        assert r.status_code == 200
-        assert r.json()["data"]["conversation_id"]
+        assert r.status_code == 409
+        minted = r.json()["detail"]["error"]["conversation_id"]
+        assert minted
+        _consent(client, minted)
+        r2 = client.post(
+            f"/api/v1/chat/{PERSONA_ID}",
+            json={"message": "fishing", "conversation_id": minted},
+            headers={"Authorization": f"Bearer {API_KEY}"},
+        )
+        assert r2.status_code == 200
+        assert r2.json()["trace"]["conversation_id"] == minted
 
 
 # ---------------------------------------------------------------------------
-# Disclosure scoping (INV-DS) via disclosure_tier request field
+# Disclosure scoping (INV-DS) via the relationship request field
 # ---------------------------------------------------------------------------
 
 
@@ -317,11 +354,9 @@ class TestDisclosureScoping:
         """An acquaintance requester must not receive private memories.
 
         We seed a private HIGH memory and assert that with
-        ``disclosure_tier=all_contacts`` it does not surface in the reply source
-        set nor in the generator prompt.
+        ``relationship=acquaintance`` it does not surface in the reply source
+        set nor in the LLM prompt.
         """
-        from datetime import date as _date
-
         backend = _FakeBackend()
         vec = _embed("fishing lake")
 
@@ -330,46 +365,45 @@ class TestDisclosureScoping:
             confidence_level="high",
             disclosure_scope=DisclosureScope.PRIVATE,
             embedding=vec,
-            memory_date=_date(2015, 7, 1),
+            memory_date=date(2015, 7, 1),
         )
         public = _node(
             content="Chandler fished Lake Travis often.",
             confidence_level="high",
             disclosure_scope=DisclosureScope.ALL_CONTACTS,
             embedding=vec,
-            memory_date=_date(2015, 7, 2),
+            memory_date=date(2015, 7, 2),
         )
         backend.seed(private)
         backend.seed(public)
 
-        gen = MockPersonaGeneratorClient(persona_name="Chandler")
+        llm = FakeLLMClient(persona_name="Chandler")
         persona = _persona()
         registry = InMemoryPersonaRegistry({persona.id: (persona, backend)})
         keys = InMemoryApiKeyStore({API_KEY: PERSONA_ID}, read_env=False)
         application = create_app(
-            api_key_store=keys, persona_registry=registry, generator=gen, start_time=0.0
+            api_key_store=keys, persona_registry=registry, llm_client=llm, start_time=0.0
         )
         client = TestClient(application)
+        conv = _consent(client, "conv-ds")
 
-        r = client.post(
-            "/api/v1/chat",
-            json={
-                "message": "fishing on the lake",
-                "disclosure_tier": "all_contacts",
-            },
-            headers={"Authorization": f"Bearer {API_KEY}"},
+        r = _chat(
+            client,
+            message="fishing on the lake",
+            conv=conv,
+            payload={"relationship": "acquaintance"},
         )
         assert r.status_code == 200, r.text
-        data = r.json()["data"]
-        contents = [m["content"] for m in data["activated_memories"]]
+        trace = r.json()["trace"]
+        contents = [m["content"] for m in trace["activated_memories"]]
         assert "Chandler fished Lake Travis often." in contents
         assert all("secret" not in c for c in contents)
         # Defense in depth: the private memory is excluded — either by
         # retrieval's disclosure filter (layer 1) or the context builder's
         # second-pass disclosure gate (layer 2). Either way it must not reach
-        # the generator prompt or the reply source set.
-        assert "secret fishing spot" not in gen.calls[0]
-        assert all(m["disclosure_scope"] != "private" for m in data["activated_memories"])
+        # the LLM prompt or the reply source set.
+        assert "secret fishing spot" not in llm.calls[0][0]
+        assert all(m["disclosure_scope"] != "private" for m in trace["activated_memories"])
 
 
 # ---------------------------------------------------------------------------
@@ -381,17 +415,17 @@ class TestValidation:
     def test_empty_message_rejected(self):
         client, _ = _make_app()
         r = client.post(
-            "/api/v1/chat",
+            f"/api/v1/chat/{PERSONA_ID}",
             json={"message": ""},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
         assert r.status_code == 422  # pydantic min_length
 
-    def test_invalid_disclosure_tier_rejected(self):
+    def test_invalid_relationship_rejected(self):
         client, _ = _make_app()
         r = client.post(
-            "/api/v1/chat",
-            json={"message": "hi", "disclosure_tier": "world"},
+            f"/api/v1/chat/{PERSONA_ID}",
+            json={"message": "hi", "relationship": "world"},
             headers={"Authorization": f"Bearer {API_KEY}"},
         )
         assert r.status_code == 400
