@@ -1,0 +1,20 @@
+{
+  "detected_at": "2026-08-19T22:24:00Z",
+  "detection": "manual reconciliation by HU-1925 heartbeat (watcher cron had rolling-window bug, missed 11:24 turn; disarmed 2026-08-19T22:23Z)",
+  "session_id": "20260819_053442_23781ad3",
+  "turn_time": "2026-08-19T11:24:18Z",
+  "message_id": 55624,
+  "inbound": "R u back online? (whatsapp, user=Pat Bhakta, chat=185293546254362@lid)",
+  "session_depth_turns": 84,
+  "depth_ok": true,
+  "gateway_recall_lines": [
+    "2026-08-19T11:24:28.120+00:00 INFO [tdai-gateway] Recall completed in 243ms: context=13481 chars, prepend=604 chars, strategy=v4-arm-a"
+  ],
+  "prompt_injection": "messages.api_content[55624] contains <session-memory-v4> with conversation digest (verified via sqlite, flag=1)",
+  "reply": {
+    "response_ready": "2026-08-19T11:24:41 gateway.run: response ready: time=17.0s api_calls=1 response=119 chars",
+    "sent_to_whatsapp": "2026-08-19T11:24:42 [Whatsapp] Sending response (84 chars) to 185293546254362@lid",
+    "persistence": "Transient agent failure post-send: user message persisted (55624), assistant message not persisted to state.db (hermes preserved-for-retry behavior; no retry fired). Not a v4 defect; logged as watch signal."
+  },
+  "verdict": "Task 1 (first-live-turn confirmation) PASSED: real inbound turn -> v4-arm-a recall (prepend=604) -> <session-memory-v4> in prompt -> LLM reply (api_calls=1) -> WhatsApp send. Full round trip at prod boundary."
+}
