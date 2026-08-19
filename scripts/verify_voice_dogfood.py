@@ -136,19 +136,20 @@ def main() -> int:
 
     print("== Stage-A voice dogfood (HU-1461) ==")
 
-    # --- Posture gate: refuse to run (and spend) unless openrouter is live ---
+    # --- Posture gate: refuse to run (and spend) unless a real voice is live --
     status_code, health = _request(args.base_url, "GET", "/health", "")
     checks = health.get("data", health).get("checks", {})
     if status_code != 200:
         print(f"[ABORT] /health unreachable (HTTP {status_code})")
         return 2
-    if "llm_budget" not in json.dumps(checks):
+    generator_state = checks.get("generator", "")
+    if "mock" in generator_state:
         print(
-            "[ABORT] /health has no llm_budget — provider is still fake. "
-            "Run scripts/activate_voice_provider.sh first."
+            "[ABORT] /health generator is mock — real voice not activated. "
+            "Flip GENERATOR_PROVIDER (and LLM_PROVIDER posture) first."
         )
         return 2
-    ok(f"posture: openrouter live ({checks.get('llm_budget', '?')})")
+    ok(f"posture: real generator live (generator={generator_state!r})")
 
     api_key, persona_id = _ops_key_and_persona(
         Path(args.env_file), args.key_prefix
