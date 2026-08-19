@@ -313,13 +313,15 @@ def configure_logging(settings: Settings) -> None:
     """
     level = getattr(logging, settings.log_level.upper(), logging.INFO)
     root = logging.getLogger()
+    # levels first so the sink-attach confirmation below is not gated by the
+    # root logger's default WARNING level
+    root.setLevel(level)
+    logging.getLogger("uvicorn").setLevel(level)
     if not any(isinstance(h.formatter, _JsonLineFormatter) for h in root.handlers):
         handler = logging.StreamHandler()
         handler.setFormatter(_JsonLineFormatter())
         root.addHandler(handler)
     _attach_telemetry_file_sink(settings)
-    root.setLevel(level)
-    logging.getLogger("uvicorn").setLevel(level)
 
 
 # --- lifespan + memory store -------------------------------------------------
