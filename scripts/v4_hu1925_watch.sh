@@ -15,6 +15,11 @@
 #    gateway L0 after the assistant reply lands (mirror skips interrupted /
 #    429-failed turns by design #15218). Gists need 40 L0 turns/session, so
 #    track conversation/add calls + new L0 rows to explain gist dormancy.
+#    Also list gist-eligible-but-ungisted sessions (>=40 L0 rows, no gist
+#    file): gist maintenance triggers only on new settle-time L1 runs, so
+#    dormant sessions stay ungisted until new turns arrive (write-path-only
+#    trigger; verified 2026-08-19 via hu1925-writeprobe: add->L0->L1->gist
+#    scheduling chain healthy).
 # Rollback lever (only on evidence, human/PM decision): set MEMORY_TDAI_READ_PATH=v3
 # in tdai-memory-core unit env + systemctl restart tdai-memory-core.
 set -uo pipefail
@@ -98,6 +103,9 @@ log "quality signals: recall-fallback-warns=$FALLBACKS zai-429=$R429"
 CONV_ADDS=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -c 'REQUEST_START POST /v3/conversation/add')
 NEW_L0=$(sqlite3 -readonly /root/.memory-tencentdb/memory-tdai/vectors.db "select count(*) from l0_conversations where recorded_at >= '$SINCE';" 2>/dev/null || echo 0)
 log "write-path: conversation_add=$CONV_ADDS new_l0_rows=$NEW_L0"
+# Gist-eligible ungisted sessions (>=40 L0 rows, no gists/<session>.json).
+ELIG=$(sqlite3 -readonly /root/.memory-tencentdb/memory-tdai/vectors.db "select session_key || ' ' || count(*) from l0_conversations group by session_key having count(*) >= 40;" 2>/dev/null | while read -r s n; do [ -f "$GIST_DIR/$s.json" ] || printf '%s(%s) ' "$s" "$n"; done)
+log "gist-eligible ungisted: ${ELIG:-none}"
 
 cat > "$SNAP" <<EOF
 {
@@ -114,7 +122,8 @@ cat > "$SNAP" <<EOF
   "fallback_warns": $FALLBACKS,
   "zai_429": $R429,
   "conv_adds": $CONV_ADDS,
-  "new_l0_rows": $NEW_L0
+  "new_l0_rows": $NEW_L0,
+  "gist_eligible_ungisted": "$(echo "$ELIG" | xargs echo -n)"
 }
 EOF
 
