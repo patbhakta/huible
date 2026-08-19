@@ -177,7 +177,34 @@ class GeneratorConfig:
             max_tokens=_int("GENERATOR_MAX_TOKENS", 512),
             temperature=_float("GENERATOR_TEMPERATURE", 0.7),
             request_timeout_s=_float("GENERATOR_REQUEST_TIMEOUT_S", 60.0),
+            extra=_extra_from_env(env),
         )
+
+
+def _extra_from_env(env: Mapping[str, str]) -> dict[str, Any]:
+    """Parse ``GENERATOR_EXTRA_JSON`` into top-level payload extras.
+
+    Lets operators forward provider-specific top-level fields (for example
+    ``{"reasoning": {"effort": "low"}}`` for reasoning-tuned models served via
+    OpenAI-compatible endpoints) without a code change. Invalid JSON or a
+    non-object value is a configuration error, raised loudly at startup
+    rather than silently ignored mid-conversation.
+    """
+    raw = (env.get("GENERATOR_EXTRA_JSON") or "").strip()
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"GENERATOR_EXTRA_JSON is not valid JSON: {exc}"
+        ) from exc
+    if not isinstance(parsed, dict):
+        raise ValueError(
+            "GENERATOR_EXTRA_JSON must be a JSON object of top-level "
+            "request-body fields"
+        )
+    return parsed
 
 
 class MockPersonaGeneratorClient:
@@ -323,7 +350,15 @@ class OpenAICompatibleGeneratorClient:
                 f"Generator at {url} response missing choices[0].message.content: {exc}"
             ) from exc
         if not isinstance(content, str) or not content.strip():
-            raise GeneratorError(f"Generator at {url} returned empty content")
+            hint = ""
+            message = (choices[0] or {}).get("message") or {}
+            if message.get("reasoning"):
+                hint = (
+                    " (model spent the token budget on hidden reasoning — "
+                    "reasoning text present; raise GENERATOR_MAX_TOKENS or "
+                    "cap reasoning effort via GENERATOR_EXTRA_JSON)"
+                )
+            raise GeneratorError(f"Generator at {url} returned empty content{hint}")
         return content
 
 

@@ -236,6 +236,28 @@ async def test_openai_compatible_empty_content_raises_generator_error() -> None:
         await client.generate(PROMPT)
 
 
+async def test_openai_compatible_reasoning_only_reply_names_the_cause() -> None:
+    """Reasoning models that exhaust the token budget return null content with
+    the text in ``reasoning`` — the error must say so (day-1 glm voice line)."""
+    payload = json.dumps(
+        {
+            "choices": [
+                {
+                    "finish_reason": "length",
+                    "message": {
+                        "role": "assistant",
+                        "content": None,
+                        "reasoning": "thinking through the joke...",
+                    },
+                }
+            ]
+        }
+    )
+    client = OpenAICompatibleGeneratorClient(_config(), transport=lambda *a: payload)
+    with pytest.raises(GeneratorError, match="hidden reasoning"):
+        await client.generate(PROMPT)
+
+
 def test_openai_compatible_requires_base_url_and_model() -> None:
     with pytest.raises(ValueError, match="GENERATOR_BASE_URL"):
         OpenAICompatibleGeneratorClient(
@@ -315,6 +337,50 @@ def test_from_env_reads_all_vars() -> None:
     assert cfg.max_tokens == 256
     assert cfg.temperature == 0.2
     assert cfg.request_timeout_s == 15.0
+
+
+def test_from_env_parses_extra_json_into_payload_extras() -> None:
+    cfg = GeneratorConfig.from_env(
+        {
+            "GENERATOR_PROVIDER": "openai_compatible",
+            "GENERATOR_BASE_URL": "http://vllm.local:8000/v1",
+            "GENERATOR_MODEL": "openweight-7b",
+            "GENERATOR_EXTRA_JSON": '{"reasoning": {"effort": "low"}}',
+        }
+    )
+    assert dict(cfg.extra) == {"reasoning": {"effort": "low"}}
+
+
+def test_from_env_rejects_invalid_extra_json() -> None:
+    with pytest.raises(ValueError, match="GENERATOR_EXTRA_JSON"):
+        GeneratorConfig.from_env(
+            {
+                "GENERATOR_PROVIDER": "openai_compatible",
+                "GENERATOR_EXTRA_JSON": "not json",
+            }
+        )
+    with pytest.raises(ValueError, match="JSON object"):
+        GeneratorConfig.from_env(
+            {
+                "GENERATOR_PROVIDER": "openai_compatible",
+                "GENERATOR_EXTRA_JSON": "[1, 2]",
+            }
+        )
+
+
+async def test_extra_config_reaches_the_request_payload() -> None:
+    transport = _ok_transport("reply")
+    config = GeneratorConfig(
+        provider=GeneratorProvider.OPENAI_COMPATIBLE,
+        base_url="http://vllm.local:8000/v1/",
+        model="openweight-7b",
+        extra={"reasoning": {"effort": "low"}},
+    )
+    client = OpenAICompatibleGeneratorClient(config, transport=transport)
+
+    await client.generate(PROMPT)
+
+    assert transport.last_payload["reasoning"] == {"effort": "low"}
 
 
 def test_from_env_unknown_provider_falls_back_to_mock() -> None:
