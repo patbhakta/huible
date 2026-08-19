@@ -77,3 +77,65 @@ Not: "How smart or broadly knowledgeable is it?"
 As we go through Hugging Face and Reddit candidates, we should be open to (and actively collect) strong small models for generator use, while treating larger/smarter models primarily as candidates for the advisory tier or for heavy extraction work during ingestion.
 
 This is a deliberate philosophical and architectural choice, not a cost compromise.
+
+---
+
+## Day-1 Provider Decision (2026-08-19, HU-1910 executing HU-1461)
+
+Board approval granted (Pat, WhatsApp 2026-08-19): Chandler onboarding starts
+this week with a chat-ready day-1 voice on an existing subscription. The
+LLM-vs-SLM-vs-finetune decision is deferred until real conversation data
+exists (Stage-A dogfood / HU-1911 output feeds it).
+
+**Day-1 voice: zai glm-5.3** on the existing GLM coding subscription
+(`https://api.z.ai/api/coding/paas/v4`, OpenAI-compatible, `$0` incremental
+metered spend). Deployed posture on .245 (`huible-app`):
+
+| Knob | Value | Consumed by |
+| --- | --- | --- |
+| `LLM_PROVIDER=zai` (+ `ZAI_*`) | glm-5.3, `ZAI_THINKING=disabled`, 200k tokens/day ceiling | `POST /api/v1/chat/{persona_id}` (`ZaiLLMClient`, `src/huible/llm/client.py`) |
+| `GENERATOR_PROVIDER=openai_compatible` (+ `GENERATOR_*`) | same zai endpoint via `GENERATOR_EXTRA_JSON={"thinking":{"type":"disabled"}}` | `POST /api/v1/chat` (persona generator, `src/huible/persona/generator.py`) |
+
+Guardrails: durable per-UTC-day token ledger (`/var/lib/huible/zai-tokens.json`,
+blocks *before* the network call, resets daily), one structured `zai.usage`
+cost log line per conversation turn, and a one-knob abort
+(`LLM_PROVIDER=fake` + `GENERATOR_PROVIDER=mock`, restart).
+
+**Why `thinking: disabled`**: glm-5.3 defaults to reasoning-on and its
+reasoning tokens share the `max_tokens` budget — persona turns can burn the
+entire budget on hidden chain-of-thought and surface as empty content
+(observed live on .245). The persona voice needs no reasoning
+(this doc's core principle), so both paths opt out.
+
+## Swap-Out Contract: what an SLM / edge candidate must implement
+
+The day-1 provider is a **deliberately replaceable stopgap**. A self-hosted
+openweight model (the strategy-preferred end state) drops in by satisfying
+either of two integration points — no chat-handler changes required:
+
+1. **LLM client path** — implement the `LLMClient` protocol
+   (`async generate(prompt, *, system_prompt=None, **kwargs) -> str`):
+   - Serve an **OpenAI-compatible `/chat/completions`** route and point
+     `GENERATOR_BASE_URL` at it (zero code change), **or**
+   - Add a provider enum value + client class in `src/huible/llm/client.py`
+     following `ZaiLLMClient` (config fields, `from_env` parsing, factory
+     branch, key gate that raises `LLMConfigError`).
+2. **Behavioral requirements** (the parts callers rely on):
+   - Accept `system`-role persona instructions and honor them verbatim
+     (reality framing must not be paraphrased away).
+   - Return non-empty string content on the persona prompt, within
+     `max_tokens` (no hidden-reasoning budget burn — cap or disable
+     chain-of-thought).
+   - Report OpenAI-style `usage` token counts if a usage ceiling applies;
+     otherwise wire an equivalent pre-call guard in the client class.
+   - Keep the failure modes loud: transport/HTTP errors raise `LLMError`
+     subclasses so monitoring sees them; budget/ceiling exhaustion raises
+     `LLMBudgetExceededError` so the approved fake-voice degraded posture
+     serves the turn instead of erroring.
+3. **Swap procedure**: flip `LLM_PROVIDER`/`GENERATOR_*` env values (one
+   change per surface), restart the container, run
+   `scripts/verify_voice_dogfood.py --key-prefix chandler-` (exit 0 proves
+   real-voice round-trips on the live deployment).
+
+Candidate evaluation should reuse the Stage-A dogfood battery + fidelity
+questions from HU-1911 rather than ad-hoc vibes checks.
