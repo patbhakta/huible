@@ -88,6 +88,10 @@ class Settings(BaseSettings):
     generator_max_tokens: int = 512
     generator_temperature: float = 0.7
     generator_request_timeout_s: float = 60.0
+    # Provider-dialect payload extras (e.g. zai/glm thinking on/off) forwarded
+    # verbatim into the generator request payload; invalid JSON fails loudly
+    # at startup. See ``huible.persona.generator._extra_from_env``.
+    generator_extra_json: str = ""
 
     # ── LLM client (runtime generation: OpenRouter / Gemini) ────────────────
     # Key-free default (``fake``) so the chat endpoint and tests run without a
@@ -396,6 +400,7 @@ class Settings(BaseSettings):
                 "GENERATOR_MAX_TOKENS": str(self.generator_max_tokens),
                 "GENERATOR_TEMPERATURE": str(self.generator_temperature),
                 "GENERATOR_REQUEST_TIMEOUT_S": str(self.generator_request_timeout_s),
+                "GENERATOR_EXTRA_JSON": self.generator_extra_json,
             }
         )
 

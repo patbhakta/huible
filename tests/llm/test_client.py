@@ -697,5 +697,45 @@ def test_settings_llm_model_override_wins() -> None:
     assert cfg.gemini_model == "global/override"
 
 
+def test_settings_to_llm_config_passes_zai_fields() -> None:
+    from huible.api.settings import Settings
+
+    settings = Settings(
+        llm_provider="zai",
+        zai_api_key="zai-k",
+        zai_model="glm-5.3",
+        zai_daily_token_limit=1234,
+        zai_thinking="disabled",
+    )
+    cfg = settings.to_llm_config()
+    assert cfg.provider is LLMProvider.ZAI
+    assert cfg.zai_api_key == "zai-k"
+    assert cfg.zai_model == "glm-5.3"
+    assert cfg.zai_daily_token_limit == 1234
+    assert cfg.zai_thinking == "disabled"
+
+
+def test_settings_to_generator_config_forwards_extra_json() -> None:
+    """HU-1910 regression: the bridge must forward GENERATOR_EXTRA_JSON.
+
+    The zai/glm thinking dialect rides in the extras; dropping it in the
+    Settings bridge silently re-enabled hidden reasoning, which starved
+    persona replies of the token budget (empty-content 500s on .245).
+    """
+    from huible.api.settings import Settings
+    from huible.persona.generator import GeneratorProvider
+
+    settings = Settings(
+        generator_provider="openai_compatible",
+        generator_base_url="https://api.z.ai/api/coding/paas/v4",
+        generator_model="glm-5.3",
+        generator_api_key="zai-k",
+        generator_extra_json='{"thinking": {"type": "disabled"}}',
+    )
+    cfg = settings.to_generator_config()
+    assert cfg.provider is GeneratorProvider.OPENAI_COMPATIBLE
+    assert cfg.extra == {"thinking": {"type": "disabled"}}
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -196,13 +196,10 @@ def _extra_from_env(env: Mapping[str, str]) -> dict[str, Any]:
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise ValueError(
-            f"GENERATOR_EXTRA_JSON is not valid JSON: {exc}"
-        ) from exc
+        raise ValueError(f"GENERATOR_EXTRA_JSON is not valid JSON: {exc}") from exc
     if not isinstance(parsed, dict):
         raise ValueError(
-            "GENERATOR_EXTRA_JSON must be a JSON object of top-level "
-            "request-body fields"
+            "GENERATOR_EXTRA_JSON must be a JSON object of top-level request-body fields"
         )
     return parsed
 
@@ -352,7 +349,10 @@ class OpenAICompatibleGeneratorClient:
         if not isinstance(content, str) or not content.strip():
             hint = ""
             message = (choices[0] or {}).get("message") or {}
-            if message.get("reasoning"):
+            # Dialect note: zai/glm surfaces hidden reasoning as
+            # ``reasoning_content``; other OpenAI-compatible servers use
+            # ``reasoning``. Check both so the operator hint is honest.
+            if message.get("reasoning") or message.get("reasoning_content"):
                 hint = (
                     " (model spent the token budget on hidden reasoning — "
                     "reasoning text present; raise GENERATOR_MAX_TOKENS or "
