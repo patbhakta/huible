@@ -192,13 +192,30 @@ public domain exists yet — see §6 DNS item); public ingress is a post-cutover
 follow-up on the pending launch-readiness decision.
 
 ```bash
-HUIBLE_DOMAIN=<board-supplied>    # export for the validate step's env expansion
 # On .245 directly (the agent host IS .245 — see note below):
 cp deploy/caddy-standby/huible-site.caddy /etc/caddy/huible-site.caddy
 grep -q 'import huible-site.caddy' /etc/caddy/Caddyfile || \
     echo 'import huible-site.caddy' >> /etc/caddy/Caddyfile
-caddy validate --config /etc/caddy/Caddyfile    # MUST pass — gate before reload
-systemctl reload caddy                          # reload (zero-downtime), never restart
+HUIBLE_DOMAIN=<domain> caddy validate --config /etc/caddy/Caddyfile  # MUST pass
+```
+
+**Activation reload (domain → running daemon, zero-downtime):**
+
+```bash
+# `systemctl reload caddy` does NOT pick up HUIBLE_DOMAIN — env expansion happens
+# in the adapting process, and the daemon's env is fixed at start. The CLI reload
+# adapts the config in a fresh process (shell env applies) and pushes the JSON to
+# the running daemon — no restart, other sites untouched:
+HUIBLE_DOMAIN=<domain> caddy reload --config /etc/caddy/Caddyfile
+```
+
+**Reboot durability:** a staged systemd drop-in makes the env survive restarts
+(done 2026-08-19, HU-1743 pre-staging):
+
+```bash
+# /etc/systemd/system/caddy.service.d/huible-domain.conf  (already staged on .245)
+[Service]
+Environment=HUIBLE_DOMAIN=huible.bhakta.us
 ```
 
 **Verify (after DNS repoint, §3.6):** `curl -s https://$HUIBLE_DOMAIN/api/v1/health`
