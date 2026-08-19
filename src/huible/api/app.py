@@ -1325,7 +1325,12 @@ def _register_routes(application: FastAPI) -> None:
             system_prompt = system_prompt + "\n\n" + build_reframe_addendum(binding.persona.name)
         budget_fallback = False
         try:
-            response_text = await llm.generate(prompt, system_prompt=system_prompt)
+            # conversation_id rides along for the per-conversation cost log
+            # line emitted by metered/ceilinged providers (zai HU-1910); the
+            # clients consume it for logging and never send it to the API.
+            response_text = await llm.generate(
+                prompt, system_prompt=system_prompt, conversation_id=body.conversation_id
+            )
         except LLMBudgetExceededError:
             # Board-approved degraded posture (HU-1774 decision sweep
             # 2026-08-18, item 3: "$50/mo hard cap; fake voice stays as

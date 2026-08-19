@@ -26,7 +26,7 @@ from typing import Any
 import httpx
 import pytest
 
-from huible.llm.budget import MonthlySpendTracker, utc_month_key
+from huible.llm.budget import DailyTokenTracker, MonthlySpendTracker, utc_day_key, utc_month_key
 from huible.llm.client import (
     LLMBudgetExceededError,
     LLMConfig,
@@ -259,3 +259,64 @@ def test_from_env_budget_defaults_match_board_approval() -> None:
     cfg = LLMConfig.from_env({"LLM_PROVIDER": "fake"})
     assert cfg.openrouter_monthly_budget_usd == 50.0
     assert cfg.openrouter_spend_state_path == "/var/lib/huible/openrouter-spend.json"
+
+
+# --- DailyTokenTracker (zai day-1 persona voice, HU-1910) ---------------------
+
+
+def test_daily_tracker_accrues_and_persists(tmp_path: Path) -> None:
+    state = tmp_path / "zai-tokens.json"
+    t1 = DailyTokenTracker(
+        limit_tokens=200_000,
+        state_path=state,
+        now_fn=_frozen(datetime(2026, 8, 19, 12, 0, tzinfo=UTC)),
+    )
+    t1.record_tokens(1_400)
+    t1.record_tokens(27)
+    assert t1.day_to_date() == 1_427
+
+    # A fresh instance (container restart) reads the same durable ledger.
+    t2 = DailyTokenTracker(
+        limit_tokens=200_000,
+        state_path=state,
+        now_fn=_frozen(datetime(2026, 8, 19, 18, 0, tzinfo=UTC)),
+    )
+    assert t2.day_to_date() == 1_427
+    assert t2.is_exhausted() is False
+
+
+def test_daily_tracker_exhaustion_and_recovery_next_day(tmp_path: Path) -> None:
+    state = tmp_path / "zai-tokens.json"
+    day1 = datetime(2026, 8, 19, 23, 59, tzinfo=UTC)
+    tracker = DailyTokenTracker(limit_tokens=100, state_path=state, now_fn=_frozen(day1))
+    tracker.record_tokens(100)
+    assert tracker.is_exhausted() is True
+
+    # Next UTC day: a fresh bucket — the ceiling resets without operator action.
+    day2 = datetime(2026, 8, 20, 0, 1, tzinfo=UTC)
+    next_day = DailyTokenTracker(limit_tokens=100, state_path=state, now_fn=_frozen(day2))
+    assert next_day.is_exhausted() is False
+    assert next_day.day_to_date() == 0
+
+
+def test_daily_tracker_zero_limit_disables_cap(tmp_path: Path) -> None:
+    tracker = DailyTokenTracker(limit_tokens=0, state_path=tmp_path / "t.json")
+    tracker.record_tokens(10_000_000)
+    assert tracker.capped is False
+    assert tracker.is_exhausted() is False
+
+
+def test_daily_tracker_ignores_garbage_and_negative_counts(tmp_path: Path) -> None:
+    tracker = DailyTokenTracker(limit_tokens=10, state_path=tmp_path / "t.json")
+    tracker.record_tokens(-5)
+    tracker.record_tokens("lots")  # type: ignore[arg-type]
+    assert tracker.day_to_date() == 0
+
+
+def test_daily_tracker_corrupt_state_restarts_at_zero(tmp_path: Path) -> None:
+    state = tmp_path / "zai-tokens.json"
+    state.write_text("{not json", encoding="utf-8")
+    tracker = DailyTokenTracker(limit_tokens=10, state_path=state)
+    assert tracker.day_to_date() == 0
+    tracker.record_tokens(4)
+    assert json.loads(state.read_text())["days"] == {utc_day_key(): 4}

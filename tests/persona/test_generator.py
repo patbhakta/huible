@@ -131,10 +131,51 @@ async def test_openai_compatible_posts_to_chat_completions_and_parses() -> None:
     assert transport.last_headers["Authorization"] == "Bearer secret-key"
     assert transport.last_headers["Content-Type"] == "application/json"
     assert transport.last_payload["model"] == "openweight-7b"
-    assert transport.last_payload["messages"] == [{"role": "user", "content": PROMPT}]
+    assert transport.last_payload["messages"] == [
+        {"role": "system", "content": "You are embodying Chandler."},
+        {
+            "role": "user",
+            "content": (
+                "ACTIVATED MEMORIES:\n[NARRATIVE] Chandler loved fishing on Lake Travis.\n\n"
+                "CURRENT MESSAGE:\nRemember the lake?\nChandler:"
+            ),
+        },
+    ]
     assert transport.last_payload["temperature"] == 0.4
     assert transport.last_payload["max_tokens"] == 128
     assert transport.last_timeout == 60.0
+
+
+async def test_openai_compatible_leading_system_block_becomes_system_role() -> None:
+    """A ``SYSTEM:``-prefixed prompt is split so hosted firewalls (OpenRouter
+    ``system_prefix_spoofing``) do not 403 the turn. Content is preserved
+    verbatim; only the role channeling changes."""
+    transport = _ok_transport("reply")
+    client = OpenAICompatibleGeneratorClient(_config(), transport=transport)
+
+    prompt = (
+        "SYSTEM: [REALITY FRAMING — immutable]\n\n"
+        "ACTIVATED MEMORIES:\n(none)\n\n"
+        "CURRENT MESSAGE:\nHi\nChandler:"
+    )
+    await client.generate(prompt)
+
+    messages = transport.last_payload["messages"]
+    assert [m["role"] for m in messages] == ["system", "user"]
+    assert messages[0]["content"] == "[REALITY FRAMING — immutable]"
+    assert "SYSTEM:" not in messages[1]["content"]
+    assert messages[1]["content"].startswith("ACTIVATED MEMORIES:")
+
+
+async def test_openai_compatible_plain_prompt_stays_single_user_message() -> None:
+    transport = _ok_transport("reply")
+    client = OpenAICompatibleGeneratorClient(_config(), transport=transport)
+
+    await client.generate("No marker here.")
+
+    assert transport.last_payload["messages"] == [
+        {"role": "user", "content": "No marker here."}
+    ]
 
 
 async def test_openai_compatible_kwargs_override_config_fields() -> None:

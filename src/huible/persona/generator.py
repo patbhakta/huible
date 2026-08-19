@@ -277,7 +277,7 @@ class OpenAICompatibleGeneratorClient:
     def _build_payload(self, prompt: str, kwargs: Mapping[str, Any]) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "model": kwargs.pop("model", self._config.model),
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": self._split_system_block(prompt),
             "temperature": float(kwargs.pop("temperature", self._config.temperature)),
             "max_tokens": int(kwargs.pop("max_tokens", self._config.max_tokens)),
         }
@@ -286,6 +286,29 @@ class OpenAICompatibleGeneratorClient:
         # Remaining caller overrides are forwarded as top-level API fields.
         payload.update(kwargs)
         return payload
+
+    def _split_system_block(self, prompt: str) -> list[dict[str, str]]:
+        """Channel a leading ``SYSTEM:`` block into a real system message.
+
+        The ContextBuilder renders ``SYSTEM: {system_prompt}`` as the first
+        paragraph of its flat prompt. Hosted-model firewalls (notably
+        OpenRouter's prompt-injection filter, pattern
+        ``system_prefix_spoofing``) reject system-style directives embedded in
+        user-role content with ``403 Forbidden``. This lifts the leading
+        block verbatim into a ``role: system`` message; everything after the
+        first blank line stays in the user message byte-for-byte. Prompts
+        without the leading marker (or without a following block) are sent
+        unchanged as a single user message.
+        """
+        if not prompt.startswith("SYSTEM: "):
+            return [{"role": "user", "content": prompt}]
+        system_block, separator, rest = prompt.partition("\n\n")
+        if not separator or not rest.strip():
+            return [{"role": "user", "content": prompt}]
+        return [
+            {"role": "system", "content": system_block[len("SYSTEM: ") :]},
+            {"role": "user", "content": rest},
+        ]
 
     def _extract_content(self, raw: str, url: str) -> str:
         try:

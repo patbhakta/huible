@@ -26,6 +26,7 @@ Usage:
     python3 scripts/verify_voice_dogfood.py [--base-url http://127.0.0.1:8000]
                                             [--env-file .env.failover]
                                             [--report-dir logs]
+                                            [--key-prefix chandler-]
 
 Exit: 0 all checks pass | 1 failure | 2 provider not activated (fake posture)
 """
@@ -43,6 +44,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 FAKE_DIGEST_PREFIX = "[fake-llm:"
+MOCK_DIGEST_PREFIX = "[mock:"
 
 # Fixed battery: a warm opener, a memory-cued follow-up, and a boundary probe.
 # Deliberately benign — crisis-path drills live in the §7.4 test suites, not
@@ -104,14 +106,19 @@ def _request(
             return exc.code, {"raw": raw}
 
 
-def _ops_key_and_persona(env_file: Path) -> tuple[str, str]:
+def _ops_key_and_persona(
+    env_file: Path, key_prefix: str = ""
+) -> tuple[str, str]:
     for line in env_file.read_text().splitlines():
         if line.startswith("API_KEYS="):
-            first = line[len("API_KEYS=") :].split(",")[0].strip()
-            key, _, persona = first.partition(":")
-            if key and persona:
-                return key.strip(), persona.strip()
-    raise SystemExit(f"[FATAL] no API_KEYS entries found in {env_file}")
+            for entry in line[len("API_KEYS=") :].split(","):
+                first = entry.strip()
+                key, _, persona = first.partition(":")
+                if key and persona and key.startswith(key_prefix):
+                    return key.strip(), persona.strip()
+    raise SystemExit(
+        f"[FATAL] no API_KEYS entry with prefix {key_prefix!r} found in {env_file}"
+    )
 
 
 def main() -> int:
@@ -119,6 +126,12 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--env-file", default=".env.failover")
     parser.add_argument("--report-dir", default="logs")
+    parser.add_argument(
+        "--key-prefix",
+        default="",
+        help="select the API_KEYS entry whose key starts with this prefix "
+        "(e.g. 'chandler-') so the battery hits the intended persona",
+    )
     args = parser.parse_args()
 
     print("== Stage-A voice dogfood (HU-1461) ==")
@@ -137,7 +150,9 @@ def main() -> int:
         return 2
     ok(f"posture: openrouter live ({checks.get('llm_budget', '?')})")
 
-    api_key, persona_id = _ops_key_and_persona(Path(args.env_file))
+    api_key, persona_id = _ops_key_and_persona(
+        Path(args.env_file), args.key_prefix
+    )
     ok(f"ops key loaded from {args.env_file} (persona {persona_id})")
 
     turns: list[dict] = []
@@ -184,11 +199,17 @@ def main() -> int:
             turns.append({"label": label, "http": code, "latency_ms": latency_ms})
             continue
 
-        # The voice proof: real model output, not the deterministic digest.
+        # The voice proof: real model output, not a deterministic digest from
+        # the fake LLM client or the mock persona generator.
         if not reply.strip():
             bad(f"{label}: empty reply")
-        elif reply.startswith(FAKE_DIGEST_PREFIX):
-            bad(f"{label}: reply is the FAKE digest — real provider not serving")
+        elif reply.startswith(FAKE_DIGEST_PREFIX) or reply.startswith(
+            MOCK_DIGEST_PREFIX
+        ):
+            bad(
+                f"{label}: reply is a deterministic digest "
+                f"({reply[:16]}...) — real provider not serving"
+            )
         else:
             ok(f"{label}: real-persona reply ({len(reply)} chars, {latency_ms} ms)")
 
@@ -199,7 +220,8 @@ def main() -> int:
                 "latency_ms": latency_ms,
                 "reply_chars": len(reply),
                 "reply_preview": reply.strip()[:280],
-                "looks_fake": reply.startswith(FAKE_DIGEST_PREFIX),
+                "looks_fake": reply.startswith(FAKE_DIGEST_PREFIX)
+                or reply.startswith(MOCK_DIGEST_PREFIX),
             }
         )
 

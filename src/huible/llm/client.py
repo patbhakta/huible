@@ -24,6 +24,12 @@ Public surface:
   CLI). Requires ``OPENROUTER_API_KEY``.
 * :class:`GeminiLLMClient` — calls the native Gemini ``generateContent`` REST
   API via ``httpx`` (no extra SDK dependency). Requires ``GEMINI_API_KEY``.
+* :class:`ZaiLLMClient` — calls the zai (GLM) OpenAI-compatible
+  chat-completions endpoint on the existing coding subscription (default
+  model ``glm-5.3``, the verified Chandler voice line). Requires
+  ``ZAI_API_KEY`` (falls back to ``GLM_API_KEY``). Carries the day-1
+  persona-voice guardrails (HU-1910): a hard per-UTC-day token ceiling plus
+  a structured cost log line per conversation turn.
 * :class:`LLMConfig` + :func:`build_llm_client` — config-driven factory.
 
 Real providers raise :class:`LLMConfigError` at construction when their key is
@@ -43,7 +49,7 @@ from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
-from huible.llm.budget import MonthlySpendTracker
+from huible.llm.budget import DailyTokenTracker, MonthlySpendTracker
 
 logger = logging.getLogger(__name__)
 
@@ -55,15 +61,21 @@ __all__ = [
     "DEFAULT_OPENROUTER_MODEL",
     "DEFAULT_OPENROUTER_MONTHLY_BUDGET_USD",
     "DEFAULT_OPENROUTER_SPEND_STATE_PATH",
+    "DEFAULT_ZAI_BASE_URL",
+    "DEFAULT_ZAI_DAILY_TOKEN_LIMIT",
+    "DEFAULT_ZAI_MODEL",
+    "DEFAULT_ZAI_TOKEN_STATE_PATH",
     "FakeLLMClient",
     "GeminiLLMClient",
     "LLMBudgetExceededError",
     "LLMClient",
     "LLMConfig",
     "LLMConfigError",
+    "LLMDailyTokenLimitExceededError",
     "LLMError",
     "LLMProvider",
     "OpenRouterLLMClient",
+    "ZaiLLMClient",
     "build_llm_client",
 ]
 
@@ -95,6 +107,20 @@ class LLMBudgetExceededError(LLMError):
     """
 
 
+class LLMDailyTokenLimitExceededError(LLMBudgetExceededError):
+    """Raised when the zai per-day token ceiling is already exhausted.
+
+    Day-1 persona-voice guardrail (HU-1910 scope item 4): the zai (GLM)
+    endpoint runs on an existing subscription, so the wall is a hard
+    per-UTC-day token ceiling rather than a USD cap. Once today's accrued
+    tokens reach ``ZAI_DAILY_TOKEN_LIMIT``, :class:`ZaiLLMClient` refuses to
+    place further calls *before* the network request. Subclasses
+    :class:`LLMBudgetExceededError` so the chat handler's existing
+    budget-fallback posture (fake voice, never a dropped turn) applies
+    unchanged.
+    """
+
+
 # --- Provider enum ----------------------------------------------------------
 
 
@@ -104,13 +130,14 @@ class LLMProvider(StrEnum):
     ``fake`` is the default and requires no key or network — it mirrors the
     ``EMBEDDING_PROVIDER=fake`` / ``GENERATOR_PROVIDER=mock`` convention so
     foundation work, the chat endpoint, and the test suite all run key-free.
-    ``openrouter`` and ``gemini`` target hosted APIs and require their
-    respective keys.
+    ``openrouter``, ``gemini`` and ``zai`` target hosted APIs and require
+    their respective keys.
     """
 
     FAKE = "fake"
     OPENROUTER = "openrouter"
     GEMINI = "gemini"
+    ZAI = "zai"
 
 
 #: Default provider when none is configured. Deliberately ``fake`` so a hosted
@@ -128,6 +155,19 @@ DEFAULT_OPENROUTER_SPEND_STATE_PATH = "/var/lib/huible/openrouter-spend.json"
 DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 #: A known-good current native Gemini model id; override via ``LLM_MODEL``.
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+
+#: zai (GLM) OpenAI-compatible coding-endpoint base (HU-1910 day-1 voice).
+DEFAULT_ZAI_BASE_URL = "https://api.z.ai/api/coding/paas/v4"
+#: The verified Chandler voice line — glm-5.2 test passed 2026-08-10; glm-5.3
+#: is the current generation on the same subscription (live-probed 2026-08-19).
+DEFAULT_ZAI_MODEL = "glm-5.3"
+#: Day-1 guardrail (HU-1910 scope item 4): hard per-UTC-day token ceiling.
+#: Sized for Stage-A dogfood volumes (~dozens of conversation turns/day at
+#: ~2-4k tokens/turn incl. glm-5.3 reasoning tokens) with wide headroom;
+#: ``<= 0`` disables. The subscription itself remains the outer wall.
+DEFAULT_ZAI_DAILY_TOKEN_LIMIT = 200_000
+#: Durable daily-token ledger; deployment bind-mounts a writable volume here.
+DEFAULT_ZAI_TOKEN_STATE_PATH = "/var/lib/huible/zai-tokens.json"
 
 
 # --- Protocol ---------------------------------------------------------------
@@ -174,6 +214,11 @@ class LLMConfig:
     gemini_api_key: str = ""
     gemini_base_url: str = DEFAULT_GEMINI_BASE_URL
     gemini_model: str = DEFAULT_GEMINI_MODEL
+    zai_api_key: str = ""
+    zai_base_url: str = DEFAULT_ZAI_BASE_URL
+    zai_model: str = DEFAULT_ZAI_MODEL
+    zai_daily_token_limit: int = DEFAULT_ZAI_DAILY_TOKEN_LIMIT
+    zai_token_state_path: str = DEFAULT_ZAI_TOKEN_STATE_PATH
     max_tokens: int = 512
     temperature: float = 0.7
     request_timeout_s: float = 60.0
@@ -183,20 +228,24 @@ class LLMConfig:
     def from_env(cls, env: Mapping[str, str] | None = None) -> LLMConfig:
         """Build config from environment variables.
 
-        Reads ``LLM_PROVIDER`` (``fake`` | ``openrouter`` | ``gemini``),
-        ``OPENROUTER_API_KEY`` / ``OPENROUTER_BASE_URL`` / ``OPENROUTER_MODEL``,
-        ``OPENROUTER_MONTHLY_BUDGET_USD`` (hard monthly cap; ``<= 0`` disables)
-        and ``OPENROUTER_SPEND_STATE_PATH`` (durable spend ledger),
-        ``GEMINI_API_KEY`` / ``GEMINI_BASE_URL`` / ``GEMINI_MODEL``,
-        ``LLM_MODEL``, ``LLM_MAX_TOKENS``, ``LLM_TEMPERATURE``, and
-        ``LLM_REQUEST_TIMEOUT_S``.
+        Reads ``LLM_PROVIDER`` (``fake`` | ``openrouter`` | ``gemini`` |
+        ``zai``), ``OPENROUTER_API_KEY`` / ``OPENROUTER_BASE_URL`` /
+        ``OPENROUTER_MODEL``, ``OPENROUTER_MONTHLY_BUDGET_USD`` (hard monthly
+        cap; ``<= 0`` disables) and ``OPENROUTER_SPEND_STATE_PATH`` (durable
+        spend ledger), ``GEMINI_API_KEY`` / ``GEMINI_BASE_URL`` /
+        ``GEMINI_MODEL``, ``ZAI_API_KEY`` (with ``GLM_API_KEY`` fallback —
+        the existing-subscription credential name) / ``ZAI_BASE_URL`` /
+        ``ZAI_MODEL`` / ``ZAI_DAILY_TOKEN_LIMIT`` (hard per-UTC-day token
+        ceiling; ``<= 0`` disables) / ``ZAI_TOKEN_STATE_PATH`` (durable
+        daily-token ledger), ``LLM_MODEL``, ``LLM_MAX_TOKENS``,
+        ``LLM_TEMPERATURE``, and ``LLM_REQUEST_TIMEOUT_S``.
 
-        ``LLM_MODEL`` (when set) overrides *both* real providers' models — handy
-        for a single env knob. Provider-specific ``OPENROUTER_MODEL`` /
-        ``GEMINI_MODEL`` apply only to their provider and are overridden by
-        ``LLM_MODEL`` when both are set. Unknown / unparsable provider values
-        fall back to the fake default so a misconfiguration can never silently
-        wire a hosted endpoint.
+        ``LLM_MODEL`` (when set) overrides *all* real providers' models —
+        handy for a single env knob. Provider-specific ``OPENROUTER_MODEL`` /
+        ``GEMINI_MODEL`` / ``ZAI_MODEL`` apply only to their provider and are
+        overridden by ``LLM_MODEL`` when both are set. Unknown / unparsable
+        provider values fall back to the fake default so a misconfiguration
+        can never silently wire a hosted endpoint.
         """
         env = env if env is not None else os.environ
 
@@ -236,6 +285,7 @@ class LLMConfig:
 
         openrouter_base = (env.get("OPENROUTER_BASE_URL") or "").strip()
         gemini_base = (env.get("GEMINI_BASE_URL") or "").strip()
+        zai_base = (env.get("ZAI_BASE_URL") or "").strip()
         global_model = (env.get("LLM_MODEL") or "").strip()
         openrouter_model = (
             global_model or (env.get("OPENROUTER_MODEL") or "").strip() or DEFAULT_OPENROUTER_MODEL
@@ -243,6 +293,13 @@ class LLMConfig:
         gemini_model = (
             global_model or (env.get("GEMINI_MODEL") or "").strip() or DEFAULT_GEMINI_MODEL
         )
+        zai_model = global_model or (env.get("ZAI_MODEL") or "").strip() or DEFAULT_ZAI_MODEL
+        # ZAI_API_KEY is canonical; GLM_API_KEY is the existing-subscription
+        # credential name (the pi-ai adapter's zai route reads it), so it
+        # stands in when ZAI_API_KEY is unset.
+        zai_api_key = (env.get("ZAI_API_KEY") or "").strip() or (
+            env.get("GLM_API_KEY") or ""
+        ).strip()
 
         return cls(
             provider=provider,
@@ -257,6 +314,12 @@ class LLMConfig:
             gemini_api_key=(env.get("GEMINI_API_KEY") or "").strip(),
             gemini_base_url=gemini_base or DEFAULT_GEMINI_BASE_URL,
             gemini_model=gemini_model,
+            zai_api_key=zai_api_key,
+            zai_base_url=zai_base or DEFAULT_ZAI_BASE_URL,
+            zai_model=zai_model,
+            zai_daily_token_limit=_int("ZAI_DAILY_TOKEN_LIMIT", DEFAULT_ZAI_DAILY_TOKEN_LIMIT),
+            zai_token_state_path=(env.get("ZAI_TOKEN_STATE_PATH") or "").strip()
+            or DEFAULT_ZAI_TOKEN_STATE_PATH,
             max_tokens=_int("LLM_MAX_TOKENS", 512),
             temperature=_float("LLM_TEMPERATURE", 0.7),
             request_timeout_s=_float("LLM_REQUEST_TIMEOUT_S", 60.0),
@@ -399,6 +462,9 @@ class OpenRouterLLMClient:
         system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
+        # Optional correlation handle forwarded by the chat handler; never
+        # sent to the API (consumed here so it cannot leak into the payload).
+        kwargs.pop("conversation_id", None)
         if self.spend.is_exhausted():
             snapshot = self.spend.snapshot()
             logger.error(
@@ -533,6 +599,9 @@ class GeminiLLMClient:
         system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
+        # Optional correlation handle forwarded by the chat handler; never
+        # sent to the API.
+        kwargs.pop("conversation_id", None)
         payload = self._build_payload(prompt, system_prompt, kwargs)
         url = self._generate_content_url()
         headers = self._headers()
@@ -592,6 +661,184 @@ class GeminiLLMClient:
         return text
 
 
+# --- zai provider (existing GLM subscription — day-1 persona voice) ---------
+
+
+class ZaiLLMClient:
+    """Concrete LLM client targeting the zai (GLM) coding endpoint.
+
+    Day-1 board-approved persona voice (HU-1910 executing HU-1461; approval
+    granted by Pat 2026-08-19). Calls the OpenAI-compatible
+    ``/chat/completions`` route on the existing coding subscription via
+    ``httpx`` — no new spend, no SDK. The default model is ``glm-5.3`` (the
+    verified Chandler voice line: glm-5.2 test passed 2026-08-10, glm-5.3
+    live-probed 2026-08-19). Key resolution: ``ZAI_API_KEY``, falling back
+    to ``GLM_API_KEY`` (the subscription's credential name). The HTTP
+    transport is injectable so tests exercise the full request path without
+    a live endpoint.
+
+    Guardrails (HU-1910 scope item 4):
+
+    * **Hard per-UTC-day token ceiling** — every successful call accrues its
+      reported ``usage.total_tokens`` (incl. glm reasoning tokens) into a
+      durable per-day ledger (:class:`huible.llm.budget.DailyTokenTracker`),
+      and once today's accrual reaches ``zai_daily_token_limit`` every
+      further :meth:`generate` raises
+      :class:`LLMDailyTokenLimitExceededError` *before* any network call.
+      ``limit <= 0`` disables the ceiling. The :attr:`tokens` tracker is
+      exposed for /health surfacing.
+    * **Cost log line per conversation** — each successful call emits one
+      structured ``zai.usage`` INFO line carrying the conversation id,
+      tokens in/out, day-to-date accrual, ceiling and cost basis
+      (subscription → $0 incremental metered spend).
+    * **One-knob abort** — ``LLM_PROVIDER=fake`` returns the deterministic
+      key-free client with no code change.
+    """
+
+    def __init__(
+        self,
+        config: LLMConfig,
+        *,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
+        if not config.zai_api_key:
+            raise LLMConfigError(
+                "LLM_PROVIDER=zai requires ZAI_API_KEY (or GLM_API_KEY) "
+                "(set the key or switch to LLM_PROVIDER=fake)."
+            )
+        self._config = config
+        self._transport = transport
+        # Self-describing provider label, surfaced in the chat response trace.
+        self.provider: str = LLMProvider.ZAI.value
+        self.tokens = DailyTokenTracker(
+            limit_tokens=config.zai_daily_token_limit,
+            state_path=config.zai_token_state_path,
+        )
+
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        system_prompt: str | None = None,
+        **kwargs: Any,
+    ) -> str:
+        # Optional correlation handle forwarded by the chat handler; used for
+        # the per-conversation cost log line, never sent to the API.
+        conversation_id = str(kwargs.pop("conversation_id", "") or "")
+        if self.tokens.is_exhausted():
+            snapshot = self.tokens.snapshot()
+            logger.error(
+                "zai daily token ceiling reached; refusing hosted call "
+                "(limit=%d tokens, day-to-date=%d tokens, day=%s). "
+                "Serve the approved fake-voice fallback or raise the ceiling.",
+                snapshot["limit_tokens"],
+                snapshot["day_to_date_tokens"],
+                snapshot["day"],
+            )
+            raise LLMDailyTokenLimitExceededError(
+                f"zai daily token ceiling of {snapshot['limit_tokens']} reached "
+                f"(day-to-date {snapshot['day_to_date_tokens']} tokens)"
+            )
+        payload = self._build_payload(prompt, system_prompt, kwargs)
+        url = self._chat_completions_url()
+        headers = self._headers()
+        timeout = float(kwargs.pop("request_timeout_s", self._config.request_timeout_s))
+        data = await _post_json(
+            url=url,
+            headers=headers,
+            payload=payload,
+            timeout_s=timeout,
+            transport=self._transport,
+        )
+        usage = _extract_usage(data)
+        self.tokens.record_tokens(usage["total_tokens"])
+        snapshot = self.tokens.snapshot()
+        logger.info(
+            "zai.usage conversation=%s model=%s tokens_in=%d tokens_out=%d "
+            "day_to_date_tokens=%d daily_limit=%d cost_basis=subscription "
+            "incremental_cost_usd=0.00",
+            conversation_id or "-",
+            payload.get("model", self._config.zai_model),
+            usage["prompt_tokens"],
+            usage["completion_tokens"],
+            snapshot["day_to_date_tokens"],
+            snapshot["limit_tokens"],
+        )
+        return self._extract_content(data, url)
+
+    def _chat_completions_url(self) -> str:
+        return self._config.zai_base_url.rstrip("/") + "/chat/completions"
+
+    def _headers(self) -> dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self._config.zai_api_key}",
+            "Content-Type": "application/json",
+        }
+
+    def _build_payload(
+        self,
+        prompt: str,
+        system_prompt: str | None,
+        kwargs: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        messages: list[dict[str, str]] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload: dict[str, Any] = {
+            "model": kwargs.pop("model", self._config.zai_model),
+            "messages": messages,
+            "temperature": _resolve(kwargs, "temperature", self._config.temperature),
+            "max_tokens": _resolve(kwargs, "max_tokens", self._config.max_tokens),
+        }
+        if self._config.extra:
+            for key, value in self._config.extra.items():
+                payload.setdefault(key, value)
+        # Remaining caller overrides are forwarded as top-level API fields.
+        payload.update(kwargs)
+        return payload
+
+    @staticmethod
+    def _extract_content(data: Mapping[str, Any], url: str) -> str:
+        try:
+            choices = data["choices"]
+            content = choices[0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMError(
+                f"LLM at {url} response missing choices[0].message.content: {exc}"
+            ) from exc
+        if not isinstance(content, str) or not content.strip():
+            raise LLMError(f"LLM at {url} returned empty content")
+        return content
+
+
+def _extract_usage(data: Mapping[str, Any]) -> dict[str, int]:
+    """Pull token counts from an OpenAI-compatible ``usage`` block.
+
+    glm-5.3 reports ``prompt_tokens`` / ``completion_tokens`` /
+    ``total_tokens`` (reasoning tokens included in completion). Missing or
+    unusable values count as ``0`` — the daily ledger then under-counts,
+    and the subscription-side limit remains the outer wall.
+    """
+    usage = data.get("usage")
+    if not isinstance(usage, Mapping):
+        return {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+    def _count(name: str) -> int:
+        try:
+            value = int(usage[name])  # type: ignore[index]
+            return value if value > 0 else 0
+        except (KeyError, TypeError, ValueError):
+            return 0
+
+    return {
+        "prompt_tokens": _count("prompt_tokens"),
+        "completion_tokens": _count("completion_tokens"),
+        "total_tokens": _count("total_tokens"),
+    }
+
+
 # --- Factory ----------------------------------------------------------------
 
 
@@ -622,6 +869,8 @@ def build_llm_client(
         return OpenRouterLLMClient(effective, transport=transport)
     if effective.provider is LLMProvider.GEMINI:
         return GeminiLLMClient(effective, transport=transport)
+    if effective.provider is LLMProvider.ZAI:
+        return ZaiLLMClient(effective, transport=transport)
     raise ValueError(f"Unknown LLM provider: {effective.provider!r}")
 
 
@@ -636,6 +885,11 @@ _LLM_CONFIG_FIELDS: frozenset[str] = frozenset(
         "gemini_api_key",
         "gemini_base_url",
         "gemini_model",
+        "zai_api_key",
+        "zai_base_url",
+        "zai_model",
+        "zai_daily_token_limit",
+        "zai_token_state_path",
         "max_tokens",
         "temperature",
         "request_timeout_s",

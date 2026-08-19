@@ -19,6 +19,7 @@ Acceptance coverage:
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 import httpx
@@ -28,14 +29,17 @@ from huible.llm.client import (
     DEFAULT_GEMINI_MODEL,
     DEFAULT_LLM_PROVIDER,
     DEFAULT_OPENROUTER_MODEL,
+    DEFAULT_ZAI_MODEL,
     FakeLLMClient,
     GeminiLLMClient,
     LLMClient,
     LLMConfig,
     LLMConfigError,
+    LLMDailyTokenLimitExceededError,
     LLMError,
     LLMProvider,
     OpenRouterLLMClient,
+    ZaiLLMClient,
     build_llm_client,
 )
 
@@ -349,6 +353,136 @@ def test_gemini_requires_api_key() -> None:
         )
 
 
+# --- zai client (no network via MockTransport) -------------------------------
+
+
+def _zai_transport(
+    content: str, *, usage: dict[str, int] | None = None
+) -> tuple[_Capture, httpx.MockTransport]:
+    cap = _Capture()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        cap.request = request
+        cap.payload = json.loads(request.content.decode("utf-8"))
+        return httpx.Response(
+            200,
+            json={
+                "model": "glm-5.3",
+                "choices": [{"message": {"role": "assistant", "content": content}}],
+                "usage": usage or {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+            },
+        )
+
+    return cap, httpx.MockTransport(handler)
+
+
+def _zai_config(**overrides: Any) -> LLMConfig:
+    defaults: dict[str, Any] = {
+        "provider": LLMProvider.ZAI,
+        "zai_api_key": "zai-k",
+        "zai_token_state_path": "/tmp/huible-test-zai-tokens.json",
+    }
+    defaults.update(overrides)
+    return LLMConfig(**defaults)
+
+
+def test_zai_satisfies_protocol() -> None:
+    client = ZaiLLMClient(_zai_config(), transport=_noop_transport())
+    assert isinstance(client, LLMClient)
+
+
+async def test_zai_round_trip_request_shape_and_content(tmp_path: Any) -> None:
+    cap, transport = _zai_transport("The lake was calm that summer.")
+    client = ZaiLLMClient(
+        _zai_config(zai_token_state_path=str(tmp_path / "t.json")), transport=transport
+    )
+
+    reply = await client.generate(PROMPT, system_prompt=SYSTEM, conversation_id="conv-7")
+
+    assert reply == "The lake was calm that summer."
+    assert str(cap.request.url) == "https://api.z.ai/api/coding/paas/v4/chat/completions"
+    assert cap.request.headers["Authorization"] == "Bearer zai-k"
+    assert cap.payload["model"] == "glm-5.3"
+    assert cap.payload["messages"] == [
+        {"role": "system", "content": SYSTEM},
+        {"role": "user", "content": PROMPT},
+    ]
+    # The correlation handle must never leak into the API payload.
+    assert "conversation_id" not in cap.payload
+
+
+async def test_zai_accrues_tokens_and_logs_cost_line(tmp_path: Any, caplog: Any) -> None:
+    _, transport = _zai_transport(
+        "reply", usage={"prompt_tokens": 100, "completion_tokens": 40, "total_tokens": 140}
+    )
+    state = tmp_path / "zai.json"
+    client = ZaiLLMClient(_zai_config(zai_token_state_path=str(state)), transport=transport)
+
+    with caplog.at_level(logging.INFO, logger="huible.llm.client"):
+        await client.generate(PROMPT, system_prompt=SYSTEM, conversation_id="conv-42")
+
+    assert client.tokens.day_to_date() == 140
+    cost_lines = [r for r in caplog.records if "zai.usage" in r.getMessage()]
+    assert len(cost_lines) == 1
+    message = cost_lines[0].getMessage()
+    assert "conversation=conv-42" in message
+    assert "tokens_in=100" in message
+    assert "tokens_out=40" in message
+    assert "cost_basis=subscription" in message
+    # Durable ledger written (bind-mount semantics).
+    assert json.loads(state.read_text())["days"]
+
+
+async def test_zai_daily_ceiling_blocks_before_network(tmp_path: Any) -> None:
+    cap, transport = _zai_transport("should never be returned")
+    client = ZaiLLMClient(
+        _zai_config(zai_daily_token_limit=10, zai_token_state_path=str(tmp_path / "t.json")),
+        transport=transport,
+    )
+    client.tokens.record_tokens(10)
+
+    with pytest.raises(LLMDailyTokenLimitExceededError, match="daily token ceiling"):
+        await client.generate(PROMPT, system_prompt=SYSTEM)
+    # The refusal happened before the transport fired — spend-proof wall.
+    assert cap.request is None
+
+
+async def test_zai_ceiling_disabled_when_limit_le_zero(tmp_path: Any) -> None:
+    _, transport = _zai_transport("reply")
+    client = ZaiLLMClient(
+        _zai_config(zai_daily_token_limit=0, zai_token_state_path=str(tmp_path / "t.json")),
+        transport=transport,
+    )
+    client.tokens.record_tokens(1_000_000)
+    assert await client.generate(PROMPT, system_prompt=SYSTEM) == "reply"
+
+
+async def test_zai_missing_usage_counts_zero_but_succeeds(tmp_path: Any) -> None:
+    cap = _Capture()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        cap.request = request
+        cap.payload = json.loads(request.content.decode("utf-8"))
+        return httpx.Response(
+            200, json={"choices": [{"message": {"role": "assistant", "content": "ok"}}]}
+        )
+
+    client = ZaiLLMClient(
+        _zai_config(zai_token_state_path=str(tmp_path / "t.json")),
+        transport=httpx.MockTransport(handler),
+    )
+    assert await client.generate(PROMPT, system_prompt=SYSTEM) == "ok"
+    assert client.tokens.day_to_date() == 0
+
+
+def test_zai_requires_api_key() -> None:
+    with pytest.raises(LLMConfigError, match=r"ZAI_API_KEY \(or GLM_API_KEY\)"):
+        ZaiLLMClient(
+            LLMConfig(provider=LLMProvider.ZAI, zai_api_key=""),
+            transport=_noop_transport(),
+        )
+
+
 # --- Factory ----------------------------------------------------------------
 
 
@@ -394,6 +528,18 @@ def test_factory_gemini_missing_key_raises_config_error() -> None:
         build_llm_client(cfg)
 
 
+def test_factory_zai() -> None:
+    cfg = LLMConfig(provider=LLMProvider.ZAI, zai_api_key="k")
+    client = build_llm_client(cfg, transport=_noop_transport())
+    assert isinstance(client, ZaiLLMClient)
+
+
+def test_factory_zai_missing_key_raises_config_error() -> None:
+    cfg = LLMConfig(provider=LLMProvider.ZAI, zai_api_key="")
+    with pytest.raises(LLMConfigError, match="ZAI_API_KEY"):
+        build_llm_client(cfg)
+
+
 # --- from_env ---------------------------------------------------------------
 
 
@@ -402,6 +548,7 @@ def test_from_env_defaults_to_fake_when_unset() -> None:
     assert cfg.provider is LLMProvider.FAKE
     assert cfg.openrouter_model == DEFAULT_OPENROUTER_MODEL
     assert cfg.gemini_model == DEFAULT_GEMINI_MODEL
+    assert cfg.zai_model == DEFAULT_ZAI_MODEL
 
 
 def test_from_env_reads_all_vars() -> None:
@@ -441,6 +588,34 @@ def test_from_env_llm_model_overrides_both_providers() -> None:
     )
     assert cfg.openrouter_model == "global/override"
     assert cfg.gemini_model == "global/override"
+    assert cfg.zai_model == "global/override"
+
+
+def test_from_env_reads_zai_vars() -> None:
+    cfg = LLMConfig.from_env(
+        {
+            "LLM_PROVIDER": "zai",
+            "ZAI_API_KEY": "zai-k",
+            "ZAI_BASE_URL": "https://zai.example/api/paas/v4",
+            "ZAI_MODEL": "glm-custom",
+            "ZAI_DAILY_TOKEN_LIMIT": "12345",
+            "ZAI_TOKEN_STATE_PATH": "/tmp/zai-ledger.json",
+        }
+    )
+    assert cfg.provider is LLMProvider.ZAI
+    assert cfg.zai_api_key == "zai-k"
+    assert cfg.zai_base_url == "https://zai.example/api/paas/v4"
+    assert cfg.zai_model == "glm-custom"
+    assert cfg.zai_daily_token_limit == 12345
+    assert cfg.zai_token_state_path == "/tmp/zai-ledger.json"
+
+
+def test_from_env_zai_key_falls_back_to_glm_api_key() -> None:
+    cfg = LLMConfig.from_env({"ZAI_API_KEY": "", "GLM_API_KEY": "glm-k"})
+    assert cfg.zai_api_key == "glm-k"
+    # Explicit ZAI_API_KEY wins over the fallback.
+    cfg = LLMConfig.from_env({"ZAI_API_KEY": "zai-k", "GLM_API_KEY": "glm-k"})
+    assert cfg.zai_api_key == "zai-k"
 
 
 def test_from_env_unknown_provider_falls_back_to_fake() -> None:

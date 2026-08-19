@@ -105,6 +105,17 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_base_url: str = ""
     gemini_model: str = ""
+    # ── zai (GLM) — day-1 board-approved persona voice (HU-1910 / HU-1461) ─
+    # Existing-subscription OpenAI-compatible coding endpoint. ``ZAI_API_KEY``
+    # falls back to ``GLM_API_KEY`` (the subscription credential name) inside
+    # ``LLMConfig.from_env``. Guardrails: hard per-UTC-day token ceiling
+    # (``<= 0`` disables) on a durable ledger bind-mounted at /var/lib/huible,
+    # plus a one-knob abort back to ``llm_provider=fake``.
+    zai_api_key: str = ""
+    zai_base_url: str = ""
+    zai_model: str = ""
+    zai_daily_token_limit: int = 200000
+    zai_token_state_path: str = "/var/lib/huible/zai-tokens.json"
     llm_model: str = ""
     llm_max_tokens: int = 512
     llm_temperature: float = 0.7
@@ -309,7 +320,7 @@ class Settings(BaseSettings):
             return ""
         for async_driver, sync_driver in _ASYNC_TO_SYNC_DRIVER.items():
             if async_url.startswith(async_driver + "://"):
-                return sync_driver + async_url[len(async_driver):]
+                return sync_driver + async_url[len(async_driver) :]
         # Defensive: an accepted async URL did not match a known swap — refuse
         # to invent a sync URL rather than risk dialing with the wrong driver.
         return ""
@@ -350,9 +361,7 @@ class Settings(BaseSettings):
             try:
                 allowed.add(UUID(part))
             except ValueError:
-                logger.warning(
-                    "Ignoring non-UUID PERSONA_CHAT_CANARY_PERSONAS entry: %r", part
-                )
+                logger.warning("Ignoring non-UUID PERSONA_CHAT_CANARY_PERSONAS entry: %r", part)
         return frozenset(allowed)
 
     @property
@@ -407,6 +416,11 @@ class Settings(BaseSettings):
                 "GEMINI_API_KEY": self.gemini_api_key,
                 "GEMINI_BASE_URL": self.gemini_base_url,
                 "GEMINI_MODEL": self.gemini_model,
+                "ZAI_API_KEY": self.zai_api_key,
+                "ZAI_BASE_URL": self.zai_base_url,
+                "ZAI_MODEL": self.zai_model,
+                "ZAI_DAILY_TOKEN_LIMIT": str(self.zai_daily_token_limit),
+                "ZAI_TOKEN_STATE_PATH": self.zai_token_state_path,
                 "LLM_MODEL": self.llm_model,
                 "LLM_MAX_TOKENS": str(self.llm_max_tokens),
                 "LLM_TEMPERATURE": str(self.llm_temperature),
