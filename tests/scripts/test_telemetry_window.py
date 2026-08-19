@@ -79,3 +79,33 @@ class TestTelemetryWindow:
         mod = _load_module()
         with pytest.raises(SystemExit):
             mod._parse_since("24x")
+
+    def test_parses_real_formatter_output(self):
+        """Lock parser compatibility with the app's actual ``ts`` shape.
+
+        ``_JsonLineFormatter`` stamps lines via ``logging.formatTime`` where
+        ``%f`` is emitted literally (no microseconds) — the reader must accept
+        exactly what the deployed formatter writes, not an idealized stamp.
+        """
+        import logging
+        import re
+
+        from huible.api.app import _JsonLineFormatter
+
+        mod = _load_module()
+        record = logging.LogRecord(
+            name="huible.test",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=1,
+            msg="chat.trace session=s action=handoff",
+            args=(),
+            exc_info=None,
+        )
+        line = _JsonLineFormatter().format(record)
+        ts = json.loads(line)["ts"]
+        # guard the premise: the deployed formatter really emits literal %f
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.%fZ", ts), ts
+        parsed = mod._parse_ts(ts)
+        assert parsed is not None, f"reader must parse the real stamp: {ts}"
+        assert parsed.tzinfo is not None

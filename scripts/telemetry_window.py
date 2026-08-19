@@ -44,16 +44,25 @@ def _parse_since(raw: str) -> timedelta:
 
 
 def _parse_ts(raw: object) -> datetime | None:
-    """Parse the ``ts`` field of a telemetry JSON line (naive-UTC tolerant)."""
+    """Parse the ``ts`` field of a telemetry JSON line (naive-UTC tolerant).
+
+    The app's ``_JsonLineFormatter`` emits ``time.strftime``-style timestamps
+    where ``%f`` is NOT expanded (no microseconds in ``logging.formatTime``),
+    so ``2026-08-19T16:25:30.%fZ`` must parse the same as a whole-second
+    ``...:30Z`` stamp.
+    """
     if not isinstance(raw, str):
         return None
-    try:
-        stamp = datetime.strptime(raw, "%Y-%m-%dT%H:%M:%S.%fZ")
-    except ValueError:
+    normalized = raw.replace(".%fZ", "Z")
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
         try:
-            stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            return datetime.strptime(normalized, fmt).replace(tzinfo=UTC)
         except ValueError:
-            return None
+            continue
+    try:
+        stamp = datetime.fromisoformat(normalized.replace("Z", "+00:00"))
+    except ValueError:
+        return None
     if stamp.tzinfo is None:
         stamp = stamp.replace(tzinfo=UTC)
     return stamp
