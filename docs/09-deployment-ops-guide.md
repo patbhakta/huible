@@ -515,6 +515,25 @@ docker compose logs -f app | fluent-bit
 
 **Recommended stack:** Grafana Loki + Promtail (lightweight, pairs well with Prometheus).
 
+**Durable telemetry window (HU-1945):** docker json-file history dies with the
+container on every `docker compose up -d --build` recreate, which used to wipe
+the daily-review stdout surfaces (`chat.trace` / `consent.record` /
+`handoff.page`). The app therefore mirrors exactly those telemetry lines to a
+rotating file on the bind-mounted app-state volume:
+
+```bash
+# trailing-24h telemetry window that survives container recreations
+python3 scripts/telemetry_window.py | grep 'chat.trace'
+python3 scripts/telemetry_window.py | grep 'consent.record'
+python3 scripts/telemetry_window.py | grep 'handoff.page'
+```
+
+Defaults: `TELEMETRY_LOG_PATH=/var/lib/huible/logs/telemetry.log`
+(host path `docker/runtime/app-state/logs/telemetry.log`), ~20 MB × 4 rotated
+files — months of retention at the observed telemetry rate. Empty path or an
+unwritable path degrades to stdout-only (startup never blocks); the compose
+`app` service also caps json-file stdout at 20 MB × 3 for the live window.
+
 ### 7.5 On-Call Paging & Sev-1 Alerts (§7.4.1, Stage 0.4)
 
 The `GET /metrics` endpoint exposes the guardrail counters shipped in Stage 0.3

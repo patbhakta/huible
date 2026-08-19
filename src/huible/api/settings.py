@@ -130,6 +130,18 @@ class Settings(BaseSettings):
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
 
+    # ── Durable telemetry log sink (HU-1945) ───────────────────────────────
+    # The daily-review runbook reads the stdout telemetry surfaces
+    # (chat.trace / consent.record / handoff.page) over a trailing 24h window,
+    # but docker json-file history dies with the container on every recreate.
+    # These lines are therefore mirrored to a rotating file under the
+    # bind-mounted app-state volume (docker-compose.yml) so telemetry survives
+    # container recreations. Empty string disables the sink (stdout-only);
+    # an unwritable path degrades gracefully to stdout-only at startup.
+    telemetry_log_path: str = "/var/lib/huible/logs/telemetry.log"
+    telemetry_log_max_bytes: int = 20 * 1024 * 1024
+    telemetry_log_backup_count: int = 4
+
     # ── CORS ───────────────────────────────────────────────────────────────
     cors_origins: str = ""
 

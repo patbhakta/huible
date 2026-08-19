@@ -15,9 +15,19 @@ services:
     # (`curl http://localhost:8000/...`) still works. (docs/09 §8 hardening.)
     ports:
       - "127.0.0.1:8000:8000"
+    # Bounded json-file stdout history (HU-1945): keeps `docker compose logs`
+    # readable for the live window without unbounded disk growth. The durable
+    # trailing-24h telemetry window lives in the app-state file sink below —
+    # daemon-side json-file history dies with the container on every recreate.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
     # Durable app runtime state (OpenRouter monthly spend ledger for the
     # board-approved $50/mo hard cap, HU-1461): bind-mounted so container
-    # recreation cannot reset month-to-date accrual.
+    # recreation cannot reset month-to-date accrual. Also hosts the durable
+    # telemetry log sink (logs/telemetry.log, HU-1945).
     volumes:
       - ./docker/runtime/app-state:/var/lib/huible
     networks:

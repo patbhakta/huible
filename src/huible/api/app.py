@@ -55,11 +55,13 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
+from logging.handlers import RotatingFileHandler
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
@@ -247,12 +249,67 @@ class _JsonLineFormatter(logging.Formatter):
         return json.dumps(payload)
 
 
+#: Stdout telemetry surfaces the daily-review runbook greps for (HU-1945):
+#: risk/alignment/dosage traces, consent acknowledgments, responder pages.
+TELEMETRY_LINE_PREFIXES = ("chat.trace ", "consent.record ", "handoff.page ")
+
+
+class _TelemetrySinkFilter(logging.Filter):
+    """Pass only the runbook telemetry lines through to the durable sink."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.getMessage().startswith(TELEMETRY_LINE_PREFIXES)
+
+
+def _attach_telemetry_file_sink(settings: Settings) -> logging.Handler | None:
+    """Mirror telemetry JSON lines to a durable rotating file (HU-1945).
+
+    Stdout (docker json-file) history does not survive container recreations,
+    so the daily review's trailing-24h window was wiped on every deploy. The
+    sink writes the same ``_JsonLineFormatter`` lines to a rotating file under
+    the bind-mounted app-state volume, which is host-durable across recreates.
+
+    Graceful degradation: an empty :attr:`Settings.telemetry_log_path` disables
+    the sink, and an unwritable path logs one warning and leaves the app on
+    stdout-only logging (never blocks startup).
+    """
+    path = settings.telemetry_log_path.strip()
+    if not path:
+        return None
+    root = logging.getLogger()
+    if any(getattr(h, "_huible_telemetry_sink", False) for h in root.handlers):
+        return None
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        handler: logging.Handler = RotatingFileHandler(
+            path,
+            maxBytes=settings.telemetry_log_max_bytes,
+            backupCount=settings.telemetry_log_backup_count,
+            encoding="utf-8",
+        )
+    except OSError:
+        logger.warning(
+            "telemetry file sink disabled (path not writable): %s", path
+        )
+        return None
+    handler.setFormatter(_JsonLineFormatter())
+    handler.addFilter(_TelemetrySinkFilter())
+    handler._huible_telemetry_sink = True  # type: ignore[attr-defined]
+    root.addHandler(handler)
+    logger.info(
+        "telemetry file sink active: %s (surfaces survive container recreations)",
+        path,
+    )
+    return handler
+
+
 def configure_logging(settings: Settings) -> None:
     """Configure structured (JSON-line) root logging from settings.
 
     Idempotent: only attaches a structured handler once. Called from the app
     lifespan on startup, so the test suite (which does not boot the lifespan)
-    is unaffected.
+    is unaffected. Also attaches the durable telemetry file sink (HU-1945)
+    when ``telemetry_log_path`` is configured and writable.
     """
     level = getattr(logging, settings.log_level.upper(), logging.INFO)
     root = logging.getLogger()
@@ -260,6 +317,7 @@ def configure_logging(settings: Settings) -> None:
         handler = logging.StreamHandler()
         handler.setFormatter(_JsonLineFormatter())
         root.addHandler(handler)
+    _attach_telemetry_file_sink(settings)
     root.setLevel(level)
     logging.getLogger("uvicorn").setLevel(level)
 
