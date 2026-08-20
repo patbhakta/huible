@@ -40,13 +40,17 @@ trap cleanup EXIT
 
 mkdir -p "$DEST"; chmod 700 "$DEST"
 
-# Source .env for POSTGRES_USER/DB overrides only (password not needed:
-# pg_dump runs inside the container over its local socket).
+# Read POSTGRES_USER/DB from .env without sourcing it: the dotenv carries
+# non-shell values (e.g. GENERATOR_EXTRA_JSON JSON added by the zai flip),
+# and `source` broke the nightly timer with exit 127 on 2026-08-20.
+# Password not needed: pg_dump runs inside the container over its local socket.
 if [ -f .env ]; then
-  # shellcheck disable=SC1091
-  set -a; . ./.env; set +a
-  PG_USER="${POSTGRES_USER:-$PG_USER}"
-  PG_DB="${POSTGRES_DB:-$PG_DB}"
+  dotenv_value() {
+    grep -E "^$1=" .env | tail -n1 | cut -d= -f2- \
+      | sed -e 's/[[:space:]]#.*$//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'/\1/" || :
+  }
+  v="$(dotenv_value POSTGRES_USER)"; PG_USER="${v:-$PG_USER}"
+  v="$(dotenv_value POSTGRES_DB)";   PG_DB="${v:-$PG_DB}"
 fi
 
 docker compose exec -T postgres pg_dump -U "$PG_USER" -d "$PG_DB" -Fc > "$dump"
