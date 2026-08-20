@@ -30,6 +30,23 @@ ln -sfn "$(basename "$LOG")" "$LOG_DIR/watch-huible-dns-latest.log"
 
 log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" | tee -a "$LOG"; }
 
+# Best-effort WhatsApp ping to Pat (Hermes bridge) so fire/deadline events are
+# human-visible immediately instead of waiting for the next TL heartbeat.
+# Never fatal: watcher behaviour is unchanged if delivery fails.
+NOTIFY_CMD="/root/.local/bin/hermes"
+notify() { # notify "<subject>" "<body>"
+  local subj="$1" body="$2"
+  if [[ -x "$NOTIFY_CMD" ]]; then
+    if timeout 45 "$NOTIFY_CMD" send --to "whatsapp:Pat Bhakta (dm)" -s "$subj" "$body" >/dev/null 2>&1; then
+      log "notify: sent '$subj'"
+    else
+      log "notify: hermes send FAILED for '$subj' (non-fatal)"
+    fi
+  else
+    log "notify: hermes not found at $NOTIFY_CMD (non-fatal)"
+  fi
+}
+
 already_active() { # 0 when the origin already serves a public cert for DOMAIN
   local issuer
   issuer="$(timeout 10 openssl s_client -connect 127.0.0.1:443 -servername "$DOMAIN" </dev/null 2>/dev/null \
@@ -55,6 +72,11 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
     log "A record LIVE: $DOMAIN -> $a — firing activation."
     bash scripts/activate_huible_domain.sh "$DOMAIN" 2>&1 | tee -a "$LOG"
     rc=${PIPESTATUS[0]}
+    if [ "$rc" -eq 0 ]; then
+      notify "[HU-1743] $DOMAIN ACTIVATED" "DNS A record is live and activation succeeded (rc=0). Public TLS + domain now serving; Tech-Lead heartbeat will verify and close out HU-1743."
+    else
+      notify "[HU-1743] ACTIVATION FAILED rc=$rc" "DNS was live but activate_huible_domain.sh failed (rc=$rc). See logs/watch-huible-dns-latest.log on the prod host — needs Tech-Lead attention."
+    fi
     log "activation finished rc=$rc — watcher exiting (one-shot)."
     exit "$rc"
   elif [ -n "$a" ]; then
@@ -63,5 +85,6 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
   sleep "$POLL_SEC"
 done
 
+notify "[HU-1743] DNS watcher disarmed" "72h window closed with no A record for $DOMAIN. Card 1402f3f5 / manual activation path unaffected; HU-1743 still waiting on the DNS record -> $EXPECTED_IP."
 log "deadline (${MAX_HOURS}h) reached without DNS — watcher self-disarming (exit 124). Card/manual path unaffected."
 exit 124
