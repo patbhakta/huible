@@ -100,7 +100,9 @@ done
 
 # 3. Quality signals
 FALLBACKS=$(journalctl -u tdai-memory-core --since "$SINCE" --no-pager 2>/dev/null | grep -cE '\[recall\] recall failed|v4.*fallback')
-R429=$(journalctl --user -u hermes-gateway --since "$SINCE" --no-pager 2>/dev/null | grep -c 'Usage limit reached')
+# hermes-gateway migrated user->system unit on 2026-08-19 17:40Z; query both
+# scopes so z.ai 429 telemetry stays complete across the migration boundary.
+R429=$(cat <(journalctl --user -u hermes-gateway --since "$SINCE" --no-pager 2>/dev/null) <(journalctl -u hermes-gateway --since "$SINCE" --no-pager 2>/dev/null) | grep -c 'Usage limit reached')
 log "quality signals: recall-fallback-warns=$FALLBACKS zai-429=$R429"
 
 # 4. Write-path health
