@@ -44,6 +44,22 @@ alignment method, and disposition policy:
   sentence with no factual cue is pure reflection and passes (the filter must
   not flag "I remember those days fondly" or the warm distress fallback).
 
+  **HU-2070 persona-scope widening.** Verbatim presence in *the turn's
+  activated refs* proved too strict for raw-dialogue corpora: a truthful
+  reply routinely names entities that exist in the wider persona corpus but
+  were not activated for that turn (e.g. the persona's job title living in
+  memories the retrieval window missed), which suppressed ~100% of legitimate
+  biographical replies. The corpus is therefore widened by an optional
+  ``persona_scope_refs`` sequence — the persona-scoped, G4-admissible memory
+  set (same confidence / disclosure-scope / era gates as the prompt
+  firewall, applied at :meth:`ContextBuilder.persona_scoped_grounding_refs`).
+  Claims must still trace to *legitimate persona memory* — LOW /
+  QUARANTINE, out-of-scope, or out-of-era memories never ground a claim, and
+  identity / advice policy claims remain un-groundable — but truth is no
+  longer indexed to one turn's retrieval window. Callers that omit
+  ``persona_scope_refs`` (the clinical Stage-A oracle, the NLI probe
+  harness) get the pre-widening turn-refs-only behavior unchanged.
+
   **HU-1461 Stage-0.6 hardening.** The Clinical Advisor's Stage-A adversarial
   probe set quantified two blind-spot classes that are invisible against the
   deterministic fake (which never emits them) but are the primary real-model
@@ -600,12 +616,24 @@ def _corpus_tokens(text: str) -> set[str]:
 def build_grounding_corpus(
     refs: Sequence[MemoryNode],
     persona: PersonaVault,
+    *,
+    persona_scope_refs: Sequence[MemoryNode] | None = None,
 ) -> set[str]:
     """Build the salient-token corpus a turn's claims are aligned against.
 
     The corpus is the concatenated content of the memories that passed the G4
     firewall plus the persona vault fields a claim may legitimately reference
     (name, voice instructions, era boundary). Lowercased, stopword-filtered.
+
+    ``persona_scope_refs`` (HU-2070) optionally widens the corpus with the
+    persona-scoped G4-admissible memory set — memories the caller has already
+    run through the same confidence / disclosure-scope / era gates as the
+    prompt firewall (see
+    :meth:`huible.persona.context.ContextBuilder.persona_scoped_grounding_refs`).
+    This keeps every grounding token traceable to legitimate persona memory
+    while decoupling truth from one turn's retrieval window. The parameter is
+    keyword-only and defaults to ``None`` so the clinical Stage-A oracle and
+    deterministic suites keep the pre-widening behavior.
 
     Grounding is intentionally a *content-overlap* check at Phase-1: a claim's
     named entity must appear in the corpus. This is the deterministic baseline
@@ -616,6 +644,10 @@ def build_grounding_corpus(
     for node in refs:
         if node.content:
             corpus |= _corpus_tokens(node.content)
+    if persona_scope_refs:
+        for node in persona_scope_refs:
+            if node.content:
+                corpus |= _corpus_tokens(node.content)
     # Persona vault: name parts, voice-instruction tokens, era-boundary year.
     if persona.name:
         corpus |= _corpus_tokens(persona.name)
@@ -652,15 +684,20 @@ def align_response(
     *,
     refs: Sequence[MemoryNode],
     persona: PersonaVault,
+    persona_scope_refs: Sequence[MemoryNode] | None = None,
 ) -> AlignmentReport:
     """Align ``response`` against the turn's refs + persona vault.
 
     Returns an :class:`AlignmentReport` carrying every extracted claim, the
     un-grounded subset, and the per-category counts. Does **not** mutate the
     response — :func:`apply_alignment_guard` applies the disposition policy.
+
+    ``persona_scope_refs`` (HU-2070) widens the grounding corpus with the
+    persona-scoped G4-admissible memory set; see
+    :func:`build_grounding_corpus`.
     """
     claims = extract_claims(response, persona_name=persona.name or "")
-    corpus = build_grounding_corpus(refs, persona)
+    corpus = build_grounding_corpus(refs, persona, persona_scope_refs=persona_scope_refs)
     ungrounded = [c for c in claims if not is_grounded(c, corpus)]
     return AlignmentReport(
         text=response,
@@ -675,6 +712,7 @@ def apply_alignment_guard(
     *,
     refs: Sequence[MemoryNode],
     persona: PersonaVault,
+    persona_scope_refs: Sequence[MemoryNode] | None = None,
 ) -> AlignmentReport:
     """Apply the §7.4.2 generation-time alignment guard.
 
@@ -688,8 +726,14 @@ def apply_alignment_guard(
     un-grounded claim fires, and the fallback is itself claim-free (verified
     by the unit suite). It never rewrites grounded text and never injects a
     claim.
+
+    ``persona_scope_refs`` (HU-2070) widens the grounding corpus with the
+    persona-scoped G4-admissible memory set; see
+    :func:`build_grounding_corpus`.
     """
-    report = align_response(response, refs=refs, persona=persona)
+    report = align_response(
+        response, refs=refs, persona=persona, persona_scope_refs=persona_scope_refs
+    )
     if report.disposition == "suppressed":
         report.text = ALIGNMENT_FALLBACK_RESPONSE
     return report

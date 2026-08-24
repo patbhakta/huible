@@ -10,7 +10,7 @@ suite so the deterministic clinical baseline holds before the e2e wiring.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
+from typing import Any, ClassVar
 from uuid import uuid4
 
 from huible.memory.protocol import (
@@ -183,6 +183,75 @@ class TestGroundingCorpus:
             salient_entities=("Marfa",),
         )
         assert is_grounded(claim, build_grounding_corpus(VAULT_REFS, PERSONA)) is False
+
+
+# --- HU-2070: persona-scope grounding corpus widening -----------------------
+
+
+class TestPersonaScopeGroundingWidening:
+    """HU-2070: truthful replies naming entities that live in the wider
+    persona corpus (raw-dialogue corpora) must not be suppressed just because
+    the turn's retrieval window missed them."""
+
+    #: Wider persona corpus: a Thanksgiving memory the turn's refs miss.
+    THANKSGIVING = _node("Every Thanksgiving, we hosted dinner in the apartment.")
+    CHICK_DUCK = _node("The chick and the duck lived with us.")
+    PERSONA_SCOPE: ClassVar[list[MemoryNode]] = [THANKSGIVING, CHICK_DUCK]
+
+    def test_corpus_unions_persona_scope_tokens(self):
+        base = build_grounding_corpus(VAULT_REFS, PERSONA)
+        widened = build_grounding_corpus(
+            VAULT_REFS, PERSONA, persona_scope_refs=self.PERSONA_SCOPE
+        )
+        assert "thanksgiving" not in base
+        assert "thanksgiving" in widened
+        assert base < widened  # widening is strictly additive
+
+    def test_persona_true_reply_passes_with_widening(self):
+        reply = "I loved our Thanksgiving dinner with the chick and the duck."
+        strict = apply_alignment_guard(reply, refs=VAULT_REFS, persona=PERSONA)
+        assert strict.disposition == "suppressed"  # the HU-2070 symptom
+        widened = apply_alignment_guard(
+            reply, refs=VAULT_REFS, persona=PERSONA, persona_scope_refs=self.PERSONA_SCOPE
+        )
+        assert widened.disposition == "passed"
+        assert widened.text == reply
+
+    def test_omitted_scope_keeps_pre_widening_behavior(self):
+        """The clinical Stage-A oracle path (no persona_scope_refs) is unchanged."""
+        reply = "I loved our Thanksgiving dinner with the chick and the duck."
+        report = align_response(reply, refs=VAULT_REFS, persona=PERSONA)
+        assert report.disposition == "suppressed"
+        assert report.ungrounded_count == 1
+
+    def test_fabricated_entity_still_suppressed_under_widening(self):
+        reply = "I lived in Marfa for twenty years."
+        report = apply_alignment_guard(
+            reply,
+            refs=VAULT_REFS,
+            persona=PERSONA,
+            persona_scope_refs=self.PERSONA_SCOPE,
+        )
+        assert report.disposition == "suppressed"
+        assert report.text == ALIGNMENT_FALLBACK_RESPONSE
+
+    def test_identity_claim_never_grounded_by_scope_widening(self):
+        reply = "I am really here. I remember dying."
+        report = apply_alignment_guard(
+            reply,
+            refs=VAULT_REFS,
+            persona=PERSONA,
+            persona_scope_refs=self.PERSONA_SCOPE,
+        )
+        assert report.disposition == "suppressed"
+        assert report.text == ALIGNMENT_FALLBACK_RESPONSE
+
+    def test_empty_scope_list_is_a_noop(self):
+        reply = "I loved our Thanksgiving dinner with the chick and the duck."
+        report = apply_alignment_guard(
+            reply, refs=VAULT_REFS, persona=PERSONA, persona_scope_refs=[]
+        )
+        assert report.disposition == "suppressed"
 
 
 # --- align_response (no mutation) ------------------------------------------

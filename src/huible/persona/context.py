@@ -448,6 +448,13 @@ class ContextBuilder:
     #: Conversation-history window size (last N turns rendered), per F5 spec.
     HISTORY_WINDOW = 10
 
+    #: Upper bound on the persona-scoped grounding scan (HU-2070). The scan
+    #: backs the §7.4.2 alignment corpus widening with every active memory
+    #: that passes the same G4 gates as the prompt firewall. Generous relative
+    #: to current persona corpora; the read is indexed and tokenization is
+    #: linear, and the result is TTL-cached by the caller.
+    GROUNDING_SCOPE_SCAN_LIMIT = 500
+
     def __init__(self, retrieval_config: RetrievalConfig | None = None) -> None:
         self._default_retrieval_config = retrieval_config
 
@@ -545,3 +552,33 @@ class ContextBuilder:
             current_message=current_message,
             user_affect=user_affect,
         )
+
+    async def persona_scoped_grounding_refs(
+        self,
+        *,
+        persona: PersonaConfig,
+        requester_tier: RelationshipTier,
+        backend: MemoryBackend,
+    ) -> list[MemoryNode]:
+        """Return the persona-scoped, G4-admissible memory set (HU-2070).
+
+        Backs the §7.4.2 generation-side alignment filter's widened grounding
+        corpus (:func:`huible.safety.alignment.build_grounding_corpus`).
+        Pulls the persona's active memories from the backend and applies the
+        *same* hard gates as the prompt firewall — confidence (HIGH/MEDIUM
+        only, fail closed on missing), disclosure scope for the requester
+        tier, era boundary — so a claim grounded by this corpus is traceable
+        to memory the requester could legitimately be shown, even when the
+        turn's retrieval window did not activate it. Read-only; no rendering,
+        no prompt side effects. Callers should TTL-cache the result (memory
+        content changes only through ingestion, not chat).
+        """
+        era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+        active = await backend.get_active_memories(
+            persona.id, limit=self.GROUNDING_SCOPE_SCAN_LIMIT
+        )
+        return [
+            node
+            for node in active
+            if _check_admissible(node, requester_tier.disclosure_scope, era_boundary)[0]
+        ]

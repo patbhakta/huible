@@ -85,6 +85,15 @@ class _FakeBackend:
     async def get_edges(self, memory_id: UUID) -> list[MemoryEdge]:
         return []
 
+    async def get_active_memories(
+        self, persona_id: UUID, limit: int = 50
+    ) -> list[MemoryNode]:
+        return [
+            node
+            for node in self._memories.values()
+            if node.persona_id == persona_id and node.is_active
+        ][:limit]
+
 
 def _node(
     *,
@@ -323,6 +332,69 @@ class TestNoRegression:
         assert body["response"].startswith("[fake-llm:")
         assert body["trace"]["provider"] == "fake"
         assert body["trace"]["alignment"]["disposition"] == "passed"
+
+
+# ---------------------------------------------------------------------------
+# HU-2070 — persona-scope grounding corpus widening (truthful replies pass)
+# ---------------------------------------------------------------------------
+
+
+class _NoScanBackend(_FakeBackend):
+    """A backend without ``get_active_memories`` — pins the degrade path."""
+
+    get_active_memories = None  # type: ignore[assignment]
+
+
+class TestPersonaScopeGroundingWidening:
+    """HU-2070: a truthful reply naming an entity that lives in the wider
+    persona corpus (raw-dialogue corpora) but outside the turn's activated
+    refs must pass; the turn must not fall to the claim-free fallback."""
+
+    JOB_TEXT = "I currently work in statistical analysis and data reconfiguration."
+
+    def _make_app_with_job_memory(self, backend_cls=_FakeBackend):
+        backend = backend_cls()
+        vec = _embed("fishing lake")
+        lake = _node(content="Chandler loved fishing on Lake Travis.", embedding=vec)
+        job = _node(content=self.JOB_TEXT)  # no embedding -> never retrieved
+        backend.seed(lake)
+        backend.seed(job)
+        persona = _persona()
+        registry = InMemoryPersonaRegistry({persona.id: (persona, backend)})
+        keys = InMemoryApiKeyStore({API_KEY: PERSONA_ID}, read_env=False)
+        fake_llm = FakeLLMClient(
+            response="I worked in statistical analysis and data reconfiguration.",
+            persona_name="Chandler",
+        )
+        application = create_app(
+            api_key_store=keys,
+            persona_registry=registry,
+            llm_client=fake_llm,
+            start_time=0.0,
+        )
+        return TestClient(application)
+
+    def test_job_reply_grounded_via_persona_scope_not_turn_refs(self):
+        client = self._make_app_with_job_memory()
+        body = _post(client, "tell me about the lake")
+        # The job entity is in the persona corpus (not the turn's refs) and
+        # the reply now passes instead of hitting the fallback.
+        assert (
+            body["response"] == "I worked in statistical analysis and data reconfiguration."
+        )
+        alignment = body["trace"]["alignment"]
+        assert alignment["disposition"] == "passed"
+        assert alignment["ungrounded_claim_count"] == 0
+        # Retrieval-side evidence: the job memory was NOT activated this turn.
+        assert len(body["trace"]["memory_refs"]) == 1
+
+    def test_scan_failure_degrades_to_strict_grounding(self):
+        """No ``get_active_memories`` on the backend -> pre-HU-2070 strict
+        behavior (the reply is suppressed, never silently un-grounded)."""
+        client = self._make_app_with_job_memory(backend_cls=_NoScanBackend)
+        body = _post(client, "tell me about the lake")
+        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["trace"]["alignment"]["disposition"] == "suppressed"
 
 
 if __name__ == "__main__":

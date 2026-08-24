@@ -148,7 +148,7 @@ from huible.llm.client import (
     LLMClient,
     build_llm_client,
 )
-from huible.memory.protocol import MemoryBackend
+from huible.memory.protocol import MemoryBackend, MemoryNode
 from huible.memory.store import PostgresMemoryBackend
 from huible.persona.context import (
     CONFIDENCE_LEVEL_METADATA_KEY,
@@ -636,6 +636,11 @@ def create_app(
     )
     application.state.llm_client = llm_client or build_llm_client(resolved_settings.to_llm_config())
     application.state.context_builder = context_builder or ContextBuilder()
+    # HU-2070: TTL cache for the persona-scope §7.4.2 grounding corpus (see
+    # ``_persona_scope_grounding_refs``). Keyed by persona + disclosure scope
+    # + era boundary; per-app so tests with fresh registries never share
+    # entries.
+    application.state.grounding_scope_cache: dict = {}
     # Runtime clinical guardrails (HU-1413 / HU-1407 §7.3). The crisis
     # classifier is the G1 synchronous pre-generation check AND the shared G3
     # affect signal. The deterministic impl is the default; tests inject a
@@ -1397,8 +1402,20 @@ def _register_routes(application: FastAPI) -> None:
         # a claim-free reflection fallback. Runs on every persona-voiced turn
         # (crisis already returned); the report feeds the trace alignment view
         # for clinical review. See huible.safety.alignment.
+        #
+        # HU-2070: the grounding corpus is widened with the persona-scoped
+        # G4-admissible memory set (same confidence / disclosure / era gates as
+        # the prompt firewall) so a truthful reply naming an entity that lives
+        # in the wider persona corpus — but outside this turn's retrieval
+        # window — is no longer suppressed. Identity/advice policy claims and
+        # fabricated entities absent from the whole persona corpus are still
+        # caught. Scan failure degrades to turn-refs-only (strict) grounding.
+        persona_scope_refs = await _persona_scope_grounding_refs(application, binding)
         alignment = apply_alignment_guard(
-            response_text, refs=ctx.included_memories, persona=binding.persona
+            response_text,
+            refs=ctx.included_memories,
+            persona=binding.persona,
+            persona_scope_refs=persona_scope_refs,
         )
         response_text = alignment.text
 
@@ -1891,6 +1908,54 @@ def _conversation_store(application: FastAPI) -> ConversationStore:
         store = InMemoryConversationStore()
         application.state.conversation_store = store
     return store
+
+
+#: TTL for the persona-scope grounding corpus cache (HU-2070). Memory content
+#: changes only through ingestion (never through chat), so the cache trades at
+#: most this much ingestion-to-groundable lag for skipping a backend scan +
+#: re-tokenization on every persona-voiced turn.
+_GROUNDING_SCOPE_CACHE_TTL_SECONDS = 60.0
+
+
+async def _persona_scope_grounding_refs(
+    application: FastAPI, binding: PersonaBinding
+) -> list[MemoryNode] | None:
+    """Fetch the persona-scoped G4-admissible refs for §7.4.2 grounding (HU-2070).
+
+    Wraps :meth:`ContextBuilder.persona_scoped_grounding_refs` with a
+    per-app TTL cache keyed by persona + disclosure scope + era boundary.
+    Returns ``None`` (and logs) when the scan fails — the caller then runs
+    the alignment guard with the turn's refs only, i.e. the stricter
+    pre-HU-2070 behavior; degrading toward over-suppression, never toward
+    letting un-grounded claims through.
+    """
+    cache: dict[tuple[str, str, str], tuple[float, list[MemoryNode]]] = (
+        application.state.grounding_scope_cache
+    )
+    key = (
+        str(binding.persona.id),
+        binding.requester_tier.disclosure_scope.value,
+        str(binding.persona.era_knowledge_boundary),
+    )
+    now = time.monotonic()
+    cached = cache.get(key)
+    if cached is not None and now - cached[0] < _GROUNDING_SCOPE_CACHE_TTL_SECONDS:
+        return cached[1]
+    try:
+        refs = await application.state.context_builder.persona_scoped_grounding_refs(
+            persona=binding.persona,
+            requester_tier=binding.requester_tier,
+            backend=binding.backend,
+        )
+    except Exception:
+        logger.exception(
+            "persona-scope grounding scan failed (persona=%s); "
+            "falling back to turn-refs-only grounding",
+            binding.persona.id,
+        )
+        return None
+    cache[key] = (now, refs)
+    return refs
 
 
 def _history(application: FastAPI, conversation_id: str | None) -> list[ConversationTurn]:

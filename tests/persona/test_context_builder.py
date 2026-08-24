@@ -443,6 +443,16 @@ class _FakeBackend:
     async def get_edges(self, memory_id: UUID) -> list[MemoryEdge]:
         return []
 
+    async def get_active_memories(
+        self, persona_id: UUID, limit: int = 50
+    ) -> list[MemoryNode]:
+        self.last_active_scan_limit = limit
+        return [
+            node
+            for node in self._memories.values()
+            if node.persona_id == persona_id and node.is_active
+        ][:limit]
+
 
 def _vec(token: str) -> list[float]:
     """Deterministic 8-dim one-hot-ish vector so identical tokens cosine=1.0."""
@@ -511,3 +521,58 @@ class TestBuildEndToEnd:
         assert "private secret" not in contents
         for node in ctx.included_memories:
             assert node.disclosure_scope != DisclosureScope.PRIVATE
+
+
+# ---------------------------------------------------------------------------
+# HU-2070: persona-scoped grounding refs (§7.4.2 corpus widening)
+# ---------------------------------------------------------------------------
+
+
+class TestPersonaScopedGroundingRefs:
+    async def test_returns_only_g4_admissible_memories(self):
+        backend = _FakeBackend()
+        await backend.store_memory(_node(content="admissible fact"))
+        await backend.store_memory(
+            _node(content="quarantined", confidence_level=ConfidenceLevel.QUARANTINE)
+        )
+        await backend.store_memory(
+            _node(content="low rumor", confidence_level=ConfidenceLevel.LOW)
+        )
+        await backend.store_memory(
+            _node(content="private secret", disclosure_scope=DisclosureScope.PRIVATE)
+        )
+        await backend.store_memory(
+            _node(content="future fact", memory_date=date(2021, 1, 1))
+        )
+
+        refs = await ContextBuilder().persona_scoped_grounding_refs(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+        )
+        assert [n.content for n in refs] == ["admissible fact"]
+
+    async def test_acquaintance_scope_excludes_family_scoped(self):
+        backend = _FakeBackend()
+        await backend.store_memory(
+            _node(content="public fact", disclosure_scope=DisclosureScope.ALL_CONTACTS)
+        )
+        await backend.store_memory(_node(content="family fact"))
+
+        refs = await ContextBuilder().persona_scoped_grounding_refs(
+            persona=_persona(),
+            requester_tier=RelationshipTier.ACQUAINTANCE,
+            backend=backend,
+        )
+        assert [n.content for n in refs] == ["public fact"]
+
+    async def test_scan_uses_grounding_scope_limit(self):
+        backend = _FakeBackend()
+        await backend.store_memory(_node(content="admissible fact"))
+
+        await ContextBuilder().persona_scoped_grounding_refs(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+        )
+        assert backend.last_active_scan_limit == ContextBuilder.GROUNDING_SCOPE_SCAN_LIMIT
