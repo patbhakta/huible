@@ -63,12 +63,15 @@ fi
 # ── Policy + rules (all idempotent; ufw dedupes identical rules) ───────────
 ufw default deny incoming
 ufw default allow outgoing
-ufw allow 22/tcp  comment 'ssh'
+# HU-1743 2026-08-24: rate-limit ssh — 4.4k failed passwords/24h against the
+# world-open port. LIMIT blocks sources exceeding 6 conns/30s; key auth and
+# normal operator password ssh are unaffected.
+ufw limit 22/tcp comment 'ssh rate-limited (brute-force mitigation 2026-08-24)'
 ufw allow 80/tcp  comment 'system caddy http'
 ufw allow 443/tcp comment 'system caddy https'
 ufw allow in on "$TS_IFACE" comment 'tailnet: kestra 8080 + couchdb 5984 + fns 9000'
 ufw --force enable
-ok "ufw enabled with allowlist (22, 80, 443, $TS_IFACE)"
+ok "ufw enabled with allowlist (22 LIMIT, 80, 443, $TS_IFACE)"
 
 # ── Post-enable reachability verification (AC #2) ──────────────────────────
 code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://$TS_IP:8080/" || true)"
