@@ -104,6 +104,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Protocol, runtime_checkable
 
 from huible.memory.protocol import MemoryNode
@@ -602,15 +603,25 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
 # --- Grounding corpus + alignment ------------------------------------------
 
 
-def _corpus_tokens(text: str) -> set[str]:
-    """Lowercase content tokens of ``text`` (stopwords + short words dropped)."""
+def _corpus_tokens(text: str) -> frozenset[str]:
+    """Lowercase content tokens of ``text`` (stopwords + short words dropped).
+
+    Memoized (HU-2070): the persona-scope grounding corpus re-tokenizes the
+    same 14k+ raw-dialogue contents on every turn while they sit in the
+    caller's TTL cache; a bounded LRU makes warm turns pay only the set
+    unions. Pure function of ``text`` — safe to cache. Returns a frozen set;
+    callers consume it read-only (``corpus |= ...``, membership, iteration).
+    """
     tokens: set[str] = set()
     for raw in re.findall(r"[A-Za-z][A-Za-z']*", text):
         low = raw.lower()
         if len(low) <= 2 or low in _STOPWORDS:
             continue
         tokens.add(low)
-    return tokens
+    return frozenset(tokens)
+
+
+_corpus_tokens = lru_cache(maxsize=131_072)(_corpus_tokens)
 
 
 def build_grounding_corpus(

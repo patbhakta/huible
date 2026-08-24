@@ -137,6 +137,31 @@ class TestPostgresMemoryBackendActiveMemories:
         active = await configured_backend.get_active_memories(persona_id, limit=3)
         assert len(active) == 3
 
+    async def test_get_active_memory_facts_lightweight_scan(self, configured_backend):
+        """HU-2070: the grounding-corpus scan returns gate-relevant fields
+        without materializing embedding vectors."""
+        persona_id = uuid4()
+        node = _make_node(
+            persona_id=persona_id,
+            content="data reconfiguration and statistical factoring",
+            embedding_content=[0.1, 0.2, 0.3],
+        )
+        await configured_backend.store_memory(node)
+
+        facts = await configured_backend.get_active_memory_facts(persona_id, limit=10)
+        assert len(facts) == 1
+        assert facts[0].content == "data reconfiguration and statistical factoring"
+        assert facts[0].disclosure_scope == DisclosureScope.FAMILY
+        assert facts[0].embedding_content is None  # vectors not materialized
+
+    async def test_get_active_memory_facts_limit(self, configured_backend):
+        persona_id = uuid4()
+        for _ in range(6):
+            await configured_backend.store_memory(_make_node(persona_id=persona_id))
+
+        facts = await configured_backend.get_active_memory_facts(persona_id, limit=2)
+        assert len(facts) == 2
+
 
 class TestPostgresMemoryBackendSupersede:
     async def test_supersede_memory(self, configured_backend):

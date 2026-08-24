@@ -454,6 +454,23 @@ class _FakeBackend:
         ][:limit]
 
 
+class _FactsOnlyBackend(_FakeBackend):
+    """Backend exposing only the embedding-free facts scan (HU-2070)."""
+
+    async def get_active_memories(self, persona_id: UUID, limit: int = 50):
+        raise AssertionError("grounding scan must prefer get_active_memory_facts")
+
+    async def get_active_memory_facts(
+        self, persona_id: UUID, limit: int = 50
+    ) -> list[MemoryNode]:
+        self.facts_scan_limit = limit
+        return [
+            node
+            for node in self._memories.values()
+            if node.persona_id == persona_id and node.is_active
+        ][:limit]
+
+
 def _vec(token: str) -> list[float]:
     """Deterministic 8-dim one-hot-ish vector so identical tokens cosine=1.0."""
     v = [0.0] * 8
@@ -568,7 +585,6 @@ class TestPersonaScopedGroundingRefs:
 
     async def test_scan_uses_grounding_scope_limit(self):
         backend = _FakeBackend()
-        await backend.store_memory(_node(content="admissible fact"))
 
         await ContextBuilder().persona_scoped_grounding_refs(
             persona=_persona(),
@@ -576,3 +592,20 @@ class TestPersonaScopedGroundingRefs:
             backend=backend,
         )
         assert backend.last_active_scan_limit == ContextBuilder.GROUNDING_SCOPE_SCAN_LIMIT
+
+    async def test_facts_scan_preferred_and_gates_applied(self):
+        """The embedding-free facts read is used when present, with the same
+        G4 gates (quarantined content never grounds a claim)."""
+        backend = _FactsOnlyBackend()
+        await backend.store_memory(_node(content="admissible fact"))
+        await backend.store_memory(
+            _node(content="quarantined", confidence_level=ConfidenceLevel.QUARANTINE)
+        )
+
+        refs = await ContextBuilder().persona_scoped_grounding_refs(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+        )
+        assert [n.content for n in refs] == ["admissible fact"]
+        assert backend.facts_scan_limit == ContextBuilder.GROUNDING_SCOPE_SCAN_LIMIT

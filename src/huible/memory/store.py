@@ -361,6 +361,69 @@ class PostgresMemoryBackend(MemoryBackend):
             rows = result.scalars().all()
             return [self._row_to_node(r) for r in rows]
 
+    async def get_active_memory_facts(
+        self,
+        persona_id: UUID,
+        limit: int = 50,
+    ) -> list[MemoryNode]:
+        """Lightweight active-memory scan for the §7.4.2 grounding corpus (HU-2070).
+
+        Backs :meth:`huible.persona.context.ContextBuilder.persona_scoped_grounding_refs`
+        on corpora far larger than one turn's retrieval window (the Chandler
+        raw-dialogue persona carries 14k+ active memories). Selects only the
+        G4-gate-relevant columns — embedding vectors are deliberately not
+        materialized, so a full-corpus scan stays a cheap text read instead of
+        a ~175MB vector payload. The returned nodes carry ``embedding_*=None``
+        and default audit fields; they are grounding-corpus inputs only, never
+        retrieval results.
+        """
+        def _coerce(value, enum_cls):
+            if isinstance(value, enum_cls):
+                return value
+            try:
+                return enum_cls(str(value))
+            except ValueError:
+                return value
+
+        async with self._session() as session:
+            result = await session.execute(
+                select(
+                    MemoryRow.id,
+                    MemoryRow.persona_id,
+                    MemoryRow.tier,
+                    MemoryRow.content,
+                    MemoryRow.content_type,
+                    MemoryRow.memory_date,
+                    MemoryRow.source_type,
+                    MemoryRow.disclosure_scope,
+                    MemoryRow.version,
+                    MemoryRow.is_active,
+                    MemoryRow.metadata_,
+                    MemoryRow.created_at,
+                )
+                .where(MemoryRow.persona_id == persona_id)
+                .where(MemoryRow.is_active.is_(True))
+                .order_by(MemoryRow.created_at.desc())
+                .limit(limit),
+            )
+            return [
+                MemoryNode(
+                    id=r.id,
+                    persona_id=r.persona_id,
+                    tier=_coerce(r.tier, MemoryTier),
+                    content=r.content,
+                    content_type=_coerce(r.content_type, ContentType),
+                    memory_date=r.memory_date,
+                    source_type=_coerce(r.source_type, SourceType),
+                    disclosure_scope=_coerce(r.disclosure_scope, DisclosureScope),
+                    version=r.version,
+                    is_active=r.is_active,
+                    created_at=r.created_at,
+                    metadata=r.metadata_ or {},
+                )
+                for r in result.all()
+            ]
+
     async def quarantine_candidate(
         self,
         entry: QuarantineEntry,
