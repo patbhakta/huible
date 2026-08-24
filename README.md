@@ -23,6 +23,24 @@ pytest tests/f6/          # F6: Ingestion pipeline
 pytest tests/f7/          # F7: Disclosure scoping
 pytest tests/f8/          # F8: Benchmarks
 
+# Run the e2e Chandler-speaks harness on the HOST (tests/e2e/)
+# The repo .env points DATABASE_URL at the compose-internal hostname
+# "postgres", which only resolves inside the huible-net network — on the
+# host the durable §7.4 stores (consent/handoff/conversation/risk,
+# HU-1440) cannot connect and the suite fails with "failed to resolve
+# host 'postgres'". Run it against an isolated Postgres instead (never
+# the production huible-postgres):
+#   docker run -d --name huible-test-pg -e POSTGRES_USER=huible \
+#     -e POSTGRES_PASSWORD=ephemeral_pw -e POSTGRES_DB=huible \
+#     -p 127.0.0.1:55432:5432 pgvector/pgvector:pg17
+#   DATABASE_URL="postgresql+psycopg://huible:ephemeral_pw@127.0.0.1:55432/huible" \
+#     .venv/bin/alembic upgrade head
+#   DATABASE_URL="postgresql+psycopg://huible:ephemeral_pw@127.0.0.1:55432/huible" \
+#     PYTHONPATH=src .venv/bin/python -m pytest tests/e2e/ -q
+#   docker rm -f huible-test-pg   # when done
+# Verified 2026-08-24: 15/15 pass on HEAD (8ac9969) and with the
+# in-flight HU-2070 alignment WIP.
+
 # Seed a test database (requires PostgreSQL + pgvector)
 python -m scripts.seed_data --url postgresql://postgres:postgres@localhost:5432/huible
 
