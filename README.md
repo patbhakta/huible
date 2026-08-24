@@ -40,6 +40,9 @@ pytest tests/f8/          # F8: Benchmarks
 #   docker rm -f huible-test-pg   # when done
 # Verified 2026-08-24: 15/15 pass on HEAD (8ac9969) and with the
 # in-flight HU-2070 alignment WIP.
+# The suite fails fast (single pytest UsageError pointing here) when the
+# configured DB host does not resolve, instead of ten per-test
+# "failed to resolve host 'postgres'" reds.
 
 # Seed a test database (requires PostgreSQL + pgvector)
 python -m scripts.seed_data --url postgresql://postgres:postgres@localhost:5432/huible
