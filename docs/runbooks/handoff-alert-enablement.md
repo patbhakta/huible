@@ -28,6 +28,28 @@ The staffing gauge (`huible_handoff_available_responders`) mirrors the live
 queue on every `/metrics` scrape, so the page rule arms at the first scrape
 after the env change and cannot drift from what the queue actually does.
 
+## Precondition: coverage-shape confirmation (added 2026-08-25)
+
+Operator input (Pat, 2026-08-25T13:53Z) describes the responder arrangement as
+**as-needed with no set schedule** — differing from the board-approved Option A
+shape (2 grief responders + 1 on-call clinician, fixed 08:00–22:00 US Eastern,
+7d/wk; approval 6334d570). Before step 1 below, the activator must hold one of:
+
+- **Shape match:** responders are engaged as-needed **but committed to the
+  configured coverage window** (on shift for the full 08:00–22:00 ET window).
+  As-needed *engagement* plus scheduled *coverage* is not a conflict —
+  activate with the Option A defaults.
+- **Re-baseline:** a superseding board approval re-baselining the coverage
+  model (windows / counts / mode). Activate with `--responders/--open/--close`
+  (or a coverage-mode change) matching **that** approval, and the coverage
+  change is re-reviewed by the Clinical Advisor (HU-1428 AC #5) before any
+  real-user traffic.
+
+A purely as-needed arrangement with **no committed window must not be
+activated** with `HANDOFF_COVERAGE_MODE=hours` defaults (nor `=always`): the
+configured window would claim staffed coverage that does not exist — the same
+never-lie rule that keeps `available_responders=0` pre-staffing.
+
 ## Go-live sequence (roster staffing day)
 
 1. **Set the staffing env** per the HU-1432 decision (values pinned in the
