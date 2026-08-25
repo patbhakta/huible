@@ -76,6 +76,8 @@ ENV_FAILOVER=".env.failover"
 conflicting_domain() { # echoes the already-claimed domain (≠ DOMAIN), rc 1 if none
   local claimed d
   claimed="$(grep -m1 '^HUIBLE_DOMAIN=' "$ENV_FAILOVER" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')"
+  # localhost/127.0.0.1 are pre-activation placeholders, not real claims
+  case "$claimed" in ""|localhost|127.0.0.1) claimed="";; esac
   if [ -n "$claimed" ] && [ "$claimed" != "$DOMAIN" ]; then
     echo "$claimed"; return 0
   fi
