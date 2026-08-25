@@ -534,6 +534,12 @@ def main():
         '--audio', help='Optional audio_features.json (from audio.py) for vocal/prosody grounding.'
     )
     parser.add_argument('--model', default='google/gemini-3-flash-preview', help='LLM model')
+    parser.add_argument(
+        '--no-llm', action='store_true',
+        help='Deterministic smoke-test mode: build the persona doc skeleton from '
+             'distillation memory only (no LLM call, zero API spend). All LLM-'
+             'authored fields are honest "Not enough data to determine." gaps.',
+    )
 
     args = parser.parse_args()
 
@@ -565,31 +571,35 @@ def main():
         dialog_sample = format_dialog_sample(lines)
         print(f"Loaded {line_count} dialog lines for notable-quote sampling.")
 
-    if not api_key:
-        print("ERROR: OPENROUTER_API_KEY not set", file=sys.stderr)
-        sys.exit(1)
+    if args.no_llm:
+        print("[structure] --no-llm: skipping LLM call (deterministic smoke mode).")
+        extraction = {}
+    else:
+        if not api_key:
+            print("ERROR: OPENROUTER_API_KEY not set", file=sys.stderr)
+            sys.exit(1)
 
-    prompt = build_grounded_extraction_prompt(
-        args.persona_name, memory_brief, dialog_sample, line_count, audio_profile
-    )
+        prompt = build_grounded_extraction_prompt(
+            args.persona_name, memory_brief, dialog_sample, line_count, audio_profile
+        )
 
-    print(f"Calling {args.model} for grounded persona structuring...")
+        print(f"Calling {args.model} for grounded persona structuring...")
 
-    response = call_gemini(prompt, api_key, args.model)
-    if not response:
-        print("ERROR: LLM call failed", file=sys.stderr)
-        sys.exit(1)
+        response = call_gemini(prompt, api_key, args.model)
+        if not response:
+            print("ERROR: LLM call failed", file=sys.stderr)
+            sys.exit(1)
 
-    response = response.strip()
-    if response.startswith('```'):
-        response = response.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+        response = response.strip()
+        if response.startswith('```'):
+            response = response.split('\n', 1)[1].rsplit('```', 1)[0].strip()
 
-    try:
-        extraction = json.loads(response)
-    except json.JSONDecodeError as e:
-        print(f"ERROR: Failed to parse LLM output as JSON: {e}", file=sys.stderr)
-        print(f"Response: {response[:500]}", file=sys.stderr)
-        sys.exit(1)
+        try:
+            extraction = json.loads(response)
+        except json.JSONDecodeError as e:
+            print(f"ERROR: Failed to parse LLM output as JSON: {e}", file=sys.stderr)
+            print(f"Response: {response[:500]}", file=sys.stderr)
+            sys.exit(1)
 
     docs = write_persona_docs(
         args.output_dir, args.persona_name, extraction, line_count, memory, audio_profile
@@ -604,10 +614,12 @@ def main():
         "dialog_lines": line_count,
         "memory_l3_profiles": n_profiles,
         "docs_written": len(docs),
-        "model_used": args.model,
+        "model_used": None if args.no_llm else args.model,
         "grounded": True,
         "multimodal": bool(audio_profile and audio_profile.get("available")),
     }
+    if args.no_llm:
+        result["mode"] = "deterministic-smoke"
     print(f'::{json.dumps({"outputs": result})}::')
 
 

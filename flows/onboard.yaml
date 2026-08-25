@@ -1,147 +1,117 @@
 id: huible-onboard
 namespace: huible
-description: "Persona onboarding — extract → clean → stats → distill → structure → validate"
-
+description: Persona onboarding — extract → clean → stats → distill → structure → validate
 inputs:
-  - id: persona_name
-    type: STRING
-    description: "Name of the persona to onboard"
-    required: true
-  - id: input_dir
-    type: STRING
-    description: "Directory containing raw files (e.g. /root/repos/personas/<p>/01-garbage/raw-data)"
-    required: true
-  - id: audio_features
-    type: STRING
-    description: "Optional path to MELD audio features CSV (or dir) for multimodal onboarding"
-    required: false
-
+- id: persona_name
+  type: STRING
+  description: Name of the persona to onboard
+  required: true
+- id: input_dir
+  type: STRING
+  description: Directory containing raw files (e.g. /root/repos/personas/<p>/01-garbage/raw-data)
+  required: true
+- id: audio_features
+  type: STRING
+  description: Optional path to MELD audio features CSV (or dir) for multimodal onboarding
+  required: false
+- id: use_llm
+  type: BOOLEAN
+  description: Enable LLM stages (structure always; distill LLM hook). false = deterministic smoke path, zero API spend
+  required: true
+  defaults: false
 variables:
-  work_dir: "/root/repos/huible"
-  vault_dir: "/root/repos/personas"
-  out: "/tmp/onboarding/{{ inputs.persona_name }}"
-  audio: "{{ inputs.audio_features ?? '' }}"
-
+  work_dir: /root/repos/huible
+  vault_dir: /root/repos/personas
+  venv_python: /root/repos/huible/.venv/bin/python
 tasks:
-  # Stage 1: EXTRACT (deterministic) — raw files → dialog.jsonl
-  - id: extract
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Extract dialog data from raw files"
-    commands:
-      - python3 /root/repos/huible/modules/onboarding/extract.py
-        --input-dir "{{ inputs.input_dir }}"
-        --persona "{{ inputs.persona_name }}"
-        --output "{{ vars.out }}/extracted.jsonl"
-    retry:
-      type: constant
-      interval: PT10S
-      maxAttempt: 3
-
-  # Stage 2: CLEAN (deterministic) — dialog → cleaned.jsonl
-  - id: clean
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Clean and normalize dialog data"
-    commands:
-      - python3 /root/repos/huible/modules/onboarding/clean.py
-        --input "{{ vars.out }}/extracted.jsonl"
-        --output "{{ vars.out }}/cleaned.jsonl"
-    retry:
-      type: constant
-      interval: PT10S
-      maxAttempt: 3
-
-  # Stage 2b: STATS (deterministic grounding anchor — hallucination-proof)
-  # Produces word/bigram/sentence metrics used to ground all later stages.
-  - id: stats
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Deterministic statistics extraction (grounding anchor)"
-    commands:
-      - python3 /root/repos/huible/modules/onboarding/stats.py
-        --input "{{ vars.out }}/cleaned.jsonl"
-        --output "{{ vars.out }}/stats.json"
-
-  # Stage 2c: AUDIO (multimodal, optional — BHAA-1375)
-  # Ingests MELD/per-utterance acoustic features → persona vocal profile +
-  # an augmented cleaned JSONL that carries acoustic features per line. Graceful
-  # no-op when no audio_features input is supplied so text-only onboarding is
-  # unchanged.
-  - id: audio
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Ingest per-utterance acoustic features (multimodal grounding)"
-    commands:
-      - if [ -z "{{ vars.audio }}" ] || [ ! -e "{{ vars.audio }}" ]; then echo "audio: no features supplied, skipping multimodal stage"; else python3 /root/repos/huible/modules/onboarding/audio.py --features "{{ vars.audio }}" --persona "{{ inputs.persona_name }}" --cleaned "{{ vars.out }}/cleaned.jsonl" --output "{{ vars.out }}/audio_features.json" --augment-output "{{ vars.out }}/cleaned_with_audio.jsonl"; fi
-    retry:
-      type: constant
-      interval: PT10S
-      maxAttempt: 3
-
-  # Stage 3: DISTILL (deterministic L0-L3 grounding with EvidenceLink citations)
-  # No LLM structuring happens before this stage. --strict forbids extrapolation.
-  # When the audio stage produced cleaned_with_audio.jsonl, distill over it so
-  # per-utterance acoustic features land in L0Record metadata; otherwise use the
-  # text-only cleaned.jsonl.
-  - id: distill
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "TencentDB L0-L3 distillation with citations (grounding)"
-    env:
-      OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
-    commands:
-      - INPUT="{{ vars.out }}/cleaned.jsonl"; [ -f "{{ vars.out }}/cleaned_with_audio.jsonl" ] && INPUT="{{ vars.out }}/cleaned_with_audio.jsonl"; python3 -m huible.distillation.cli --input "$INPUT" --stats "{{ vars.out }}/stats.json" --persona "{{ inputs.persona_name }}" --out-dir "{{ vars.out }}/memory" --strict
-    retry:
-      type: constant
-      interval: PT10S
-      maxAttempt: 3
-
-  # Stage 4: STRUCTURE (LLM, GROUNDED) — consumes distillation memory, not raw text
-  - id: structure
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Structure into persona markdown (flat OKF frontmatter) from grounded distillation memory"
-    env:
-      OPENROUTER_API_KEY: "{{ envs.OPENROUTER_API_KEY }}"
-    commands:
-      - python3 /root/repos/huible/modules/onboarding/structure.py
-        --memory-dir "{{ vars.out }}/memory"
-        --input "{{ vars.out }}/cleaned.jsonl"
-        --audio "{{ vars.out }}/audio_features.json"
-        --output-dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
-        --persona-name "{{ inputs.persona_name }}"
-    retry:
-      type: constant
-      interval: PT30S
-      maxAttempt: 3
-
-  # Stage 5: VALIDATE (deterministic) — flat OKF frontmatter + body conformance
-  - id: validate
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Validate persona doc frontmatter + body conformance"
-    commands:
-      - python3 /root/repos/huible/modules/onboarding/validate.py
-        --dir "{{ vars.vault_dir }}/{{ inputs.persona_name }}"
-        --output "{{ vars.out }}/report.json"
-
-  # Stage 6: REPORT GAPS — emit gap list from distillation 'not found' answers
-  - id: report-gaps
-    type: io.kestra.plugin.scripts.python.Commands
-    description: "Emit gap list from distillation memory for the gap loop"
-    commands:
-      - python3 /root/repos/huible/modules/onboarding/gaps.py
-        --memory-dir "{{ vars.out }}/memory"
-        --persona "{{ inputs.persona_name }}"
-        --output "{{ vars.out }}/gaps.json"
-
-  # Stage 7: Summary
-  - id: summary
-    type: io.kestra.plugin.core.log.Log
-    message: |
-      Onboarding complete for {{ inputs.persona_name }}
-
-      Memory: {{ vars.out }}/memory (L0-L3 distillation)
-      Validate: See {{ vars.out }}/report.json
-      Gaps: See {{ vars.out }}/gaps.json
-
-      Persona docs: {{ vars.vault_dir }}/{{ inputs.persona_name }}/
-
+- id: extract
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Extract dialog data from raw files
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/extract.py --input-dir \"{{ inputs.input_dir }}\" --persona \"{{ inputs.persona_name }}\" --output \"/tmp/onboarding/{{ inputs.persona_name }}/extracted.jsonl\""
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+- id: clean
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Clean and normalize dialog data
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/clean.py --input \"/tmp/onboarding/{{ inputs.persona_name }}/extracted.jsonl\" --output \"/tmp/onboarding/{{ inputs.persona_name }}/cleaned.jsonl\""
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+- id: stats
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Deterministic statistics extraction (grounding anchor)
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/stats.py --input \"/tmp/onboarding/{{ inputs.persona_name }}/cleaned.jsonl\" --output \"/tmp/onboarding/{{ inputs.persona_name }}/stats.json\""
+- id: audio
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Ingest per-utterance acoustic features (multimodal grounding)
+  commands:
+  - "if [ -z \"{{ inputs.audio_features | default('') }}\" ] || [ ! -e \"{{ inputs.audio_features | default('') }}\" ]; then echo \"audio: no features supplied, skipping multimodal stage\"; else python3 /root/repos/huible/modules/onboarding/audio.py --features \"{{ inputs.audio_features | default('') }}\" --persona \"{{ inputs.persona_name }}\" --cleaned \"/tmp/onboarding/{{ inputs.persona_name }}/cleaned.jsonl\" --output \"/tmp/onboarding/{{ inputs.persona_name }}/audio_features.json\" --augment-output \"/tmp/onboarding/{{ inputs.persona_name }}/cleaned_with_audio.jsonl\"; fi"
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+- id: distill
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: TencentDB L0-L3 distillation with citations (grounding)
+  commands:
+  - "INPUT=\"/tmp/onboarding/{{ inputs.persona_name }}/cleaned.jsonl\"; [ -f \"/tmp/onboarding/{{ inputs.persona_name }}/cleaned_with_audio.jsonl\" ] && INPUT=\"/tmp/onboarding/{{ inputs.persona_name }}/cleaned_with_audio.jsonl\"; CMD=\"--input $INPUT --stats /tmp/onboarding/{{ inputs.persona_name }}/stats.json --persona {{ inputs.persona_name }} --out-dir /tmp/onboarding/{{ inputs.persona_name }}/memory --strict\"; [ \"{{ inputs.use_llm }}\" = \"true\" ] && CMD=\"$CMD --llm\"; cd /root/repos/huible && PYTHONPATH=/root/repos/huible/src {{ vars.venv_python }} -m huible.distillation.cli $CMD"
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+- id: structure
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Structure into persona markdown (flat OKF frontmatter) from grounded distillation memory
+  commands:
+  - "ARGS=\"--memory-dir /tmp/onboarding/{{ inputs.persona_name }}/memory --input /tmp/onboarding/{{ inputs.persona_name }}/cleaned.jsonl --audio /tmp/onboarding/{{ inputs.persona_name }}/audio_features.json --output-dir {{ vars.vault_dir }}/{{ inputs.persona_name }} --persona-name {{ inputs.persona_name }}\"; [ \"{{ inputs.use_llm }}\" != \"true\" ] && ARGS=\"$ARGS --no-llm\"; {{ vars.venv_python }} /root/repos/huible/modules/onboarding/structure.py $ARGS"
+  retry:
+    type: constant
+    interval: PT30S
+    maxAttempt: 3
+- id: validate
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Validate persona doc frontmatter + body conformance
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/validate.py --dir \"{{ vars.vault_dir }}/{{ inputs.persona_name }}\" --output \"/tmp/onboarding/{{ inputs.persona_name }}/report.json\""
+- id: report-gaps
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Emit gap list from distillation memory for the gap loop
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/gaps.py --memory-dir \"/tmp/onboarding/{{ inputs.persona_name }}/memory\" --persona \"{{ inputs.persona_name }}\" --output \"/tmp/onboarding/{{ inputs.persona_name }}/gaps.json\""
+- id: summary
+  type: io.kestra.plugin.core.log.Log
+  message: "Onboarding complete for {{ inputs.persona_name }}\n\nMemory: /tmp/onboarding/{{ inputs.persona_name }}/memory (L0-L3 distillation)\nValidate: See /tmp/onboarding/{{ inputs.persona_name }}/report.json\nGaps: See /tmp/onboarding/{{ inputs.persona_name }}/gaps.json\n\nPersona docs: {{ vars.vault_dir }}/{{ inputs.persona_name }}/\n"
 errors:
-  - id: on-error
-    type: io.kestra.plugin.core.log.Log
-    message: "Onboarding FAILED for {{ inputs.persona_name }}"
+- id: on-error
+  type: io.kestra.plugin.core.log.Log
+  message: "Onboarding FAILED for {{ inputs.persona_name }}"
