@@ -20,13 +20,22 @@ set -uo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
 
-DOMAIN="huible.bhakta.us"
+# WATCH_DOMAIN lets the same watcher cover the de-facto huible.com path the
+# founder DM'd (HU-1743 comment 000f1716) — default stays the board-approved
+# bhakta.us zone so the running instance and runbook log names are unchanged.
+DOMAIN="${WATCH_DOMAIN:-huible.bhakta.us}"
 EXPECTED_IP="208.84.102.245"
 POLL_SEC="${POLL_SEC:-180}"
 MAX_HOURS="${MAX_HOURS:-72}"
 LOG_DIR="logs"; mkdir -p "$LOG_DIR"
-LOG="$LOG_DIR/watch-huible-dns-$(date -u +%Y%m%dT%H%M%SZ).log"
-ln -sfn "$(basename "$LOG")" "$LOG_DIR/watch-huible-dns-latest.log"
+if [ "$DOMAIN" = "huible.bhakta.us" ]; then
+  LOG="$LOG_DIR/watch-huible-dns-$(date -u +%Y%m%dT%H%M%SZ).log"
+  ln -sfn "$(basename "$LOG")" "$LOG_DIR/watch-huible-dns-latest.log"
+else
+  slug="$(echo "$DOMAIN" | tr '.' '-')"
+  LOG="$LOG_DIR/watch-$slug-$(date -u +%Y%m%dT%H%M%SZ).log"
+  ln -sfn "$(basename "$LOG")" "$LOG_DIR/watch-$slug-latest.log"
+fi
 
 log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" | tee -a "$LOG"; }
 
