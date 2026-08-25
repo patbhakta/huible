@@ -582,11 +582,11 @@ queue, so the on-call must not be told one was).
 
 Run through this checklist before going live.
 
+> **§8 completion (HU-1743) — 2026-08-25T15:3xZ, prod host `.245`.**
+> 18/18 items verified. `huible.com` DNS A landed 2026-08-25 (~15:25Z, Cloudflare-proxied/orange → `.245`); Caddy site blocks (`huible.com` apex + `api.huible.com`) installed 15:30:44Z, reload 15:30:46Z; **Let's Encrypt public-CA origin cert obtained 15:30:52Z via HTTP-01 through the Cloudflare proxy** (Cloudflare passes `/.well-known/acme-challenge` to origin port 80). External verifier: `scripts/verify_prod_external.sh huible.com` → **5 passed / 0 failed, ALL_EXTERNAL_CHECKS_PASS** @ 15:32:10Z (edge cert GTS WE1 valid to Nov 23; origin cert LE YE2; `/api/v1/health` 200 over HTTPS; 80→443 redirect 308; 5432/8000 closed at origin — ufw 22/80/443+tailnet only). First `API_KEYS` issuance verified live: 401 `AUTH_REQUIRED` (no/bogus key) → 200 with valid key @ 15:33Z, 6 entries scoped to 2 personas. `api.huible.com` DNS pending from founder; Caddy pre-wired (auto-issues via same HTTP-01 path on land).
+
 > **Stage-0.9 sign-off (HU-1464) — 2026-08-15, prod host `.245` (standby layout, post HU-1715 cutover).**
-> 15/18 items verified live on the real-user env: `scripts/verify_prod_hardening.sh` **25 passed / 0 failed → ALL_LIVE_CHECKS_PASS** @ 18:37:25Z (incl. the HU-1742 disk-monitoring block); backup timer + restore proof + ufw allowlist per HU-1672 §8-completion run @ 18:15Z. Evidence: item annotations below.
-> 3 items remain open, tracked as follow-up issues under HU-1464:
-> - **Real `HUIBLE_DOMAIN` + public-CA TLS** — operator-blocked on the domain answer card (`3745dd93` on HU-1501, pending since 2026-08-14). Until then ingress serves `https://localhost` (Caddy internal-CA cert, obtained 18:04:21Z), health 200.
-> - **`API_KEYS` issuance** — enforcement is live and fail-closed (empty store → `401 AUTH_REQUIRED` on all persona-scoped endpoints); keys are issued at first real-user onboarding, which cannot precede the domain.
+> 15/18 items verified live on the real-user env: `scripts/verify_prod_hardening.sh` **25 passed / 0 failed → ALL_LIVE_CHECKS_PASS** @ 18:37:25Z (incl. the HU-1742 disk-monitoring block); backup timer + restore proof + ufw allowlist per HU-1672 §8-completion run @ 18:15Z. Evidence: item annotations below. The 3 then-open items were closed by the §8 completion block above (2026-08-25).
 
 > **Loopback health-probe contract (pre-domain, `.245`) — 2026-08-16.**
 > Until the real domain lands, the Caddy-fronted loopback probe is `curl -sk https://localhost/api/v1/health` and **only** that form:
@@ -599,14 +599,14 @@ Run through this checklist before going live.
 
 - [x] `POSTGRES_PASSWORD` is a strong, unique secret (not the `.env.example` default) — *live: non-default, 48 chars (verifier Secrets block)*
 - [x] PostgreSQL port 5432 is NOT exposed to the public internet (remove `ports:` mapping or bind to `127.0.0.1:5432`) — *live: loopback bind `127.0.0.1:5433`, ufw default-deny + 22/80/443/tailnet allowlist*
-- [ ] `HUIBLE_DOMAIN` is set to a real domain with DNS A record — *OPERATOR-BLOCKED: domain card `3745dd93` (HU-1501) pending; `.env.failover` carries the `localhost` placeholder*
-- [ ] Caddy TLS is active (verify with `curl https://<domain>/api/v1/health`) — *PARTIAL: TLS pipeline live (`https://localhost/api/v1/health` → 200, Caddy cert obtained 18:04:21Z, issuer local); public-CA cert for the real domain lands with the DNS A record (runbook §3.6)*
+- [x] `HUIBLE_DOMAIN` is set to a real domain with DNS A record — *live 2026-08-25: `HUIBLE_DOMAIN=huible.com` in `.env.failover`; A record (Cloudflare-proxied → `.245`) live at authoritative NS (felicity/sofia, SOA 2413157195)*
+- [x] Caddy TLS is active (verify with `curl https://<domain>/api/v1/health`) — *live 2026-08-25: `https://huible.com/api/v1/health` → 200 through Cloudflare; origin cert Let's Encrypt YE2 (obtained 15:30:52Z, HTTP-01 via proxy), edge cert GTS WE1 (valid to 2026-11-23); `verify_prod_external.sh` 5/5 PASS*
 
 ### Secrets
 
 - [x] `.env` is not committed to version control (`.gitignore` includes `.env`) — *live: gitignored + not tracked (verifier)*
 - [x] API keys for embedding/advisory providers are set via environment, not hardcoded — *repo: env-only via `.env`/compose; no keys in tree (Stage-0.9 repo audit)*
-- [ ] `API_KEYS` is set for persona-scoped authentication — *PENDING: store empty (fail-closed — all persona endpoints return 401); keys issued at first real-user onboarding, after the domain lands*
+- [x] `API_KEYS` is set for persona-scoped authentication — *live 2026-08-25: 6 entries (`key:persona-uuid`) scoped to the 2 provisioned personas; fail-closed proven (no/bogus key → `401 AUTH_REQUIRED`), valid key → `200` on `/api/v1/admin/real-user-mode` @ 15:33Z (mode=canary, kill_switch=on)*
 
 ### Database
 
