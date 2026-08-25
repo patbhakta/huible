@@ -85,6 +85,6 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
   sleep "$POLL_SEC"
 done
 
-notify "[HU-1743] DNS watcher disarmed" "72h window closed with no A record for $DOMAIN. Card 1402f3f5 / manual activation path unaffected; HU-1743 still waiting on the DNS record -> $EXPECTED_IP."
+notify "[HU-1743] DNS watcher disarmed" "${MAX_HOURS}h window closed with no A record for $DOMAIN. Card 1402f3f5 / manual activation path unaffected; HU-1743 still waiting on the DNS record -> $EXPECTED_IP."
 log "deadline (${MAX_HOURS}h) reached without DNS — watcher self-disarming (exit 124). Card/manual path unaffected."
 exit 124
