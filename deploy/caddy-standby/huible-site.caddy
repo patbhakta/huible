@@ -1,39 +1,36 @@
-# System-Caddy site block for the Huible app on the standby host (208.84.102.245).
+# System-Caddy site blocks for huible.com (HUI-1743 DNS landed 2026-08-25).
 #
-# This is the cutover-time ingress config for runbook §3.4
-# (docs/runbooks/vps-failover-to-standby.md). The standby's SYSTEM Caddy owns
-# 80/443 (Kestra ingress depends on it), so the compose caddy service is
-# excluded on this host (docker-compose.failover.yml) and this site block
-# fronts the app instead. Upstream is the compose app's loopback binding
-# (127.0.0.1:8000), NOT `app:8000` — the system Caddy is not on the huible-net
-# docker network.
+# Apex = public site (static placeholder until the in-house site build).
+# api. = prod HUible API (docker huible-app on 127.0.0.1:8000).
 #
-# HUIBLE_DOMAIN is supplied by the board/operator (ask-question interaction on
-# HU-1501); Caddy reads it from its environment. Caddy auto-provisions TLS for
-# the domain once DNS points at the standby (runbook §3.6).
+# TLS: Cloudflare-proxied (orange). Full (strict) works because Caddy
+# auto-provisions a Let's Encrypt cert for each name via TLS-ALPN-01 —
+# requires the DNS record to exist FIRST (it does for the apex; api. pending
+# Pat's A-record). If SSL mode is ever "Flexible", 525/redirect loops appear —
+# runbook: always Full (strict).
 #
-# Install (see runbook §3.4 for the full gated procedure):
-#   scp deploy/caddy-standby/huible-site.caddy root@<standby>:/etc/caddy/huible-site.caddy
-#   # add to /etc/caddy/Caddyfile (top level):  import huible-site.caddy
-#   caddy validate --config /etc/caddy/Caddyfile   # MUST pass before reload
-#   systemctl reload caddy                         # reload, never restart
+# Install history: replaced the pre-stage block that bound {$HUIBLE_DOMAIN}. A
+# systemd drop-in still exports HUIBLE_DOMAIN=huible.bhakta.us; it is now
+# unused but harmless (kept for rollback context).
 
-{$HUIBLE_DOMAIN:localhost} {
-	# Health / liveness
+huible.com {
+	# Health passthrough for uptime probes
 	handle /api/v1/health {
 		reverse_proxy 127.0.0.1:8000
 	}
 
-	# API v1
-	handle /api/v1/* {
+	# Public site
+	handle {
+		root * /var/www/huible
+		encode gzip zstd
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+api.huible.com {
+	# Prod HUible API (huible-app container, loopback binding)
+	handle {
 		reverse_proxy 127.0.0.1:8000
 	}
-
-	# Static assets (Phase 3+ admin UI)
-	handle /static/* {
-		reverse_proxy 127.0.0.1:8000
-	}
-
-	# Fallback — 404
-	respond 404
 }
