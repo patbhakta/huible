@@ -56,12 +56,34 @@ notify() { # notify "<subject>" "<body>"
   fi
 }
 
-already_active() { # 0 when the origin already serves a public cert for DOMAIN
-  local issuer
-  issuer="$(timeout 10 openssl s_client -connect 127.0.0.1:443 -servername "$DOMAIN" </dev/null 2>/dev/null \
+cert_active() { # 0 when the origin already serves a public ACME cert for $1
+  local d="$1" issuer
+  issuer="$(timeout 10 openssl s_client -connect 127.0.0.1:443 -servername "$d" </dev/null 2>/dev/null \
     | openssl x509 -noout -issuer 2>/dev/null)"
   # internal/placeholder CA means not yet activated via ACME
   [[ -n "$issuer" && "$issuer" != *"Caddy Local Authority"* && "$issuer" != *"internal"* ]]
+}
+
+already_active() { cert_active "$DOMAIN"; }
+
+# Dual-watcher guard (HU-1743): both huible.bhakta.us and huible.com watchers
+# can be armed at once while the launch-domain card is pending. The activation
+# script overwrites HUIBLE_DOMAIN last-writer-wins, so a late second fire would
+# silently flip the production domain post-launch. Before firing, stand down if
+# a DIFFERENT domain has already claimed production (env claim or live cert).
+KNOWN_DOMAINS="huible.bhakta.us huible.com"
+ENV_FAILOVER=".env.failover"
+conflicting_domain() { # echoes the already-claimed domain (≠ DOMAIN), rc 1 if none
+  local claimed d
+  claimed="$(grep -m1 '^HUIBLE_DOMAIN=' "$ENV_FAILOVER" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')"
+  if [ -n "$claimed" ] && [ "$claimed" != "$DOMAIN" ]; then
+    echo "$claimed"; return 0
+  fi
+  for d in $KNOWN_DOMAINS; do
+    [ "$d" = "$DOMAIN" ] && continue
+    if cert_active "$d"; then echo "$d"; return 0; fi
+  done
+  return 1
 }
 
 dns_a() { timeout 8 dig +short +time=5 +tries=1 @1.1.1.1 "$DOMAIN" A 2>/dev/null \
@@ -73,11 +95,21 @@ if already_active; then
   log "origin cert already active for $DOMAIN — activation previously completed, watcher disarming."
   exit 0
 fi
+if other="$(conflicting_domain)"; then
+  log "CONFLICT: production already claimed by $other (env/cert) — this watcher ($DOMAIN) standing down WITHOUT firing."
+  notify "[HU-1743] watcher conflict: $other already active" "Watcher for $DOMAIN stood down without activating: production already claimed by $other. Manual/attended decision required to switch domains — nothing was changed."
+  exit 0
+fi
 
 deadline=$(( $(date +%s) + MAX_HOURS * 3600 ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
   a="$(dns_a)"
   if [ "$a" = "$EXPECTED_IP" ]; then
+    if other="$(conflicting_domain)"; then
+      log "A record LIVE for $DOMAIN but production already claimed by $other — NOT firing activation (attended switch required)."
+      notify "[HU-1743] $DOMAIN DNS live but $other already active" "A record for $DOMAIN is live, but production was already activated on $other. No change made. If the launch domain should be $DOMAIN, Tech Lead must run the switch manually."
+      exit 0
+    fi
     log "A record LIVE: $DOMAIN -> $a — firing activation."
     bash scripts/activate_huible_domain.sh "$DOMAIN" 2>&1 | tee -a "$LOG"
     rc=${PIPESTATUS[0]}
