@@ -221,6 +221,17 @@ class Settings(BaseSettings):
     handoff_pager_smtp_user: str = ""
     handoff_pager_smtp_password: str = ""
     handoff_pager_email_from: str = ""
+    # Drill-traffic paging suppression (launch-safety watch item, digest #5 /
+    # HU-1428 pre-work). Comma-separated case-insensitive markers; a page
+    # whose ticket id / conversation_id / persona_id carries any marker is
+    # routed to the LoggingPager even when real channels (Telnyx / SMTP /
+    # webhook) are credentialed, and counted on
+    # huible_paging_drill_suppressed_total{trigger}. The verification drills
+    # (verify-*, probe-full) run with demo--prefixed conversation ids
+    # on-box and sess-drill-style ids in the suite — without this, a
+    # post-activation drill would ring a real on-call human device. Empty
+    # string disables suppression (not recommended while drills run).
+    handoff_pager_drill_markers: str = "demo-,drill"
 
     # ── G8 risk-flag enforcement — §7.4.4 dosage cap ──────────────────────
     # Pre-real-user clinical gate (HU-1424 / HU-1407 §7.4 #4). The reserved

@@ -89,6 +89,7 @@ from huible.api.metrics import (
     record_handoff_responder_readiness,
     record_handoff_telemetry,
     record_health_status,
+    record_paging_drill_suppressed,
     record_paging_failures,
 )
 from huible.api.paging import (
@@ -738,6 +739,8 @@ def create_app(
             smtp_user=resolved_settings.handoff_pager_smtp_user,
             smtp_password=resolved_settings.handoff_pager_smtp_password,
             email_from_addr=resolved_settings.handoff_pager_email_from,
+            drill_markers=resolved_settings.handoff_pager_drill_markers,
+            on_suppressed=record_paging_drill_suppressed,
         )
     application.state.coverage_window_label = _coverage_window_label(resolved_settings)
     # The gauge wiring target (HU-1446) flips to 1 once the roster is staffed

@@ -78,7 +78,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 import httpx
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
     from datetime import datetime
 
     from huible.safety.handoff import HandoffQueue, HandoffTicket
@@ -103,12 +103,15 @@ __all__ = [
     "Pager",
     "TelnyxSmsPager",
     "WebhookPager",
+    "DEFAULT_DRILL_MARKERS",
+    "DrillSuppressingPager",
     "build_pager",
     "build_roster",
     "escalate_coverage_pressure",
     "escalate_sla_breaches",
     "page_degraded_net",
     "page_sev1_signal",
+    "ticket_is_drill",
 ]
 
 #: Immediate page on a freshly-enqueued crisis ticket (primary trigger). Fires
@@ -169,6 +172,14 @@ PAGE_TRIGGER_COVERAGE_PRESSURE: str = "coverage_pressure"
 #: so a slow transport never stalls a clinical turn — the chat path pages
 #: synchronously on the detection point.
 _WEBHOOK_TIMEOUT_S: float = 10.0
+
+#: Default drill-marker config (HU-1428 pre-work, digest #5 watch item): the
+#: verification drills (verify-*, probe-full) run with ``demo-``-prefixed
+#: conversation ids on-box and ``sess-drill``-style ids in the test suite.
+#: Once the real paging channels gain credentials (roster activation), a
+#: drill page must never ring a real on-call human device — see
+#: :class:`DrillSuppressingPager`.
+DEFAULT_DRILL_MARKERS: str = "demo-,drill"
 
 #: The CEO seat id — the escalation ceiling for ack-SLA misses. Resolved from
 #: the roster contact map; the CEO is the final human point for emergency
@@ -378,6 +389,93 @@ class LoggingPager:
             seats,
         )
         return 0
+
+
+def _parse_drill_markers(raw: str) -> tuple[str, ...]:
+    """Split the comma-separated drill-marker config into a lowercase tuple."""
+    return tuple(m.strip().lower() for m in raw.split(",") if m.strip())
+
+
+def ticket_is_drill(ticket: HandoffTicket, markers: tuple[str, ...]) -> bool:
+    """True when any ticket-borne id carries a drill marker.
+
+    Matches ``ticket.id`` / ``ticket.conversation_id`` / ``ticket.persona_id``
+    (lowercased) against the marker substrings — never message text, so no PHI
+    is inspected. An empty ``markers`` tuple disables the check (every ticket
+    is treated as real traffic).
+    """
+    if not markers:
+        return False
+    haystacks = (
+        ticket.id or "",
+        ticket.conversation_id or "",
+        ticket.persona_id or "",
+    )
+    return any(
+        marker in field.lower() for field in haystacks for marker in markers
+    )
+
+
+class DrillSuppressingPager:
+    """Route drill-traffic pages to the log line, never a real channel.
+
+    HU-1428 pre-work (digest #5 watch item): once the HU-1451 multi-channel
+    pager gains real credentials (roster activation wires Telnyx / email /
+    webhook), a verification drill (verify-*, probe-full — ``demo-`` /
+    ``sess-drill``-marked traffic) must not ring a real on-call human device.
+    This wrapper intercepts every page whose ticket carries a drill marker
+    (see :data:`DEFAULT_DRILL_MARKERS` + :func:`ticket_is_drill`) and routes
+    it to the key-free :class:`LoggingPager`: the drill page stays visible in
+    logs and on ``huible_paging_drill_suppressed_total{trigger}`` (via the
+    ``on_suppressed`` callback), but no real channel is attempted. Non-drill
+    pages pass through untouched.
+
+    Suppression is a **transport** decision only — it never changes the queue
+    outcome, the §10.1 #2 degrade gate, or the clinical turn. The wrapper is
+    escalation-aware (:meth:`page` accepts ``escalated`` and forwards it to a
+    wrapped :class:`MultiChannelPager`) so :func:`escalate_sla_breaches`
+    keeps its secondary + CEO climb on real traffic.
+    """
+
+    def __init__(
+        self,
+        inner: Pager,
+        *,
+        markers: tuple[str, ...],
+        fallback: Pager | None = None,
+        on_suppressed: Callable[[str], None] | None = None,
+    ) -> None:
+        self._inner = inner
+        self._markers = markers
+        self._fallback = fallback or LoggingPager()
+        self._on_suppressed = on_suppressed
+
+    def page(
+        self,
+        ticket: HandoffTicket,
+        *,
+        severity: str,
+        window: str,
+        trigger: str = PAGE_TRIGGER_CRISIS_ENQUEUE,
+        contacts: list[OnCallContact] | None = None,
+        escalated: bool = False,
+    ) -> int:
+        if ticket_is_drill(ticket, self._markers):
+            if self._on_suppressed is not None:
+                self._on_suppressed(trigger)
+            return self._fallback.page(
+                ticket, severity=severity, window=window, trigger=trigger,
+                contacts=contacts,
+            )
+        if escalated and isinstance(self._inner, MultiChannelPager):
+            return self._inner.page(
+                ticket, severity=severity, window=window, trigger=trigger,
+                contacts=contacts, escalated=True,
+            )
+        return self._inner.page(
+            ticket, severity=severity, window=window, trigger=trigger,
+            contacts=contacts,
+        )
 
 
 class WebhookPager:
@@ -777,6 +875,8 @@ def build_multichannel_pager(
     smtp_user: str,
     smtp_password: str,
     email_from_addr: str,
+    drill_markers: str = DEFAULT_DRILL_MARKERS,
+    on_suppressed: Callable[[str], None] | None = None,
 ) -> Pager:
     """Construct the HU-1651 multi-channel pager, composing real channels.
 
@@ -785,6 +885,16 @@ def build_multichannel_pager(
     :class:`LoggingPager` — the key-free default is preserved. When credentials
     are present, the page fans out across every configured channel to the
     roster-resolved primary + secondary (+ CEO on escalation).
+
+    HU-1428 drill suppression: when real channels are configured **and**
+    ``drill_markers`` parses to a non-empty tuple, the pager is wrapped in a
+    :class:`DrillSuppressingPager` so drill-marked traffic (verification
+    drills) pages the log line only, reporting each suppressed page through
+    ``on_suppressed`` (the app wires this to
+    ``huible_paging_drill_suppressed_total``). An empty ``drill_markers``
+    string returns the unwrapped pager (suppression disabled — operator
+    opt-out). The key-free LoggingPager path is never wrapped: there is no
+    real channel to suppress.
     """
     telnyx = (
         TelnyxSmsPager(api_key=telnyx_api_key, from_number=telnyx_from,
@@ -803,7 +913,11 @@ def build_multichannel_pager(
         # No real channel configured → key-free log pager (preserve HU-1450
         # default + the provider="log" path).
         return LoggingPager()
-    return MultiChannelPager(roster=roster, telnyx=telnyx, email=email, webhook=webhook)
+    pager: Pager = MultiChannelPager(roster=roster, telnyx=telnyx, email=email, webhook=webhook)
+    markers = _parse_drill_markers(drill_markers)
+    if not markers:
+        return pager
+    return DrillSuppressingPager(pager, markers=markers, on_suppressed=on_suppressed)
 
 
 # --- §3 Sev-1 paging helpers (HU-1651 triggers #2/#3/#4) --------------------
@@ -914,11 +1028,15 @@ def escalate_sla_breaches(
     from huible.safety.handoff_monitoring import sla_status
 
     count = 0
+    # HU-1428 drill suppression: the wrapper is escalation-aware, so a
+    # wrapped MultiChannelPager still gets the escalated=True fan-out
+    # (secondary + CEO) on real traffic while drill tickets are suppressed.
+    escalation_aware = isinstance(pager, (MultiChannelPager, DrillSuppressingPager))
     for ticket in queue.list_pending():
         if ticket.outcome is HandoffOutcome.ENQUEUED and sla_status(
             ticket, now=now
         ).breached:
-            if isinstance(pager, MultiChannelPager):
+            if escalation_aware:
                 pager.page(
                     ticket,
                     severity=PAGE_SEVERITY_SEV1,

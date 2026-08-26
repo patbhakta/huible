@@ -58,6 +58,7 @@ __all__ = [
     "record_handoff_telemetry",
     "record_health_status",
     "record_paging_failures",
+    "record_paging_drill_suppressed",
 ]
 
 
@@ -191,6 +192,19 @@ PAGING_FAILURES = Counter(
     "§3 Sev-1 page-send failures by trigger (HU-1451). A real channel "
     "(Telnyx/email/webhook) errored on send; the clinical turn was not "
     "affected, but the page did not land. The log fallback is not a failure.",
+    ["trigger"],
+)
+
+# Drill-traffic paging suppression (HU-1428 pre-work, digest #5 watch item).
+# A page whose ticket carried a drill marker was routed to the LoggingPager
+# instead of the real channels. Non-zero during a drill window *proves*
+# suppression is working; a real-user page must never appear here.
+PAGING_DRILL_SUPPRESSED = Counter(
+    "huible_paging_drill_suppressed_total",
+    "Pages whose traffic matched a drill marker and were suppressed from "
+    "real channels to the log line (HU-1428 drill suppression). Expected "
+    "non-zero during verification drills; must stay untouched by real-user "
+    "traffic.",
     ["trigger"],
 )
 
@@ -363,6 +377,18 @@ def record_paging_failures(trigger: str, count: int) -> None:
     if count <= 0:
         return
     PAGING_FAILURES.labels(trigger=trigger).inc(count)
+
+
+def record_paging_drill_suppressed(trigger: str) -> None:
+    """Record a drill-suppressed page (HU-1428 drill-marker suppression).
+
+    Called by the paging wire when a page matched a drill marker and was
+    routed to the log line instead of the real channels. ``trigger`` is the
+    :data:`huible.api.paging.PAGE_TRIGGER_*` label. The counter is the
+    operator-visible proof that drill traffic can never ring a real on-call
+    device once credentials land.
+    """
+    PAGING_DRILL_SUPPRESSED.labels(trigger=trigger).inc()
 
 
 def record_handoff_telemetry(telemetry: object) -> None:

@@ -33,6 +33,7 @@ from huible.api.paging import (
     PAGE_TRIGGER_DEGRADED_NET,
     PAGE_TRIGGER_SLA_BREACH,
     PAGE_TRIGGER_UNGROUNDED_LEAK,
+    DrillSuppressingPager,
     EmailPager,
     LoggingPager,
     MultiChannelPager,
@@ -519,7 +520,19 @@ class TestBuildMultichannelPager:
             smtp_host="", smtp_port=587, smtp_user="", smtp_password="",
             email_from_addr="",
         )
-        assert isinstance(pager, MultiChannelPager)
+        # HU-1428 drill suppression: real channels now default to a
+        # DrillSuppressingPager wrapping the MultiChannelPager. Suppression
+        # disabled (drill_markers="") returns the raw MultiChannelPager.
+        assert isinstance(pager, DrillSuppressingPager)
+        assert isinstance(pager._inner, MultiChannelPager)
+        unwrapped = build_multichannel_pager(
+            provider="log", webhook_url="", roster=roster,
+            telnyx_api_key="key", telnyx_from="+15559999999",
+            telnyx_api_base_url="https://api.telnyx.com/v2",
+            smtp_host="", smtp_port=587, smtp_user="", smtp_password="",
+            email_from_addr="", drill_markers="",
+        )
+        assert isinstance(unwrapped, MultiChannelPager)
 
 
 # --- Trigger helpers -------------------------------------------------------

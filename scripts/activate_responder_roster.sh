@@ -98,6 +98,16 @@ HEALTH="$(curl -fsS --max-time 8 "$HEALTH_URL" 2>/dev/null || true)"
 echo "$HEALTH" | grep -q '"status":"ok"' && ok "app health ok ($HEALTH_URL)" || bad "app health not ok ($HEALTH_URL)"
 GAUGE_NOW="$(docker exec "$APP" sh -c "curl -s -m 5 http://127.0.0.1:8000/metrics 2>/dev/null" | awk -v g="$GAUGE" '$1 == g {print $2}')"
 [ -n "$GAUGE_NOW" ] && ok "gauge $GAUGE = $GAUGE_NOW" || bad "gauge $GAUGE not exposed on /metrics"
+# Drill-traffic paging suppression must be in the RUNNING app code before
+# activation (HU-1428 pre-work, digest #5 watch item): once the roster is
+# staffed, real paging channels (Telnyx/SMTP/webhook) may gain credentials —
+# the deployed build must already keep verification drills (demo-/drill-
+# marked traffic) off real on-call devices.
+if docker exec "$APP" python -c "from huible.api.paging import DrillSuppressingPager" >/dev/null 2>&1; then
+  ok "drill-suppression pager present in running app code (HU-1428)"
+else
+  bad "running app predates drill suppression — deploy first: git pull, then docker compose -f docker-compose.yml -f docker-compose.failover.yml build app && docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d app"
+fi
 [ "$fail" -gt 0 ] && die "preconditions failed"
 [ "$MODE_CHECK" = 1 ] && { echo "RESULT: CHECK_OK ($(date -u +%FT%TZ))" | tee -a "$LOG"; exit 0; }
 
