@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datasets — HUible</title>
+<meta name="description" content="The voice and expression data landscape HUible draws on for human AI memory.">
+<style>
+:root{color-scheme:dark}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Georgia,'Times New Roman',serif;background:#0e0f12;color:#e8e4da;min-height:100vh;padding:32px 20px}
+.wrap{max-width:880px;margin:0 auto}
+header{margin-bottom:44px}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c9a86a;margin-bottom:14px}
+h1{font-size:clamp(30px,6vw,46px);font-weight:400;color:#f2ede1;line-height:1.15}
+.lede{font-size:17px;color:#9a948a;margin-top:14px;line-height:1.6;font-style:italic;max-width:640px}
+.stats{display:flex;gap:34px;flex-wrap:wrap;margin:34px 0 8px;padding:22px 0;border-top:1px solid #26282e;border-bottom:1px solid #26282e}
+.stat b{display:block;font-size:30px;color:#c9a86a;font-weight:400}
+.stat span{font-size:12.5px;color:#6f6a61;letter-spacing:.06em;text-transform:uppercase}
+h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#c9a86a;font-weight:400;margin:48px 0 18px}
+ul.plain{list-style:none}
+ul.plain li{padding:14px 0;border-bottom:1px solid #1d1f24}
+ul.plain li:last-child{border-bottom:none}
+.name{font-size:16.5px;color:#e8e4da}
+.name .mod{font-size:11px;letter-spacing:.08em;color:#57534b;text-transform:uppercase;margin-left:10px}
+.desc{font-size:14px;color:#8a857c;margin-top:5px;line-height:1.55}
+.note{font-size:13.5px;color:#6f6a61;margin-top:44px;padding:16px 18px;background:#14161b;border:1px solid #26282e;border-radius:10px;line-height:1.6}
+.note a{color:#c9a86a}
+footer{margin-top:56px;text-align:center}
+footer a{color:#c9a86a;text-decoration:none;font-size:14px;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="kicker">Datasets</div>
+<h1>The data behind human voices.</h1>
+<p class="lede">We map the world's voice and expression data landscape — the
+raw material for AI that remembers how someone laughed, sighed, and said
+your name.</p>
+</header>
+
+<div class="stats">
+<div class="stat"><b>50+</b><span>Languages</span></div>
+<div class="stat"><b>48</b><span>Emotion dimensions</span></div>
+<div class="stat"><b>600+</b><span>Voice descriptors</span></div>
+</div>
+
+<h2>Voice datasets</h2>
+<ul class="plain">
+<li><div class="name">Conversational Audio</div><div class="desc">Turn-taking, interruptions, and multi-speaker dynamics.</div></li>
+<li><div class="name">Emotional Reproduction</div><div class="desc">Fine-grained annotations across a wide range of expressive speech.</div></li>
+<li><div class="name">Multilingual Audio</div><div class="desc">Native speaker recordings across global languages and dialects.</div></li>
+<li><div class="name">Voice Realism</div><div class="desc">Prosody, intonation, pacing, and expressive range.</div></li>
+<li><div class="name">Domain-Specific</div><div class="desc">Industry contexts like healthcare, education, and customer service.</div></li>
+<li><div class="name">Task-Specific</div><div class="desc">Conversations for assistants, support, tutoring, and research.</div></li>
+</ul>
+
+<h2>Expression &amp; multimodal</h2>
+<ul class="plain">
+<li><div class="name">Speech Prosody <span class="mod">audio</span></div><div class="desc">Annotated speech rhythm, stress, and intonation across diverse speakers and emotional contexts.</div></li>
+<li><div class="name">Vocal Expression <span class="mod">audio</span></div><div class="desc">Voice timbre, resonance, and vocal quality labeled across 48 emotion dimensions.</div></li>
+<li><div class="name">Vocal Bursts <span class="mod">audio</span></div><div class="desc">Laughter, sighs, gasps, and non-verbal vocalizations categorized by type and emotional context.</div></li>
+<li><div class="name">FACS 2.0 <span class="mod">visual</span></div><div class="desc">Facial Action Coding System data with precise action-unit annotations and intensity scoring.</div></li>
+<li><div class="name">Dynamic Reaction <span class="mod">audio + visual</span></div><div class="desc">Temporal expression sequences capturing how facial and vocal responses change over time.</div></li>
+<li><div class="name">Facial Expression <span class="mod">visual</span></div><div class="desc">Cross-cultural facial emotion samples spanning 48 expression categories and varied lighting.</div></li>
+<li><div class="name">Language <span class="mod">text</span></div><div class="desc">Text annotated for emotional expression, sentiment, and content safety across languages.</div></li>
+</ul>
+
+<p class="note">Catalog referenced from published research-library descriptions
+(Hume AI). All source datasets are research-licensed; HUible catalogs the
+taxonomy and licenses data through proper research channels.</p>
+
+<footer><a href="/">← HUible</a></footer>
+</div>
+</body>
+</html>
