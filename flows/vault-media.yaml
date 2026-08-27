@@ -1,6 +1,10 @@
 id: huible-vault-media
 namespace: huible
 description: |
+  [PAUSED — Pat verdict Aug 27: outputs were ungrounded 'AI slop'. Do NOT
+  run for persona assets until the grounded pipelines land (HU-2150 images,
+  HU-2151 voice). Retained for pipe-proof reference only.]
+
   Persona vault media generation — voice (Gemini TTS via home relay) and
   imagery (FAL FLUX). Writes real assets into the persona vault:
   media/voice/*.mp3 and media/images/*.png.
@@ -21,6 +25,10 @@ inputs:
 - id: persona_name
   type: STRING
   required: true
+- id: confirm_pipeline_test
+  type: BOOLEAN
+  defaults: false
+  description: Required=true ack — this flow is paused for persona use (slop verdict); only pipeline tests may run
 - id: voice_text
   type: STRING
   defaults: "Could I BE any more excited? Welcome to the vault. I make jokes when I'm uncomfortable, and honestly? This is all pretty comfortable."
@@ -36,6 +44,14 @@ inputs:
 variables:
   repo: /root/repos/huible
 tasks:
+- id: guard
+  type: io.kestra.plugin.scripts.shell.Commands
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Refuse to run unless the paused-for-persona-use ack is set
+  commands:
+  - >-
+    {{ inputs.confirm_pipeline_test == true ? 'echo pipeline-test acked' : 'echo "BLOCKED: flow paused for persona use (Pat verdict Aug 27) — set confirm_pipeline_test=true ONLY for pipeline tests" && exit 1' }}
 - id: voice
   type: io.kestra.plugin.scripts.shell.Commands
   taskRunner:
