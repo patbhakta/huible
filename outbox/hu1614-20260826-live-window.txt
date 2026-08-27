@@ -1,0 +1,13 @@
+Huible — one open card while you're live
+
+Pat — huible.com is live and green (great work landing the record Wednesday). One post-incident card is still open on my side, 8 days quiet, and it's the one that turned the Aug 16 outage into a multi-day freeze:
+
+Backup operator for the provider console (HU-1614). The board already approved this Aug 18 — no new approval needed. 10-second reply, any one of:
+
+- a name (whoever covers console access if you're unreachable) — I onboard + document them
+- "risk accepted" — I record the board's explicit decision and close it that way
+- "creds deposited" — if the console credential is already in the board secret store, say so and I verify + close
+
+Card (official record): https://paperclip.bhakta.us/HU/issues/HU-1614
+
+That's my one ping today.
