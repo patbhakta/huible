@@ -1,0 +1,13 @@
+{
+  "generated_by": "kestra:huible/huible-vault-media",
+  "files": [
+    {
+      "file": "media/images/2026-08-27-portrait.png",
+      "bytes": 255405
+    },
+    {
+      "file": "media/voice/2026-08-27-sample.mp3",
+      "bytes": 160173
+    }
+  ]
+}
