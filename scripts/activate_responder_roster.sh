@@ -17,7 +17,13 @@
 #   bash scripts/activate_responder_roster.sh --activate --approval <approval-id>
 #       # activate Option A defaults (idempotent)
 #   bash scripts/activate_responder_roster.sh --activate --approval <id> \
-#       --responders 3 --pool alice,bob --tz America/New_York --open 8 --close 22
+#       --responders 3 --pool alice,bob --tz America/New_York --open 8 --close 22 \
+#       --days mon-fri
+#
+# --days (optional, default empty = every day): committed coverage days as
+#   ISO weekdays (1=Mon..7=Sun) or day names, e.g. mon-fri / 1,3,5 / sun.
+#   Escalations on off days degrade to the G1 safe response — a responder is
+#   never paged on an uncommitted day (HU-2110 committed windows).
 #
 # What activation does:
 #   1. Backup .env.failover (timestamped, alongside the existing .bak files).
@@ -45,7 +51,7 @@ LOG_DIR="logs"; mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/activate-roster-$(date -u +%Y%m%dT%H%M%SZ).log"
 
 # Option A decision defaults (board approval 6334d570).
-RESPONDERS=2; POOL=""; TZ_NAME="America/New_York"; OPEN=8; CLOSE=22; SLA=""
+RESPONDERS=2; POOL=""; TZ_NAME="America/New_York"; OPEN=8; CLOSE=22; SLA=""; DAYS=""
 MODE_CHECK=0; MODE_ACT=0; APPROVAL=""
 
 pass=0; fail=0
@@ -65,6 +71,7 @@ while [ $# -gt 0 ]; do
     --open) OPEN="${2:?}"; shift ;;
     --close) CLOSE="${2:?}"; shift ;;
     --sla) SLA="${2:?}"; shift ;;
+    --days) DAYS="${2:?}"; shift ;;
     *) echo "unknown flag: $1" >&2; exit 64 ;;
   esac
   shift
@@ -108,6 +115,21 @@ if docker exec "$APP" python -c "from huible.api.paging import DrillSuppressingP
 else
   bad "running app predates drill suppression — deploy first: git pull, then docker compose -f docker-compose.yml -f docker-compose.failover.yml build app && docker compose -f docker-compose.yml -f docker-compose.failover.yml up -d app"
 fi
+# Committed-coverage days (HU-2110): the running build must understand
+# HANDOFF_COVERAGE_DAYS before activation uses it, and a non-empty --days
+# spec must parse (loud failure here beats a silently-always-open roster).
+if docker exec "$APP" python -c "from huible.safety.handoff import parse_coverage_days" >/dev/null 2>&1; then
+  ok "coverage-days parser present in running app code (HU-2110)"
+else
+  bad "running app predates coverage-days support — deploy first (git pull + rebuild app), or drop --days"
+fi
+if [ -n "$DAYS" ]; then
+  if docker exec "$APP" python -c "from huible.safety.handoff import parse_coverage_days; parse_coverage_days('''$DAYS''')" >/dev/null 2>&1; then
+    ok "coverage days spec '$DAYS' parses"
+  else
+    bad "coverage days spec '$DAYS' does not parse (use mon-fri / 1,3,5 / sun shapes)"
+  fi
+fi
 [ "$fail" -gt 0 ] && die "preconditions failed"
 [ "$MODE_CHECK" = 1 ] && { echo "RESULT: CHECK_OK ($(date -u +%FT%TZ))" | tee -a "$LOG"; exit 0; }
 
@@ -132,6 +154,8 @@ set_env HANDOFF_COVERAGE_MODE "hours"; ok "HANDOFF_COVERAGE_MODE=hours"
 set_env HANDOFF_COVERAGE_TZ "$TZ_NAME"; ok "HANDOFF_COVERAGE_TZ=$TZ_NAME"
 set_env HANDOFF_COVERAGE_OPEN_HOUR "$OPEN"; ok "HANDOFF_COVERAGE_OPEN_HOUR=$OPEN"
 set_env HANDOFF_COVERAGE_CLOSE_HOUR "$CLOSE"; ok "HANDOFF_COVERAGE_CLOSE_HOUR=$CLOSE"
+if [ -n "$DAYS" ]; then set_env HANDOFF_COVERAGE_DAYS "$DAYS"; ok "HANDOFF_COVERAGE_DAYS=$DAYS"
+else set_env HANDOFF_COVERAGE_DAYS ""; note "coverage days empty — every day (7/7)"; fi
 if [ -n "$SLA" ]; then set_env HANDOFF_SLA_TARGET_SECONDS "$SLA"; ok "HANDOFF_SLA_TARGET_SECONDS=$SLA (overridden)"; fi
 
 echo "## Recreate app container" | tee -a "$LOG"
@@ -153,7 +177,7 @@ GAUGE_INT="${GAUGE_NEW%%.*}"
 
 echo "=== Summary: $pass passed, $fail failed ===" | tee -a "$LOG"
 if [ "$fail" -eq 0 ]; then
-  echo "RESULT: ROSTER_ACTIVATED (responders=$RESPONDERS coverage=$OPEN-$CLOSE $TZ_NAME approval=$APPROVAL)" | tee -a "$LOG"
+  echo "RESULT: ROSTER_ACTIVATED (responders=$RESPONDERS coverage=$OPEN-$CLOSE $TZ_NAME days=${DAYS:-all} approval=$APPROVAL)" | tee -a "$LOG"
 else
   echo "RESULT: ROSTER_ACTIVATED_WITH_GAPS — restore with: cp $BAK $ENV_REAL && docker compose ${COMPOSE_FILES[*]} up -d app" | tee -a "$LOG"
   exit 1

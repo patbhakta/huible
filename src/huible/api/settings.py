@@ -176,6 +176,13 @@ class Settings(BaseSettings):
     handoff_coverage_tz: str = "UTC"
     handoff_coverage_open_hour: int = 0
     handoff_coverage_close_hour: int = 24
+    # Committed coverage days for the bounded window (HU-2110): ISO weekdays
+    # (1=Mon .. 7=Sun) or day names, single values or comma/range lists —
+    # e.g. ``mon-fri``, ``1,3,5``, ``sun``. Empty (default) = every day,
+    # preserving time-of-day-only behaviour. Escalations on off days degrade
+    # to the G1 safe response — a responder is never paged on an uncommitted
+    # day. Parsed by ``huible.safety.handoff.parse_coverage_days``.
+    handoff_coverage_days: str = ""
     # On-call paging transport — Stage 0.4 wire (HU-1450). The alert→on-call
     # paging link deferred from HU-1446 lands here: once the roster is named
     # (HU-1447), an enqueued crisis ticket pages a real person. Key-free

@@ -118,6 +118,7 @@ from huible.safety.handoff import (
     build_handoff_acknowledgement,
     escalate_risk_to_human,
     escalate_to_human,
+    parse_coverage_days,
 )
 from huible.safety.handoff_monitoring import (
     HandoffTelemetry,
@@ -238,6 +239,7 @@ __all__ = [
     "get_distress_addendum",
     "get_framing",
     "is_grounded",
+    "parse_coverage_days",
     "sla_status",
     "was_answered_within_sla",
 ]

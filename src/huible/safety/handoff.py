@@ -92,6 +92,68 @@ COVERAGE_ALWAYS: str = "always"
 #: person (§10.1 #2/#4). Recorded in the §7.4.1 coverage-hours decision (AC #1).
 COVERAGE_HOURS: str = "hours"
 
+#: Maps lowercase day-name prefixes to ISO weekday numbers (1=Mon .. 7=Sun)
+#: for :func:`parse_coverage_days`.
+_DAY_NAMES: dict[str, int] = {
+    "mon": 1,
+    "tue": 2,
+    "wed": 3,
+    "thu": 4,
+    "fri": 5,
+    "sat": 6,
+    "sun": 7,
+}
+
+
+def _day_number(token: str) -> int:
+    """Resolve one day spec token (``1``-``7`` or day name) to ISO weekday."""
+    token = token.strip().lower()
+    if token.isdigit():
+        if 1 <= int(token) <= 7:
+            return int(token)
+        raise ValueError(f"invalid coverage day {token!r} — weekday numbers are 1-7 (1=Mon)")
+    # Day names: any unambiguous prefix of mon/monday .. sun/sunday (>=3 chars).
+    matches = {n for abbr, n in _DAY_NAMES.items() if token.startswith(abbr)}
+    if len(token) >= 3 and len(matches) == 1:
+        return matches.pop()
+    raise ValueError(
+        f"invalid coverage day {token!r} — use ISO weekdays 1-7 (1=Mon) or "
+        f"day names mon,tue,wed,thu,fri,sat,sun"
+    )
+
+
+def parse_coverage_days(spec: str) -> tuple[int, ...] | None:
+    """Parse a committed-coverage day spec into sorted ISO weekdays (HU-2110).
+
+    Accepts the shapes a founder is likely to reply with — ``""`` (no spec,
+    every day), ``"mon-fri"``, ``"1-5"``, ``"mon,wed,fri"``, ``"1,3,5"``,
+    ``"sun"``, ``"saturday"`` — case-insensitive and whitespace-tolerant.
+    Returns ``None`` for an empty spec (meaning "every day", the backward-
+    compatible default) and a sorted tuple of ISO weekdays (1=Mon .. 7=Sun)
+    otherwise. Raises :class:`ValueError` on tokens that are neither weekday
+    numbers nor day names, so a mistyped roster config fails loudly instead of
+    silently paging responders on uncommitted days.
+    """
+    spec = (spec or "").strip()
+    if not spec:
+        return None
+    days: set[int] = set()
+    for part in spec.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            lo_token, _, hi_token = part.partition("-")
+            lo, hi = _day_number(lo_token), _day_number(hi_token)
+            if lo > hi:
+                raise ValueError(f"coverage day range {part!r} is inverted (use lo-hi)")
+            days.update(range(lo, hi + 1))
+        else:
+            days.add(_day_number(part))
+    if not days:
+        raise ValueError(f"coverage day spec {spec!r} contains no days")
+    return tuple(sorted(days))
+
 
 @dataclass(slots=True, frozen=True)
 class CoverageWindow:
@@ -112,12 +174,21 @@ class CoverageWindow:
     past midnight (``open_hour > close_hour``, e.g. ``22``->``6`` night cover)
     is supported. ``open_hour == close_hour`` is rejected as a zero-width
     misconfiguration; the full-day case is ``open_hour=0, close_hour=24``.
+
+    ``days`` optionally restricts the window to committed weekdays — ISO
+    weekday numbers (1=Mon .. 7=Sun), parsed by :func:`parse_coverage_days`.
+    ``None`` means every day (the default, preserving time-of-day-only
+    behaviour). Off-day escalations degrade to the G1 safe response; for a
+    wraparound window the early-morning tail belongs to the *opening* day's
+    commitment (e.g. ``days=(1,)`` with 22->6 covers Mon 22:00 through Tue
+    06:00), so an off-shift hour never pages a responder (HU-2110).
     """
 
     mode: str = COVERAGE_ALWAYS
     tz_name: str = "UTC"
     open_hour: int = 0
     close_hour: int = 24
+    days: tuple[int, ...] | None = None
 
     def __post_init__(self) -> None:
         if self.mode not in (COVERAGE_ALWAYS, COVERAGE_HOURS):
@@ -135,6 +206,12 @@ class CoverageWindow:
                     "open_hour equals close_hour (zero-width window); "
                     "use mode 'always' for 24/7 cover or widen the range"
                 )
+        if self.days is not None:
+            if not self.days:
+                raise ValueError("days must be non-empty when provided (None means every day)")
+            bad_days = [d for d in self.days if not 1 <= d <= 7]
+            if bad_days:
+                raise ValueError(f"days must be ISO weekdays 1-7 (1=Mon), got {bad_days}")
 
     def is_open(self, now: datetime | None = None) -> bool:
         """Whether ``now`` falls inside the coverage window.
@@ -150,6 +227,15 @@ class CoverageWindow:
             return True
         moment = (now or datetime.now(UTC)).astimezone(ZoneInfo(self.tz_name))
         hour = moment.hour
+        weekday = moment.isoweekday()
+        if self.days is not None and weekday not in self.days:
+            # Wraparound tail: hours before close belong to the previous day's
+            # window (Mon 22:00 -> Tue 06:00 is "Monday's" commitment).
+            if not (self.open_hour > self.close_hour and hour < self.close_hour):
+                return False
+            prev_weekday = 7 if weekday == 1 else weekday - 1
+            if prev_weekday not in self.days:
+                return False
         if self.open_hour < self.close_hour:
             return self.open_hour <= hour < self.close_hour
         # Wraps past midnight (e.g. 22→6): open at/after open OR before close.

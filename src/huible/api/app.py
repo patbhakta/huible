@@ -189,6 +189,7 @@ from huible.safety import (
     enforce_risk_flags,
     escalate_risk_to_human,
     escalate_to_human,
+    parse_coverage_days,
     sla_status,
 )
 from huible.safety.store import (
@@ -345,6 +346,23 @@ async def _init_memory_backend(settings: Settings) -> MemoryBackend | None:
         return None
 
 
+def _coverage_from_settings(settings: Settings) -> CoverageWindow:
+    """Build the §7.4.1 coverage window from settings (single source of truth).
+
+    Shared by every backend-construction branch so the queue's degrade
+    decisions, the paging label, and ops config cannot drift apart. The day
+    spec (``handoff_coverage_days``, HU-2110) is optional and defaults to
+    every day.
+    """
+    return CoverageWindow(
+        mode=settings.handoff_coverage_mode,
+        tz_name=settings.handoff_coverage_tz,
+        open_hour=settings.handoff_coverage_open_hour,
+        close_hour=settings.handoff_coverage_close_hour,
+        days=parse_coverage_days(settings.handoff_coverage_days),
+    )
+
+
 def _init_safety_backends(
     settings: Settings,
 ) -> tuple[HandoffQueue, ConsentGate, ConversationStore, RiskProfileProvider, list]:
@@ -364,12 +382,7 @@ def _init_safety_backends(
                 available_responders=settings.handoff_available_responders,
                 responder_id_pool=tuple(settings.handoff_responder_pool_list),
                 sla_target_seconds=settings.handoff_sla_target_seconds,
-                coverage=CoverageWindow(
-                    mode=settings.handoff_coverage_mode,
-                    tz_name=settings.handoff_coverage_tz,
-                    open_hour=settings.handoff_coverage_open_hour,
-                    close_hour=settings.handoff_coverage_close_hour,
-                ),
+                coverage=_coverage_from_settings(settings),
             ),
             InMemoryConsentGate(),
             InMemoryConversationStore(),
@@ -382,12 +395,7 @@ def _init_safety_backends(
             available_responders=settings.handoff_available_responders,
             responder_id_pool=tuple(settings.handoff_responder_pool_list),
             sla_target_seconds=settings.handoff_sla_target_seconds,
-            coverage=CoverageWindow(
-                mode=settings.handoff_coverage_mode,
-                tz_name=settings.handoff_coverage_tz,
-                open_hour=settings.handoff_coverage_open_hour,
-                close_hour=settings.handoff_coverage_close_hour,
-            ),
+            coverage=_coverage_from_settings(settings),
         )
         consent_gate = PostgresConsentGate(url)
         conversation_store = PostgresConversationStore(url)
@@ -407,12 +415,7 @@ def _init_safety_backends(
                 available_responders=settings.handoff_available_responders,
                 responder_id_pool=tuple(settings.handoff_responder_pool_list),
                 sla_target_seconds=settings.handoff_sla_target_seconds,
-                coverage=CoverageWindow(
-                    mode=settings.handoff_coverage_mode,
-                    tz_name=settings.handoff_coverage_tz,
-                    open_hour=settings.handoff_coverage_open_hour,
-                    close_hour=settings.handoff_coverage_close_hour,
-                ),
+                coverage=_coverage_from_settings(settings),
             ),
             InMemoryConsentGate(),
             InMemoryConversationStore(),
@@ -761,15 +764,17 @@ def _coverage_window_label(settings: Settings) -> str:
     """Build a human-readable label for the active coverage window (HU-1450).
 
     The label rides on every ``handoff.page`` so the paged operator knows which
-    seat / window is active (e.g. ``"always"`` for 24/7 cover, or
-    ``"hours 09:00-17:00 America/New_York"`` for a bounded window). Derived
+    seat / window is active (e.g. ``"always"`` for 24/7 cover, or ``"hours
+    mon-fri 09:00-17:00 America/New_York"`` for a bounded window). Derived
     from the same settings that construct the :class:`CoverageWindow` so the
     page matches the queue's degrade decisions.
     """
     if settings.handoff_coverage_mode == "always":
         return "always"
+    days = settings.handoff_coverage_days.strip()
+    day_prefix = f"{days.lower()} " if days else ""
     return (
-        f"hours {settings.handoff_coverage_open_hour:02d}:00-"
+        f"hours {day_prefix}{settings.handoff_coverage_open_hour:02d}:00-"
         f"{settings.handoff_coverage_close_hour:02d}:00 {settings.handoff_coverage_tz}"
     )
 

@@ -18,7 +18,7 @@ end-to-end wiring is exercised in ``tests/api/test_chat_guardrails.py``:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -32,6 +32,7 @@ from huible.safety import (
     InMemoryHandoffQueue,
     build_handoff_acknowledgement,
     escalate_to_human,
+    parse_coverage_days,
 )
 from huible.safety.crisis import CrisisResult, CrisisSignal, UserAffect, classify_user_message
 
@@ -407,6 +408,98 @@ class TestCoverageWindow:
             CoverageWindow(mode=COVERAGE_HOURS, open_hour=24, close_hour=6)
         with pytest.raises(ValueError):
             CoverageWindow(mode=COVERAGE_HOURS, open_hour=0, close_hour=0)
+
+    # -- committed coverage days (HU-2110) ------------------------------------
+
+    def test_days_none_keeps_every_day_behaviour(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17)
+        # Mon 2026-06-29 through Sun 2026-07-05, mid-window hour: all open.
+        monday = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+        for offset in range(7):
+            assert w.is_open(monday + timedelta(days=offset)) is True
+
+    def test_weekday_only_window_closed_on_weekend(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17, days=(1, 2, 3, 4, 5))
+        assert w.is_open(datetime(2026, 7, 1, 12, 0, tzinfo=UTC)) is True  # Wed
+        assert w.is_open(datetime(2026, 7, 4, 12, 0, tzinfo=UTC)) is False  # Sat
+        assert w.is_open(datetime(2026, 7, 5, 12, 0, tzinfo=UTC)) is False  # Sun
+
+    def test_single_day_window_closed_other_days_same_hour(self):
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17, days=(1,))  # Mon
+        assert w.is_open(datetime(2026, 6, 29, 12, 0, tzinfo=UTC)) is True  # Mon in-hours
+        assert w.is_open(datetime(2026, 6, 29, 8, 0, tzinfo=UTC)) is False  # Mon off-hours
+        assert w.is_open(datetime(2026, 6, 30, 12, 0, tzinfo=UTC)) is False  # Tue same hour
+
+    def test_wraparound_tail_belongs_to_opening_day(self):
+        # Mon 22:00 -> Tue 06:00 committed as days=(1,): Tuesday 03:00 is the
+        # tail of Monday's window and must stay open; Tue 22:00 is closed.
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=22, close_hour=6, days=(1,))
+        assert w.is_open(datetime(2026, 6, 29, 22, 0, tzinfo=UTC)) is True  # Mon open
+        assert w.is_open(datetime(2026, 6, 30, 3, 0, tzinfo=UTC)) is True  # Tue tail
+        assert w.is_open(datetime(2026, 6, 30, 6, 0, tzinfo=UTC)) is False  # Tue close
+        assert w.is_open(datetime(2026, 6, 30, 22, 0, tzinfo=UTC)) is False  # Tue not committed
+
+    def test_wraparound_sunday_night_opens_monday_tail(self):
+        # Sun 22:00 -> Mon 06:00 (days=(7,)): Monday 03:00 is open, Monday
+        # 22:00 is not (only Sunday evenings are committed).
+        w = CoverageWindow(mode=COVERAGE_HOURS, open_hour=22, close_hour=6, days=(7,))
+        assert w.is_open(datetime(2026, 7, 5, 22, 0, tzinfo=UTC)) is True  # Sun open
+        assert w.is_open(datetime(2026, 7, 6, 3, 0, tzinfo=UTC)) is True  # Mon tail
+        assert w.is_open(datetime(2026, 7, 6, 22, 0, tzinfo=UTC)) is False  # Mon evening
+
+    def test_days_applied_in_window_timezone(self):
+        # 22:00 America/New_York on Wed Jun 30 summer (EDT=UTC-4) is 02:00 UTC
+        # Thu Jul 1 — a mon-fri window must treat it as Wednesday night (open)
+        # even though the UTC weekday is Thursday.
+        w = CoverageWindow(
+            mode=COVERAGE_HOURS,
+            tz_name="America/New_York",
+            open_hour=20,
+            close_hour=23,
+            days=(1, 2, 3, 4, 5),
+        )
+        assert w.is_open(datetime(2026, 7, 1, 2, 0, tzinfo=UTC)) is True  # Wed 22:00 EDT
+
+    def test_invalid_days_rejected(self):
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17, days=(0, 1))
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17, days=(8,))
+        with pytest.raises(ValueError):
+            CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=17, days=())
+
+
+class TestParseCoverageDays:
+    def test_empty_spec_means_every_day(self):
+        assert parse_coverage_days("") is None
+        assert parse_coverage_days("   ") is None
+
+    def test_numeric_range(self):
+        assert parse_coverage_days("1-5") == (1, 2, 3, 4, 5)
+
+    def test_name_range(self):
+        assert parse_coverage_days("mon-fri") == (1, 2, 3, 4, 5)
+
+    def test_mixed_list_sorted_and_deduped(self):
+        assert parse_coverage_days("Fri,Mon,mon,3,sun") == (1, 3, 5, 7)
+
+    def test_single_day_full_name(self):
+        assert parse_coverage_days("Saturday") == (6,)
+
+    def test_whitespace_tolerant(self):
+        assert parse_coverage_days(" mon - fri ") == (1, 2, 3, 4, 5)
+
+    def test_garbage_rejected(self):
+        with pytest.raises(ValueError):
+            parse_coverage_days("funday")
+        with pytest.raises(ValueError):
+            parse_coverage_days("0")
+        with pytest.raises(ValueError):
+            parse_coverage_days("8")
+        with pytest.raises(ValueError):
+            parse_coverage_days("fri-mon")  # inverted range
+        with pytest.raises(ValueError):
+            parse_coverage_days(",,")  # no actual days
         with pytest.raises(ValueError):
             CoverageWindow(mode=COVERAGE_HOURS, open_hour=9, close_hour=25)
 
