@@ -1,0 +1,71 @@
+id: huible-vault-compare
+namespace: huible
+description: |
+  Persona vault comparison — validates all four persona vaults against the
+  OKF standard, runs the SAME test question through each vault, and writes a
+  side-by-side comparison report into the vault root (comparison/<date>.md)
+  for human + agent review in Obsidian.
+
+  Inputs:
+    vaults_root  e.g. /root/repos/personas/chandler-bing
+    persona      e.g. "Chandler Bing"
+    question     the probe question asked of every vault
+    engine       glm (z.ai direct) or gemini (3.7-flash via home relay)
+    model        optional model override
+    no_llm       true = OKF validation only, zero API spend
+
+  Keys are read by the scripts from /opt/kestra/kestra.env (worker env).
+inputs:
+- id: vaults_root
+  type: STRING
+  required: true
+- id: persona
+  type: STRING
+  defaults: Chandler Bing
+- id: question
+  type: STRING
+  defaults: How would you comfort a friend who just lost their job?
+- id: engine
+  type: STRING
+  defaults: gemini
+- id: model
+  type: STRING
+  required: false
+  description: (reserved) model override — scripts default per engine
+- id: no_llm
+  type: BOOLEAN
+  defaults: false
+variables:
+  repo: /root/repos/huible
+tasks:
+- id: compare
+  type: io.kestra.plugin.scripts.shell.Commands
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: OKF-validate all vaults + generate + diff answers
+  commands:
+  - >-
+    python3 {{ vars.repo }}/scripts/compare_vaults.py
+    --vaults-root "{{ inputs.vaults_root }}"
+    --persona "{{ inputs.persona }}"
+    --question "{{ inputs.question }}"
+    --engine {{ inputs.engine }}
+    --out "{{ inputs.vaults_root }}/comparison/$(date +%F).md"
+    --answers-dir /tmp/vault-compare
+    {{ inputs.no_llm == true ? '--no-llm' : '' }}
+  retry:
+    type: constant
+    interval: PT15S
+    maxAttempt: 2
+
+- id: commit
+  type: io.kestra.plugin.scripts.shell.Commands
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Commit the comparison report to the personas repo
+  commands:
+  - >-
+    cd /root/repos/personas
+    && git add -A
+    && git commit -m "chore: vault comparison report $(date +%F) (kestra huible-vault-compare)"
+    || true

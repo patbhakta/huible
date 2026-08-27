@@ -1,0 +1,85 @@
+id: huible-vault-media
+namespace: huible
+description: |
+  Persona vault media generation — voice (Gemini TTS via home relay) and
+  imagery (FAL FLUX). Writes real assets into the persona vault:
+  media/voice/*.mp3 and media/images/*.png.
+
+  Inputs:
+    persona_root  e.g. /root/repos/personas/chandler-bing
+    persona_name  e.g. "Chandler Bing"
+    voice_text    line(s) to speak (defaults to a Chandler-isms sample)
+    image_prompt  subject for the portrait (defaults to a Chandler-style prompt)
+    skip_voice / skip_image  booleans to run only one lane
+
+  Provenance: scripts live in /root/repos/huible/scripts (git). Keys are
+  injected from the Kestra worker environment (GEMINI_API_KEY, FAL_KEY).
+inputs:
+- id: persona_root
+  type: STRING
+  required: true
+- id: persona_name
+  type: STRING
+  required: true
+- id: voice_text
+  type: STRING
+  defaults: "Could I BE any more excited? Welcome to the vault. I make jokes when I'm uncomfortable, and honestly? This is all pretty comfortable."
+- id: image_prompt
+  type: STRING
+  defaults: "Friendly mid-30s American man with dark hair, sarcastic warm smile, casual sweater, New York apartment background, soft sitcom lighting, photorealistic portrait"
+- id: skip_voice
+  type: BOOLEAN
+  defaults: false
+- id: skip_image
+  type: BOOLEAN
+  defaults: false
+variables:
+  repo: /root/repos/huible
+tasks:
+- id: voice
+  type: io.kestra.plugin.scripts.shell.Commands
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Generate persona voice line via Gemini TTS through the home relay
+  commands:
+  - >-
+    python3 {{ vars.repo }}/scripts/generate_voice.py
+    --text "{{ inputs.voice_text }}"
+    --out "{{ inputs.persona_root }}/media/voice/$(date +%F)-sample.mp3"
+  runIf: "{{ not inputs.skip_voice }}"
+  retry:
+    type: constant
+    interval: PT15S
+    maxAttempt: 2
+
+- id: image
+  type: io.kestra.plugin.scripts.shell.Commands
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Generate persona portrait via FAL FLUX
+  commands:
+  - >-
+    python3 {{ vars.repo }}/scripts/generate_image.py
+    --prompt "{{ inputs.image_prompt }}"
+    --out "{{ inputs.persona_root }}/media/images/$(date +%F)-portrait.png"
+  runIf: "{{ not inputs.skip_image }}"
+  retry:
+    type: constant
+    interval: PT15S
+    maxAttempt: 2
+
+- id: register
+  type: io.kestra.plugin.scripts.shell.Commands
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: Write OKF-compliant manifest of generated media into the vault
+  commands:
+  - >-
+    python3 -c
+    "import json,glob,os,sys;
+    root=sys.argv[1];
+    files=[{'file':p.replace(root+'/',''),'bytes':os.path.getsize(p)} for p in glob.glob(root+'/media/**/*.*',recursive=True) if os.path.isfile(p)];
+    os.makedirs(root+'/media',exist_ok=True);
+    open(root+'/media/media-manifest.json','w').write(json.dumps({'generated_by':'kestra:huible/huible-vault-media','files':files},indent=2));
+    print(json.dumps({'media_files':len(files)}))"
+    "{{ inputs.persona_root }}"
