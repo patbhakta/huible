@@ -145,6 +145,20 @@ class PersonaVault(Protocol):
     era_knowledge_boundary: str
 
 
+@runtime_checkable
+class ConversationTurnLike(Protocol):
+    """Structural view of a conversation turn for corpus widening.
+
+    Same decoupling rationale as :class:`PersonaVault`: avoids re-importing
+    :class:`huible.persona.context.ConversationTurn` (import cycle). Any object
+    with a ``content`` attribute satisfies this — including
+    ``huible.persona.context.ConversationTurn`` and
+    ``huible.api.app`` history entries.
+    """
+
+    content: str
+
+
 class ClaimCategory(str):
     """Claim category labels (string enum values kept simple for JSON)."""
 
@@ -629,6 +643,7 @@ def build_grounding_corpus(
     persona: PersonaVault,
     *,
     persona_scope_refs: Sequence[MemoryNode] | None = None,
+    conversation_history: Sequence[ConversationTurnLike] | None = None,
 ) -> set[str]:
     """Build the salient-token corpus a turn's claims are aligned against.
 
@@ -646,6 +661,15 @@ def build_grounding_corpus(
     keyword-only and defaults to ``None`` so the clinical Stage-A oracle and
     deterministic suites keep the pre-widening behavior.
 
+    ``conversation_history`` (turn-recall fix, Aug 27) widens the corpus with
+    the conversation's own prior turns — user and persona both. A reply that
+    correctly refers back to what the user just said ("you mentioned work was
+    crushing you") is grounded in the conversation, not the persona vault, and
+    was previously suppressed as an un-grounded claim — replacing a correct
+    recall answer with the canned reflection fallback. Conversation turns are
+    first-party truth (both speakers are parties to this exchange), so claims
+    referencing them cannot be persona confabulation.
+
     Grounding is intentionally a *content-overlap* check at Phase-1: a claim's
     named entity must appear in the corpus. This is the deterministic baseline
     the Clinical Advisor can reason about; it hardens to NLI / LLM-as-judge
@@ -659,6 +683,10 @@ def build_grounding_corpus(
         for node in persona_scope_refs:
             if node.content:
                 corpus |= _corpus_tokens(node.content)
+    if conversation_history:
+        for turn in conversation_history:
+            if turn.content:
+                corpus |= _corpus_tokens(turn.content)
     # Persona vault: name parts, voice-instruction tokens, era-boundary year.
     if persona.name:
         corpus |= _corpus_tokens(persona.name)
@@ -696,6 +724,7 @@ def align_response(
     refs: Sequence[MemoryNode],
     persona: PersonaVault,
     persona_scope_refs: Sequence[MemoryNode] | None = None,
+    conversation_history: Sequence[ConversationTurnLike] | None = None,
 ) -> AlignmentReport:
     """Align ``response`` against the turn's refs + persona vault.
 
@@ -708,7 +737,10 @@ def align_response(
     :func:`build_grounding_corpus`.
     """
     claims = extract_claims(response, persona_name=persona.name or "")
-    corpus = build_grounding_corpus(refs, persona, persona_scope_refs=persona_scope_refs)
+    corpus = build_grounding_corpus(
+        refs, persona, persona_scope_refs=persona_scope_refs,
+        conversation_history=conversation_history,
+    )
     ungrounded = [c for c in claims if not is_grounded(c, corpus)]
     return AlignmentReport(
         text=response,
@@ -724,6 +756,7 @@ def apply_alignment_guard(
     refs: Sequence[MemoryNode],
     persona: PersonaVault,
     persona_scope_refs: Sequence[MemoryNode] | None = None,
+    conversation_history: Sequence[ConversationTurnLike] | None = None,
 ) -> AlignmentReport:
     """Apply the §7.4.2 generation-time alignment guard.
 
@@ -743,7 +776,8 @@ def apply_alignment_guard(
     :func:`build_grounding_corpus`.
     """
     report = align_response(
-        response, refs=refs, persona=persona, persona_scope_refs=persona_scope_refs
+        response, refs=refs, persona=persona, persona_scope_refs=persona_scope_refs,
+        conversation_history=conversation_history,
     )
     if report.disposition == "suppressed":
         report.text = ALIGNMENT_FALLBACK_RESPONSE

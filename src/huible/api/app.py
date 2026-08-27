@@ -1365,6 +1365,7 @@ def _register_routes(application: FastAPI) -> None:
             query_embedding_content=_embed(body.message),
             current_message=body.message,
             user_affect=effective_affect,
+            conversation_history=_history(application, body.conversation_id),
         )
 
         prompt = ctx.render()
@@ -1424,6 +1425,7 @@ def _register_routes(application: FastAPI) -> None:
             refs=ctx.included_memories,
             persona=binding.persona,
             persona_scope_refs=persona_scope_refs,
+            conversation_history=_history(application, body.conversation_id),
         )
         response_text = alignment.text
 

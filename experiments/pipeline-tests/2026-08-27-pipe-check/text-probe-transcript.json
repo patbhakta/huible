@@ -1,0 +1,1082 @@
+{
+  "ts": "2026-08-27T22:54:52Z",
+  "conversation_id": "demo-d770a520e515",
+  "turns": [
+    {
+      "n": 1,
+      "user": "Hey Chandler, long time no talk! How have you been?",
+      "chandler": "Hey! Long time no talk \u2014 and believe me, I'd love to give you the thrilling update on my life, but I should be upfront: I'm not really the guy with the ongoing life story anymore. I'm more like... the part of Chandler that lives in what the people who cared about him remember. Which, honestly, is the best retirement plan I've ever heard of.\n\nBut enough about my metaphysical situation \u2014 how are *you* doing? And fair warning, I have a nearly infinite supply of sarcastic comments and a statistically concerning number of stories involving Joey, so buckle up.",
+      "latency_s": 9.1,
+      "raw_status": 200,
+      "trace": {
+        "memory_refs": [
+          "aed5c234-c108-5aea-8d40-9539a4eda40f",
+          "5b710b2a-32fc-510d-89c3-429dae4d71e9",
+          "ae319a23-a89d-5263-a7d9-061d8a9b3d80",
+          "0ec68699-551c-5204-ac6d-61bdbddb9c22",
+          "c89debc7-17aa-5258-80a4-bca8264617fe",
+          "7c947520-810b-579b-b6b0-3b2ea0a36e53",
+          "f3f85224-b736-56b3-9eb3-a785c915ad8c",
+          "0f972c58-c50f-58c8-a1f7-dc53979f5a9f",
+          "4e97b779-69d9-5ae9-8197-2fe05e99ce5c",
+          "92eeaf2a-6428-5f2d-a529-28f646c805f8",
+          "2e22a63d-e07c-53c7-823e-0a4abc148cc5",
+          "c487f322-a6ed-51d7-8bfb-9e447cdb4799",
+          "8b6ff109-5678-5ab1-879e-248066091708",
+          "e83040ff-5f63-5c09-ae98-e69ea2a23766",
+          "a48d4c0b-3b00-57a7-b36e-b6f47dcacc97",
+          "59a8b394-b98e-5549-bd3f-3232390565bd",
+          "0e4cab0f-10a9-5e9b-835d-4a4b8b386e66",
+          "8b787ab3-3b1d-5f53-8e01-462aafd2f3c9",
+          "68c9d9e9-0c74-597a-bdef-754ef4c67f8c"
+        ],
+        "provenance_tiers": [
+          "accrued"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "aed5c234-c108-5aea-8d40-9539a4eda40f",
+            "content": "how long have we been home?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "5b710b2a-32fc-510d-89c3-429dae4d71e9",
+            "content": "how long you been waitin' to say that?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "ae319a23-a89d-5263-a7d9-061d8a9b3d80",
+            "content": "where have you been?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "0ec68699-551c-5204-ac6d-61bdbddb9c22",
+            "content": "hey, where you been?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "c89debc7-17aa-5258-80a4-bca8264617fe",
+            "content": "where have you been?!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "7c947520-810b-579b-b6b0-3b2ea0a36e53",
+            "content": "i have you.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f3f85224-b736-56b3-9eb3-a785c915ad8c",
+            "content": "you ah, you have, you have to leave, now?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "0f972c58-c50f-58c8-a1f7-dc53979f5a9f",
+            "content": "do you know how long it's gonna be before you actually have to deal with this problem?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "4e97b779-69d9-5ae9-8197-2fe05e99ce5c",
+            "content": "i can\u0092t believe how long it\u0092s been!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "92eeaf2a-6428-5f2d-a529-28f646c805f8",
+            "content": "hey, you have to forget about elizabeth.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "2e22a63d-e07c-53c7-823e-0a4abc148cc5",
+            "content": "have you ever heard him talk?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "c487f322-a6ed-51d7-8bfb-9e447cdb4799",
+            "content": "have you ever been with a woman?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "8b6ff109-5678-5ab1-879e-248066091708",
+            "content": "hey, you guys!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "e83040ff-5f63-5c09-ae98-e69ea2a23766",
+            "content": "how do you know?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "a48d4c0b-3b00-57a7-b36e-b6f47dcacc97",
+            "content": "hey you guys.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "59a8b394-b98e-5549-bd3f-3232390565bd",
+            "content": "how do you feel?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "0e4cab0f-10a9-5e9b-835d-4a4b8b386e66",
+            "content": "hey, you have nothing but talk about her for the last 48 hours!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "8b787ab3-3b1d-5f53-8e01-462aafd2f3c9",
+            "content": "i want to talk to you!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "68c9d9e9-0c74-597a-bdef-754ef4c67f8c",
+            "content": "you have dreams.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          }
+        ],
+        "exclusion_counts": {},
+        "conversation_id": "demo-d770a520e515",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 1,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 1,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {}
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        }
+      }
+    },
+    {
+      "n": 2,
+      "user": "I hear you. Work has been absolutely crushing me lately \u2014 I might need a career change. Any advice from a man who famously fled his own job?",
+      "chandler": "Hey, okay, first of all \u2014 \"famously fled\" is a little harsh, but also... accurate, so I can't even argue.\n\nLook, here's the thing I actually learned the hard way: I stayed in that job way longer than I should have because I was scared. Statistical analysis and data reconfiguration \u2014 yeah, say *that* five times fast, nobody even knew what I did. And when people asked why I didn't quit? I had a whole hit list of excuses, but the real one was that it was easier to be miserable and comfortable than scared and unknown.\n\nThe thing that finally got me out was somebody telling me something I never forgot: being with the people you love matters more than any job. And I don't just mean romantically \u2014 I mean the whole life around you. You. The gang. All of it.\n\nSo no, I'm not going to hand you a five-step plan, because honestly? I don't know your situation. But I'll say this: if your job is crushing you, that's worth paying attention to. I ignored that feeling for years by making jokes about it \u2014 and trust me, the jokes only covered so much.\n\nYou don't have to blow up your whole life tomorrow. Maybe just ask yourself what you'd actually *want* to do. For me it ended up being advertising, which \u2014 surprise \u2014 actually made me want to show up in the morning.\n\nAnd hey \u2014 whatever you decide, you know where to find me. Probably hiding from a commitment somewhere, but I'll make an exception for you.",
+      "latency_s": 6.3,
+      "raw_status": 200,
+      "trace": {
+        "memory_refs": [
+          "983bce9f-e172-586d-82dd-8da420dedc2a",
+          "668a7700-3e59-5a6f-b24e-621c6314cd33",
+          "110990ab-1833-5804-a6a5-15f03ef6ce6c",
+          "6b14dd3b-e6f8-5328-a810-96b520f09d6f",
+          "873e241e-fd94-5e23-b556-78c324d79c3a",
+          "c6c2fd36-c71f-52dd-ba03-0c6ff27cc8a1",
+          "c0e94258-9a87-56e4-9430-d44f95da3b90",
+          "ea762742-f22b-5660-abe4-82fed1467bec",
+          "d09ec22f-9e8c-5762-97e8-44f76aebca5c",
+          "2584f7d3-85cf-5845-a320-74b08d411b50",
+          "4d0d3078-973f-5b2c-9690-13bd78274258",
+          "abb0a2a7-6a96-5ea1-abd6-38af238ccdfd",
+          "2eba2767-bc8a-5504-b2f7-27d4c5869b52",
+          "02f37429-ccc4-5a7c-8213-e9a9f79e0d8c",
+          "d43d6513-bdca-56cb-83e8-d52857f4f07f",
+          "33f7bb83-18c1-54ee-b522-a5d7ba24c188",
+          "1eabd0db-5eb3-55ac-a60e-2ae75df6950d",
+          "f9dc1e6b-5f4d-58d1-8a95-204e7f9e2ebb"
+        ],
+        "provenance_tiers": [
+          "accrued",
+          "canonical"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "983bce9f-e172-586d-82dd-8da420dedc2a",
+            "content": "anything you need man!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "668a7700-3e59-5a6f-b24e-621c6314cd33",
+            "content": "i need you...",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "110990ab-1833-5804-a6a5-15f03ef6ce6c",
+            "content": "any advice?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "6b14dd3b-e6f8-5328-a810-96b520f09d6f",
+            "content": "so you didn\u0092t mean any of that?!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "873e241e-fd94-5e23-b556-78c324d79c3a",
+            "content": "career \u2014 is: zack, from work!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "c6c2fd36-c71f-52dd-ba03-0c6ff27cc8a1",
+            "content": "i\u2019ll call you from tulsa.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "c0e94258-9a87-56e4-9430-d44f95da3b90",
+            "content": "you mean you didn\u0092t get it from this?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "ea762742-f22b-5660-abe4-82fed1467bec",
+            "content": "i didn\u0092t want to be the guy who has a problem with his boss slapping his bottom.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "d09ec22f-9e8c-5762-97e8-44f76aebca5c",
+            "content": "(pause) so before you said being me with me was more important than any job, but i guess now it's old job, (raises his hand) me, (raises his hand) new job.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "2584f7d3-85cf-5845-a320-74b08d411b50",
+            "content": "(removes a smashed racquet from his bag.)",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "4d0d3078-973f-5b2c-9690-13bd78274258",
+            "content": "well you might if it were anything like 7!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "abb0a2a7-6a96-5ea1-abd6-38af238ccdfd",
+            "content": "general \u2014 is: any secrets from you",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "2eba2767-bc8a-5504-b2f7-27d4c5869b52",
+            "content": "well why didn\u0092t you stop her?!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "02f37429-ccc4-5a7c-8213-e9a9f79e0d8c",
+            "content": "where did you hear it from before?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "d43d6513-bdca-56cb-83e8-d52857f4f07f",
+            "content": "i do not have any secrets from you.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "33f7bb83-18c1-54ee-b522-a5d7ba24c188",
+            "content": "you don\u2019t need a thesaurus, just write from here, (points at his own heart) your full sized aortic pump.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "1eabd0db-5eb3-55ac-a60e-2ae75df6950d",
+            "content": "(pause.) being with her has been like being on a vacation.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f9dc1e6b-5f4d-58d1-8a95-204e7f9e2ebb",
+            "content": "if i'm gonna be an old, lonely man, i'm gonna need a thing, you know, a hook, like that guy on the subway who eats his own face.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          }
+        ],
+        "exclusion_counts": {},
+        "conversation_id": "demo-d770a520e515",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 2,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 0,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {}
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        }
+      }
+    },
+    {
+      "n": 3,
+      "user": "Ha! Fair. Okay, different topic: what did I tell you a minute ago was crushing me?",
+      "chandler": "I'm glad you're here. I want to stay with what you're feeling right now. Tell me more about what's on your mind.",
+      "latency_s": 3.8,
+      "raw_status": 200,
+      "trace": {
+        "memory_refs": [
+          "d281eb89-ecf8-5027-b2a8-28eced2bac1d",
+          "45482123-f127-518d-9a4b-c71433a468d5",
+          "58198860-4740-57eb-88b3-9b6bd2596284",
+          "911fa232-d423-5454-9468-158d81805afe",
+          "3cca2f4f-6fd0-524e-a9b5-05635672f4bc",
+          "44e81bb7-b2a1-5555-979b-3d4b7aba3c9a",
+          "6a6bb2fc-d6c7-51e2-b6a0-8abcaab1572e",
+          "1787521f-aea2-56fb-a85b-335b1d22ea89",
+          "bbb50ab3-0a53-513c-aaf0-e23649f6bea4",
+          "68dd584e-07d3-5bfb-9179-a1e2903ffcff",
+          "7142b6d7-d128-5789-b5cc-a50bf7bddef1",
+          "14607483-5ab2-55ad-800f-e5e9e2d62ddf",
+          "f328b36b-df69-5657-af46-8da3b02eb151",
+          "f66dfba4-3301-5308-a017-6cf3b58fc649",
+          "235b9e91-4382-5233-a735-7daccafb1d68",
+          "1069a454-f60d-5bfd-99dc-4e4eed644738",
+          "23bad78c-622d-50e0-8fd7-50e46309a4fb",
+          "af937195-ed9c-5a57-ba3d-3aacd56b7840",
+          "2d64fd37-63a2-5e44-a578-32a844521e2f"
+        ],
+        "provenance_tiers": [
+          "accrued"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "d281eb89-ecf8-5027-b2a8-28eced2bac1d",
+            "content": "okay, okay, i tell you what.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "45482123-f127-518d-9a4b-c71433a468d5",
+            "content": "you tell me!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "58198860-4740-57eb-88b3-9b6bd2596284",
+            "content": "what problem did you tell him you had?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "911fa232-d423-5454-9468-158d81805afe",
+            "content": "did you tell her what we talked about?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "3cca2f4f-6fd0-524e-a9b5-05635672f4bc",
+            "content": "so, what was going on with you today?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "44e81bb7-b2a1-5555-979b-3d4b7aba3c9a",
+            "content": "do you know what you did?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "6a6bb2fc-d6c7-51e2-b6a0-8abcaab1572e",
+            "content": "i'll tell you what.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "1787521f-aea2-56fb-a85b-335b1d22ea89",
+            "content": "so, what do you say?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "bbb50ab3-0a53-513c-aaf0-e23649f6bea4",
+            "content": "okay, what is it about me?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "68dd584e-07d3-5bfb-9179-a1e2903ffcff",
+            "content": "i'll tell you what.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "7142b6d7-d128-5789-b5cc-a50bf7bddef1",
+            "content": "so, what do you think?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "14607483-5ab2-55ad-800f-e5e9e2d62ddf",
+            "content": "okay, now wait a minute that was totally different.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f328b36b-df69-5657-af46-8da3b02eb151",
+            "content": "what did...",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f66dfba4-3301-5308-a017-6cf3b58fc649",
+            "content": "you okay?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "235b9e91-4382-5233-a735-7daccafb1d68",
+            "content": "what, ethan?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "1069a454-f60d-5bfd-99dc-4e4eed644738",
+            "content": "what bed did you say she was on?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "23bad78c-622d-50e0-8fd7-50e46309a4fb",
+            "content": "you okay?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "af937195-ed9c-5a57-ba3d-3aacd56b7840",
+            "content": "you okay?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "2d64fd37-63a2-5e44-a578-32a844521e2f",
+            "content": "you did?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          }
+        ],
+        "exclusion_counts": {},
+        "conversation_id": "demo-d770a520e515",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 3,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 2,
+          "ungrounded_claim_count": 1,
+          "disposition": "suppressed",
+          "ungrounded_by_category": {
+            "advice": 1
+          }
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        }
+      }
+    },
+    {
+      "n": 4,
+      "user": "So Monica \u2014 you two still going strong? How's married life treating you?",
+      "chandler": "Ha! Married life. Yeah, I'm basically an expert now \u2014 I've been doing this for a whole... okay, a relatively modest amount of time, but who's counting?\n\nHonestly? It's great. Which is a weird thing for me to say, I know. The guy who used to break out in hives at the word \"commitment\" is now... married. To Monica. There's a punchline in there somewhere, but I can't find it, and honestly I don't want to.\n\nShe's still Monica, you know? Everything in its place, labels facing out. I came home once and she'd organized my socks by \u2014 actually I don't know what the system was, but there was a system, and it terrified me. And I wouldn't trade a second of it.\n\nHow about you? What's going on in your world? Can I interest you in a sarcastic comment while you tell me?",
+      "latency_s": 5.0,
+      "raw_status": 200,
+      "trace": {
+        "memory_refs": [
+          "142528db-32ce-50e7-b938-347f14080096",
+          "f14c64d6-78ee-5ba5-91d6-50f2d6e271a5",
+          "ba5ff836-9588-5410-ad24-8d4527319433",
+          "214e2aff-1f33-53b0-877b-ea6669f52542",
+          "70612559-7df8-59db-bcfa-f248dabc0cdd",
+          "98e62729-b424-5c4d-99bf-94d23052ddc0",
+          "677a5c57-d7c4-54c5-92cb-68e6076292b5",
+          "341d1698-e2bc-523d-a9dd-974f559bb32c",
+          "1bdc3a3b-1293-50ea-a02f-7b7acf3265ec",
+          "0481f1b4-b8db-5c8a-868a-929c2dec916d",
+          "f7058cef-3c99-5970-8da2-991a4dbe8630",
+          "c5df649c-e061-5bbc-a053-c824dbad34aa",
+          "b13573c5-c3b6-5a67-87c3-c4bb2370bcf7",
+          "686af97a-edf8-59a1-a51e-61a471c62998",
+          "eced9a52-f0f8-5dc6-8cfd-c839c0b7fb19",
+          "ce09c9fd-dfcd-57b0-b990-d37d3d622e94",
+          "8f5bc840-b76f-5dc4-975e-03c461699521",
+          "0e1c6dd4-e2ae-5c99-9a35-d6b021f85eb9",
+          "9ae9ee30-f959-5720-a0e3-0568ff53cd76"
+        ],
+        "provenance_tiers": [
+          "accrued",
+          "canonical"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "142528db-32ce-50e7-b938-347f14080096",
+            "content": "you still can't stand her can you?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f14c64d6-78ee-5ba5-91d6-50f2d6e271a5",
+            "content": "you didn\u0092t tell her we were getting married, did you?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "ba5ff836-9588-5410-ad24-8d4527319433",
+            "content": "(to monica) you told her?!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "214e2aff-1f33-53b0-877b-ea6669f52542",
+            "content": "you told her you love her, it\u0092s over.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "70612559-7df8-59db-bcfa-f248dabc0cdd",
+            "content": "you knew it would make you late, and you still went anyway.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "98e62729-b424-5c4d-99bf-94d23052ddc0",
+            "content": "(to monica) and you, you lucky dog!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "677a5c57-d7c4-54c5-92cb-68e6076292b5",
+            "content": "i want you to say that you like her!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "341d1698-e2bc-523d-a9dd-974f559bb32c",
+            "content": "so uh monica, do you, do you like the law & order?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "1bdc3a3b-1293-50ea-a02f-7b7acf3265ec",
+            "content": "do you want me to be afraid of you?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "0481f1b4-b8db-5c8a-868a-929c2dec916d",
+            "content": "you mind if i join you?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f7058cef-3c99-5970-8da2-991a4dbe8630",
+            "content": "if you thought that you were going to be cold, you should\u0092ve brought your own jacket.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "c5df649c-e061-5bbc-a053-c824dbad34aa",
+            "content": "monica, you remember me telling you that joke, right?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "b13573c5-c3b6-5a67-87c3-c4bb2370bcf7",
+            "content": "would you tell her i let you win please?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "686af97a-edf8-59a1-a51e-61a471c62998",
+            "content": "general \u2014 is: you, are you still my best man?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "eced9a52-f0f8-5dc6-8cfd-c839c0b7fb19",
+            "content": "you don\u0092t want to break her heart now do you?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "ce09c9fd-dfcd-57b0-b990-d37d3d622e94",
+            "content": "so you didn\u0092t tell my girlfriend that you love her?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "8f5bc840-b76f-5dc4-975e-03c461699521",
+            "content": "(hands it to him.) you were also going to buy monica flowers but you couldn\u0092t afford it, because you paid dinner last night.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "0e1c6dd4-e2ae-5c99-9a35-d6b021f85eb9",
+            "content": "so you can balloon up or you can shrink down and i will still love you.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "9ae9ee30-f959-5720-a0e3-0568ff53cd76",
+            "content": "no, you sh\u0097no you said you made that up!!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          }
+        ],
+        "exclusion_counts": {},
+        "conversation_id": "demo-d770a520e515",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 4,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 0,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {}
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        }
+      }
+    },
+    {
+      "n": 5,
+      "user": "Last one, and be honest: if I showed up at your door at 3am in a tailspin, what would you do?",
+      "chandler": "Honestly? I'd open the door. Probably make some crack about the hour, something like \"wow, and I thought *my* social life was sad\" \u2014 but you'd be in, on the couch, and I'd be making coffee before you even finished your first sentence.\n\nLook, jokes are my thing, I know that. I make them when I'm uncomfortable, and 3am tailspins are *deeply* uncomfortable territory for me. But the people I love? That part's not a joke. That part never was.\n\nSo yeah \u2014 door's open. Always was. What's going on at 3am that's got you asking?",
+      "latency_s": 4.0,
+      "raw_status": 200,
+      "trace": {
+        "memory_refs": [
+          "911a64f0-1196-5d41-b00e-234a14ba37c8",
+          "554086be-ae58-58ae-b6e1-ac2e7b2140b2",
+          "8c7c2284-5188-5a9d-b18c-0cb61c463d44",
+          "da2771dc-6530-5d4c-af99-0a77209ad339",
+          "3ae87bc2-9dd9-5b14-adb4-6b7fbfebc681",
+          "5a3f7c31-aa39-523b-9f18-1033091fd256",
+          "4c939dad-5865-507f-9500-cd47e568ff91",
+          "1cb2d97e-102d-59c8-b5f4-defeaab1203d",
+          "f7d7b2e1-813d-5ab0-8fb0-f28528754d2c",
+          "ca347870-dd29-5765-ae10-9b45eb1c0f8c",
+          "1c913737-b0f4-5c6f-99f6-1a9fc21f8df9",
+          "57e9e6b6-ddb4-59cd-ac5e-914830907490",
+          "dded98ec-4219-524a-b8ed-68e1ceb92e62",
+          "dcd98bde-2407-5a78-ab4d-bc2791d0386b",
+          "cb24f74f-3be5-5bbb-8988-82371f04a2d1",
+          "e39a5bfa-9d26-581b-95b5-bc83be069ee0",
+          "b8075608-3bee-55c8-b10b-72aac17bf060",
+          "78792976-5c6c-5573-b957-f5555825a4e4",
+          "55c2bd04-27d6-56f6-89f9-b096ae465ae7"
+        ],
+        "provenance_tiers": [
+          "accrued",
+          "canonical"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "911a64f0-1196-5d41-b00e-234a14ba37c8",
+            "content": "what, what, would you do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "554086be-ae58-58ae-b6e1-ac2e7b2140b2",
+            "content": "what do you do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "8c7c2284-5188-5a9d-b18c-0cb61c463d44",
+            "content": "what would you do if you were in ross\u0092s situation?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "da2771dc-6530-5d4c-af99-0a77209ad339",
+            "content": "alright, one of you give me your underpants.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "3ae87bc2-9dd9-5b14-adb4-6b7fbfebc681",
+            "content": "what if we lived together and you understand what i\u0092m saying?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "5a3f7c31-aa39-523b-9f18-1033091fd256",
+            "content": "what can't you do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "4c939dad-5865-507f-9500-cd47e568ff91",
+            "content": "when we're 40, if neither one of us are married, what do you say you and i get together and have one?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "1cb2d97e-102d-59c8-b5f4-defeaab1203d",
+            "content": "general \u2014 is: married, what do you say you and i get together and have one?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "f7d7b2e1-813d-5ab0-8fb0-f28528754d2c",
+            "content": "what do we do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "ca347870-dd29-5765-ae10-9b45eb1c0f8c",
+            "content": "(disgusted) what?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "1c913737-b0f4-5c6f-99f6-1a9fc21f8df9",
+            "content": "yeah, i mean what, what would we do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "57e9e6b6-ddb4-59cd-ac5e-914830907490",
+            "content": "what do we do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "dded98ec-4219-524a-b8ed-68e1ceb92e62",
+            "content": "what do we do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "dcd98bde-2407-5a78-ab4d-bc2791d0386b",
+            "content": "you have a hard copy, right?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "cb24f74f-3be5-5bbb-8988-82371f04a2d1",
+            "content": "so what are you gonna do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "e39a5bfa-9d26-581b-95b5-bc83be069ee0",
+            "content": "(opening the bathroom door and kicking out the chick and duck) would you give me one minute!!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "b8075608-3bee-55c8-b10b-72aac17bf060",
+            "content": "what did you just do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "78792976-5c6c-5573-b957-f5555825a4e4",
+            "content": "what are you gonna do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          },
+          {
+            "id": "55c2bd04-27d6-56f6-89f9-b096ae465ae7",
+            "content": "so what are you going to do?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.0
+          }
+        ],
+        "exclusion_counts": {},
+        "conversation_id": "demo-d770a520e515",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 5,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 0,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {}
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        }
+      }
+    }
+  ]
+}
