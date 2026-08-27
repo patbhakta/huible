@@ -1,0 +1,13 @@
+Hi Pat — quick one while you're at the keyboard (16 days on this ask, 3 cards expired):
+
+**The live paging drill (last item of Stage 0.4a, HU-1453) is blocked on ONE thing only you can do — real on-call device contacts.** Agents can't mint real phone PII.
+
+1. **Answer card `6a736af9`** on HU-1453 — "approve drill runbook rev 5".
+2. **Provision** at the deploy-host env (or company secrets API — **never paste phone numbers into a comment**):
+   • `HANDOFF_ONCALL_CONTACTS` — real device phone (E.164) + email for the staffed seats (drill only needs seats staffed for the window)
+   • One real transport: `TELNYX_API_KEY`/`TELNYX_FROM` (preferred) and/or `HANDOFF_PAGER_SMTP_*` / `HANDOFF_PAGER_WEBHOOK_URL`
+3. **Confirm** the humans behind the primary + secondary seats will hold the devices for a ~1h window (Drill A: page + ≤15-min ack; Drill B: deliberate 15-min miss → secondary+CEO escalation).
+
+Why now: runbook rev 5 fixed a real defect — the drill-traffic suppression deployed Aug 26 would have silently swallowed the old drill ids (pages would never reach devices). Substrate re-verified green (168 paging tests). Once contacts land, the drill runs in **under 1h**.
+
+Fastest reply here: "creds deposited" — I'll verify and the drill fires same day.
