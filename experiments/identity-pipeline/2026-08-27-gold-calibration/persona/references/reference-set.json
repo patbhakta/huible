@@ -1,0 +1,44 @@
+[
+  {
+    "photo_id": "ref_20260827_8bab4a",
+    "path": "references/raw/ref_20260827_8bab4a.png",
+    "sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+    "source": "synthetic_seed",
+    "rights": {
+      "basis": "synthetic",
+      "license_ref": null,
+      "consent_by": null,
+      "expires": null
+    },
+    "collected_at": "2026-08-27T21:44:03+00:00",
+    "notes": ""
+  },
+  {
+    "photo_id": "ref_20260827_9314d2",
+    "path": "references/raw/ref_20260827_9314d2.png",
+    "sha256": "9314d24659798a3a986ec125706dc15b42631126b7dfeb6207159db1c1d875bb",
+    "source": "synthetic_seed",
+    "rights": {
+      "basis": "synthetic",
+      "license_ref": null,
+      "consent_by": null,
+      "expires": null
+    },
+    "collected_at": "2026-08-27T21:44:03+00:00",
+    "notes": ""
+  },
+  {
+    "photo_id": "ref_20260827_321218",
+    "path": "references/raw/ref_20260827_321218.png",
+    "sha256": "3212186ae807b0323e0761960d76012974b74f29dea01c8d6b41f9a19ab5ddd4",
+    "source": "synthetic_seed",
+    "rights": {
+      "basis": "synthetic",
+      "license_ref": null,
+      "consent_by": null,
+      "expires": null
+    },
+    "collected_at": "2026-08-27T21:44:03+00:00",
+    "notes": ""
+  }
+]

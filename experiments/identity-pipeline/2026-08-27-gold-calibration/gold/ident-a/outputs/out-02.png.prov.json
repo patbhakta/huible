@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/outputs/out-02.png",
+  "out_sha256": "607b1eb28923f4b7b3caa4645a9cb13c5c19612030e365c19aa1d0332afb6d38",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person laughing at a backyard barbecue, holding a plate, golden hour, candid photorealistic photo",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 325255,
+  "latency_s": 13.18,
+  "generated_at": "2026-08-27T21:44:40.403365+00:00"
+}

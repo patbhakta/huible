@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/outputs/out-04.png",
+  "out_sha256": "b0b302ff31a3ad726fb787336a4ca8e1508b09db0c019ad69c3f27d062553b26",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/reference.png",
+  "ref_sha256": "d9a7f9535fbbb2e7bd3f7bc51d73825d75e9ca7e55342ccf621fb748c00ce34b",
+  "prompt": "the same person at a beach boardwalk in summer clothes, sunny afternoon, candid photorealistic photo",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 366420,
+  "latency_s": 143.4,
+  "generated_at": "2026-08-27T21:55:31.255882+00:00"
+}

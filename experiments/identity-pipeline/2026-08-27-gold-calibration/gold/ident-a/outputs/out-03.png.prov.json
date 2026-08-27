@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/outputs/out-03.png",
+  "out_sha256": "fc2f23672c98ba71653e968d7d7e0606b5877eedc3c7b65483e2fc55296e7d2c",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person reading a book in a cozy armchair by a fireplace, warm lamp light, photorealistic",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 275318,
+  "latency_s": 10.03,
+  "generated_at": "2026-08-27T21:44:50.513089+00:00"
+}

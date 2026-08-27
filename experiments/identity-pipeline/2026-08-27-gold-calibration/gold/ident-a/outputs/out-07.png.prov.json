@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/outputs/out-07.png",
+  "out_sha256": "f6507e696056b529fa9cb39da9e160b6593163fa79cccb167144e893412680ed",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person in a garden holding fresh flowers, soft overcast light, photorealistic portrait",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 347131,
+  "latency_s": 9.88,
+  "generated_at": "2026-08-27T21:46:34.592738+00:00"
+}

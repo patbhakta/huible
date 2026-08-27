@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/acceptance/accept-0.png",
+  "out_sha256": "6f5801a1c4482da59762d6833e1714d0241228ff4b9584dcdc5fe47d66365d9b",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person riding a bicycle on a park path in autumn, leaves on the trees, candid photorealistic photo",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 344046,
+  "latency_s": 9.9,
+  "generated_at": "2026-08-27T21:56:57.356657+00:00"
+}

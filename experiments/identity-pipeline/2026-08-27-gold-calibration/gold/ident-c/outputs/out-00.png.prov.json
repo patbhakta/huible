@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/outputs/out-00.png",
+  "out_sha256": "8c45bb1a289a8143d09a73d4bb95b3166f3426dd8ed8865cf88eb963151fadd9",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/reference.png",
+  "ref_sha256": "d9a7f9535fbbb2e7bd3f7bc51d73825d75e9ca7e55342ccf621fb748c00ce34b",
+  "prompt": "the same person sitting at a kitchen table in the morning, drinking coffee, warm window light, candid photorealistic photo",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 384134,
+  "latency_s": 9.97,
+  "generated_at": "2026-08-27T21:50:24.280653+00:00"
+}

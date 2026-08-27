@@ -1,0 +1,4 @@
+{"event": "collect", "at": "2026-08-27T21:44:03+00:00", "added": 3, "photos": ["/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png", "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/dedupe-proof/duplicate-copy.png", "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/dedupe-proof/slightly-cropped.png"], "source": "synthetic_seed"}
+{"photo_id": "ref_20260827_9314d2", "path": "references/raw/ref_20260827_9314d2.png", "kept": false, "reasons": ["perceptual_duplicate(of ref_20260827_8bab4a)"], "curated_at": "2026-08-27T21:44:07+00:00"}
+{"photo_id": "ref_20260827_321218", "path": "references/raw/ref_20260827_321218.png", "kept": false, "reasons": ["perceptual_duplicate(of ref_20260827_8bab4a)"], "curated_at": "2026-08-27T21:44:07+00:00"}
+{"event": "curate", "at": "2026-08-27T21:44:07+00:00", "input": 3, "kept": 1, "rejected": 2}

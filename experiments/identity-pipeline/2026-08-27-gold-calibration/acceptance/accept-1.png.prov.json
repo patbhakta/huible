@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/acceptance/accept-1.png",
+  "out_sha256": "3f91226af55c7477d3774dfccd4decec8b7964abc41b6834f5bc1d8d27674c1b",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person at an art gallery opening, smart casual clothes, indoor gallery lighting, photorealistic",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 324524,
+  "latency_s": 13.23,
+  "generated_at": "2026-08-27T21:57:52.770340+00:00"
+}

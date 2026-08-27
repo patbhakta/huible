@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/outputs/out-01.png",
+  "out_sha256": "8f76f034c10e12355838f436ae00940f3562ed1dd0c0d141cb667a3dd84027e0",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/reference.png",
+  "ref_sha256": "d9a7f9535fbbb2e7bd3f7bc51d73825d75e9ca7e55342ccf621fb748c00ce34b",
+  "prompt": "the same person hiking on a mountain trail at sunrise, wearing running clothes and a light jacket, wide shot, photorealistic",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 424279,
+  "latency_s": 10.0,
+  "generated_at": "2026-08-27T21:50:34.373174+00:00"
+}

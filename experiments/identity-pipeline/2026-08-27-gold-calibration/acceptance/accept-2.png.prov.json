@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/acceptance/accept-2.png",
+  "out_sha256": "bdf149d7de11b8b517930429dc2a6e8e33f5e866e2d5fd3ab5794167e98d512e",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person kayaking on a calm lake at midday, wearing a life vest, wide shot, photorealistic",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 358045,
+  "latency_s": 13.1,
+  "generated_at": "2026-08-27T21:58:11.308967+00:00"
+}

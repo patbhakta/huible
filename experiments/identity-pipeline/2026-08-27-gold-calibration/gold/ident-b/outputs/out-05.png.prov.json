@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-b/outputs/out-05.png",
+  "out_sha256": "471960577988cb9dc97ba4060328f4f14f4f0fe8893147d6d079f25066363495",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-b/reference.png",
+  "ref_sha256": "e9a593052ce7cb276ce6d0e2ca673b003a8a411d7ae7e57e54d1c0e23f53b853",
+  "prompt": "the same person wearing a winter coat and scarf in falling snow, city street at dusk, photorealistic",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 353472,
+  "latency_s": 9.91,
+  "generated_at": "2026-08-27T21:49:53.978349+00:00"
+}

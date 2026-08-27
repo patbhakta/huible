@@ -1,0 +1,10 @@
+# Reference-grounded identity pipeline (HU-2150) — stage tools
+# ref_collect / ref_curate / ref_gate / calibrate_gate / ref_registry.
+# Model weights (insightface buffalo_l, ~280 MB) cache to ~/.insightface/models/.
+# Generation itself (generate_image.py) has NO python deps beyond stdlib.
+insightface>=1.0
+onnxruntime>=1.19
+opencv-python-headless>=4.10
+pillow>=10.0
+imagehash>=4.3
+numpy>=1.26

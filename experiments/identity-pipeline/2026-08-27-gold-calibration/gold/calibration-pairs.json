@@ -1,0 +1,472 @@
+{
+  "positive": [
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-00.png",
+      "score": 0.8462
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-01.png",
+      "score": 0.5055
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-02.png",
+      "score": 0.6423
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-03.png",
+      "score": 0.6436
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-04.png",
+      "score": 0.6655
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-05.png",
+      "score": 0.7408
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-06.png",
+      "score": 0.8579
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-a",
+      "output": "out-07.png",
+      "score": 0.7418
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-00.png",
+      "score": 0.9024
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-01.png",
+      "score": 0.6611
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-02.png",
+      "score": 0.7161
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-03.png",
+      "score": 0.7832
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-04.png",
+      "score": 0.9066
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-05.png",
+      "score": 0.7739
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-06.png",
+      "score": 0.8909
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-b",
+      "output": "out-07.png",
+      "score": 0.8404
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-00.png",
+      "score": 0.7615
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-01.png",
+      "score": 0.4711
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-02.png",
+      "score": 0.7551
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-03.png",
+      "score": 0.7164
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-04.png",
+      "score": 0.6549
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-05.png",
+      "score": 0.6676
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-06.png",
+      "score": 0.7685
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-c",
+      "output": "out-07.png",
+      "score": 0.6775
+    }
+  ],
+  "negative": [
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-00.png",
+      "score": 0.096
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-00.png",
+      "score": 0.1653
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-01.png",
+      "score": -0.0414
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-01.png",
+      "score": 0.0183
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-02.png",
+      "score": 0.0399
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-02.png",
+      "score": 0.2389
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-03.png",
+      "score": 0.0843
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-03.png",
+      "score": 0.2468
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-04.png",
+      "score": 0.0996
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-04.png",
+      "score": 0.2203
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-05.png",
+      "score": 0.1282
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-05.png",
+      "score": 0.2242
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-06.png",
+      "score": 0.0775
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-06.png",
+      "score": 0.1506
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-b",
+      "output": "out-07.png",
+      "score": 0.1028
+    },
+    {
+      "identity": "ident-a",
+      "ref": "ident-c",
+      "output": "out-07.png",
+      "score": 0.2397
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-00.png",
+      "score": 0.132
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-00.png",
+      "score": 0.1345
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-01.png",
+      "score": 0.0272
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-01.png",
+      "score": 0.073
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-02.png",
+      "score": 0.1053
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-02.png",
+      "score": 0.1411
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-03.png",
+      "score": 0.1159
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-03.png",
+      "score": 0.1446
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-04.png",
+      "score": 0.1101
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-04.png",
+      "score": 0.1468
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-05.png",
+      "score": 0.0165
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-05.png",
+      "score": 0.1481
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-06.png",
+      "score": 0.1376
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-06.png",
+      "score": 0.1624
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-a",
+      "output": "out-07.png",
+      "score": 0.0611
+    },
+    {
+      "identity": "ident-b",
+      "ref": "ident-c",
+      "output": "out-07.png",
+      "score": 0.1298
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-00.png",
+      "score": 0.2278
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-00.png",
+      "score": 0.1798
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-01.png",
+      "score": 0.2195
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-01.png",
+      "score": 0.036
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-02.png",
+      "score": 0.1939
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-02.png",
+      "score": 0.1635
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-03.png",
+      "score": 0.247
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-03.png",
+      "score": 0.1404
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-04.png",
+      "score": 0.1641
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-04.png",
+      "score": 0.1493
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-05.png",
+      "score": 0.248
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-05.png",
+      "score": 0.1438
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-06.png",
+      "score": 0.2963
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-06.png",
+      "score": 0.1446
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-a",
+      "output": "out-07.png",
+      "score": 0.2465
+    },
+    {
+      "identity": "ident-c",
+      "ref": "ident-b",
+      "output": "out-07.png",
+      "score": 0.1175
+    }
+  ],
+  "config": {
+    "threshold": 0.3837,
+    "embedder": "insightface buffalo_l / w600k_r50 (ArcFace 512-d, cosine)",
+    "calibrated_at": "2026-08-27T21:56:41+00:00",
+    "gold_dir": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold",
+    "identities": [
+      "ident-a",
+      "ident-b",
+      "ident-c"
+    ],
+    "pairs": {
+      "positive": 24,
+      "negative": 48
+    },
+    "distributions": {
+      "positive": {
+        "min": 0.4711,
+        "median": 0.7413,
+        "max": 0.9066
+      },
+      "negative": {
+        "min": -0.0414,
+        "median": 0.1425,
+        "max": 0.2963
+      }
+    },
+    "at_threshold": {
+      "tpr": 1.0,
+      "fpr": 0.0
+    },
+    "fully_separated": true,
+    "note": "fully separated: max_neg=0.2963 < min_pos=0.4711",
+    "production_safe": false
+  }
+}

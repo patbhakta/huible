@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/outputs/out-06.png",
+  "out_sha256": "5df367c963a2ede79b1f95d4dc0cf1a5361479e7a350f555c8936c3210ec7899",
+  "ref_image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "ref_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "prompt": "the same person cooking in a home kitchen, apron on, steam rising, natural light, candid photorealistic photo",
+  "model": "flux-pro-kontext",
+  "aspect": "square",
+  "strength": 1.0,
+  "bytes": 336610,
+  "latency_s": 9.87,
+  "generated_at": "2026-08-27T21:45:23.785852+00:00"
+}

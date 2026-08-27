@@ -1,0 +1,18 @@
+{
+  "image": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/acceptance/accept-1.png",
+  "ok": true,
+  "reason": null,
+  "metrics": {
+    "faces": 4,
+    "face_w_px": 303,
+    "face_area_frac": 0.1137,
+    "yaw": 0.3,
+    "pitch": -4.1,
+    "roll": 0.9
+  },
+  "score": 0.7949,
+  "threshold": 0.3837,
+  "per_ref": {
+    "ref_20260827_8bab4a": 0.7949
+  }
+}

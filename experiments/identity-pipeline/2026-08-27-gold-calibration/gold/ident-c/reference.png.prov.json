@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-c/reference.png",
+  "out_sha256": "d9a7f9535fbbb2e7bd3f7bc51d73825d75e9ca7e55342ccf621fb748c00ce34b",
+  "ref_image": null,
+  "ref_sha256": null,
+  "prompt": "solo portrait photograph of a woman in her 40s with long curly auburn hair, plain warm beige studio background, soft even lighting, looking at camera, photorealistic, neutral expression",
+  "model": "flux-schnell",
+  "aspect": "square",
+  "strength": null,
+  "bytes": 279200,
+  "latency_s": 3.79,
+  "generated_at": "2026-08-27T16:04:13.638198+00:00"
+}

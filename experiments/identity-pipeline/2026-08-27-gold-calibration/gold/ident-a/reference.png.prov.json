@@ -1,0 +1,13 @@
+{
+  "out": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold/ident-a/reference.png",
+  "out_sha256": "8bab4adb6396370c3177f40f7f4058f0302c31c7f9af6ba98b2e286519b160be",
+  "ref_image": null,
+  "ref_sha256": null,
+  "prompt": "solo portrait photograph of a woman in her 60s with short silver hair and round glasses, plain studio background, soft even lighting, looking at camera, photorealistic, neutral expression",
+  "model": "flux-schnell",
+  "aspect": "square",
+  "strength": null,
+  "bytes": 199407,
+  "latency_s": 3.83,
+  "generated_at": "2026-08-27T16:04:13.676855+00:00"
+}

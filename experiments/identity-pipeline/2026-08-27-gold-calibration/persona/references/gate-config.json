@@ -1,0 +1,34 @@
+{
+  "threshold": 0.3837,
+  "embedder": "insightface buffalo_l / w600k_r50 (ArcFace 512-d, cosine)",
+  "calibrated_at": "2026-08-27T21:56:41+00:00",
+  "gold_dir": "/root/repos/huible/experiments/identity-pipeline/2026-08-27-gold-calibration/gold",
+  "identities": [
+    "ident-a",
+    "ident-b",
+    "ident-c"
+  ],
+  "pairs": {
+    "positive": 24,
+    "negative": 48
+  },
+  "distributions": {
+    "positive": {
+      "min": 0.4711,
+      "median": 0.7413,
+      "max": 0.9066
+    },
+    "negative": {
+      "min": -0.0414,
+      "median": 0.1425,
+      "max": 0.2963
+    }
+  },
+  "at_threshold": {
+    "tpr": 1.0,
+    "fpr": 0.0
+  },
+  "fully_separated": true,
+  "note": "fully separated: max_neg=0.2963 < min_pos=0.4711",
+  "production_safe": false
+}
