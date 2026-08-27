@@ -1,0 +1,15 @@
+=== voice_gate on non-passed internal_only config ===
+gate config did not pass calibration — recalibrate before gating
+rc=1
+=== clone: no flags ===
+REFUSED: gate config exists but calibration did not pass; ZERO persona-voice spend allowed
+rc=1
+=== clone: --benchmark-only only ===
+REFUSED: gate config exists but calibration did not pass; ZERO persona-voice spend allowed
+rc=1
+=== clone: --allow-spend only ===
+REFUSED: gate config exists but calibration did not pass; ZERO persona-voice spend allowed
+rc=1
+=== clone: --allow-spend --benchmark-only (no API key) ===
+REFUSED: gate config exists but calibration did not pass; ZERO persona-voice spend allowed
+rc=1

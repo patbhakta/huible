@@ -1,0 +1,142 @@
+{
+  "updated_at": "2026-08-27T23:04:42+00:00",
+  "records": [
+    {
+      "clip_id": "vaudio_20260827_848cad",
+      "path": "references/voice-raw/848cadb51b18.wav",
+      "sha256": "848cadb51b18cc131a4cf6c2dc9296d0f98e67873e7456030a2f3c33a6d358ea",
+      "duration_s": 5.85,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_b7dbd7",
+      "path": "references/voice-raw/b7dbd77db211.wav",
+      "sha256": "b7dbd77db21133fe1c207cb6d557116fda450e6a55111c2e4347ace52fc02c1e",
+      "duration_s": 5.85,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_4389e9",
+      "path": "references/voice-raw/4389e95093df.wav",
+      "sha256": "4389e95093df3af0633b2ea10aed0fe187bdbc73106e1ddfd63a1819e3a4fe23",
+      "duration_s": 6.63,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_e59b6c",
+      "path": "references/voice-raw/e59b6cf0bde5.wav",
+      "sha256": "e59b6cf0bde56bde861d198ba482f85fbf788c5a8cd9bdeda3e90007b722edf7",
+      "duration_s": 7.02,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_b22e67",
+      "path": "references/voice-raw/b22e67b266ec.wav",
+      "sha256": "b22e67b266ecfdd0aeaa184463371fa1056b6f1b9b60833eaa64ad9865fe78ad",
+      "duration_s": 5.44,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_5b8d3a",
+      "path": "references/voice-raw/5b8d3a6132c0.wav",
+      "sha256": "5b8d3a6132c0d141c262079ee8386db52c21f2ad37791d5990a018b9f130ed22",
+      "duration_s": 7.51,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_13d3c1",
+      "path": "references/voice-raw/13d3c1ebcae5.wav",
+      "sha256": "13d3c1ebcae548d88bd12f2edb72676755eb5b1f944f6c86e69a495f344a7198",
+      "duration_s": 6.27,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    },
+    {
+      "clip_id": "vaudio_20260827_4fcbff",
+      "path": "references/voice-raw/4fcbfff24de5.wav",
+      "sha256": "4fcbfff24de5782452806382822d8750db3dbc081d282a28019c13bde3fdf371",
+      "duration_s": 6.19,
+      "source": "benchmark_corpus",
+      "rights": {
+        "basis": "benchmark_only",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": null,
+        "corpus_ref": "MELD.Raw/chandler",
+        "internal_only": true
+      },
+      "collected_at": "2026-08-27T23:04:42+00:00",
+      "notes": "MELD.Raw official release tarball sha256 a56b4407d574195c; 16kHz mono WAV extracts via ffmpeg speaker=Chandler"
+    }
+  ],
+  "internal_only": true
+}

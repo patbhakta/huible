@@ -1,0 +1,68 @@
+{
+ "chandler": {
+  "refs": [
+   "dia202_utt2.wav",
+   "dia250_utt3.wav",
+   "dia145_utt6.wav",
+   "dia148_utt6.wav",
+   "dia180_utt6.wav",
+   "dia57_utt2.wav",
+   "dia76_utt7.wav",
+   "dia99_utt8.wav"
+  ],
+  "heldout": [
+   "dia121_utt4.wav",
+   "dia0_utt0.wav",
+   "dia253_utt0.wav",
+   "dia93_utt0.wav",
+   "dia312_utt17.wav"
+  ],
+  "unseen": [
+   "dia57_utt1.wav",
+   "dia12_utt10.wav",
+   "dia58_utt2.wav"
+  ]
+ },
+ "joey": {
+  "refs": [
+   "dia89_utt0.wav",
+   "dia95_utt17.wav",
+   "dia80_utt1.wav"
+  ],
+  "heldout": [
+   "dia111_utt4.wav",
+   "dia6_utt7.wav",
+   "dia18_utt3.wav",
+   "dia126_utt4.wav",
+   "dia119_utt4.wav"
+  ]
+ },
+ "rachel": {
+  "refs": [
+   "dia94_utt4.wav",
+   "dia180_utt5.wav",
+   "dia46_utt6.wav"
+  ],
+  "heldout": [
+   "dia182_utt1.wav",
+   "dia24_utt1.wav",
+   "dia43_utt1.wav",
+   "dia34_utt1.wav",
+   "dia109_utt8.wav"
+  ]
+ },
+ "ross": {
+  "refs": [
+   "dia15_utt2.wav",
+   "dia35_utt5.wav",
+   "dia116_utt1.wav"
+  ],
+  "heldout": [
+   "dia63_utt2.wav",
+   "dia32_utt12.wav",
+   "dia51_utt6.wav",
+   "dia113_utt5.wav",
+   "dia76_utt2.wav"
+  ]
+ }
+}

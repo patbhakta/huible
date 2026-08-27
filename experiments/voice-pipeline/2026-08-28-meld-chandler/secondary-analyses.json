@@ -1,0 +1,18 @@
+{
+ "librispeech_threshold_operating_point": {
+  "threshold": 0.8323,
+  "calibrated_on": "LibriSpeech test-clean v1 gold set",
+  "tpr": 0.35,
+  "fpr": 0.0333
+ },
+ "neutral_subset": {
+  "subset": "heldout clips with emotion=neutral (all pairs, same protocol)",
+  "pos_n": 9,
+  "neg_n": 27,
+  "pos_min": 0.7076,
+  "pos_mean": 0.8019,
+  "neg_max": 0.7992,
+  "neg_mean": 0.6862,
+  "separated": false
+ }
+}

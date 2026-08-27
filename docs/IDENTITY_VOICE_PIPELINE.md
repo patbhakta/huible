@@ -150,6 +150,18 @@ registry never depends on memory of invocation flags.
 pos_mean 0.9301 vs neg_mean 0.6012 → **threshold 0.8323, TPR 1.0, FPR 0.0**.
 Evidence: `experiments/voice-pipeline/2026-08-27-gold-calibration/`.
 
+**Sitcom recalibration (2026-08-28, HU-2159): NOT separated.** MELD.Raw
+Chandler gold set (official release, sha256-verified; 4 speakers, 8 Chandler
+refs across 6 emotions, 20 pos / 60 neg): pos_min 0.7076 vs neg_max 0.8967
+— no threshold reaches TPR=1/FPR=0; midpoint 0.8022 gives TPR 0.60 / FPR
+0.067; the LibriSpeech 0.8323 transfers at TPR 0.35 / FPR 0.033. Dominant
+confusion: Joey↔Chandler (similar male-leads prosody); positive failures
+cluster on anger/surprise delivery; neutral-only subsets still overlap. The
+Chandler vault gate config exists but `passed: false` (fail-closed: no
+gating, no spend, no registry). Read-speech thresholds do **not** transfer
+to sitcom speech. Evidence:
+`experiments/voice-pipeline/2026-08-28-meld-chandler/`.
+
 **Production promotion requires** (in order): (a) **clone-output gold set**
 — same protocol with cloned lines vs held-out references, per cloning
 model+version; (b) for client personas, a **consented human gold set
@@ -222,16 +234,22 @@ gate→registry path, zero generation).
 
 ## Known limits / next steps
 
-- **No Chandler reference audio exists locally yet.** friends-v2 is
-  transcripts only. Follow-up child issue: ingest MELD audio for
-  Persona-0 as `benchmark_corpus` (internal-only) and run the same
-  calibration to benchmark the pipeline on sitcom speech.
+- **Chandler benchmark set exists (MELD.Raw ingested, HU-2159) but the
+  sitcom gate is honestly not-separated** — resemblyzer confuses
+  Joey↔Chandler and expressive delivery shifts positives below the
+  negatives band. Production-path implication unchanged (set is
+  internal_only forever); benchmark-path implication: a trial clone
+  benchmark needs a stronger embedder first.
 - **Threshold is R&D-calibrated on natural speech, not clone outputs.**
   Clone-output gold set required before any production persona voice
   (§3). Consented human gold set (~50 clips/class) required before client
   personas.
-- **Thin v1 margin (0.016)** — consider ECAPA swap (§3) if production
-  margins demand it.
+- **Read-speech ↔ sitcom transfer fails (v1 0.8323 → TPR 0.35 on MELD)**
+  — thresholds are corpus-domain-specific; recalibrate per domain.
+- **ECAPA swap is now evidence-motivated, not speculative (§3, §Known
+  limits)** — swap the embedder to speechbrain ECAPA-TDNN behind the same
+  `embed_wav` interface and recalibrate on the MELD gold set (follow-up
+  issue; Joey↔Chandler on expressive TV audio is the hard case).
 - **Local clone adapters are documented stubs** — model installs are
   follow-ups only if zero-spend local cloning is wanted for benchmarking
   (XTTS CPML: benchmarking only, no commercial use).

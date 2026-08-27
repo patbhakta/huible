@@ -1,0 +1,1394 @@
+{
+ "chandler": [
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia14_utt3.wav",
+   "speech_s": 7.41,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 8.55,
+   "text": "Uhh yeah. Yeah, it\u0092s  right, right down there.  Right there, yeah. Can I ask you why?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia14_utt5.wav",
+   "speech_s": 3.69,
+   "speaker": "Chandler",
+   "emotion": "sadness",
+   "dur_s": 6.3,
+   "text": "Okay Bob listen uhh, I\u0092m the reason you didn\u0092t get the job up here."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia21_utt4.wav",
+   "speech_s": 4.41,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.46,
+   "text": "Danielle! Hi! Uh- everybody, this is Danielle, Danielle, everybody."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia31_utt4.wav",
+   "speech_s": 5.13,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.76,
+   "text": "And if heaven has a    door, I'm sure he's pressing his ear up against it and listening intently."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia58_utt9.wav",
+   "speech_s": 4.2,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.21,
+   "text": "Okay, okay, but don\u0092t worry, because we also have cereals, muffins, waffles,"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia76_utt11.wav",
+   "speech_s": 6.99,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 8.09,
+   "text": "You know, but of course, like, after that you can't possibly think of anything else, and you can't, you know, stop what "
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia76_utt12.wav",
+   "speech_s": 6.81,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 8.09,
+   "text": "So it's kinda like, you're, you know."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia76_utt13.wav",
+   "speech_s": 4.08,
+   "speaker": "Chandler",
+   "emotion": "surprise",
+   "dur_s": 4.59,
+   "text": "You know.... You don't know!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia76_utt7.wav",
+   "speech_s": 6.06,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 6.26,
+   "text": "And you get all these like, mental images in your brain, you know, like Elle MacPherson, or that girl at the Xerox place"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia79_utt10.wav",
+   "speech_s": 3.33,
+   "speaker": "Chandler",
+   "emotion": "sadness",
+   "dur_s": 4.04,
+   "text": "But I don't wanna do it in a cup!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia99_utt8.wav",
+   "speech_s": 5.46,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 6.17,
+   "text": "Well, the movie was great, dinner was great, and there\u0092s nothing like a cool, crisp New York evening."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia12_utt10.wav",
+   "speech_s": 5.16,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.46,
+   "text": "Well, we are fond of the silliness, but we also have a soft spot for the love."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia22_utt6.wav",
+   "speech_s": 3.36,
+   "speaker": "Chandler",
+   "emotion": "sadness",
+   "dur_s": 4.36,
+   "text": "Well, y'know, you and me, it had to end sometime."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia41_utt1.wav",
+   "speech_s": 4.59,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 4.75,
+   "text": "Oh yeah, that was great. Thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia49_utt15.wav",
+   "speech_s": 4.14,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.5,
+   "text": "Okay, y'know your not though. Let's go."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia50_utt1.wav",
+   "speech_s": 3.99,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.09,
+   "text": "Sounds like two people are really enjoying the Dewey decimal system."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia57_utt1.wav",
+   "speech_s": 6.33,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 6.88,
+   "text": "We were playing Gin? Y'know if we were a couple, we could play this game naked."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia58_utt2.wav",
+   "speech_s": 6.9,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 7.51,
+   "text": "Let me tell you about this chick I scored with last night! Oh no wait a minute that was you!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia60_utt0.wav",
+   "speech_s": 4.17,
+   "speaker": "Chandler",
+   "emotion": "fear",
+   "dur_s": 4.84,
+   "text": "Yeah, but what if it's not? What if there    is a reason why we can't have a baby?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia62_utt1.wav",
+   "speech_s": 3.99,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 6.13,
+   "text": "Yeah. Well, I think our second fight is going to be a"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia65_utt2.wav",
+   "speech_s": 3.72,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.67,
+   "text": "Okay uh, for now, temporarily, you can call me, Clint."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia7_utt3.wav",
+   "speech_s": 3.84,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.21,
+   "text": "Yeah, it\u0092s two guys in a ring, and the rules are: \u0093They\u0092re"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/output_repeated_splits_test/dia8_utt4.wav",
+   "speech_s": 4.29,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.34,
+   "text": "Well, maybe he had some kind of uh, new, cool style, that you're not familiar with."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia0_utt0.wav",
+   "speech_s": 5.55,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.67,
+   "text": "also I was the point person on my company\u0092s transition from the KL-5 to GR-6 system."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia108_utt0.wav",
+   "speech_s": 6.9,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 7.42,
+   "text": "Oh my God, honey we are so meant to be together. We both have copies of the"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia109_utt13.wav",
+   "speech_s": 7.68,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 8.26,
+   "text": "Ahh, come on! Y\u0092know what\u0097y\u0092know what, I think I\u0092m just gonna go home and call Kathy."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia121_utt4.wav",
+   "speech_s": 5.49,
+   "speaker": "Chandler",
+   "emotion": "disgust",
+   "dur_s": 5.5,
+   "text": "You don\u0092t want to be guys, you\u0092d be all hairy and wouldn\u0092t live as long."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia135_utt2.wav",
+   "speech_s": 7.02,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 7.67,
+   "text": "I'm doing research for a book, and I was wondering what someone might do if they left a baby on a city bus."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia141_utt5.wav",
+   "speech_s": 4.8,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.34,
+   "text": "Y\u0092know what you should do, just toss \u0091em in the shedder and claim you never got \u0091em."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia145_utt6.wav",
+   "speech_s": 6.18,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 6.63,
+   "text": "I might have some kind of life, like I haven't been sitting around here honing for the past few hours."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia147_utt3.wav",
+   "speech_s": 4.32,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 4.63,
+   "text": "It's just you and Rachel, just the two of you? This is a date. You're going on a date."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia148_utt6.wav",
+   "speech_s": 5.52,
+   "speaker": "Chandler",
+   "emotion": "disgust",
+   "dur_s": 7.01,
+   "text": "Well, let's just say the impressions you made in the butter left little to the imagination."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia157_utt1.wav",
+   "speech_s": 3.9,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 4.38,
+   "text": "Oh well, this was a really important experience for me, and    I wanted to share it with you."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia165_utt19.wav",
+   "speech_s": 4.29,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 4.29,
+   "text": "That all the pieces of my life are falling right into place!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia166_utt0.wav",
+   "speech_s": 3.84,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.09,
+   "text": "Hey, anybody got a length of rope about six feet long with a little nouse at the end?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia175_utt9.wav",
+   "speech_s": 3.45,
+   "speaker": "Chandler",
+   "emotion": "sadness",
+   "dur_s": 4.09,
+   "text": "I have--and I remember this part vividly--a mouthful of pumpkin pie, and this is the moment my parents choose to tell me"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia180_utt6.wav",
+   "speech_s": 5.37,
+   "speaker": "Chandler",
+   "emotion": "surprise",
+   "dur_s": 5.42,
+   "text": "Weirdest thing. Did I hear\u0097\u0097Mother of God it\u0092s true!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia185_utt10.wav",
+   "speech_s": 6.66,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 8.92,
+   "text": "Come on, Ross? Remember back in college, when he fell in love with Carol and bought her that ridiculously expensive crys"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia202_utt2.wav",
+   "speech_s": 5.82,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.84,
+   "text": "Well, let\u0092s just say that Krog will be fully equipped to destroy the universe again in twelve to fourteen hours."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia219_utt9.wav",
+   "speech_s": 4.8,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.13,
+   "text": "Oh, come on Monica, reliving past pain and getting depressed is what Thanksgiving is all about."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia222_utt19.wav",
+   "speech_s": 3.84,
+   "speaker": "Chandler",
+   "emotion": "disgust",
+   "dur_s": 4.25,
+   "text": "Oh yeah. Boy, urine cuts"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia223_utt1.wav",
+   "speech_s": 4.8,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.05,
+   "text": "How many times have I told you guys, you"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia229_utt1.wav",
+   "speech_s": 4.47,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 5.67,
+   "text": "Yes. Yes, thanks for letting me use your phone... and for saving my life."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia232_utt2.wav",
+   "speech_s": 4.2,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.42,
+   "text": "When we're 40, if neither one of us are married, what do you say you and I get together and have one?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia242_utt6.wav",
+   "speech_s": 3.45,
+   "speaker": "Chandler",
+   "emotion": "sadness",
+   "dur_s": 5.8,
+   "text": "You-you-you didn\u0092t know that.  Well, I guess my work here is done!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia250_utt3.wav",
+   "speech_s": 5.37,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 5.84,
+   "text": "Yes indeedy!  With a beautiful view of..."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia253_utt0.wav",
+   "speech_s": 5.43,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 6.46,
+   "text": "My specimen is in the    room and I just want to thank whoever knocked on the door while I was in there."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia258_utt3.wav",
+   "speech_s": 6.75,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 6.88,
+   "text": "Yeah, Joey already told me, and I am so-so fine."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia264_utt8.wav",
+   "speech_s": 3.72,
+   "speaker": "Chandler",
+   "emotion": "fear",
+   "dur_s": 4.0,
+   "text": "I\u0092m going crazy! Okay? Do you have any thing around here that looks homemade?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia266_utt0.wav",
+   "speech_s": 4.8,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.8,
+   "text": "Well actually uh, there was something we wanted to tell you about the wedding."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia273_utt0.wav",
+   "speech_s": 4.26,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.25,
+   "text": "Pheebs, can you help me pick out an engagement ring for Monica?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia274_utt4.wav",
+   "speech_s": 7.14,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 8.59,
+   "text": "Just a sec, give me a minute to wake up for this\u0097Ah-ha-ha!!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia279_utt7.wav",
+   "speech_s": 6.51,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 7.67,
+   "text": "Oh yeah, gym member. I try to go four times a week, but I\u0092ve missed the last 1200 times."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia27_utt1.wav",
+   "speech_s": 4.38,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 6.3,
+   "text": "Okay, all right, all right, all right! Okay!  Okay, here's something, here's something blue and new."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia286_utt3.wav",
+   "speech_s": 7.44,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 8.34,
+   "text": "Well, I have an appointment to see Dr. Robert Pillman, career counselor a-gogo.  I added the \"a-gogo.\""
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia287_utt4.wav",
+   "speech_s": 4.29,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 4.34,
+   "text": "Yes, I know, but her friend sounds like such a..."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia2_utt6.wav",
+   "speech_s": 4.29,
+   "speaker": "Chandler",
+   "emotion": "disgust",
+   "dur_s": 4.79,
+   "text": "Just coffee! Where are we gonna hang out now?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia302_utt3.wav",
+   "speech_s": 3.45,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 4.25,
+   "text": "We can\u0092t tell him, you can\u0092t go up to a guy you barely know and talk about his.... stuff."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia304_utt7.wav",
+   "speech_s": 6.36,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 6.38,
+   "text": "Yo!! Spackel boy! Get up!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia312_utt17.wav",
+   "speech_s": 5.7,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 6.13,
+   "text": "Noo!! I don\u0092t care! I\u0092m not, I\u0092m not gonna playing one-on-one strip poker with you for practice!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia315_utt9.wav",
+   "speech_s": 3.87,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 5.8,
+   "text": "Hey, you guys! Hey, Ross, quick question for ya. Are you ready to party?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia42_utt0.wav",
+   "speech_s": 4.32,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 5.55,
+   "text": "Everything\u0092s gonna be all right. Okay, Dick?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia46_utt12.wav",
+   "speech_s": 4.29,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 6.76,
+   "text": "Tickets please!  That\u0092s courtside baby!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia47_utt0.wav",
+   "speech_s": 4.26,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.42,
+   "text": "You know, I don't think we brought enough stuff. Did you forget to pack the baby's anvil?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia56_utt0.wav",
+   "speech_s": 4.17,
+   "speaker": "Chandler",
+   "emotion": "surprise",
+   "dur_s": 5.17,
+   "text": "Oh my God, it's that Victoria's Secret model. Something... something Goodacre."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia57_utt2.wav",
+   "speech_s": 7.26,
+   "speaker": "Chandler",
+   "emotion": "fear",
+   "dur_s": 7.51,
+   "text": "Og-ee-op, I\u0092m not asking for me, I\u0092m\u0085 I mean\u0085 No, I\u0092m-I\u0092m not gay, I\u0092m not asking you out."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia62_utt9.wav",
+   "speech_s": 4.56,
+   "speaker": "Chandler",
+   "emotion": "surprise",
+   "dur_s": 7.76,
+   "text": "Bob? Ooh, working here with us? Everyday? Yeah, I don\u0092t know if he has what it takes."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia63_utt5.wav",
+   "speech_s": 3.57,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 4.13,
+   "text": "You can\u0092t wear that! I\u0092m wearing the famous tux! James Bond\u0092s tux!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia64_utt0.wav",
+   "speech_s": 4.8,
+   "speaker": "Chandler",
+   "emotion": "anger",
+   "dur_s": 4.88,
+   "text": "Sorry, I just don\u0092t like the idea of when I say \"I do,\" he\u0092s thinking, \"Yeah, I\u0092d do her too!\""
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia6_utt6.wav",
+   "speech_s": 4.05,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 4.05,
+   "text": "I love the specifics, the specifics were the best part!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia70_utt6.wav",
+   "speech_s": 6.18,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 7.42,
+   "text": "All right, just, just take the entertainment center, and then when you get home, throw the canoe away!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia72_utt7.wav",
+   "speech_s": 5.7,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 7.05,
+   "text": "All right, y\u0092know what, she\u0092s  gonna think that I\u0092m handing you a credit card, but what I\u0092m really gonna do is hand you "
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia82_utt1.wav",
+   "speech_s": 3.81,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.54,
+   "text": "Oh! Right. Umm, maybe that\u0092s because I didn\u0092t send him an invitation."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia93_utt0.wav",
+   "speech_s": 5.31,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 7.05,
+   "text": "All right, there\u0092s a nuclear holocaust, I\u0092m the last man on Earth. Would you go out with me?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia99_utt4.wav",
+   "speech_s": 3.66,
+   "speaker": "Chandler",
+   "emotion": "neutral",
+   "dur_s": 4.67,
+   "text": "Y\u0092know I was thinking if we had a\u0085a big fight and uh we broke up for a few hours"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia9_utt3.wav",
+   "speech_s": 3.48,
+   "speaker": "Chandler",
+   "emotion": "joy",
+   "dur_s": 4.21,
+   "text": "Can you hold on a moment? I have another call.  I love her."
+  }
+ ],
+ "joey": [
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia10_utt3.wav",
+   "speech_s": 6.0,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 6.09,
+   "text": "Come on man!  Listen so uh, are you gonna squeeze the perps shoes a little bit before he lawyers up?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia1_utt13.wav",
+   "speech_s": 5.82,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 7.34,
+   "text": "Yeah! Yeah! Yeah! Like-like when I\u0092m doing something exciting and I don\u0092t wanna get"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia20_utt0.wav",
+   "speech_s": 4.14,
+   "speaker": "Joey",
+   "emotion": "neutral",
+   "dur_s": 5.63,
+   "text": "Okay, it's a typical New York City apartment. Two girls are just hanging out."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia22_utt13.wav",
+   "speech_s": 7.14,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 7.63,
+   "text": "Whoah, boy, hockey was a big mistake! There was a whole bunch of stuff we could've done tonight!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia24_utt2.wav",
+   "speech_s": 5.13,
+   "speaker": "Joey",
+   "emotion": "sadness",
+   "dur_s": 5.55,
+   "text": "Look he knows he did a terrible thing and I believe him, he\u0092s sorry."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia28_utt2.wav",
+   "speech_s": 3.9,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 5.21,
+   "text": "Man, it must be so cool remembering stuff like that! I don't have any past life memories."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia2_utt2.wav",
+   "speech_s": 4.71,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 4.93,
+   "text": "What are you talkin\u0092 about? I never left you! You\u0092ve always been my agent!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia30_utt8.wav",
+   "speech_s": 5.52,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 5.71,
+   "text": "Yeah, you\u0092re great! Okay, let\u0092s take it from"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia6_utt9.wav",
+   "speech_s": 4.86,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 5.0,
+   "text": "Why would they take away our keys?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia9_utt5.wav",
+   "speech_s": 4.62,
+   "speaker": "Joey",
+   "emotion": "neutral",
+   "dur_s": 4.63,
+   "text": "I just figured y\u0092know, after living with you it\u0092d be an interesting change of pace to have a female roommate, y\u0092know?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia107_utt5.wav",
+   "speech_s": 3.99,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 4.21,
+   "text": "You can come in, but your filter-tipped little buddy has to stay outside!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia111_utt4.wav",
+   "speech_s": 6.09,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 6.67,
+   "text": "When? Today? Some, not a lot."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia119_utt4.wav",
+   "speech_s": 4.65,
+   "speaker": "Joey",
+   "emotion": "sadness",
+   "dur_s": 4.88,
+   "text": "Doesn't matter, I'm never gonna get to meet her anyway."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia124_utt7.wav",
+   "speech_s": 3.87,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 5.25,
+   "text": "Uhh, are you saying that you're not entirely happy about this?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia126_utt4.wav",
+   "speech_s": 6.3,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 7.01,
+   "text": "Are you kidding? I love that guy!  Morning\u0092s here! Morning is here\u0097"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia129_utt5.wav",
+   "speech_s": 3.24,
+   "speaker": "Joey",
+   "emotion": "anger",
+   "dur_s": 4.55,
+   "text": "Wow! Yeah I ah, I gave up a job too."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia12_utt1.wav",
+   "speech_s": 8.07,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 8.88,
+   "text": "Hey! So Estelle lined up a bunch of auditions for me tomorrow and I\u0092ll have my health insurance back in no time."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia17_utt1.wav",
+   "speech_s": 4.05,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 4.04,
+   "text": "Oh umm, my big scene is coming up. Big scene coming up."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia18_utt3.wav",
+   "speech_s": 4.74,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 5.09,
+   "text": "Hey Ross, wouldn't it be great if we could go two straight hours without dropping it?!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia1_utt2.wav",
+   "speech_s": 4.26,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 4.75,
+   "text": "No-no-no-no, no! Who, who were you talking about?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia26_utt11.wav",
+   "speech_s": 3.51,
+   "speaker": "Joey",
+   "emotion": "sadness",
+   "dur_s": 5.59,
+   "text": "Man, this is gonna be kinda weird."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia40_utt8.wav",
+   "speech_s": 3.84,
+   "speaker": "Joey",
+   "emotion": "disgust",
+   "dur_s": 4.05,
+   "text": "Hey, hang up! You get food poisoning just talkin\u0092 to that place."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia50_utt0.wav",
+   "speech_s": 3.63,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 4.13,
+   "text": "Morning! Hey, how\u0092s my favorite genius and my little robot buddy?!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia54_utt0.wav",
+   "speech_s": 8.13,
+   "speaker": "Joey",
+   "emotion": "disgust",
+   "dur_s": 8.55,
+   "text": "One pregnant woman at a time, please! I just want you to be okay."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia6_utt7.wav",
+   "speech_s": 4.89,
+   "speaker": "Joey",
+   "emotion": "neutral",
+   "dur_s": 5.05,
+   "text": "Hey, what about the scene with the kangaroo? Did-did you like that part?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia79_utt0.wav",
+   "speech_s": 4.38,
+   "speaker": "Joey",
+   "emotion": "neutral",
+   "dur_s": 4.67,
+   "text": "No that\u0092s all right. Don\u0092t worry about it."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia80_utt1.wav",
+   "speech_s": 5.82,
+   "speaker": "Joey",
+   "emotion": "joy",
+   "dur_s": 6.34,
+   "text": "I don't know, but one of the extras sure did!  Hey, listen    Rach. Thanks again for coming down to watch my scenes!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia81_utt0.wav",
+   "speech_s": 4.47,
+   "speaker": "Joey",
+   "emotion": "neutral",
+   "dur_s": 4.8,
+   "text": "OK, you've got to promise that you'll never, ever tell Ross that I told you."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia89_utt0.wav",
+   "speech_s": 5.37,
+   "speaker": "Joey",
+   "emotion": "anger",
+   "dur_s": 7.17,
+   "text": "This sucks! I didn\u0092t know I had to stay up all night before I went to this stupid sleep clinic! I\u0092m so tired!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia93_utt3.wav",
+   "speech_s": 4.35,
+   "speaker": "Joey",
+   "emotion": "surprise",
+   "dur_s": 5.38,
+   "text": "Hey, you guys! Take a look at this!  Check this baby out, dug me a hole!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia95_utt17.wav",
+   "speech_s": 5.34,
+   "speaker": "Joey",
+   "emotion": "neutral",
+   "dur_s": 6.38,
+   "text": "Oh, it's easy. Yeah, I-I can do it with anything. Watch uh,  Grandma's chicken salad"
+  }
+ ],
+ "rachel": [
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia11_utt10.wav",
+   "speech_s": 6.24,
+   "speaker": "Rachel",
+   "emotion": "anger",
+   "dur_s": 6.25,
+   "text": "Nooo! Nooooo! You lent me Monica's earrings?! I'm not allowed to borrow her stuff!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia15_utt0.wav",
+   "speech_s": 6.45,
+   "speaker": "Rachel",
+   "emotion": "joy",
+   "dur_s": 9.05,
+   "text": "Thank you.  Oh Joey and look at this crib! It\u0092s so cute!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia26_utt16.wav",
+   "speech_s": 5.19,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 8.13,
+   "text": "Ok, Monica. I just have to know one thing. Did you go with her to"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia28_utt8.wav",
+   "speech_s": 3.6,
+   "speaker": "Rachel",
+   "emotion": "surprise",
+   "dur_s": 4.3,
+   "text": "What?! Joey got a turkey stuck on his head?!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia29_utt3.wav",
+   "speech_s": 3.57,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 4.0,
+   "text": "Oh... that's too bad. Bye bye."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia36_utt9.wav",
+   "speech_s": 4.47,
+   "speaker": "Rachel",
+   "emotion": "surprise",
+   "dur_s": 6.8,
+   "text": "Thank you.  Oww!!!! God!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia40_utt2.wav",
+   "speech_s": 4.23,
+   "speaker": "Rachel",
+   "emotion": "disgust",
+   "dur_s": 4.75,
+   "text": "Oh! Oh, I think I\u0092m gonna throw up a little bit. What did you say?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia41_utt0.wav",
+   "speech_s": 5.22,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 6.01,
+   "text": "Ohh, here you are. I was looking for you before. Joshua\u0092s gone so you and Emily are free to go."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia5_utt3.wav",
+   "speech_s": 4.59,
+   "speaker": "Rachel",
+   "emotion": "anger",
+   "dur_s": 4.59,
+   "text": "Hey, I was doin' great before I found out about you. You think it's easy for me to see you with Julie?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia7_utt3.wav",
+   "speech_s": 4.08,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.13,
+   "text": "No. She\u0092s going to live with us for eight weeks."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia109_utt8.wav",
+   "speech_s": 4.29,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 4.8,
+   "text": "Ugh, you know what makes it so much worse, Ross is all happy in Vermont!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia122_utt2.wav",
+   "speech_s": 3.96,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.09,
+   "text": "Well, that shouldn\u0092t be a problem. I mean I work in fashion and all I meet are eligible straight men."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia126_utt5.wav",
+   "speech_s": 8.7,
+   "speaker": "Rachel",
+   "emotion": "anger",
+   "dur_s": 9.38,
+   "text": "Stop it! I will kill you. I hate the fact that my room is so small."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia130_utt2.wav",
+   "speech_s": 3.48,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 6.88,
+   "text": "Yeah, sure. Umm\u0085here."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia138_utt1.wav",
+   "speech_s": 3.78,
+   "speaker": "Rachel",
+   "emotion": "anger",
+   "dur_s": 4.21,
+   "text": "But, when we were in high school I made out with James Farrell even when I knew that you liked him!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia156_utt2.wav",
+   "speech_s": 3.75,
+   "speaker": "Rachel",
+   "emotion": "surprise",
+   "dur_s": 4.0,
+   "text": "What? Hey wait a minute! Phoebe, how do you even know who the father is?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia180_utt5.wav",
+   "speech_s": 5.13,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 5.21,
+   "text": "Oh not bad. Do you know that feeling when you\u0092re trying to blow a Saint Bernard out your ass?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia182_utt1.wav",
+   "speech_s": 4.74,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 5.09,
+   "text": "I just saw Danny getting on the subway with a girl and he had his arm around her."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia184_utt6.wav",
+   "speech_s": 3.81,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 4.21,
+   "text": "Yeah, it's a real shame you can't make it to that one-woman    show tonight."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia24_utt1.wav",
+   "speech_s": 4.56,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.67,
+   "text": "Look honey, Mark is in fashion okay, I like having a friend that I can share this stuff with."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia34_utt1.wav",
+   "speech_s": 4.38,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.67,
+   "text": "I'm-I'm really warm, so I'm going to be taking off my sweater."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia43_utt1.wav",
+   "speech_s": 4.56,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.63,
+   "text": "Oh, great. Although I did sit down where there wasn\u0092t a chair."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia46_utt6.wav",
+   "speech_s": 5.04,
+   "speaker": "Rachel",
+   "emotion": "anger",
+   "dur_s": 8.26,
+   "text": "Come on apartment! Come on apartment!  Oh! I know queen is high!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia4_utt8.wav",
+   "speech_s": 7.83,
+   "speaker": "Rachel",
+   "emotion": "joy",
+   "dur_s": 8.05,
+   "text": "Oh well, the woman I interviewed with was pretty tough, but y'know thank God Mark coached me, because once I started tal"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia51_utt1.wav",
+   "speech_s": 3.51,
+   "speaker": "Rachel",
+   "emotion": "sadness",
+   "dur_s": 4.75,
+   "text": "Hi. Look um, about what happened earlier..."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia55_utt3.wav",
+   "speech_s": 6.75,
+   "speaker": "Rachel",
+   "emotion": "surprise",
+   "dur_s": 8.59,
+   "text": "You're sister? You're sister's asleep on the couch?  Ohhh! I saw"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia78_utt5.wav",
+   "speech_s": 4.2,
+   "speaker": "Rachel",
+   "emotion": "surprise",
+   "dur_s": 4.84,
+   "text": "Oh my God! Why is he jumping on those women!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia80_utt2.wav",
+   "speech_s": 7.74,
+   "speaker": "Rachel",
+   "emotion": "surprise",
+   "dur_s": 8.51,
+   "text": "Oh, please!Honey, just the fact that you want me here to support    you, I'm...OH MY GOD!Is that Christian Sanders?He's "
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia85_utt4.wav",
+   "speech_s": 6.81,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 7.05,
+   "text": "Well yeah, but then I remembered I started it and there was this pep rally and I was, I was on top of the pyramid but an"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia86_utt3.wav",
+   "speech_s": 4.23,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.84,
+   "text": "Oh, I thought you guys meant marijuana cigarettes, y'know?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia89_utt8.wav",
+   "speech_s": 4.17,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 4.42,
+   "text": "Now, maybe I would have a problem with this if it wasn\u0092t for me and Joshua."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia94_utt4.wav",
+   "speech_s": 5.85,
+   "speaker": "Rachel",
+   "emotion": "disgust",
+   "dur_s": 6.09,
+   "text": "Oh my God!! Ohh, that is it! I\u0092m leaving! You are just a horrible person!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia95_utt14.wav",
+   "speech_s": 8.01,
+   "speaker": "Rachel",
+   "emotion": "neutral",
+   "dur_s": 8.76,
+   "text": "Okay, you're coming with me, and I also told them that if we're still here when they get off that we'll go down to the c"
+  }
+ ],
+ "ross": [
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia10_utt9.wav",
+   "speech_s": 4.56,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 5.34,
+   "text": "Hello! I'm in the front seat, okay? I'm Gary's partner!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia16_utt14.wav",
+   "speech_s": 4.89,
+   "speaker": "Ross",
+   "emotion": "sadness",
+   "dur_s": 6.3,
+   "text": "I\u0092m sorry. Ugh, Pheebs, you were, you were right about her. Y\u0092know, she"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia19_utt4.wav",
+   "speech_s": 4.74,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 5.05,
+   "text": "My son is being born, and I should be in there, you know, instead of stuck in a closet with you."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia1_utt0.wav",
+   "speech_s": 5.85,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 6.25,
+   "text": "Or! Or, we could go to the bank, close our accounts and cut them off at the source."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia21_utt3.wav",
+   "speech_s": 4.11,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 4.13,
+   "text": "I just wanna clarify this: are you outing Mr. Peanut?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia22_utt6.wav",
+   "speech_s": 4.32,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 4.38,
+   "text": "Little louder, okay, I think there's a man on the twelfth floor in a coma that didn't quite hear you..."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia23_utt2.wav",
+   "speech_s": 5.88,
+   "speaker": "Ross",
+   "emotion": "sadness",
+   "dur_s": 6.8,
+   "text": "My marriage, I think my marriage is um, is kinda over."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia4_utt4.wav",
+   "speech_s": 6.48,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 7.17,
+   "text": "Perhaps,  perhaps Dr. Chester Stock\u0092s musings on the Smiledon Californicus?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia5_utt6.wav",
+   "speech_s": 4.77,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 4.92,
+   "text": "It, it's too late, I'm with somebody else, I'm happy."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/dev_splits_complete/dia7_utt7.wav",
+   "speech_s": 4.35,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 4.34,
+   "text": "I mean she\u0092s a very nice woman, but there is no way we can take eight weeks of her."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia100_utt5.wav",
+   "speech_s": 3.99,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 4.55,
+   "text": "Just showing you my run-of-the-mill-slice-it-right-off third nipple."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia103_utt1.wav",
+   "speech_s": 8.31,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 9.09,
+   "text": "It\u0092s from France\u0085In Europe\u0085Western Europe. Y\u0092know umm, a few years ago I actually was backpacking across Western Europe."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia106_utt0.wav",
+   "speech_s": 4.29,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 4.46,
+   "text": "Um uh\u0085We\u0092re-we\u0092re just having this baby together but uh, uh that\u0092s all."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia112_utt4.wav",
+   "speech_s": 7.23,
+   "speaker": "Ross",
+   "emotion": "disgust",
+   "dur_s": 7.51,
+   "text": "The big deal is I don\u0092t want naked, greasy strangers in my apartment when I want to kick back with a puzzle\u0097beer! Cold b"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia113_utt5.wav",
+   "speech_s": 5.04,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 5.05,
+   "text": "I think it has to do with my working late."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia116_utt1.wav",
+   "speech_s": 5.61,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 5.92,
+   "text": "I mean, your Dad tells me that you get a couple of days off school, and you, you ah, don\u0092t have to sell those cookies an"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia14_utt2.wav",
+   "speech_s": 6.39,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 8.88,
+   "text": "But that\u0092s not enough. So\u0085 So\u0085here\u0092s a key to my apartment."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia15_utt2.wav",
+   "speech_s": 5.52,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 6.88,
+   "text": "Yes, please!  So, what's going on?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia18_utt0.wav",
+   "speech_s": 4.29,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 4.38,
+   "text": "Hey, you wanna get something to eat or uh, do you wanna see how long we can throw this ball back and forth? Huh?"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia29_utt13.wav",
+   "speech_s": 6.15,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 8.17,
+   "text": "Oh, that's not what you want..."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia30_utt7.wav",
+   "speech_s": 6.9,
+   "speaker": "Ross",
+   "emotion": "fear",
+   "dur_s": 8.38,
+   "text": "That\u0092s funny. Umm\u0085.  It\u0092s not funny."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia32_utt12.wav",
+   "speech_s": 5.85,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 6.3,
+   "text": "It's your moral obligation, as a friend, as a woman, I think it's a feminist issue!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia35_utt5.wav",
+   "speech_s": 5.46,
+   "speaker": "Ross",
+   "emotion": "joy",
+   "dur_s": 6.38,
+   "text": "Oh hey, don\u0092t thank me, thank yourself. You\u0092re the one who faced her fears and ultimately overcame them."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia36_utt1.wav",
+   "speech_s": 4.17,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 6.46,
+   "text": "I mean, you two are-are my\u0085 I mean, I\u0092m lucky to have just one good"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia38_utt5.wav",
+   "speech_s": 4.2,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 4.38,
+   "text": "No-no, I took them from the hotel lobby."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia49_utt1.wav",
+   "speech_s": 4.14,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 4.17,
+   "text": "I mean technically it\u0092s-it\u0092s not against the rules or anything, but it is frowned upon."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia4_utt11.wav",
+   "speech_s": 6.99,
+   "speaker": "Ross",
+   "emotion": "sadness",
+   "dur_s": 9.3,
+   "text": "Listen, I\u0092m ah, I\u0092m sorry I\u0092ve been so crazy and jealous and, it\u0092s just that I like you a lot, so..."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia51_utt6.wav",
+   "speech_s": 5.13,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 5.13,
+   "text": "Yeah, well excuse me for wanting to be with my girlfriend on our anniversary, boy what an ass am I."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia63_utt2.wav",
+   "speech_s": 5.22,
+   "speaker": "Ross",
+   "emotion": "joy",
+   "dur_s": 5.92,
+   "text": "No. Rachel hooked me up with a tux! But not just any tux, Batman\u0092s tux!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia76_utt2.wav",
+   "speech_s": 5.97,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 5.96,
+   "text": "Listen about that, the whole uh, who came on to who thing really doesn\u0092t matter."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia7_utt1.wav",
+   "speech_s": 4.08,
+   "speaker": "Ross",
+   "emotion": "anger",
+   "dur_s": 4.09,
+   "text": "What?! What is with everybody? It\u0092s Thanksgiving, not...Truth-Day!"
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia87_utt9.wav",
+   "speech_s": 4.2,
+   "speaker": "Ross",
+   "emotion": "joy",
+   "dur_s": 5.09,
+   "text": "What a beautiful story. Hey, I'm fine by the way."
+  },
+  {
+   "path": "/root/.hermes/meld_raw/extracted/train_splits/dia9_utt10.wav",
+   "speech_s": 6.72,
+   "speaker": "Ross",
+   "emotion": "neutral",
+   "dur_s": 6.8,
+   "text": "Even though you do do a good Bob impression, I'm thinkin' when she sees you tomorow, she's probably gonna realize, \"Hey,"
+  }
+ ]
+}
