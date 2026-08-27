@@ -92,6 +92,22 @@ a voice name or prompt description:
 - **`elevenlabs-ivc` (production path).** Instant Voice Cloning: upload the
   curated reference clips once (`voices/add`), then TTS with the cloned
   `voice_id` (`eleven_multilingual_v2`). Provenance sidecar per generation.
+- **`chatterbox-local` (zero-API-spend local path, MEASURED Aug 27).**
+  Chatterbox TTS (Resemble AI, code MIT). Self-hosted — the reference audio
+  (grief recordings) never leaves our boundary; no upload step, no
+  clone-creation step: every generation is conditioned on one curated
+  reference clip (`audio_prompt_path`). Variants in `chatterbox-tts` 0.1.7:
+  `std` (ResembleAI/chatterbox, 500M) and `turbo`
+  (ResembleAI/chatterbox-turbo, 350M); note turbo accepts but **ignores**
+  `exaggeration`/`cfg_weight` (runtime warning, 0.1.7) — provenance records
+  `controls_applied: false` accordingly. Every output carries Resemble's
+  built-in Perth watermark. Install:
+  `uv pip install chatterbox-tts` (+ torch/torchaudio; pulls torch 2.6.0).
+  **Measured smoke (vault spkr-1089, open-licence LibriSpeech gold set):**
+  turbo on 8-core CPU, 47.9 s for one sentence, gate score **0.9263** vs
+  threshold 0.8323 → **PASS** and registered (first gate-passed clone
+  output, zero API spend). internal_only sets still require
+  `--benchmark-only`.
 - **`xtts-local` / `openvoice-local` (zero-API-spend R&D path).** Local
   cloning adapters — XTTS v2 (CPML licence — benchmarking only, no
   commercial use) and OpenVoice v2 (MIT). Documented stubs in v1: the
@@ -250,9 +266,15 @@ gate→registry path, zero generation).
   limits)** — swap the embedder to speechbrain ECAPA-TDNN behind the same
   `embed_wav` interface and recalibrate on the MELD gold set (follow-up
   issue; Joey↔Chandler on expressive TV audio is the hard case).
-- **Local clone adapters are documented stubs** — model installs are
-  follow-ups only if zero-spend local cloning is wanted for benchmarking
-  (XTTS CPML: benchmarking only, no commercial use).
+- **Local clone adapters: chatterbox-local is real and measured; XTTS /
+  OpenVoice remain documented stubs** — chatterbox-turbo gate-passed on the
+  spkr-1089 gold set (0.9263 ≥ 0.8323, CPU 47.9 s/sentence, zero spend);
+  XTTS CPML is benchmarking-only, no commercial use. One measured sentence
+  is a smoke datapoint, not a clone-output gold set — n≈20 clone outputs
+  across voices/domains are still required before promotion (§3).
+- **Chatterbox-turbo ignores expression controls (0.1.7)** — provenance
+  logs `controls_applied: false`; if expression control matters for
+  persona tuning, `std` is the variant to benchmark next (500M, slower).
 - **Kestra productionization** (vault-media flow replacement: collect →
   curate → clone → gate → register) is a follow-up once the gate config is
   promoted from R&D to production.

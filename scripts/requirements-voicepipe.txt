@@ -6,3 +6,10 @@ torch>=2.1
 resemblyzer>=0.1.1
 # resemblyzer pulls librosa + webrtcvad (webrtcvad needs a C compiler).
 # ffmpeg (system) is required for audio decode.
+#
+# Optional — chatterbox-local clone adapter (docs §2). Install separately:
+# chatterbox-tts pins torch==2.6.0 (CUDA build works CPU-only) and pulls
+# transformers etc., so keep it out of the base gate/calibration env:
+#   uv pip install --python <venv>/bin/python chatterbox-tts
+# chatterbox-tts>=0.1.7
+

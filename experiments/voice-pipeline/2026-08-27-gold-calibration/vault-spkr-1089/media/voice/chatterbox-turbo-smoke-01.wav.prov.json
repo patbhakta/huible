@@ -1,0 +1,23 @@
+{
+  "model": "chatterbox-local",
+  "model_version": "ResembleAI/chatterbox-turbo turbo (chatterbox-tts 0.1.7)",
+  "references_used": [
+    "vaudio_20260827_0b1785"
+  ],
+  "device": "cpu",
+  "controls": {
+    "requested": {
+      "exaggeration": 0.5,
+      "cfg_weight": 0.5
+    },
+    "controls_applied": false,
+    "note": "turbo ignores exaggeration/cfg_weight (chatterbox-tts 0.1.7 runtime warning)"
+  },
+  "watermark": "perth-implicit (built into every Chatterbox output)",
+  "privacy": "self-hosted \u2014 reference audio never leaves our boundary",
+  "text": "It was a bright cold day in April, and the clocks were striking thirteen.",
+  "endpoint": "chatterbox-local",
+  "latency_s": 47.9,
+  "bytes": 213198,
+  "generated_at": "2026-08-27T23:58:50+00:00"
+}
