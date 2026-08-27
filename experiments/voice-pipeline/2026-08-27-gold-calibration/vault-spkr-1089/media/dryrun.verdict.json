@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "score": 0.857,
+  "threshold": 0.8323,
+  "best_ref": "vaudio_20260827_0b1785",
+  "per_ref": {
+    "vaudio_20260827_0b1785": 0.857,
+    "vaudio_20260827_6bc58a": 0.8557,
+    "vaudio_20260827_62fa78": 0.8475
+  },
+  "quality": {
+    "duration_s": 4.41,
+    "clipping_frac": 0.0,
+    "rms": 0.07378,
+    "speech_s": 3.9
+  },
+  "audio": "/root/repos/huible/experiments/voice-pipeline/2026-08-27-gold-calibration/vault-spkr-1089/media/voice/dryrun-hold-1089-09.wav",
+  "sha256": "a2f7cf27e284947bd4eb5778b953898827fd453707131f95b2215f0023285eb0",
+  "gate": "resemblyzer-256d-cosine-max",
+  "checked_at": "2026-08-27T22:08:37+00:00"
+}

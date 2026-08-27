@@ -1,0 +1,8 @@
+# Reference-grounded voice pipeline (HU-2151) — see docs/IDENTITY_VOICE_PIPELINE.md
+# torch must come from the CPU wheel index to avoid the ~2.5 GB CUDA build:
+#   uv pip install --python .venv/bin/python -r scripts/requirements-voicepipe.txt
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.1
+resemblyzer>=0.1.1
+# resemblyzer pulls librosa + webrtcvad (webrtcvad needs a C compiler).
+# ffmpeg (system) is required for audio decode.

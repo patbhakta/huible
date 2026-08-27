@@ -1,0 +1,41 @@
+{
+  "gate": "resemblyzer-256d-cosine-max",
+  "threshold": 0.8323,
+  "passed": true,
+  "production_safe": false,
+  "internal_only": false,
+  "calibrated_at": "2026-08-27T22:07:49+00:00",
+  "gold_set": {
+    "speakers": [
+      "spkr-1089",
+      "spkr-1188",
+      "spkr-121",
+      "spkr-1221"
+    ],
+    "pos_pairs": 32,
+    "neg_pairs": 96,
+    "pos_min": 0.8403,
+    "pos_mean": 0.9301,
+    "neg_max": 0.8243,
+    "neg_mean": 0.6012,
+    "separated": true,
+    "tpr": 1.0,
+    "fpr": 0.0,
+    "protocol": "held-out same-speaker positives (zero-spend proxy), cross-speaker negatives",
+    "promotion_requires": "clone-output gold set + consented human gold set (~50 clips/class)"
+  },
+  "references_used": [
+    "ref-1089-01.wav",
+    "ref-1089-02.wav",
+    "ref-1089-03.wav",
+    "ref-1188-01.wav",
+    "ref-1188-02.wav",
+    "ref-1188-03.wav",
+    "ref-121-01.wav",
+    "ref-121-02.wav",
+    "ref-121-03.wav",
+    "ref-1221-01.wav",
+    "ref-1221-02.wav",
+    "ref-1221-03.wav"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "updated_at": "2026-08-27T22:07:24+00:00",
+  "records": [
+    {
+      "clip_id": "vaudio_20260827_0b1785",
+      "path": "references/voice-raw/0b1785dba56f.wav",
+      "sha256": "0b1785dba56f22af426ccb25d318f7e103558fd40e1c3ab064b455dba2afae12",
+      "duration_s": 10.44,
+      "source": "licensed",
+      "rights": {
+        "basis": "license",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": "OpenSLR12 LibriSpeech test-clean \u2014 open licence (openslr.org/12), R&D gold calibration",
+        "corpus_ref": null,
+        "internal_only": false
+      },
+      "collected_at": "2026-08-27T22:07:24+00:00",
+      "notes": "R&D gate calibration vault (HU-2151); not a client persona"
+    },
+    {
+      "clip_id": "vaudio_20260827_6bc58a",
+      "path": "references/voice-raw/6bc58a4efdf2.wav",
+      "sha256": "6bc58a4efdf20daac252b6b1502632601a71efe0308f6757dc1eda34891a7e4f",
+      "duration_s": 6.62,
+      "source": "licensed",
+      "rights": {
+        "basis": "license",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": "OpenSLR12 LibriSpeech test-clean \u2014 open licence (openslr.org/12), R&D gold calibration",
+        "corpus_ref": null,
+        "internal_only": false
+      },
+      "collected_at": "2026-08-27T22:07:24+00:00",
+      "notes": "R&D gate calibration vault (HU-2151); not a client persona"
+    },
+    {
+      "clip_id": "vaudio_20260827_62fa78",
+      "path": "references/voice-raw/62fa78c06e5a.wav",
+      "sha256": "62fa78c06e5a74d08d38ab3e899eb3115810a4f33769389a2c6b498f01d5deb1",
+      "duration_s": 5.22,
+      "source": "licensed",
+      "rights": {
+        "basis": "license",
+        "consent_by": null,
+        "provided_by": null,
+        "license_ref": "OpenSLR12 LibriSpeech test-clean \u2014 open licence (openslr.org/12), R&D gold calibration",
+        "corpus_ref": null,
+        "internal_only": false
+      },
+      "collected_at": "2026-08-27T22:07:24+00:00",
+      "notes": "R&D gate calibration vault (HU-2151); not a client persona"
+    }
+  ],
+  "internal_only": false
+}

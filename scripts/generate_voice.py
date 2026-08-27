@@ -22,7 +22,6 @@ import os
 import shutil
 import socket
 import sys
-import urllib.request
 
 
 def _key_from(names):
@@ -107,7 +106,17 @@ def main():
     ap.add_argument("--voice", default="Charon")
     ap.add_argument("--style-prompt", default="")
     ap.add_argument("--model", default="gemini-3.1-flash-tts-preview")
+    ap.add_argument("--persona", help="persona id — if set, refuses (prebuilt voices "
+                                      "can never serve persona assets; use voice_clone.py)")
     args = ap.parse_args()
+
+    if args.persona:
+        # HU-2151 spend rule / Pat verdict Aug 27: a prebuilt voice "doesn't
+        # sound anything like" the person — persona voice must come from
+        # reference-audio cloning through the gated pipeline.
+        print(json.dumps({"ok": False, "error": "prebuilt voices cannot serve persona assets "
+                                                "(HU-2151) — use scripts/voice_clone.py"}))
+        sys.exit(1)
 
     api_key = _key_from(("GEMINI_API_KEY",))
     if not api_key:

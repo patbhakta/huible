@@ -1,0 +1,128 @@
+{"speaker": "spkr-1089", "clip": "hold-1089-04.wav", "label": "pos", "ref-1089-01.wav": 0.8759, "ref-1089-02.wav": 0.8932, "ref-1089-03.wav": 0.8481, "score": 0.8932}
+{"speaker": "spkr-1089", "clip": "hold-1089-05.wav", "label": "pos", "ref-1089-01.wav": 0.9224, "ref-1089-02.wav": 0.9302, "ref-1089-03.wav": 0.8447, "score": 0.9302}
+{"speaker": "spkr-1089", "clip": "hold-1089-06.wav", "label": "pos", "ref-1089-01.wav": 0.8925, "ref-1089-02.wav": 0.8964, "ref-1089-03.wav": 0.8119, "score": 0.8964}
+{"speaker": "spkr-1089", "clip": "hold-1089-07.wav", "label": "pos", "ref-1089-01.wav": 0.9081, "ref-1089-02.wav": 0.9219, "ref-1089-03.wav": 0.8436, "score": 0.9219}
+{"speaker": "spkr-1089", "clip": "hold-1089-08.wav", "label": "pos", "ref-1089-01.wav": 0.912, "ref-1089-02.wav": 0.9205, "ref-1089-03.wav": 0.8614, "score": 0.9205}
+{"speaker": "spkr-1089", "clip": "unseen-1089-09.wav", "label": "pos", "ref-1089-01.wav": 0.857, "ref-1089-02.wav": 0.8557, "ref-1089-03.wav": 0.8475, "score": 0.857}
+{"speaker": "spkr-1089", "clip": "unseen-1089-10.wav", "label": "pos", "ref-1089-01.wav": 0.9495, "ref-1089-02.wav": 0.9221, "ref-1089-03.wav": 0.8489, "score": 0.9495}
+{"speaker": "spkr-1089", "clip": "unseen-1089-11.wav", "label": "pos", "ref-1089-01.wav": 0.9129, "ref-1089-02.wav": 0.9253, "ref-1089-03.wav": 0.8601, "score": 0.9253}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "hold-1188-04.wav", "label": "neg", "ref-1089-01.wav": 0.7562, "ref-1089-02.wav": 0.7463, "ref-1089-03.wav": 0.7111, "score": 0.7562}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "hold-1188-05.wav", "label": "neg", "ref-1089-01.wav": 0.7645, "ref-1089-02.wav": 0.7631, "ref-1089-03.wav": 0.7424, "score": 0.7645}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "hold-1188-06.wav", "label": "neg", "ref-1089-01.wav": 0.7935, "ref-1089-02.wav": 0.7858, "ref-1089-03.wav": 0.7677, "score": 0.7935}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "hold-1188-07.wav", "label": "neg", "ref-1089-01.wav": 0.7426, "ref-1089-02.wav": 0.7489, "ref-1089-03.wav": 0.7112, "score": 0.7489}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "hold-1188-08.wav", "label": "neg", "ref-1089-01.wav": 0.7465, "ref-1089-02.wav": 0.743, "ref-1089-03.wav": 0.707, "score": 0.7465}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "unseen-1188-09.wav", "label": "neg", "ref-1089-01.wav": 0.7437, "ref-1089-02.wav": 0.7487, "ref-1089-03.wav": 0.7172, "score": 0.7487}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "unseen-1188-10.wav", "label": "neg", "ref-1089-01.wav": 0.7313, "ref-1089-02.wav": 0.7231, "ref-1089-03.wav": 0.702, "score": 0.7313}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1089", "clip": "unseen-1188-11.wav", "label": "neg", "ref-1089-01.wav": 0.7526, "ref-1089-02.wav": 0.7377, "ref-1089-03.wav": 0.7258, "score": 0.7526}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "hold-121-04.wav", "label": "neg", "ref-1089-01.wav": 0.6007, "ref-1089-02.wav": 0.5753, "ref-1089-03.wav": 0.6092, "score": 0.6092}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "hold-121-05.wav", "label": "neg", "ref-1089-01.wav": 0.5864, "ref-1089-02.wav": 0.5074, "ref-1089-03.wav": 0.5831, "score": 0.5864}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "hold-121-06.wav", "label": "neg", "ref-1089-01.wav": 0.57, "ref-1089-02.wav": 0.5263, "ref-1089-03.wav": 0.6234, "score": 0.6234}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "hold-121-07.wav", "label": "neg", "ref-1089-01.wav": 0.5146, "ref-1089-02.wav": 0.4625, "ref-1089-03.wav": 0.5789, "score": 0.5789}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "hold-121-08.wav", "label": "neg", "ref-1089-01.wav": 0.5943, "ref-1089-02.wav": 0.5526, "ref-1089-03.wav": 0.5828, "score": 0.5943}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "unseen-121-09.wav", "label": "neg", "ref-1089-01.wav": 0.6058, "ref-1089-02.wav": 0.5631, "ref-1089-03.wav": 0.6381, "score": 0.6381}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "unseen-121-10.wav", "label": "neg", "ref-1089-01.wav": 0.5599, "ref-1089-02.wav": 0.5007, "ref-1089-03.wav": 0.5941, "score": 0.5941}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1089", "clip": "unseen-121-11.wav", "label": "neg", "ref-1089-01.wav": 0.5672, "ref-1089-02.wav": 0.5369, "ref-1089-03.wav": 0.6263, "score": 0.6263}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "hold-1221-04.wav", "label": "neg", "ref-1089-01.wav": 0.5315, "ref-1089-02.wav": 0.499, "ref-1089-03.wav": 0.5618, "score": 0.5618}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "hold-1221-05.wav", "label": "neg", "ref-1089-01.wav": 0.5593, "ref-1089-02.wav": 0.509, "ref-1089-03.wav": 0.5794, "score": 0.5794}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "hold-1221-06.wav", "label": "neg", "ref-1089-01.wav": 0.5493, "ref-1089-02.wav": 0.5122, "ref-1089-03.wav": 0.5853, "score": 0.5853}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "hold-1221-07.wav", "label": "neg", "ref-1089-01.wav": 0.5418, "ref-1089-02.wav": 0.4967, "ref-1089-03.wav": 0.574, "score": 0.574}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "hold-1221-08.wav", "label": "neg", "ref-1089-01.wav": 0.5367, "ref-1089-02.wav": 0.4998, "ref-1089-03.wav": 0.5769, "score": 0.5769}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "unseen-1221-09.wav", "label": "neg", "ref-1089-01.wav": 0.5437, "ref-1089-02.wav": 0.4996, "ref-1089-03.wav": 0.5827, "score": 0.5827}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "unseen-1221-10.wav", "label": "neg", "ref-1089-01.wav": 0.5512, "ref-1089-02.wav": 0.5108, "ref-1089-03.wav": 0.5791, "score": 0.5791}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1089", "clip": "unseen-1221-11.wav", "label": "neg", "ref-1089-01.wav": 0.5482, "ref-1089-02.wav": 0.5074, "ref-1089-03.wav": 0.5891, "score": 0.5891}
+{"speaker": "spkr-1188", "clip": "hold-1188-04.wav", "label": "pos", "ref-1188-01.wav": 0.9584, "ref-1188-02.wav": 0.9321, "ref-1188-03.wav": 0.9642, "score": 0.9642}
+{"speaker": "spkr-1188", "clip": "hold-1188-05.wav", "label": "pos", "ref-1188-01.wav": 0.9254, "ref-1188-02.wav": 0.8957, "ref-1188-03.wav": 0.9605, "score": 0.9605}
+{"speaker": "spkr-1188", "clip": "hold-1188-06.wav", "label": "pos", "ref-1188-01.wav": 0.897, "ref-1188-02.wav": 0.8746, "ref-1188-03.wav": 0.9454, "score": 0.9454}
+{"speaker": "spkr-1188", "clip": "hold-1188-07.wav", "label": "pos", "ref-1188-01.wav": 0.9343, "ref-1188-02.wav": 0.8798, "ref-1188-03.wav": 0.9525, "score": 0.9525}
+{"speaker": "spkr-1188", "clip": "hold-1188-08.wav", "label": "pos", "ref-1188-01.wav": 0.9531, "ref-1188-02.wav": 0.9128, "ref-1188-03.wav": 0.9409, "score": 0.9531}
+{"speaker": "spkr-1188", "clip": "unseen-1188-09.wav", "label": "pos", "ref-1188-01.wav": 0.9545, "ref-1188-02.wav": 0.931, "ref-1188-03.wav": 0.9566, "score": 0.9566}
+{"speaker": "spkr-1188", "clip": "unseen-1188-10.wav", "label": "pos", "ref-1188-01.wav": 0.9491, "ref-1188-02.wav": 0.9316, "ref-1188-03.wav": 0.9278, "score": 0.9491}
+{"speaker": "spkr-1188", "clip": "unseen-1188-11.wav", "label": "pos", "ref-1188-01.wav": 0.9315, "ref-1188-02.wav": 0.9141, "ref-1188-03.wav": 0.959, "score": 0.959}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "hold-1089-04.wav", "label": "neg", "ref-1188-01.wav": 0.7231, "ref-1188-02.wav": 0.7051, "ref-1188-03.wav": 0.81, "score": 0.81}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "hold-1089-05.wav", "label": "neg", "ref-1188-01.wav": 0.6644, "ref-1188-02.wav": 0.6448, "ref-1188-03.wav": 0.7677, "score": 0.7677}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "hold-1089-06.wav", "label": "neg", "ref-1188-01.wav": 0.6622, "ref-1188-02.wav": 0.6458, "ref-1188-03.wav": 0.7428, "score": 0.7428}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "hold-1089-07.wav", "label": "neg", "ref-1188-01.wav": 0.7609, "ref-1188-02.wav": 0.7479, "ref-1188-03.wav": 0.8243, "score": 0.8243}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "hold-1089-08.wav", "label": "neg", "ref-1188-01.wav": 0.696, "ref-1188-02.wav": 0.6952, "ref-1188-03.wav": 0.7899, "score": 0.7899}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "unseen-1089-09.wav", "label": "neg", "ref-1188-01.wav": 0.7011, "ref-1188-02.wav": 0.705, "ref-1188-03.wav": 0.7729, "score": 0.7729}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "unseen-1089-10.wav", "label": "neg", "ref-1188-01.wav": 0.6919, "ref-1188-02.wav": 0.6562, "ref-1188-03.wav": 0.7908, "score": 0.7908}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1188", "clip": "unseen-1089-11.wav", "label": "neg", "ref-1188-01.wav": 0.7386, "ref-1188-02.wav": 0.7232, "ref-1188-03.wav": 0.803, "score": 0.803}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "hold-121-04.wav", "label": "neg", "ref-1188-01.wav": 0.5045, "ref-1188-02.wav": 0.4909, "ref-1188-03.wav": 0.5345, "score": 0.5345}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "hold-121-05.wav", "label": "neg", "ref-1188-01.wav": 0.4988, "ref-1188-02.wav": 0.5159, "ref-1188-03.wav": 0.5217, "score": 0.5217}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "hold-121-06.wav", "label": "neg", "ref-1188-01.wav": 0.4894, "ref-1188-02.wav": 0.4939, "ref-1188-03.wav": 0.5184, "score": 0.5184}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "hold-121-07.wav", "label": "neg", "ref-1188-01.wav": 0.4046, "ref-1188-02.wav": 0.4028, "ref-1188-03.wav": 0.4424, "score": 0.4424}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "hold-121-08.wav", "label": "neg", "ref-1188-01.wav": 0.4861, "ref-1188-02.wav": 0.4682, "ref-1188-03.wav": 0.5061, "score": 0.5061}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "unseen-121-09.wav", "label": "neg", "ref-1188-01.wav": 0.5116, "ref-1188-02.wav": 0.4991, "ref-1188-03.wav": 0.5261, "score": 0.5261}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "unseen-121-10.wav", "label": "neg", "ref-1188-01.wav": 0.4459, "ref-1188-02.wav": 0.4474, "ref-1188-03.wav": 0.4828, "score": 0.4828}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1188", "clip": "unseen-121-11.wav", "label": "neg", "ref-1188-01.wav": 0.4358, "ref-1188-02.wav": 0.4319, "ref-1188-03.wav": 0.5019, "score": 0.5019}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "hold-1221-04.wav", "label": "neg", "ref-1188-01.wav": 0.549, "ref-1188-02.wav": 0.5581, "ref-1188-03.wav": 0.5536, "score": 0.5581}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "hold-1221-05.wav", "label": "neg", "ref-1188-01.wav": 0.5418, "ref-1188-02.wav": 0.5416, "ref-1188-03.wav": 0.5296, "score": 0.5418}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "hold-1221-06.wav", "label": "neg", "ref-1188-01.wav": 0.5511, "ref-1188-02.wav": 0.5542, "ref-1188-03.wav": 0.5576, "score": 0.5576}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "hold-1221-07.wav", "label": "neg", "ref-1188-01.wav": 0.5138, "ref-1188-02.wav": 0.5026, "ref-1188-03.wav": 0.4982, "score": 0.5138}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "hold-1221-08.wav", "label": "neg", "ref-1188-01.wav": 0.507, "ref-1188-02.wav": 0.5039, "ref-1188-03.wav": 0.5003, "score": 0.507}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "unseen-1221-09.wav", "label": "neg", "ref-1188-01.wav": 0.5099, "ref-1188-02.wav": 0.5086, "ref-1188-03.wav": 0.528, "score": 0.528}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "unseen-1221-10.wav", "label": "neg", "ref-1188-01.wav": 0.5392, "ref-1188-02.wav": 0.5341, "ref-1188-03.wav": 0.5439, "score": 0.5439}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-1188", "clip": "unseen-1221-11.wav", "label": "neg", "ref-1188-01.wav": 0.565, "ref-1188-02.wav": 0.5571, "ref-1188-03.wav": 0.575, "score": 0.575}
+{"speaker": "spkr-121", "clip": "hold-121-04.wav", "label": "pos", "ref-121-01.wav": 0.9042, "ref-121-02.wav": 0.9114, "ref-121-03.wav": 0.8115, "score": 0.9114}
+{"speaker": "spkr-121", "clip": "hold-121-05.wav", "label": "pos", "ref-121-01.wav": 0.8904, "ref-121-02.wav": 0.8455, "ref-121-03.wav": 0.7273, "score": 0.8904}
+{"speaker": "spkr-121", "clip": "hold-121-06.wav", "label": "pos", "ref-121-01.wav": 0.9116, "ref-121-02.wav": 0.8612, "ref-121-03.wav": 0.833, "score": 0.9116}
+{"speaker": "spkr-121", "clip": "hold-121-07.wav", "label": "pos", "ref-121-01.wav": 0.8513, "ref-121-02.wav": 0.8723, "ref-121-03.wav": 0.7854, "score": 0.8723}
+{"speaker": "spkr-121", "clip": "hold-121-08.wav", "label": "pos", "ref-121-01.wav": 0.9268, "ref-121-02.wav": 0.8894, "ref-121-03.wav": 0.806, "score": 0.9268}
+{"speaker": "spkr-121", "clip": "unseen-121-09.wav", "label": "pos", "ref-121-01.wav": 0.9199, "ref-121-02.wav": 0.9009, "ref-121-03.wav": 0.8671, "score": 0.9199}
+{"speaker": "spkr-121", "clip": "unseen-121-10.wav", "label": "pos", "ref-121-01.wav": 0.8303, "ref-121-02.wav": 0.8554, "ref-121-03.wav": 0.794, "score": 0.8554}
+{"speaker": "spkr-121", "clip": "unseen-121-11.wav", "label": "pos", "ref-121-01.wav": 0.8403, "ref-121-02.wav": 0.8403, "ref-121-03.wav": 0.8252, "score": 0.8403}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "hold-1089-04.wav", "label": "neg", "ref-121-01.wav": 0.6637, "ref-121-02.wav": 0.6235, "ref-121-03.wav": 0.5778, "score": 0.6637}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "hold-1089-05.wav", "label": "neg", "ref-121-01.wav": 0.63, "ref-121-02.wav": 0.597, "ref-121-03.wav": 0.5446, "score": 0.63}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "hold-1089-06.wav", "label": "neg", "ref-121-01.wav": 0.6429, "ref-121-02.wav": 0.6266, "ref-121-03.wav": 0.6064, "score": 0.6429}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "hold-1089-07.wav", "label": "neg", "ref-121-01.wav": 0.6335, "ref-121-02.wav": 0.598, "ref-121-03.wav": 0.5983, "score": 0.6335}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "hold-1089-08.wav", "label": "neg", "ref-121-01.wav": 0.6027, "ref-121-02.wav": 0.5905, "ref-121-03.wav": 0.5641, "score": 0.6027}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "unseen-1089-09.wav", "label": "neg", "ref-121-01.wav": 0.6147, "ref-121-02.wav": 0.5667, "ref-121-03.wav": 0.5647, "score": 0.6147}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "unseen-1089-10.wav", "label": "neg", "ref-121-01.wav": 0.5907, "ref-121-02.wav": 0.5568, "ref-121-03.wav": 0.5019, "score": 0.5907}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-121", "clip": "unseen-1089-11.wav", "label": "neg", "ref-121-01.wav": 0.5885, "ref-121-02.wav": 0.5519, "ref-121-03.wav": 0.5399, "score": 0.5885}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "hold-1188-04.wav", "label": "neg", "ref-121-01.wav": 0.5245, "ref-121-02.wav": 0.4687, "ref-121-03.wav": 0.501, "score": 0.5245}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "hold-1188-05.wav", "label": "neg", "ref-121-01.wav": 0.5542, "ref-121-02.wav": 0.5113, "ref-121-03.wav": 0.5395, "score": 0.5542}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "hold-1188-06.wav", "label": "neg", "ref-121-01.wav": 0.5668, "ref-121-02.wav": 0.5171, "ref-121-03.wav": 0.5434, "score": 0.5668}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "hold-1188-07.wav", "label": "neg", "ref-121-01.wav": 0.5191, "ref-121-02.wav": 0.4711, "ref-121-03.wav": 0.5012, "score": 0.5191}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "hold-1188-08.wav", "label": "neg", "ref-121-01.wav": 0.5108, "ref-121-02.wav": 0.4545, "ref-121-03.wav": 0.5046, "score": 0.5108}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "unseen-1188-09.wav", "label": "neg", "ref-121-01.wav": 0.5311, "ref-121-02.wav": 0.4794, "ref-121-03.wav": 0.521, "score": 0.5311}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "unseen-1188-10.wav", "label": "neg", "ref-121-01.wav": 0.5072, "ref-121-02.wav": 0.461, "ref-121-03.wav": 0.4904, "score": 0.5072}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-121", "clip": "unseen-1188-11.wav", "label": "neg", "ref-121-01.wav": 0.5417, "ref-121-02.wav": 0.5088, "ref-121-03.wav": 0.5257, "score": 0.5417}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "hold-1221-04.wav", "label": "neg", "ref-121-01.wav": 0.5386, "ref-121-02.wav": 0.5814, "ref-121-03.wav": 0.5371, "score": 0.5814}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "hold-1221-05.wav", "label": "neg", "ref-121-01.wav": 0.5781, "ref-121-02.wav": 0.5786, "ref-121-03.wav": 0.5322, "score": 0.5786}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "hold-1221-06.wav", "label": "neg", "ref-121-01.wav": 0.554, "ref-121-02.wav": 0.5897, "ref-121-03.wav": 0.5408, "score": 0.5897}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "hold-1221-07.wav", "label": "neg", "ref-121-01.wav": 0.5832, "ref-121-02.wav": 0.61, "ref-121-03.wav": 0.5763, "score": 0.61}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "hold-1221-08.wav", "label": "neg", "ref-121-01.wav": 0.5924, "ref-121-02.wav": 0.6517, "ref-121-03.wav": 0.5944, "score": 0.6517}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "unseen-1221-09.wav", "label": "neg", "ref-121-01.wav": 0.5458, "ref-121-02.wav": 0.606, "ref-121-03.wav": 0.5607, "score": 0.606}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "unseen-1221-10.wav", "label": "neg", "ref-121-01.wav": 0.5675, "ref-121-02.wav": 0.5992, "ref-121-03.wav": 0.55, "score": 0.5992}
+{"speaker": "spkr-1221", "vs_refs_of": "spkr-121", "clip": "unseen-1221-11.wav", "label": "neg", "ref-121-01.wav": 0.5836, "ref-121-02.wav": 0.6295, "ref-121-03.wav": 0.5709, "score": 0.6295}
+{"speaker": "spkr-1221", "clip": "hold-1221-04.wav", "label": "pos", "ref-1221-01.wav": 0.967, "ref-1221-02.wav": 0.9765, "ref-1221-03.wav": 0.9486, "score": 0.9765}
+{"speaker": "spkr-1221", "clip": "hold-1221-05.wav", "label": "pos", "ref-1221-01.wav": 0.9367, "ref-1221-02.wav": 0.9476, "ref-1221-03.wav": 0.9043, "score": 0.9476}
+{"speaker": "spkr-1221", "clip": "hold-1221-06.wav", "label": "pos", "ref-1221-01.wav": 0.9738, "ref-1221-02.wav": 0.9848, "ref-1221-03.wav": 0.9547, "score": 0.9848}
+{"speaker": "spkr-1221", "clip": "hold-1221-07.wav", "label": "pos", "ref-1221-01.wav": 0.9516, "ref-1221-02.wav": 0.936, "ref-1221-03.wav": 0.9249, "score": 0.9516}
+{"speaker": "spkr-1221", "clip": "hold-1221-08.wav", "label": "pos", "ref-1221-01.wav": 0.9287, "ref-1221-02.wav": 0.9442, "ref-1221-03.wav": 0.9196, "score": 0.9442}
+{"speaker": "spkr-1221", "clip": "unseen-1221-09.wav", "label": "pos", "ref-1221-01.wav": 0.9552, "ref-1221-02.wav": 0.9541, "ref-1221-03.wav": 0.9486, "score": 0.9552}
+{"speaker": "spkr-1221", "clip": "unseen-1221-10.wav", "label": "pos", "ref-1221-01.wav": 0.9732, "ref-1221-02.wav": 0.9711, "ref-1221-03.wav": 0.9486, "score": 0.9732}
+{"speaker": "spkr-1221", "clip": "unseen-1221-11.wav", "label": "pos", "ref-1221-01.wav": 0.9666, "ref-1221-02.wav": 0.956, "ref-1221-03.wav": 0.9476, "score": 0.9666}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "hold-1089-04.wav", "label": "neg", "ref-1221-01.wav": 0.5481, "ref-1221-02.wav": 0.5272, "ref-1221-03.wav": 0.5206, "score": 0.5481}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "hold-1089-05.wav", "label": "neg", "ref-1221-01.wav": 0.55, "ref-1221-02.wav": 0.5442, "ref-1221-03.wav": 0.5209, "score": 0.55}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "hold-1089-06.wav", "label": "neg", "ref-1221-01.wav": 0.53, "ref-1221-02.wav": 0.5204, "ref-1221-03.wav": 0.5155, "score": 0.53}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "hold-1089-07.wav", "label": "neg", "ref-1221-01.wav": 0.563, "ref-1221-02.wav": 0.5441, "ref-1221-03.wav": 0.5463, "score": 0.563}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "hold-1089-08.wav", "label": "neg", "ref-1221-01.wav": 0.5679, "ref-1221-02.wav": 0.553, "ref-1221-03.wav": 0.5442, "score": 0.5679}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "unseen-1089-09.wav", "label": "neg", "ref-1221-01.wav": 0.5444, "ref-1221-02.wav": 0.5242, "ref-1221-03.wav": 0.5355, "score": 0.5444}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "unseen-1089-10.wav", "label": "neg", "ref-1221-01.wav": 0.5415, "ref-1221-02.wav": 0.5439, "ref-1221-03.wav": 0.5191, "score": 0.5439}
+{"speaker": "spkr-1089", "vs_refs_of": "spkr-1221", "clip": "unseen-1089-11.wav", "label": "neg", "ref-1221-01.wav": 0.5776, "ref-1221-02.wav": 0.5618, "ref-1221-03.wav": 0.5625, "score": 0.5776}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "hold-1188-04.wav", "label": "neg", "ref-1221-01.wav": 0.5716, "ref-1221-02.wav": 0.5508, "ref-1221-03.wav": 0.5288, "score": 0.5716}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "hold-1188-05.wav", "label": "neg", "ref-1221-01.wav": 0.5826, "ref-1221-02.wav": 0.5637, "ref-1221-03.wav": 0.5432, "score": 0.5826}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "hold-1188-06.wav", "label": "neg", "ref-1221-01.wav": 0.5856, "ref-1221-02.wav": 0.5706, "ref-1221-03.wav": 0.5354, "score": 0.5856}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "hold-1188-07.wav", "label": "neg", "ref-1221-01.wav": 0.5575, "ref-1221-02.wav": 0.5353, "ref-1221-03.wav": 0.5139, "score": 0.5575}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "hold-1188-08.wav", "label": "neg", "ref-1221-01.wav": 0.564, "ref-1221-02.wav": 0.5431, "ref-1221-03.wav": 0.5168, "score": 0.564}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "unseen-1188-09.wav", "label": "neg", "ref-1221-01.wav": 0.5831, "ref-1221-02.wav": 0.5625, "ref-1221-03.wav": 0.5475, "score": 0.5831}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "unseen-1188-10.wav", "label": "neg", "ref-1221-01.wav": 0.5809, "ref-1221-02.wav": 0.5589, "ref-1221-03.wav": 0.536, "score": 0.5809}
+{"speaker": "spkr-1188", "vs_refs_of": "spkr-1221", "clip": "unseen-1188-11.wav", "label": "neg", "ref-1221-01.wav": 0.5884, "ref-1221-02.wav": 0.5775, "ref-1221-03.wav": 0.5582, "score": 0.5884}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "hold-121-04.wav", "label": "neg", "ref-1221-01.wav": 0.5624, "ref-1221-02.wav": 0.557, "ref-1221-03.wav": 0.5712, "score": 0.5712}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "hold-121-05.wav", "label": "neg", "ref-1221-01.wav": 0.4989, "ref-1221-02.wav": 0.4987, "ref-1221-03.wav": 0.5115, "score": 0.5115}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "hold-121-06.wav", "label": "neg", "ref-1221-01.wav": 0.5759, "ref-1221-02.wav": 0.5724, "ref-1221-03.wav": 0.5956, "score": 0.5956}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "hold-121-07.wav", "label": "neg", "ref-1221-01.wav": 0.498, "ref-1221-02.wav": 0.4931, "ref-1221-03.wav": 0.5206, "score": 0.5206}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "hold-121-08.wav", "label": "neg", "ref-1221-01.wav": 0.5183, "ref-1221-02.wav": 0.5236, "ref-1221-03.wav": 0.5254, "score": 0.5254}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "unseen-121-09.wav", "label": "neg", "ref-1221-01.wav": 0.6158, "ref-1221-02.wav": 0.6073, "ref-1221-03.wav": 0.6126, "score": 0.6158}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "unseen-121-10.wav", "label": "neg", "ref-1221-01.wav": 0.541, "ref-1221-02.wav": 0.5342, "ref-1221-03.wav": 0.5569, "score": 0.5569}
+{"speaker": "spkr-121", "vs_refs_of": "spkr-1221", "clip": "unseen-121-11.wav", "label": "neg", "ref-1221-01.wav": 0.5246, "ref-1221-02.wav": 0.5258, "ref-1221-03.wav": 0.5296, "score": 0.5296}

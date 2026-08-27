@@ -1,0 +1,4 @@
+{"model": "dryrun-no-clone", "model_version": null,
+ "references_used": ["vaudio_20260827_0b1785", "vaudio_20260827_6bc58a", "vaudio_20260827_62fa78"],
+ "text": "(dry-run: natural held-out clip used to exercise gate→registry path; ZERO generation spend)",
+ "generated_at": "2026-08-27T22:20:00+00:00"}
