@@ -207,29 +207,32 @@ groups:
   # --- §8 host-disk monitoring (HU-1742) -----------------------------------
   #
   # docs/09 §8 Infrastructure item: "Disk monitoring alerts are set
-  # (< 20% free triggers alert)". node_exporter (compose `monitoring` profile)
-  # reports the host filesystems backing the pgdata named volume and /backups
-  # on .245; pseudo-filesystems (tmpfs/overlay/etc.) are excluded. Alert
-  # delivery to the human pager rides the §7.5 operator-provisioned webhook
-  # path; this rule is the firing signal.
+  # (< 10GiB free triggers alert)". node_exporter (compose `monitoring`
+  # profile) reports the host filesystems backing the pgdata named volume and
+  # /backups on .245; pseudo-filesystems (tmpfs/overlay/etc.) are excluded.
+  # Recalibrated from a < 20% ratio to an absolute free-bytes floor (HU-2131,
+  # PM-approved): the only watched fs is a 119G shared volume whose standing
+  # free level parks ~1G above the ~24G ratio firing line, so the ratio rule
+  # re-fired on a known 200–900M hourly-dump sawtooth with no action path.
+  # 10GiB keeps ~10x the observed hourly swing of real runway. Single-watched-
+  # fs verified on .245 (mountpoint="/", ext4) so no small mount can false-
+  # fire the absolute floor. Alert delivery to the human pager rides the §7.5
+  # operator-provisioned webhook path; this rule is the firing signal.
   - name: huible-infra
     interval: 30s
     rules:
       - alert: HuibleDiskFreeLow
         expr: |
-          (
-            node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"}
-            /
-            node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"}
-          ) < 0.20
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"}
+          < 10 * 1024 * 1024 * 1024
         for: 5m
         labels:
           severity: page
           slo: service-health
         annotations:
-          summary: "Huible host disk below 20% free ({{ $labels.mountpoint }})"
+          summary: "Huible host disk below 10GiB free ({{ $labels.mountpoint }})"
           description: >
-            Only {{ $value | humanizePercentage }} free on the host filesystem
+            Only {{ $value | humanize1024 }}B free on the host filesystem
             mounted at {{ $labels.mountpoint }} — on .245 this backs the
             pgdata volume and /backups. Free space or extend the disk before
             Postgres or the daily backup job fails (docs/09 §8 disk item).

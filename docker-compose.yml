@@ -77,7 +77,8 @@ services:
       - huible-net
 
   # Monitoring profile (HU-1742, docs/09 §8 disk item): Prometheus +
-  # node_exporter for the HuibleDiskFreeLow (< 20% free) host-disk alert and
+  # node_exporter for the HuibleDiskFreeLow (< 10GiB free, absolute — HU-2131
+  # recalibrated from < 20% ratio) host-disk alert and
   # the app §7.3 metrics. Loopback binds ONLY — no new public listeners (ufw
   # default-deny; verified by scripts/verify_prod_hardening.sh Monitoring
   # block). Enable with: docker compose --profile monitoring up -d

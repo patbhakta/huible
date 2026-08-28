@@ -266,7 +266,7 @@ echo
 echo "## Monitoring (disk)"
 
 # Prometheus + node_exporter from the compose `monitoring` profile must be up
-# with unless-stopped (docs/09 §8 disk item: "< 20% free triggers alert").
+# with unless-stopped (docs/09 §8 disk item: "< 10GiB free triggers alert").
 for c in prometheus node-exporter; do
   rp="$(docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' "huible-$c" 2>/dev/null || true)"
   if [ "$rp" = "unless-stopped" ]; then
@@ -303,21 +303,22 @@ if command -v jq >/dev/null 2>&1; then
     fail "Prometheus scrape target(s) down" "inspect: curl -s 127.0.0.1:9090/api/v1/targets"
   fi
   # Current disk posture — informational: a firing alert means ops action is
-  # needed (free space), not that the monitoring control is missing.
-  fr="$(curl -fsSG --max-time 5 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"})' 2>/dev/null | jq -r '.data.result[]? | "\(.value[1] | tonumber * 1000 | round / 10)% free on \(.metric.mountpoint) (\(.metric.fstype))"' 2>/dev/null || true)"
+  # needed (free space), not that the monitoring control is missing. Matches
+  # the HU-2131 recalibration: absolute free bytes, not ratio.
+  fr="$(curl -fsSG --max-time 5 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|devtmpfs|iso9660"}' 2>/dev/null | jq -r '.data.result[]? | "\(.value[1] | tonumber / 1073741824 * 10 | round / 10)GiB free on \(.metric.mountpoint) (\(.metric.fstype))"' 2>/dev/null || true)"
   if [ -n "$fr" ]; then
-    ok "Disk-free ratio queryable via node_exporter ($fr)."
+    ok "Disk free bytes queryable via node_exporter ($fr)."
   else
-    fail "Disk-free ratio not queryable" "node_exporter scrape broken — check the node job target."
+    fail "Disk free bytes not queryable" "node_exporter scrape broken — check the node job target."
   fi
   astate="$(prom alerts | jq -r '.data.alerts[]? | select(.labels.alertname=="HuibleDiskFreeLow") | .state' 2>/dev/null | head -1)"
   if [ -n "$astate" ]; then
     ok "HuibleDiskFreeLow live in the evaluator (state: $astate)."
     if [ "$astate" = "firing" ]; then
-      note "ALERT FIRING — host disk is below 20% free: free space / extend the volume now."
+      note "ALERT FIRING — host disk is below the 10GiB absolute floor: free space / extend the volume now."
     fi
   else
-    note "HuibleDiskFreeLow not pending/firing (all watched filesystems above 20% free)."
+    note "HuibleDiskFreeLow not pending/firing (all watched filesystems above the 10GiB free floor)."
   fi
 else
   note "'jq' unavailable — verify rule/targets manually via 127.0.0.1:9090/api/v1/{rules,targets}."

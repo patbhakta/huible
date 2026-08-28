@@ -492,7 +492,7 @@ The file covers every §4.1 halt-the-ramp trigger:
 
 **Infrastructure alert (HU-1742, §8 disk item):**
 
-- **`HuibleDiskFreeLow`** — host filesystem below 20% free (`node_filesystem_avail_bytes / node_filesystem_size_bytes` from node_exporter; pseudo-fs excluded, `for: 5m`, `severity: page`). On `.245` the watched fs backs the pgdata volume and `/backups`.
+- **`HuibleDiskFreeLow`** — host filesystem below **10GiB free (absolute)** (`node_filesystem_avail_bytes` from node_exporter; pseudo-fs excluded, `for: 5m`, `severity: page`). On `.245` the watched fs backs the pgdata volume and `/backups`. HU-2131 recalibration (PM-approved): the original `< 20%` ratio fired at ~24G on a 119G shared volume parked ~1G above the line — the absolute floor preserves real runway (≈10x the observed 200–900M hourly-dump swing) without the standing re-fire risk.
 
 **Live deployment (`.245`, HU-1742):** the compose file ships a `monitoring` profile
 (`prometheus` + `node-exporter`, both `restart: unless-stopped`, **loopback binds only**
@@ -502,7 +502,7 @@ from [`examples/prometheus-alerts.yml`](../examples/prometheus-alerts.yml). Enab
 `docker compose --profile monitoring up -d`. Live checks are wired into
 [`scripts/verify_prod_hardening.sh`](../scripts/verify_prod_hardening.sh) (Monitoring
 block: containers + restart policy, loopback binds, rule health, target health, disk
-ratio, evaluator state).
+free bytes, evaluator state).
 
 `severity: page` alerts map to the §7.5 paging path (the on-call roster wired
 in Stage 0.4); `severity: ticket` alerts are investigate-before-next-ramp-advance.
@@ -635,7 +635,7 @@ Run through this checklist before going live.
 - [x] Host firewall allows only 80, 443 (and 22 for SSH) — *live: ufw active, default deny incoming, allowlist exactly 22/80/443 + `tailscale0` (in-kernel `iptables -S INPUT` policy DROP verified, HU-1672)*
 - [x] On the standby .245: ufw allowlist applied via `deploy/ufw/huible-allowlist.sh` (22/80/443 + tailscale iface, break-glass-gated enable; §9.2f sibling, HU-1672 AC #2) — *live: applied + post-checks green 18:15Z (HU-1672)*
 - [x] Automatic security updates are enabled on the host — *live: `unattended-upgrades` active on .245*
-- [x] Disk monitoring alerts are set (< 20% free triggers alert) — *live on `.245` (HU-1742): `HuibleDiskFreeLow` loaded+healthy in Prometheus (`127.0.0.1:9090`), node_exporter + app targets up, evaluator live — verified **firing** on the real 6.8%-free rootfs @ 18:41Z, restart-safe (`unless-stopped`), loopback binds only, ufw unchanged; verifier Monitoring block 8/8 PASS*
+- [x] Disk monitoring alerts are set (< 10GiB free triggers alert — recalibrated from < 20% ratio, HU-2131) — *live on `.245` (HU-1742): `HuibleDiskFreeLow` loaded+healthy in Prometheus (`127.0.0.1:9090`), node_exporter + app targets up, evaluator live — ratio variant verified **firing** on the real 6.8%-free rootfs @ 18:41Z, restart-safe (`unless-stopped`), loopback binds only, ufw unchanged; verifier Monitoring block 8/8 PASS. 10GiB-absolute variant reloaded + verified healthy/inactive @ 24G free (HU-2131)*
 
 ---
 

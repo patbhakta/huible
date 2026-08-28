@@ -8,7 +8,8 @@
 # compose service name is `app`) and node_exporter for host-disk metrics.
 # Alert rules are bind-mounted from examples/prometheus-alerts.yml (mounted as
 # /etc/prometheus/huible-alerts.yml), including the §8 HuibleDiskFreeLow
-# (< 20% free) rule backed by node_filesystem_avail_bytes/size_bytes.
+# (< 10GiB free, absolute — HU-2131 recalibration of the original < 20% ratio)
+# rule backed by node_filesystem_avail_bytes.
 #
 # Alert *delivery* to the human pager is the operator-provisioned §7.5 webhook
 # path — intentionally NOT configured here (no Alertmanager by design, see
