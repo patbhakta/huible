@@ -1,0 +1,6 @@
+usrlocal done
+varlog done
+etc done
+home done
+opt done
+srv done
