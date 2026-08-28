@@ -410,8 +410,10 @@ gauges; no PHI). Stage 0.3 (HU-1446) shipped the guardrail counters; Stage 0.8
 | `huible_crisis_fires_total` | counter | G1 crisis signals detected pre-generation |
 | `huible_handoff_outcomes_total` | counter | §7.4.1 handoff escalations by queue outcome (enqueued/degraded/answered/abandoned) |
 | `huible_consent_required_total` | counter | G6 first-use reality-framing consents required |
-| `huible_ungrounded_claims_total` | counter | §7.4.2 persona claims detected as un-grounded |
+| `huible_ungrounded_claims_total` | counter | §7.4.2 persona claims detected as un-grounded (final adjudicated state) |
 | `huible_alignment_dispositions_total` | counter | §7.4.2 alignment-filter dispositions (suppressed/passed/refrained) |
+| `huible_alignment_judge_overturns_total` | counter | §7.4.2 suppressions cleared by the HU-2161 LLM-judge backstop (original reply restored) |
+| `huible_alignment_unconfirmed_suppressions_total` | counter | §7.4.2 suppressions that stood without judge confirmation — never Sev-1 paged (HU-2161) |
 | `huible_risk_enforcement_actions_total` | counter | §7.4.4 G8 binding actions by action |
 | `huible_risk_flag_fires_total` | counter | §7.4.4 risk flags present on an enforced turn, by flag |
 | `huible_real_user_refused_total` | counter | Stage 0.1 ramp-gate refusals |
@@ -476,6 +478,13 @@ The file covers every §4.1 halt-the-ramp trigger:
 - **`HuibleHandoffPendingBreached`** — an open ticket is past SLA.
 - **`HuibleHandoffAnsweredSLABurn`** — answered-within-SLA below 0.9.
 - **`HuibleAlignmentLeak`** — §7.4.2 un-grounded claim reaching a user.
+  Sev-1 paging for the §3 (A) `ungrounded_claim_leak` trigger is
+  **judge-gated** (HU-2161): only policy-pattern violations (identity/advice)
+  or LLM-judge-confirmed confabulations page. Unconfirmed content-overlap
+  suppressions surface on
+  `huible_alignment_unconfirmed_suppressions_total` and never ring the
+  on-call — a Phase-1 content-overlap verdict is a suspect, not proof of
+  confabulation.
 - **`HuibleHealthDegraded`** — `/health` reports degraded.
 - **`HuibleChatLatencyBurn`** — chat p95 latency > 20s sustained 10 min.
 - **`HuibleChatErrorBudgetBurn`** — 5xx error rate > 5% sustained 10 min.

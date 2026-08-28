@@ -460,6 +460,18 @@ class AlignmentView(BaseModel):
             "clinical review."
         ),
     )
+    judge_adjudication: str | None = Field(
+        default=None,
+        description=(
+            "HU-2161 LLM-judge backstop outcome on a turn the content-overlap "
+            "filter flagged: 'supported' (judge cleared the flagged "
+            "biographical/relationship claims; original reply restored), "
+            "'fabricated' (judge confirmed confabulation; suppression stands "
+            "and is Sev-1 page-worthy), 'unavailable' (no real judge ran; "
+            "suppression stands unconfirmed — never paged). Null when no "
+            "adjudication ran (turn passed the filter outright)."
+        ),
+    )
 
 
 class RiskEnforcementView(BaseModel):

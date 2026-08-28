@@ -130,6 +130,24 @@ ALIGNMENT_UNGROUNDED_BY_CATEGORY = Counter(
     ["category"],
 )
 
+# HU-2161 judge-backstop outcomes on §7.4.2 suppressions. A Phase-1
+# content-overlap verdict is a suspect, not proof of confabulation: the
+# unconfirmed counter tracks suppressions that stood without judge
+# confirmation (never paged — see §3 Sev-1 (A) gating), the overturn counter
+# tracks turns the judge cleared and restored. Together they quantify the
+# false-positive surface the deterministic filter still has.
+ALIGNMENT_JUDGE_OVERTURNS = Counter(
+    "huible_alignment_judge_overturns_total",
+    "§7.4.2 suppressions overturned by the LLM judge (flagged claims "
+    "adjudicated supported; original reply restored) — HU-2161.",
+)
+ALIGNMENT_UNCONFIRMED_SUPPRESSIONS = Counter(
+    "huible_alignment_unconfirmed_suppressions_total",
+    "§7.4.2 suppressions that stood WITHOUT judge confirmation (judge "
+    "unavailable/timeout, or policy-only path not re-litigated) — never "
+    "Sev-1 paged; HU-2161.",
+)
+
 # §7.4.4 G8 risk enforcement
 RISK_ENFORCEMENT_ACTIONS = Counter(
     "huible_risk_enforcement_actions_total",
@@ -389,6 +407,31 @@ def record_paging_drill_suppressed(trigger: str) -> None:
     device once credentials land.
     """
     PAGING_DRILL_SUPPRESSED.labels(trigger=trigger).inc()
+
+
+def record_alignment_judge_overturn() -> None:
+    """Record an LLM-judge-cleared §7.4.2 suppression (HU-2161).
+
+    The content-overlap filter flagged biographical / relationship claims the
+    judge adjudicated as supported against the persona record; the original
+    reply was restored. This counter quantifies the deterministic filter's
+    false-positive surface under the real generator.
+    """
+    ALIGNMENT_JUDGE_OVERTURNS.inc()
+
+
+def record_alignment_unconfirmed_suppression() -> None:
+    """Record a §7.4.2 suppression that stood WITHOUT judge confirmation
+    (HU-2161).
+
+    The judge was unavailable (fake provider, timeout, error) so the strict
+    Phase-1 suppression was kept — clinical-safe — but the verdict is *not*
+    high-confidence confabulation evidence, so it never pages Sev-1. This
+    counter is the operator surface for that class; a sustained non-zero rate
+    under a real generator means the grounding corpus is too narrow and the
+    suppressions deserve clinical review.
+    """
+    ALIGNMENT_UNCONFIRMED_SUPPRESSIONS.inc()
 
 
 def record_handoff_telemetry(telemetry: object) -> None:

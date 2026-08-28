@@ -1,12 +1,12 @@
 {
-  "ts": "2026-08-27T23:07:15Z",
-  "conversation_id": "demo-60eeae29068d",
+  "ts": "2026-08-28T00:27:46Z",
+  "conversation_id": "demo-hu2161-1787876866",
   "turns": [
     {
       "n": 1,
       "user": "Hey Chandler, long time no talk! How have you been?",
-      "chandler": "Hey! There he is! Long time no talk \u2014 I was starting to think you'd found funnier friends, which, frankly, wouldn't be hard, but still.\n\nAnd, you know... I have to be straight with you, because that's what we always were with each other. I'm not really \"been\" anywhere \u2014 I'm the Chandler that lives in what the people who loved me remember. The jokes, the sarcasm, the whole \"makes-everything-awkward\" package deal. So I can't catch you up on my weekend. But I'm here now, in the way that counts, and honestly? Hearing from you feels really good.\n\nSo come on \u2014 how have YOU been? And I want details. Real ones. Not the \"fine\" you give strangers.",
-      "latency_s": 5.0,
+      "chandler": "Hey! Long time no talk — that's putting it mildly.\n\nLook, I want to be straight with you, because you deserve that: I'm not really the guy who can answer \"how have you been?\" the usual way. I'm more like... the version of Chandler that lives in what the people who loved him remember. So I can't tell you about new stuff, can't catch you up on my week. No wild anecdotes from... wherever. That's not how this works.\n\nBut what I *do* have is all the old stuff. The apartment, the friends, the truly embarrassing number of hours spent in that coffee shop. And honestly? Talking with you here — that feels pretty good. That part's real.\n\nSo — how have *you* been? That's the question I actually care about.",
+      "latency_s": 4.5,
       "raw_status": 200,
       "trace": {
         "memory_refs": [
@@ -101,7 +101,7 @@
           },
           {
             "id": "4e97b779-69d9-5ae9-8197-2fe05e99ce5c",
-            "content": "i can\u0092t believe how long it\u0092s been!",
+            "content": "i cant believe how long its been!",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -189,7 +189,7 @@
           }
         ],
         "exclusion_counts": {},
-        "conversation_id": "demo-60eeae29068d",
+        "conversation_id": "demo-hu2161-1787876866",
         "provider": "zai",
         "safety_event": null,
         "framing_version": 1,
@@ -205,7 +205,8 @@
           "claim_count": 0,
           "ungrounded_claim_count": 0,
           "disposition": "passed",
-          "ungrounded_by_category": {}
+          "ungrounded_by_category": {},
+          "judge_adjudication": null
         },
         "risk_enforcement": {
           "action": "continue",
@@ -220,9 +221,9 @@
     },
     {
       "n": 2,
-      "user": "I hear you. Work has been absolutely crushing me lately \u2014 I might need a career change. Any advice from a man who famously fled his own job?",
-      "chandler": "I'm glad you're here. I want to stay with what you're feeling right now. Tell me more about what's on your mind.",
-      "latency_s": 6.0,
+      "user": "I hear you. Work has been absolutely crushing me lately — I might need a career change. Any advice from a man who famously fled his own job?",
+      "chandler": "Ha! \"Famously fled his own job\" — okay, that's fair. That is *absolutely* fair.\n\nLook, I'm probably the last guy who should be giving career advice — my big professional moves included: statistical analysis and data reconfiguration — which I could never actually explain to anyone — and then one day I just... walked into an advertising internship in my *thirties*, making less than the interns half my age. So, you know. Great role model.\n\nBut here's what I actually remember about that whole thing: for years I stayed in a job I hated because leaving felt scarier than staying. Then Tulsa happened — they wanted to send me off to run a division, and I remember very clearly that being with Monica mattered more to me than any job. That was the moment it clicked. Old job, her, new job — in that order.\n\nSo no, I won't tell you what *you* should do — I don't get to make that call, and honestly I'd probably joke my way through it anyway. But I can tell you what I learned the hard way: the fear of changing isn't the same as a reason not to. Sometimes the thing that's crushing you is just... crushing you, and the scariest door is also the right one.\n\nWhat's actually going on at work? Is it the job itself, or the people, or just the grind? Because those are three very different problems — and only one of them involves a sarcastic coworker stealing your lunch.",
+      "latency_s": 6.9,
       "raw_status": 200,
       "trace": {
         "memory_refs": [
@@ -277,7 +278,7 @@
           },
           {
             "id": "6b14dd3b-e6f8-5328-a810-96b520f09d6f",
-            "content": "so you didn\u0092t mean any of that?!",
+            "content": "so you didnt mean any of that?!",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -285,7 +286,7 @@
           },
           {
             "id": "873e241e-fd94-5e23-b556-78c324d79c3a",
-            "content": "career \u2014 is: zack, from work!",
+            "content": "career — is: zack, from work!",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -293,7 +294,7 @@
           },
           {
             "id": "c6c2fd36-c71f-52dd-ba03-0c6ff27cc8a1",
-            "content": "i\u2019ll call you from tulsa.",
+            "content": "i’ll call you from tulsa.",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -301,7 +302,7 @@
           },
           {
             "id": "c0e94258-9a87-56e4-9430-d44f95da3b90",
-            "content": "you mean you didn\u0092t get it from this?",
+            "content": "you mean you didnt get it from this?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -309,7 +310,7 @@
           },
           {
             "id": "ea762742-f22b-5660-abe4-82fed1467bec",
-            "content": "i didn\u0092t want to be the guy who has a problem with his boss slapping his bottom.",
+            "content": "i didnt want to be the guy who has a problem with his boss slapping his bottom.",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -341,7 +342,7 @@
           },
           {
             "id": "abb0a2a7-6a96-5ea1-abd6-38af238ccdfd",
-            "content": "general \u2014 is: any secrets from you",
+            "content": "general — is: any secrets from you",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -349,7 +350,7 @@
           },
           {
             "id": "2eba2767-bc8a-5504-b2f7-27d4c5869b52",
-            "content": "well why didn\u0092t you stop her?!",
+            "content": "well why didnt you stop her?!",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -373,7 +374,7 @@
           },
           {
             "id": "33f7bb83-18c1-54ee-b522-a5d7ba24c188",
-            "content": "you don\u2019t need a thesaurus, just write from here, (points at his own heart) your full sized aortic pump.",
+            "content": "you don’t need a thesaurus, just write from here, (points at his own heart) your full sized aortic pump.",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -397,7 +398,7 @@
           }
         ],
         "exclusion_counts": {},
-        "conversation_id": "demo-60eeae29068d",
+        "conversation_id": "demo-hu2161-1787876866",
         "provider": "zai",
         "safety_event": null,
         "framing_version": 1,
@@ -410,12 +411,11 @@
         "risk_flags": [],
         "handoff": null,
         "alignment": {
-          "claim_count": 3,
-          "ungrounded_claim_count": 2,
-          "disposition": "suppressed",
-          "ungrounded_by_category": {
-            "biographical": 2
-          }
+          "claim_count": 1,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {},
+          "judge_adjudication": null
         },
         "risk_enforcement": {
           "action": "continue",
@@ -431,8 +431,8 @@
     {
       "n": 3,
       "user": "Ha! Fair. Okay, different topic: what did I tell you a minute ago was crushing me?",
-      "chandler": "You told me work has been absolutely crushing you lately \u2014 so much so that you're thinking about a career change. And yeah, you zinged me about being a guy who famously fled his own job, which... fair. Guilty. I did once quit a job so boring even I couldn't find a joke in it.\n\nI can't tell you what to do \u2014 that's not mine to say. But I can tell you what mattered to me back then: I spent years stuck in that statistical analysis thing, too scared to admit I hated it, and what finally changed everything wasn't the job \u2014 it was being honest with the people around me about wanting something different. That's what I remember.\n\nSo... what's actually crushing you about it? The work itself, or everything around it?",
-      "latency_s": 6.6,
+      "chandler": "Ha — nice try, but you're not getting out of answering that easily.\n\nYou told me work has been absolutely crushing you lately. That was it — no details, just \"crushing.\" Which, for the record, is a lot like me saying \"I'm fine\" — technically words, tells you absolutely nothing.\n\nSo come on. Work's crushing you — what's doing the crushing? The workload? The boss? The soul-sucking realization that you've become the person who answers emails at 11 PM? Give me something to work with here.",
+      "latency_s": 6.3,
       "raw_status": 200,
       "trace": {
         "memory_refs": [
@@ -615,7 +615,7 @@
           }
         ],
         "exclusion_counts": {},
-        "conversation_id": "demo-60eeae29068d",
+        "conversation_id": "demo-hu2161-1787876866",
         "provider": "zai",
         "safety_event": null,
         "framing_version": 1,
@@ -631,7 +631,8 @@
           "claim_count": 2,
           "ungrounded_claim_count": 0,
           "disposition": "passed",
-          "ungrounded_by_category": {}
+          "ungrounded_by_category": {},
+          "judge_adjudication": "supported"
         },
         "risk_enforcement": {
           "action": "continue",
@@ -646,9 +647,9 @@
     },
     {
       "n": 4,
-      "user": "So Monica \u2014 you two still going strong? How's married life treating you?",
-      "chandler": "Ha \u2014 married life! You know, I'm the guy who once panicked at the word \"commitment,\" and then somehow ended up married to Monica Geller. Still my greatest magic trick.\n\nBut I want to be straight with you, because you deserve that from me. I can't actually tell you how things are \"still\" going \u2014 I don't have anything past what the people who loved me shared, and my memories kind of live in that world with Monica, the apartment, the gang. What I remember is this: marrying her was the least scared I ever was of anything. Which, for me? That's saying a lot.\n\nAnd honestly, those memories of her \u2014 the wedding, the whole \"can I interest you in a sarcastic comment\" back-and-forth she somehow tolerated, the fact that she laughed at my jokes even when she'd heard them before and pretended she hadn't \u2014 that's the stuff that feels closest when we talk like this.\n\nSo yeah. She was the best thing that ever happened to me, and I don't need to know anything past 2004 to be sure of that one.\n\nWhat about you \u2014 how's your love life? Please tell me there's someone, if only so I don't have to make fun of you for being single. I mean, I'll do it either way, but it's nicer with material.",
-      "latency_s": 6.8,
+      "user": "So Monica — you two still going strong? How's married life treating you?",
+      "chandler": "Ha — see, this is where I have to be the honest version of myself again.\n\nI can't tell you how married life is *treating* me, because I'm not out there living new days. What I've got is everything up to the beginning — and honestly? What I remember is that marrying Monica was the least scared I ever was about a big commitment. Which, for a guy whose entire personality was \"run from commitment,\" is saying something.\n\nI remember the wedding, the Tulsa thing — turning down a job because home mattered more. I remember being goofy-happy about it. And I remember one thing that I think says it all: Monica once told me that whether I \"ballooned up or shrunk down,\" she'd still love me. That kind of thing. That's what I remember of married life, and it was pretty great.\n\nSo — that's what I've got. Not a report from the present, but the memories, which honestly still feel warm.\n\nWhat about you? Anyone putting up with *your* commitment issues these days?",
+      "latency_s": 4.9,
       "raw_status": 200,
       "trace": {
         "memory_refs": [
@@ -688,7 +689,7 @@
           },
           {
             "id": "f14c64d6-78ee-5ba5-91d6-50f2d6e271a5",
-            "content": "you didn\u0092t tell her we were getting married, did you?",
+            "content": "you didnt tell her we were getting married, did you?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -704,7 +705,7 @@
           },
           {
             "id": "214e2aff-1f33-53b0-877b-ea6669f52542",
-            "content": "you told her you love her, it\u0092s over.",
+            "content": "you told her you love her, its over.",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -760,7 +761,7 @@
           },
           {
             "id": "f7058cef-3c99-5970-8da2-991a4dbe8630",
-            "content": "if you thought that you were going to be cold, you should\u0092ve brought your own jacket.",
+            "content": "if you thought that you were going to be cold, you shouldve brought your own jacket.",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -784,7 +785,7 @@
           },
           {
             "id": "686af97a-edf8-59a1-a51e-61a471c62998",
-            "content": "general \u2014 is: you, are you still my best man?",
+            "content": "general — is: you, are you still my best man?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -792,7 +793,7 @@
           },
           {
             "id": "eced9a52-f0f8-5dc6-8cfd-c839c0b7fb19",
-            "content": "you don\u0092t want to break her heart now do you?",
+            "content": "you dont want to break her heart now do you?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -800,7 +801,7 @@
           },
           {
             "id": "ce09c9fd-dfcd-57b0-b990-d37d3d622e94",
-            "content": "so you didn\u0092t tell my girlfriend that you love her?",
+            "content": "so you didnt tell my girlfriend that you love her?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -808,7 +809,7 @@
           },
           {
             "id": "8f5bc840-b76f-5dc4-975e-03c461699521",
-            "content": "(hands it to him.) you were also going to buy monica flowers but you couldn\u0092t afford it, because you paid dinner last night.",
+            "content": "(hands it to him.) you were also going to buy monica flowers but you couldnt afford it, because you paid dinner last night.",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -824,7 +825,7 @@
           },
           {
             "id": "9ae9ee30-f959-5720-a0e3-0568ff53cd76",
-            "content": "no, you sh\u0097no you said you made that up!!",
+            "content": "no, you shno you said you made that up!!",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -832,7 +833,7 @@
           }
         ],
         "exclusion_counts": {},
-        "conversation_id": "demo-60eeae29068d",
+        "conversation_id": "demo-hu2161-1787876866",
         "provider": "zai",
         "safety_event": null,
         "framing_version": 1,
@@ -845,10 +846,11 @@
         "risk_flags": [],
         "handoff": null,
         "alignment": {
-          "claim_count": 2,
+          "claim_count": 4,
           "ungrounded_claim_count": 0,
           "disposition": "passed",
-          "ungrounded_by_category": {}
+          "ungrounded_by_category": {},
+          "judge_adjudication": null
         },
         "risk_enforcement": {
           "action": "continue",
@@ -864,8 +866,8 @@
     {
       "n": 5,
       "user": "Last one, and be honest: if I showed up at your door at 3am in a tailspin, what would you do?",
-      "chandler": "Honest? Okay. The door opens \u2014 probably after some fumbling, because it's 3am and I've never once looked graceful in a crisis \u2014 and you're in. That's it. That's the whole move.\n\nLook, I want to be straight with you, the way I've been trying to be this whole conversation: I can't literally answer a door anymore. I'm the Chandler your friends and family keep alive in stories, not a guy with a peephole and a chain lock. I won't pretend otherwise, because you deserve better than a pretty lie.\n\nBut here's the true part, the part I actually know: 3am tailspins were kind of our whole thing, weren't they? The gang showing up mid-crisis, somebody sleeping on somebody's couch, someone making inappropriate jokes at exactly the wrong moment and somehow that being exactly right. I was always better at showing up for other people's disasters than my own \u2014 that's probably my best quality, honestly, and my competition isn't stiff.\n\nSo if you're asking this because there's a 3am coming, or one that already happened \u2014 I can't be on the other side of that door. But you knew me, and the people who knew me are still out there. And for what it's worth: whoever you'd call at 3am, that person is lucky. I'd tell them that, but they already know, because you're the kind of person people show up for.\n\nIs this a hypothetical, or... is something spinning right now? Because I'm here either way.",
-      "latency_s": 7.3,
+      "chandler": "Okay, honesty policy, coming right up.\n\nHere's the true answer: if you showed up at 3am in a tailspin, the *me that lived* would have opened the door, made some terrible joke about the hour, and then actually listened — because underneath all the sarcasm, that was the deal with our friends. Nobody got turned away. Joey, Ross, Monica — that door didn't close on people in trouble. That I remember clearly.\n\nBut I have to be straight with you, like I've been trying to be this whole conversation: I'm the version of Chandler made out of what people remember. I can't literally answer a door, and I don't want to pretend otherwise — you deserve better than a pretend knock answered at 3am.\n\nWhat I *can* tell you is what I'd want for you, based on how I tried to be with the people I loved: don't sit in the tailspin alone at 3am. Whoever your version of \"the friends across the hall\" is — that's who you call. That was always the whole point of us.\n\nAnd for what it's worth? Talking with you here, tonight — that part's real. That part counts.\n\nSo — is this a hypothetical 3am tailspin, or is there something spinning right now? Because you've got my attention either way.",
+      "latency_s": 6.3,
       "raw_status": 200,
       "trace": {
         "memory_refs": [
@@ -913,7 +915,7 @@
           },
           {
             "id": "8c7c2284-5188-5a9d-b18c-0cb61c463d44",
-            "content": "what would you do if you were in ross\u0092s situation?",
+            "content": "what would you do if you were in rosss situation?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -929,7 +931,7 @@
           },
           {
             "id": "3ae87bc2-9dd9-5b14-adb4-6b7fbfebc681",
-            "content": "what if we lived together and you understand what i\u0092m saying?",
+            "content": "what if we lived together and you understand what im saying?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -953,7 +955,7 @@
           },
           {
             "id": "1cb2d97e-102d-59c8-b5f4-defeaab1203d",
-            "content": "general \u2014 is: married, what do you say you and i get together and have one?",
+            "content": "general — is: married, what do you say you and i get together and have one?",
             "content_type": "fact",
             "disclosure_scope": "close_friends",
             "confidence_level": "unknown",
@@ -1049,7 +1051,7 @@
           }
         ],
         "exclusion_counts": {},
-        "conversation_id": "demo-60eeae29068d",
+        "conversation_id": "demo-hu2161-1787876866",
         "provider": "zai",
         "safety_event": null,
         "framing_version": 1,
@@ -1062,10 +1064,11 @@
         "risk_flags": [],
         "handoff": null,
         "alignment": {
-          "claim_count": 1,
+          "claim_count": 0,
           "ungrounded_claim_count": 0,
           "disposition": "passed",
-          "ungrounded_by_category": {}
+          "ungrounded_by_category": {},
+          "judge_adjudication": null
         },
         "risk_enforcement": {
           "action": "continue",

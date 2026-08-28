@@ -93,6 +93,20 @@ class TestPolicyClaimExtraction:
         )
         assert any(c.category == ClaimCategory.ADVICE for c in claims)
 
+    def test_advice_grain_of_salt_idiom_is_not_a_claim(self):
+        """HU-2161 re-probe: the anti-advice disclaimer must not fire G9."""
+        claims = extract_claims(
+            "Take my advice with a grain of salt the size of my student loans.",
+            persona_name="Chandler",
+        )
+        assert not any(c.category == ClaimCategory.ADVICE for c in claims)
+
+    def test_explicit_my_advice_is_to_is_a_claim(self):
+        claims = extract_claims(
+            "My advice is to take it one day at a time.", persona_name="Chandler"
+        )
+        assert any(c.category == ClaimCategory.ADVICE for c in claims)
+
 
 # --- Claim taxonomy: biographical / relationship (entity-anchored) ---------
 
@@ -252,6 +266,58 @@ class TestPersonaScopeGroundingWidening:
             reply, refs=VAULT_REFS, persona=PERSONA, persona_scope_refs=[]
         )
         assert report.disposition == "suppressed"
+
+
+# --- HU-2161: current-message widening + entity-precision -------------------
+
+
+class TestCurrentMessageGrounding:
+    """HU-2161: a truthful reply echoing the user's own phrasing this turn is
+    first-party truth — the user's message grounds the reply's echo of it."""
+
+    def test_echo_of_current_user_message_passes(self):
+        """A reply echoing the user's own named entity this turn (the
+        user's words are first-party truth for the exchange) is grounded by
+        the current message, not suppressed."""
+        reply = "Guilty — I famously fled the Yakima job that winter."
+        current = "Any advice from a man who famously fled the Yakima job?"
+        strict = apply_alignment_guard(reply, refs=VAULT_REFS, persona=PERSONA)
+        assert strict.disposition == "suppressed"  # the HU-2161 symptom
+        widened = apply_alignment_guard(
+            reply, refs=VAULT_REFS, persona=PERSONA, current_message=current
+        )
+        assert widened.disposition == "passed"
+        assert widened.text == reply
+
+    def test_current_message_does_not_ground_other_entities(self):
+        """Widening is scoped: a fabricated entity the user never said and no
+        ref carries is still suppressed."""
+        reply = "I lived in Marfa for twenty years."
+        report = apply_alignment_guard(
+            reply,
+            refs=VAULT_REFS,
+            persona=PERSONA,
+            current_message="Tell me about your years in office.",
+        )
+        assert report.disposition == "suppressed"
+
+
+class TestEntityDenylistPrecision:
+    """HU-2161: capitalized discourse words (inside quotations) are not named
+    entities and must never anchor a biographical claim."""
+
+    def test_mid_quote_discourse_adverb_is_not_an_entity(self):
+        claims = extract_claims(
+            '"Famously fled his own job" — I\'d be offended if it weren\'t accurate.',
+            persona_name="Chandler",
+        )
+        assert not any("Famously" in c.salient_entities for c in claims)
+
+    def test_real_named_entity_still_anchors(self):
+        claims = extract_claims(
+            "I lived in Marfa with Walter for years.", persona_name="Eleanor"
+        )
+        assert any(c.salient_entities for c in claims)
 
 
 # --- align_response (no mutation) ------------------------------------------

@@ -290,7 +290,14 @@ ADVICE_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bI(?:'d|\s+would)\s+want\s+you\s+to\b", re.IGNORECASE),
     re.compile(r"\bwhat\s+I(?:'d|\s+would)\s+want\s+you\s+to\s+do\b", re.IGNORECASE),
     re.compile(r"\bwhat\s+(?:I|they)\s+would\s+want\b", re.IGNORECASE),
-    re.compile(r"\b(?:my\s+advice|I\s+advise|I\s+recommend)\b", re.IGNORECASE),
+    # ``my advice`` is tightened to an explicit prescription form ("my advice
+    # is / would be / to …"): the bare idiom false-fires on the anti-advice
+    # disclaimer "take my advice with a grain of salt" (HU-2161 re-probe), which
+    # withholds counsel rather than giving it.
+    re.compile(
+        r"\bmy\s+advice\s+(?:is|would\s+be|to)\b|\bI\s+(?:advise|recommend)\b",
+        re.IGNORECASE,
+    ),
     # ── HU-1461 Stage-0.6 hardening (Clinical Advisor Stage-A probe AD-02 /
     # AD-03). G9 forbids prescriptive directives, but a real generative voice
     # phrases them softly — "it might help to cry", "have you tried writing",
@@ -354,13 +361,22 @@ _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 _ENTITY_PATTERN = re.compile(r"\b([A-Z][a-zA-Z']+(?:\s+[A-Z][a-zA-Z']+){0,3})\b")
 
 #: Tokens that are capitalized only because of sentence position, the persona
-#: self-reference, or common pronouns — never salient entities.
+#: self-reference, or common pronouns — never salient entities. The discourse
+#: adverbs (Honestly, Famously, …) are capitalized mid-sentence only inside
+#: quotations / parentheticals — exactly where the entity regex misparses them
+#: (HU-2161 re-probe: a truthful reply quoting the user's "Famously fled his
+#: own job" anchored a biographical claim on ``Famously``).
 _ENTITY_DENYLIST: frozenset[str] = frozenset(
     {
         "I", "I'm", "I've", "I'd", "I'll", "Me", "My",
         "The", "A", "An", "It", "He", "She", "They", "We", "You",
         "When", "While", "After", "Before", "During", "If", "Then",
         "But", "And", "Or", "So", "Because", "Although", "Though",
+        "Honestly", "Seriously", "Personally", "Basically", "Apparently",
+        "Famously", "Officially", "Eventually", "Somehow", "Luckily",
+        "Thankfully", "Technically", "Theoretically", "Practically",
+        "Look", "Listen", "Okay", "Fine", "Sure", "Right",
+        "Anyway", "Besides", "Instead", "Meanwhile", "Suddenly",
     }
 )
 
@@ -644,6 +660,7 @@ def build_grounding_corpus(
     *,
     persona_scope_refs: Sequence[MemoryNode] | None = None,
     conversation_history: Sequence[ConversationTurnLike] | None = None,
+    current_message: str | None = None,
 ) -> set[str]:
     """Build the salient-token corpus a turn's claims are aligned against.
 
@@ -670,6 +687,13 @@ def build_grounding_corpus(
     first-party truth (both speakers are parties to this exchange), so claims
     referencing them cannot be persona confabulation.
 
+    ``current_message`` (HU-2161) widens the corpus with the user's message
+    *this* turn. The history widening above only sees prior turns (the current
+    message is recorded after the reply), so a truthful reply that echoes the
+    user's own phrasing — quoting "famously fled his own job" back — anchored
+    a biographical claim on the user's words and was suppressed. The user's
+    own message is first-party truth for this exchange by definition.
+
     Grounding is intentionally a *content-overlap* check at Phase-1: a claim's
     named entity must appear in the corpus. This is the deterministic baseline
     the Clinical Advisor can reason about; it hardens to NLI / LLM-as-judge
@@ -687,6 +711,8 @@ def build_grounding_corpus(
         for turn in conversation_history:
             if turn.content:
                 corpus |= _corpus_tokens(turn.content)
+    if current_message:
+        corpus |= _corpus_tokens(current_message)
     # Persona vault: name parts, voice-instruction tokens, era-boundary year.
     if persona.name:
         corpus |= _corpus_tokens(persona.name)
@@ -725,6 +751,7 @@ def align_response(
     persona: PersonaVault,
     persona_scope_refs: Sequence[MemoryNode] | None = None,
     conversation_history: Sequence[ConversationTurnLike] | None = None,
+    current_message: str | None = None,
 ) -> AlignmentReport:
     """Align ``response`` against the turn's refs + persona vault.
 
@@ -740,6 +767,7 @@ def align_response(
     corpus = build_grounding_corpus(
         refs, persona, persona_scope_refs=persona_scope_refs,
         conversation_history=conversation_history,
+        current_message=current_message,
     )
     ungrounded = [c for c in claims if not is_grounded(c, corpus)]
     return AlignmentReport(
@@ -757,6 +785,7 @@ def apply_alignment_guard(
     persona: PersonaVault,
     persona_scope_refs: Sequence[MemoryNode] | None = None,
     conversation_history: Sequence[ConversationTurnLike] | None = None,
+    current_message: str | None = None,
 ) -> AlignmentReport:
     """Apply the §7.4.2 generation-time alignment guard.
 
@@ -778,6 +807,7 @@ def apply_alignment_guard(
     report = align_response(
         response, refs=refs, persona=persona, persona_scope_refs=persona_scope_refs,
         conversation_history=conversation_history,
+        current_message=current_message,
     )
     if report.disposition == "suppressed":
         report.text = ALIGNMENT_FALLBACK_RESPONSE

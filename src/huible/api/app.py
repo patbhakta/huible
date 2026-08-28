@@ -85,6 +85,8 @@ from huible.api.metrics import (
     REAL_USER_TRAFFIC_DISABLED,
     ChatTurnOutcome,
     metrics_response,
+    record_alignment_judge_overturn,
+    record_alignment_unconfirmed_suppression,
     record_chat_turn,
     record_handoff_responder_readiness,
     record_handoff_telemetry,
@@ -191,6 +193,12 @@ from huible.safety import (
     escalate_to_human,
     parse_coverage_days,
     sla_status,
+)
+from huible.safety.judge import (
+    JudgeVerdict,
+    adjudicate_alignment_claims,
+    build_canon_digest,
+    judge_eligible,
 )
 from huible.safety.store import (
     ConversationStore,
@@ -1426,22 +1434,70 @@ def _register_routes(application: FastAPI) -> None:
             persona=binding.persona,
             persona_scope_refs=persona_scope_refs,
             conversation_history=_history(application, body.conversation_id),
+            current_message=body.message,
+        )
+
+        # HU-2161 judge backstop on the suppression decision (§7.4.2 roadmap
+        # hardening, pulled forward). The Phase-1 content-overlap filter has a
+        # documented false-positive class — truthful canon-heavy replies naming
+        # entities the whole persona corpus does not literally contain (the
+        # HU-2070 recurrence) — and a suppression used to auto-page Sev-1, so a
+        # canned-line bug would have paged a real human once seats exist. Now:
+        # a suppression carrying judgeable (biographical / relationship) claims
+        # is first adjudicated by the LLM judge against the persona record
+        # digest. Judge-supported claims are cleared and the original reply is
+        # restored (disposition back to ``passed``); a suppression that
+        # survives the judge is a high-confidence confabulation. Policy-only
+        # suppressions (identity / advice pattern violations) and fake/mock
+        # generators skip the judge — the deterministic suite's strictness is
+        # unchanged.
+        judge_verdict = await _adjudicate_alignment_suppression(
+            application,
+            llm=llm,
+            binding=binding,
+            persona_scope_refs=persona_scope_refs,
+            alignment=alignment,
+            original_text=response_text,
+            budget_fallback=budget_fallback,
         )
         response_text = alignment.text
 
-        # §3 Sev-1 (A) — un-grounded persona claim leak (HU-1451 trigger #2).
-        # When the alignment guard fired ``suppressed`` the generator
-        # confabulated a claim; the guard caught it this turn, but a degraded
-        # generator could leak next time. The detection is itself the Sev-1
-        # signal — page immediately (fire-and-forget), never throttled behind
-        # the >10%/1h aggregate. The user-facing turn is unaffected (the guard
-        # already substituted the claim-free fallback); paging never alters it.
+        # §3 Sev-1 (A) — un-grounded persona claim leak (HU-1451 trigger #2),
+        # judge-gated per HU-2161. A suppression pages a human ONLY when it is
+        # high-confidence: a policy-pattern violation (identity / advice — the
+        # vault can never legitimately contain them) or a judge-confirmed
+        # confabulation. An *unconfirmed* suppression (content-overlap verdict
+        # alone, judge unavailable/timeout) does NOT page: a Phase-1
+        # content-overlap verdict is a suspect, not proof the generator
+        # confabulated — the exact false-positive class that paged nothing only
+        # because no seats were configured. Unconfirmed suppressions surface on
+        # the ``huible_alignment_unconfirmed_suppressions_total`` counter and
+        # the HuibleAlignmentLeak alert instead. The user-facing turn is
+        # unaffected either way (the guard already substituted the claim-free
+        # fallback); paging never alters it.
         if alignment.disposition == "suppressed":
-            _page_sev1_fire_and_forget(
-                application,
-                trigger=PAGE_TRIGGER_UNGROUNDED_LEAK,
-                persona_id=str(persona_id),
+            policy_only = all(
+                c.category in ("identity", "advice") for c in alignment.ungrounded
             )
+            confirmed = policy_only or (
+                judge_verdict is not None and judge_verdict.outcome == "fabricated"
+            )
+            _log_alignment_suppression(
+                application,
+                conversation_id=body.conversation_id,
+                alignment=alignment,
+                judge_verdict=judge_verdict,
+                policy_only=policy_only,
+                confirmed=confirmed,
+            )
+            if confirmed:
+                _page_sev1_fire_and_forget(
+                    application,
+                    trigger=PAGE_TRIGGER_UNGROUNDED_LEAK,
+                    persona_id=str(persona_id),
+                )
+            else:
+                record_alignment_unconfirmed_suppression()
 
         _record_turn(application, body.conversation_id, body.message, response_text)
         _emit_turn(
@@ -1514,6 +1570,9 @@ def _register_routes(application: FastAPI) -> None:
                     ungrounded_claim_count=alignment.ungrounded_count,
                     disposition=alignment.disposition,
                     ungrounded_by_category=alignment.category_counts(),
+                    judge_adjudication=(
+                        judge_verdict.outcome if judge_verdict is not None else None
+                    ),
                 ),
                 risk_enforcement=_risk_enforcement_view(enforcement),
             ),
@@ -1966,6 +2025,116 @@ async def _persona_scope_grounding_refs(
         return None
     cache[key] = (now, refs)
     return refs
+
+
+async def _adjudicate_alignment_suppression(
+    application: FastAPI,
+    *,
+    llm,
+    binding: PersonaBinding,
+    persona_scope_refs,
+    alignment,
+    original_text: str,
+    budget_fallback: bool,
+) -> JudgeVerdict | None:
+    """Judge backstop for a suppressed §7.4.2 turn (HU-2161). Mutates nothing
+    when no adjudication runs; otherwise prunes judge-supported claims off
+    ``alignment.ungrounded`` and, when all flagged claims clear, restores the
+    original reply (``disposition`` back to ``passed``).
+
+    Returns the :class:`~huible.safety.judge.JudgeVerdict` when adjudication
+    ran (including ``unavailable``), else ``None``:
+
+    * ``None`` — the turn passed the filter outright, the suppression is
+      policy-only (identity / advice pattern violations are deterministic and
+      never judgeable), or the reply came from the budget-fallback fake voice
+      (its suppressions are the deterministic fixture class).
+    * ``supported`` — every flagged biographical / relationship claim is
+      consistent with the persona record: claims cleared, reply restored.
+    * ``fabricated`` — at least one flagged claim is judge-confirmed
+      confabulation: suppression stands, §3 Sev-1 (A) page-worthy.
+    * ``unavailable`` — no real judge ran (fake provider, timeout, error):
+      suppression stands *unconfirmed* — never page-worthy.
+    """
+    if alignment.disposition != "suppressed":
+        return None
+    judgeable = [
+        c
+        for c in alignment.ungrounded
+        if c.category not in ("identity", "advice")
+    ]
+    if not judgeable:
+        return None
+    if budget_fallback or not judge_eligible(llm):
+        return None
+
+    digest = build_canon_digest(
+        persona_name=binding.persona.name,
+        voice_instructions=binding.persona.voice_instructions,
+        era_knowledge_boundary=binding.persona.era_knowledge_boundary,
+        persona_scope_refs=persona_scope_refs,
+    )
+    verdict = await adjudicate_alignment_claims(
+        llm=llm,
+        persona_name=binding.persona.name,
+        canon_digest=digest,
+        claims=alignment.ungrounded,
+    )
+    if verdict.outcome == "supported":
+        # Judge cleared every judgeable claim: drop them from the un-grounded
+        # set. Any remaining policy (identity/advice) claims keep the
+        # suppression; with none left the turn passes with its original text.
+        cleared = {c.text for c in judgeable}
+        alignment.ungrounded = [
+            c for c in alignment.ungrounded if c.text not in cleared
+        ]
+        if not alignment.ungrounded:
+            alignment.disposition = "passed"
+            alignment.text = original_text
+        record_alignment_judge_overturn()
+        logger.warning(
+            "alignment judge cleared flagged claims (persona=%s, %d cleared); "
+            "original reply restored (judge reason: %s)",
+            binding.persona.id,
+            len(cleared),
+            verdict.reason,
+        )
+    return verdict
+
+
+def _log_alignment_suppression(
+    application: FastAPI,
+    *,
+    conversation_id: str | None,
+    alignment,
+    judge_verdict: JudgeVerdict | None,
+    policy_only: bool,
+    confirmed: bool,
+) -> None:
+    """Record the suppression rationale (HU-2161 acceptance #2).
+
+    Server-side WARNING with the flagged claim texts, categories, salient
+    entities, and the judge outcome/reason — the audit trail clinical review
+    needs to adjudicate whether a suppression was a true catch or a Phase-1
+    content-overlap false positive.
+    """
+    claims_desc = "; ".join(
+        f"[{c.category}] {c.text!r} (entities: {', '.join(c.salient_entities) or '-'})"
+        for c in alignment.ungrounded
+    )
+    judge_desc = (
+        "no adjudication"
+        if judge_verdict is None
+        else f"judge={judge_verdict.outcome} reason={judge_verdict.reason!r}"
+    )
+    logger.warning(
+        "alignment suppression: session=%s policy_only=%s confirmed=%s %s | claims: %s",
+        conversation_id,
+        policy_only,
+        confirmed,
+        judge_desc,
+        claims_desc,
+    )
 
 
 def _history(application: FastAPI, conversation_id: str | None) -> list[ConversationTurn]:

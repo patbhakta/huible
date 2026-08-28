@@ -142,8 +142,15 @@ PAGE_TRIGGER_CRISIS_ENQUEUE: str = "crisis_enqueue"
 PAGE_TRIGGER_SLA_BREACH: str = "sla_breach"
 
 #: §3 Sev-1 (A): an un-grounded persona claim was released to a user (the
-#: §7.4.2 alignment guard fired ``suppressed`` — the generator confabulated;
-#: a degraded generator could leak next time). Pages on the detection.
+#: §7.4.2 alignment guard fired ``suppressed``). HU-2161: this trigger is now
+#: **judge-gated** — a Phase-1 content-overlap suppression pages only when it
+#: is high-confidence confabulation: a policy-pattern violation (identity /
+#: advice, deterministic) or an LLM-judge-confirmed fabrication. An
+#: unconfirmed suppression (judge unavailable/timeout) never pages: the
+#: content-overlap verdict alone is a suspect, not proof the generator
+#: confabulated — the HU-2070 false-positive class must not ring a real
+#: on-call seat. Unconfirmed suppressions surface on
+#: ``huible_alignment_unconfirmed_suppressions_total`` instead.
 PAGE_TRIGGER_UNGROUNDED_LEAK: str = "ungrounded_claim_leak"
 
 #: §3 Sev-1 (B): the safety net failed — a handoff ticket was ``DEGRADED``
