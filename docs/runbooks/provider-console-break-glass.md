@@ -1,12 +1,24 @@
 # Break-Glass Runbook: Provider-Console Access Recovery
 
+> **CANONICAL ADDRESS — READ FIRST (updated 2026-08-29, third false incident).**
+> Since the [HU-1715](/HU/issues/HU-1715) cutover, prod runs on **`.245`**
+> (`208.84.102.245`, hostname `ip-208-84-102-245.my-advin.com`, tailnet
+> `100.101.235.117`). The old prod **`.243` is DECOMMISSIONED/DARK** (offline
+> since ~2026-08-11; tailscale peer `ip-208-84-102-243` last seen 18d before
+> 2026-08-29). **Probing or power-cycling `.243` is always wrong.**
+> HU-1777, HU-1823, and the 2026-08-29 13:17Z HU-2131 event were ALL false
+> incidents from treating a non-prod IP as prod while prod was green. Confirm
+> the canonical address first:
+> `docs/runbooks/vps-failover-to-standby.md` § Canonical addresses.
+
 **Purpose:** Recover control of the production VPS through the hosting-provider
 console when the primary operator is unavailable, so a transient outage can
 never again cascade into a multi-day launch-chain freeze.
 
-**Scope:** Power-control and console access for the **prod VPS `208.84.102.243`**
-(reverse DNS `algo.bhakta.us`). This runbook does **not** cover application-level
-recovery — that is handled by the recovery trio (see §6).
+**Scope:** Power-control and console access for the **prod VPS `208.84.102.245`**
+(post-HU-1715 cutover; this host is also the agent host). This runbook does
+**not** cover application-level recovery — that is handled by the recovery trio
+(see §6).
 
 **Origin:** Post-incident follow-up to HU-1501 (prod VPS offline, multi-day
 launch freeze). The freeze cascaded for one reason: provider-console access
@@ -35,8 +47,8 @@ freeze (verified across the incident by Tech Lead + PM, Aug 12–14 2026):
 
 - **Provider-console access lives with a single operator.** Only the primary
   operator holds console login. No second authorized operator exists.
-- **No provider API token exists anywhere reachable to agents.** The agent host
-  (`208.84.102.245`) has no provider token in its runtime env, and no provider
+- **No provider API token exists anywhere reachable to agents.** The prod/agent
+  host (`208.84.102.245`) has no provider token in its runtime env, and no provider
   CLI is installed (`hcloud`/`doctl`/`vultr`/`linode`/`aws`/`gcloud` — none
   present). The `vps-infra` and `huible` repos are service-files / app code only
   (no Terraform/IaC, no provider references).
@@ -60,11 +72,13 @@ Invoke when **any** of these are true and the primary operator cannot be reached
 within an agreed SLA (default: **2 hours** of unreachability during a prod
 outage):
 
-- The prod VPS `208.84.102.243` is unreachable (ICMP loss + ports 22/8080/5984
-  down) AND the primary operator has not responded on WhatsApp / accepted the
-  Paperclip power-on confirmation.
-- Both prod Tailscale nodes (`ip-208-84-102-243`, `kestra-on-vps`) report
-  `offline` for >2h.
+- The prod VPS `208.84.102.245` is unreachable (ICMP loss + ports
+  22/80/443 down — SSH 22 and Caddy 80/443 are the public edge; app 8000 and
+  Prometheus 9090 are additional checks) AND the primary operator has not
+  responded on WhatsApp / accepted the Paperclip power-on confirmation.
+- The prod Tailscale node (`ip-208-84-102-245`) reports `offline` for >2h.
+  (Old nodes `ip-208-84-102-243` and `kestra-on-vps` are decommissioned —
+  their being offline is NOT a prod signal.)
 - The operator's own workstation nodes (`pat-w11pc`, `pats-lappy`, `cloud9`)
   are all `offline`, indicating the operator is entirely absent.
 
@@ -99,12 +113,13 @@ be executed by anyone but the primary operator.**
 
 ## 5. Break-glass power-on procedure
 
-> **2026-08-16 (HU-1823):** this runbook was written for the `.243`-era prod.
-> Since the HU-1715 cutover, prod runs on `.245` and `.243` is decommissioned —
-> before invoking any break-glass step, confirm the outage is against the
-> **canonical** address (`docs/runbooks/vps-failover-to-standby.md` § Canonical
-> addresses). HU-1777 and HU-1823 were both false incidents from probing
-> non-prod IPs while prod was green.
+> **2026-08-16 (HU-1823), reaffirmed 2026-08-29 (HU-2131):** this runbook was
+> written for the `.243`-era prod. Since the HU-1715 cutover, prod runs on
+> `.245` and `.243` is decommissioned — before invoking any break-glass step,
+> confirm the outage is against the **canonical** address
+> (`docs/runbooks/vps-failover-to-standby.md` § Canonical addresses). HU-1777,
+> HU-1823, and the 2026-08-29 13:17Z HU-2131 event were all false incidents
+> from probing non-prod IPs while prod was green.
 
 > Prerequisites: §4 credential deposit is complete AND a break-glass operator
 > is designated. If either is missing, escalate to the board (§7) instead — do
@@ -185,4 +200,4 @@ linked in the HU-1614 thread.
   operator's access still works (do not let it silently lapse).
 - Keep the provider identity (§7) and operator contacts (§1) current.
 
-*Last reviewed: 2026-08-14 (created with HU-1614).*
+*Last reviewed: 2026-08-29 (HU-2131 false-incident pass 3 — scope/§3 triggers canonicalized to `.245`; `.243` marked decommissioned up top).*
