@@ -37,8 +37,10 @@ from huible.persona.context import (
     ConversationTurn,
     PersonaConfig,
     RelationshipTier,
+    TEXTING_CONCISION_DIRECTIVE,
     get_confidence_level,
 )
+from huible.safety.crisis import UserAffect
 
 PERSONA_ID = uuid4()
 
@@ -333,6 +335,17 @@ class TestRendering:
     def test_system_prompt_contains_relationship_tier(self):
         ctx = ContextBuilder().filter_and_render([], _persona(), RelationshipTier.ACQUAINTANCE)
         assert "acquaintance" in ctx.system_prompt
+
+    def test_system_prompt_contains_texting_concision_directive(self):
+        # HU-1911 human-touch gate: every persona system prompt carries the
+        # texting channel shape (length bound, no lists, one-line disclosure).
+        ctx = ContextBuilder().filter_and_render([], _persona(), RelationshipTier.FAMILY)
+        assert TEXTING_CONCISION_DIRECTIVE in ctx.system_prompt
+        # On the distress branch too — the channel bound must never drop.
+        distressed = ContextBuilder().filter_and_render(
+            [], _persona(), RelationshipTier.FAMILY, user_affect=UserAffect.DISTRESS
+        )
+        assert TEXTING_CONCISION_DIRECTIVE in distressed.system_prompt
 
     def test_memory_block_format(self):
         activated = [

@@ -65,6 +65,8 @@ from huible.safety.affect import (
 from huible.safety.alignment import (
     ADVICE_CLAIM_PATTERNS,
     ALIGNMENT_FALLBACK_RESPONSE,
+    ALIGNMENT_FALLBACK_VARIANTS,
+    select_alignment_fallback,
     IDENTITY_CLAIM_PATTERNS,
     AlignmentReport,
     Claim,
@@ -165,6 +167,8 @@ __all__ = [
     "ADVICE_CLAIM_PATTERNS",
     "AGE_INAPPROPRIATE_TOPIC_PATTERNS",
     "ALIGNMENT_FALLBACK_RESPONSE",
+    "ALIGNMENT_FALLBACK_VARIANTS",
+    "select_alignment_fallback",
     "CONSENT_CARD_VERSION",
     "COVERAGE_ALWAYS",
     "COVERAGE_HOURS",

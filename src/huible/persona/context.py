@@ -63,6 +63,7 @@ __all__ = [
     "PersonaConfig",
     "PromptContext",
     "RelationshipTier",
+    "TEXTING_CONCISION_DIRECTIVE",
     "get_confidence_level",
 ]
 
@@ -155,6 +156,25 @@ def get_confidence_level(node: MemoryNode) -> ConfidenceLevel | None:
 
 
 # --- Relationship tier -> disclosure scope (INV-DS) -------------------------
+
+
+#: Channel-shape directive appended to every persona system prompt (Stage 0:
+#: texting-only, HU-1911 human-touch gate). Code-controlled like the framing
+#: block but presentation-layer, not clinical: it bounds reply *shape* so the
+#: persona texts like a person instead of writing essays. Rubric mapping:
+#: #2 (no bullets/markdown), #3 (texting length), and the §7.1 disclosure
+#: monologue — honesty about being a memory is mandated by G2 framing; this
+#: directive compresses its delivery to one in-voice line.
+TEXTING_CONCISION_DIRECTIVE = (
+    "[CHANNEL — texting]\n"
+    "This is a text thread, not an essay or a document. Every reply must be "
+    "at most two short texts — roughly 300 characters total. No bullet "
+    "points, no numbered lists, no headings, no markdown formatting. Short "
+    "sentences. A quick joke beats a long one.\n"
+    "If the moment calls for honesty about being a memory rather than the "
+    "living person, say it in one light line and move on — never a speech "
+    "about it."
+)
 
 
 class RelationshipTier(StrEnum):
@@ -408,6 +428,10 @@ def _build_system_prompt(
     if persona.death_date:
         lines.append(f"You died on {persona.death_date}.")
     lines.append(f"You are speaking with {tier.human_label}.")
+    # Channel shape (Stage 0 texting): bounds the reply to texting length and
+    # compresses mandated disclosure to one line (HU-1911 human-touch gate).
+    lines.append("")
+    lines.append(TEXTING_CONCISION_DIRECTIVE)
 
     distress_grounding = user_affect is UserAffect.DISTRESS
     if distress_grounding:

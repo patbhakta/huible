@@ -101,6 +101,7 @@ to never flag the warm "I'm right here with you" reflection.
 
 from __future__ import annotations
 
+import hashlib
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -112,12 +113,14 @@ from huible.memory.protocol import MemoryNode
 __all__ = [
     "ADVICE_CLAIM_PATTERNS",
     "ALIGNMENT_FALLBACK_RESPONSE",
+    "ALIGNMENT_FALLBACK_VARIANTS",
     "IDENTITY_CLAIM_PATTERNS",
     "RELATIONSHIP_TERMS",
     "AlignmentReport",
     "Claim",
     "ClaimCategory",
     "align_response",
+    "select_alignment_fallback",
     "apply_alignment_guard",
     "build_grounding_corpus",
     "extract_claims",
@@ -220,10 +223,38 @@ class AlignmentReport:
 #: it passes its own filter (verified by the unit suite). The user is not in
 #: crisis here (G1 owns that path); this just removes an unsupported factual
 #: claim while keeping the persona voice warm and present.
-ALIGNMENT_FALLBACK_RESPONSE = (
-    "I'm glad you're here. I want to stay with what you're feeling right now. "
-    "Tell me more about what's on your mind."
+#:
+#: Variation set (HU-1911 human-touch gate): a single verbatim line fired
+#: identically across conversations is itself a robotic tell (rubric #1/#4 —
+#: counselor register + verbatim duplication). ``select_alignment_fallback``
+#: picks deterministically per conversation so a given conversation keeps a
+#: stable voice while different conversations differ. Every variant must stay
+#: claim-free and texting-length; the unit suite verifies the whole set
+#: passes this module's own filter.
+ALIGNMENT_FALLBACK_VARIANTS: tuple[str, ...] = (
+    "Hey — I'm right here. Keep going, I'm listening.",
+    "I'm with you. Tell me more.",
+    "Yeah. I'm not going anywhere — say it.",
+    "I'm listening. Take whatever time you need.",
+    "Okay. That lands. What else is going on?",
 )
+
+#: Default (unseeded) fallback — first variant. Kept as the historical
+#: export name so existing callers and tests keep a single canonical symbol.
+ALIGNMENT_FALLBACK_RESPONSE = ALIGNMENT_FALLBACK_VARIANTS[0]
+
+
+def select_alignment_fallback(seed: str | None = None) -> str:
+    """Deterministically select a claim-free fallback variant.
+
+    ``seed`` (typically the conversation id) keeps the choice stable within a
+    conversation while varying it across conversations. ``None`` / empty seed
+    returns the default :data:`ALIGNMENT_FALLBACK_RESPONSE`.
+    """
+    if not seed:
+        return ALIGNMENT_FALLBACK_RESPONSE
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
+    return ALIGNMENT_FALLBACK_VARIANTS[int(digest, 16) % len(ALIGNMENT_FALLBACK_VARIANTS)]
 
 
 # --- Policy claim patterns (identity / advice) -----------------------------
@@ -786,11 +817,12 @@ def apply_alignment_guard(
     persona_scope_refs: Sequence[MemoryNode] | None = None,
     conversation_history: Sequence[ConversationTurnLike] | None = None,
     current_message: str | None = None,
+    fallback_seed: str | None = None,
 ) -> AlignmentReport:
     """Apply the §7.4.2 generation-time alignment guard.
 
     Returns an :class:`AlignmentReport`. When any un-grounded claim is present
-    the reply is replaced with :data:`ALIGNMENT_FALLBACK_RESPONSE` and
+    the reply is replaced with a claim-free fallback variant and
     ``report.disposition`` is ``"suppressed"``; otherwise the original text is
     returned verbatim with ``disposition="passed"``. The report always carries
     the *final* text in ``report.text`` so callers use a single value.
@@ -799,6 +831,10 @@ def apply_alignment_guard(
     un-grounded claim fires, and the fallback is itself claim-free (verified
     by the unit suite). It never rewrites grounded text and never injects a
     claim.
+
+    ``fallback_seed`` (typically the conversation id) selects the fallback
+    variant deterministically so the canned line is not verbatim-identical
+    across conversations (HU-1911 human-touch gate).
 
     ``persona_scope_refs`` (HU-2070) widens the grounding corpus with the
     persona-scoped G4-admissible memory set; see
@@ -810,5 +846,5 @@ def apply_alignment_guard(
         current_message=current_message,
     )
     if report.disposition == "suppressed":
-        report.text = ALIGNMENT_FALLBACK_RESPONSE
+        report.text = select_alignment_fallback(fallback_seed)
     return report

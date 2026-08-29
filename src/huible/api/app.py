@@ -1386,7 +1386,13 @@ def _register_routes(application: FastAPI) -> None:
             # line emitted by metered/ceilinged providers (zai HU-1910); the
             # clients consume it for logging and never send it to the API.
             response_text = await llm.generate(
-                prompt, system_prompt=system_prompt, conversation_id=body.conversation_id
+                prompt,
+                system_prompt=system_prompt,
+                conversation_id=body.conversation_id,
+                # Rubric #3 (HU-1911): texting-length ceiling per turn; the
+                # concision directive in the system prompt shapes style, this
+                # hard-caps the hosted generation budget for persona turns.
+                max_tokens=settings.persona_chat_max_tokens,
             )
         except LLMBudgetExceededError:
             # Board-approved degraded posture (HU-1774 decision sweep
@@ -1435,6 +1441,9 @@ def _register_routes(application: FastAPI) -> None:
             persona_scope_refs=persona_scope_refs,
             conversation_history=_history(application, body.conversation_id),
             current_message=body.message,
+            # HU-1911: vary the suppression fallback per conversation so the
+            # canned line is not verbatim-identical across sessions.
+            fallback_seed=str(body.conversation_id),
         )
 
         # HU-2161 judge backstop on the suppression decision (§7.4.2 roadmap

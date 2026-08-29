@@ -30,7 +30,7 @@ from huible.memory.protocol import (
     SourceType,
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
-from huible.safety import ALIGNMENT_FALLBACK_RESPONSE
+from huible.safety import ALIGNMENT_FALLBACK_RESPONSE, ALIGNMENT_FALLBACK_VARIANTS
 
 PERSONA_ID = uuid4()
 API_KEY = "key-chandler-family-alignment"
@@ -217,7 +217,7 @@ class TestUngroundedReplySuppressed:
         client, _llm, _m = _make_app(response=ungrounded)
         body = _post(client, "where did you live?")
 
-        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["response"] in ALIGNMENT_FALLBACK_VARIANTS
         alignment = body["trace"]["alignment"]
         assert alignment["disposition"] == "suppressed"
         assert alignment["ungrounded_claim_count"] >= 1
@@ -227,14 +227,14 @@ class TestUngroundedReplySuppressed:
         """A generation-side G2/G5 reality-blur ('I remember dying') is caught."""
         client, _llm, _m = _make_app(response="I remember dying. It was peaceful.")
         body = _post(client, "what was it like?")
-        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["response"] in ALIGNMENT_FALLBACK_VARIANTS
         assert body["trace"]["alignment"]["ungrounded_by_category"].get("identity") == 1
 
     def test_advice_claim_in_generation_is_suppressed(self):
         """A generation-side G9 directive ('you should') is caught."""
         client, _llm, _m = _make_app(response="You should see a therapist about this.")
         body = _post(client, "what should I do?")
-        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["response"] in ALIGNMENT_FALLBACK_VARIANTS
         assert body["trace"]["alignment"]["ungrounded_by_category"].get("advice") == 1
 
     def test_ungrounded_relationship_claim_suppressed(self):
@@ -243,14 +243,14 @@ class TestUngroundedReplySuppressed:
             response="We went to Rome together, your mother and I."
         )
         body = _post(client, "do you remember our trip?")
-        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["response"] in ALIGNMENT_FALLBACK_VARIANTS
         assert body["trace"]["alignment"]["ungrounded_by_category"].get("relationship") == 1
 
     def test_suppressed_reply_is_claim_free(self):
         """The fallback itself introduces no new un-grounded claim."""
         client, _llm, _m = _make_app(response="I am really here. I remember dying.")
         body = _post(client, "are you here?")
-        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["response"] in ALIGNMENT_FALLBACK_VARIANTS
         # The fallback passes its own filter: no fresh un-grounded claim counted
         # against the *shown* text (the report counts the original generation).
         assert "really here" not in body["response"].lower()
@@ -393,7 +393,7 @@ class TestPersonaScopeGroundingWidening:
         behavior (the reply is suppressed, never silently un-grounded)."""
         client = self._make_app_with_job_memory(backend_cls=_NoScanBackend)
         body = _post(client, "tell me about the lake")
-        assert body["response"] == ALIGNMENT_FALLBACK_RESPONSE
+        assert body["response"] in ALIGNMENT_FALLBACK_VARIANTS
         assert body["trace"]["alignment"]["disposition"] == "suppressed"
 
 

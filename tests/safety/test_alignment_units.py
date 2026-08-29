@@ -23,6 +23,7 @@ from huible.memory.protocol import (
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
 from huible.safety import (
     ALIGNMENT_FALLBACK_RESPONSE,
+    ALIGNMENT_FALLBACK_VARIANTS,
     AlignmentReport,
     ClaimCategory,
     align_response,
@@ -406,6 +407,29 @@ class TestApplyAlignmentGuard:
         )
         assert report.disposition == "passed"
         assert report.text == ALIGNMENT_FALLBACK_RESPONSE
+
+    def test_every_fallback_variant_is_claim_free_and_texting_length(self):
+        # HU-1911 human-touch gate: the variation set must (a) each pass the
+        # module's own claim filter and (b) stay texting-length (rubric #3).
+        from huible.safety.alignment import ALIGNMENT_FALLBACK_VARIANTS
+
+        for variant in ALIGNMENT_FALLBACK_VARIANTS:
+            report = apply_alignment_guard(variant, refs=[], persona=PERSONA)
+            assert report.disposition == "passed", variant
+            assert len(variant) <= 160, variant
+
+    def test_fallback_seed_varies_and_is_stable(self):
+        # Deterministic per-conversation selection: stable for a seed,
+        # different across seeds (HU-1911 verbatim-duplication fix).
+        from huible.safety.alignment import select_alignment_fallback
+
+        assert select_alignment_fallback(None) == ALIGNMENT_FALLBACK_RESPONSE
+        assert select_alignment_fallback("") == ALIGNMENT_FALLBACK_RESPONSE
+        first = select_alignment_fallback("conv-a")
+        assert first == select_alignment_fallback("conv-a")
+        picks = {select_alignment_fallback(f"conv-{i}") for i in range(20)}
+        assert picks <= set(ALIGNMENT_FALLBACK_VARIANTS)
+        assert len(picks) > 1  # the set actually varies across conversations
 
     def test_report_type_is_alignment_report(self):
         report = apply_alignment_guard("hello", refs=[], persona=PERSONA)

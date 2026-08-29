@@ -126,6 +126,12 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 512
     llm_temperature: float = 0.7
     llm_request_timeout_s: float = 60.0
+    # Persona-voiced turns on the texting channel get a per-turn ceiling
+    # below the raw LLM budget (HU-1911 human-touch gate, rubric #3:
+    # hosted generators default to essay-length replies). ``llm_max_tokens``
+    # stays generous for provider headroom; this cap is applied at the
+    # persona-chat call site so non-persona consumers keep the full budget.
+    persona_chat_max_tokens: int = 160
 
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
