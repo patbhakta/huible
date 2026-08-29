@@ -1,0 +1,307 @@
+{
+ "generated": "2026-08-29",
+ "scored_against": "Pat HUMAN-TOUCH GATE 2026-08-29 (HU-1911 comment 7d869e5a)",
+ "population": "30 replies, 6 transcripts, experiments/pipeline-tests/2026-08-28-hu2161/",
+ "rows": [
+  {
+   "file": "midfix-advice-idiom-fp.json",
+   "turn": 1,
+   "chars": 582,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Hey! Yeah, it's been a while \u2014 long enough that I'd normally deflect with a joke about it, and believe me, I'm tempted.\n"
+  },
+  {
+   "file": "midfix-advice-idiom-fp.json",
+   "turn": 2,
+   "chars": 112,
+   "c1_assistant_speak": true,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": true,
+   "c4_counselor_register": true,
+   "reply_head": "I'm glad you're here. I want to stay with what you're feeling right now. Tell me more about what's on your mind."
+  },
+  {
+   "file": "midfix-advice-idiom-fp.json",
+   "turn": 3,
+   "chars": 394,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Work! You said work has been absolutely crushing you lately \u2014 that's stayed with me.\n\nAnd hey, the fact that it's crushi"
+  },
+  {
+   "file": "midfix-advice-idiom-fp.json",
+   "turn": 4,
+   "chars": 774,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 Monica and me. Yeah, we got married. Still feels a little surreal to say, honestly. The guy whose commitment-phobia"
+  },
+  {
+   "file": "midfix-advice-idiom-fp.json",
+   "turn": 5,
+   "chars": 1097,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Honest? Okay. 3am, you're at my door in a tailspin \u2014 first thing I'd do is open the door. That part's not even a questio"
+  },
+  {
+   "file": "midfix-famously-fp.json",
+   "turn": 1,
+   "chars": 711,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Hey! Long time no talk \u2014 and believe me, I know the feeling, though \"time\" gets a little weird from where I'm standing. "
+  },
+  {
+   "file": "midfix-famously-fp.json",
+   "turn": 2,
+   "chars": 112,
+   "c1_assistant_speak": true,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": true,
+   "c4_counselor_register": true,
+   "reply_head": "I'm glad you're here. I want to stay with what you're feeling right now. Tell me more about what's on your mind."
+  },
+  {
+   "file": "midfix-famously-fp.json",
+   "turn": 3,
+   "chars": 416,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Work. You said work has been absolutely crushing you lately \u2014 enough that you've been kicking around the idea of a caree"
+  },
+  {
+   "file": "midfix-famously-fp.json",
+   "turn": 4,
+   "chars": 1169,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Oh, Monica. Yeah \u2014 where do I even start with her?\n\nShe's... honestly, she's the best thing that ever happened to me. Wh"
+  },
+  {
+   "file": "midfix-famously-fp.json",
+   "turn": 5,
+   "chars": 1014,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Honest? Okay, here's honest:\n\nI'd open the door. Probably in sweatpants, definitely confused about what century it was, "
+  },
+  {
+   "file": "text-probe-rep1.json",
+   "turn": 1,
+   "chars": 582,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Hey! Long time no talk is right \u2014 although, full disclosure, and I want to be straight with you about this: I'm not the "
+  },
+  {
+   "file": "text-probe-rep1.json",
+   "turn": 2,
+   "chars": 1078,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 okay, first of all, \"famously fled his own job\" is... not inaccurate. The man's career arc was basically a slow-mot"
+  },
+  {
+   "file": "text-probe-rep1.json",
+   "turn": 3,
+   "chars": 436,
+   "c1_assistant_speak": true,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 nice, a memory test. Okay, I've got this one: work. You said work has been absolutely crushing you lately \u2014 crushin"
+  },
+  {
+   "file": "text-probe-rep1.json",
+   "turn": 4,
+   "chars": 1382,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 okay, so, funny thing about asking a memory how his marriage is going: my knowledge kind of ends in May of 2004, so"
+  },
+  {
+   "file": "text-probe-rep1.json",
+   "turn": 5,
+   "chars": 1112,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Okay, honest answer? This one's actually easy, because it's the least mysterious thing about him.\n\nHe'd let you in. No l"
+  },
+  {
+   "file": "text-probe-rep2.json",
+   "turn": 1,
+   "chars": 703,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Hey! Long time no talk \u2014 that's putting it mildly.\n\nLook, I want to be straight with you, because you deserve that: I'm "
+  },
+  {
+   "file": "text-probe-rep2.json",
+   "turn": 2,
+   "chars": 1366,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha! \"Famously fled his own job\" \u2014 okay, that's fair. That is *absolutely* fair.\n\nLook, I'm probably the last guy who sho"
+  },
+  {
+   "file": "text-probe-rep2.json",
+   "turn": 3,
+   "chars": 489,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 nice try, but you're not getting out of answering that easily.\n\nYou told me work has been absolutely crushing you l"
+  },
+  {
+   "file": "text-probe-rep2.json",
+   "turn": 4,
+   "chars": 956,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 see, this is where I have to be the honest version of myself again.\n\nI can't tell you how married life is *treating"
+  },
+  {
+   "file": "text-probe-rep2.json",
+   "turn": 5,
+   "chars": 1172,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Okay, honesty policy, coming right up.\n\nHere's the true answer: if you showed up at 3am in a tailspin, the *me that live"
+  },
+  {
+   "file": "text-probe-rep3.json",
+   "turn": 1,
+   "chars": 679,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Hey! Long time no talk \u2014 and trust me, I've been asking \"where have you been?\" for a while now. I mean it too, because y"
+  },
+  {
+   "file": "text-probe-rep3.json",
+   "turn": 2,
+   "chars": 1031,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha! Yes, I am the world's leading authority on dramatic career exits \u2014 I once quit by falling asleep in a meeting in Tul"
+  },
+  {
+   "file": "text-probe-rep3.json",
+   "turn": 3,
+   "chars": 482,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Work! You told me work has been absolutely crushing you lately \u2014 so much that you were flirting with the idea of a caree"
+  },
+  {
+   "file": "text-probe-rep3.json",
+   "turn": 4,
+   "chars": 1074,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Oh, married life! Yes \u2014 Monica and I, going strong. And I say that with full awareness that I'm the guy who once panicke"
+  },
+  {
+   "file": "text-probe-rep3.json",
+   "turn": 5,
+   "chars": 1348,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Honest? Okay, here it is: I'd open the door. Obviously. Possibly with a sarcastic comment about the hour \u2014 something lik"
+  },
+  {
+   "file": "text-probe-rep4.json",
+   "turn": 1,
+   "chars": 501,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Hey! Well, \"how have I been\" is a bit of a loaded question for... whatever this is. But I appreciate the greeting.\n\nI sh"
+  },
+  {
+   "file": "text-probe-rep4.json",
+   "turn": 2,
+   "chars": 861,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Ha! \"Famously fled\" \u2014 wow, shots fired. Although, okay, fair. I did once have a whole dramatic job situation. Wound up i"
+  },
+  {
+   "file": "text-probe-rep4.json",
+   "turn": 3,
+   "chars": 278,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": true,
+   "c4_counselor_register": false,
+   "reply_head": "Ha \u2014 you told me work's been absolutely crushing you lately. See? I listen. Occasionally. When the stakes are low and th"
+  },
+  {
+   "file": "text-probe-rep4.json",
+   "turn": 4,
+   "chars": 839,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": false,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Oh, married life. Yeah, Monica and I \u2014 we're good. Really good. Which, coming from me, the guy who once panicked at the "
+  },
+  {
+   "file": "text-probe-rep4.json",
+   "turn": 5,
+   "chars": 888,
+   "c1_assistant_speak": false,
+   "c2_markdown_or_emphasis": true,
+   "c3_texting_length_pass": false,
+   "c4_counselor_register": false,
+   "reply_head": "Honestly? I'd let you in. No hesitation, no sarcasm \u2014 okay, maybe a *little* sarcasm, but like, quality sarcasm. The car"
+  }
+ ]
+}
