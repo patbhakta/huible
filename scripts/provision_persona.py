@@ -30,6 +30,7 @@ Usage:
       --slug chandler-bing --era-boundary 2004-05-06 \
       --voice-profile /root/repos/personas/chandler-bing/02-clean/persona-profile.md \
       --corpus "friends-v2.csv" \
+      --length-corpus "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv" \
       --database-url postgresql://huible:***@127.0.0.1:5432/huible
 """
 
@@ -47,7 +48,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from huible.conversation import simple_embedding  # noqa: E402
+from huible.conversation import simple_embedding
+from huible.persona.length import (
+    CorpusLengthStats,
+    compute_corpus_length_stats,
+    stats_to_metadata,
+)
 
 QUERY_EMBEDDING_DIM = 1536  # memories.embedding_content schema dim (HU-1909)
 
@@ -177,6 +183,62 @@ def collect_memories(memory_dir: Path) -> list[dict]:
     return out
 
 
+def load_length_corpus(
+    path: Path, persona_name: str
+) -> CorpusLengthStats | None:
+    """Measure the persona's own real-text length register (HU-2231).
+
+    Accepts either the cleaned dialog JSONL (``clean.py`` output — already
+    persona-filtered by ``extract.py``; entries carry ``text`` and an
+    optional ``speaker``) or the raw ``person,line`` CSV (``extract.py``
+    input; filtered to the persona's own rows so a shared-corpus file like
+    ``friends-v2.csv`` measures only the persona's lines). Returns ``None``
+    when the corpus is missing/too thin — the persona then keeps the safe
+    default reply budget.
+    """
+    if not path.exists():
+        print(f"[provision] length corpus not found: {path} (keeping default budget)")
+        return None
+
+    texts: list[str] = []
+    if path.suffix.lower() == ".csv":
+        import csv
+
+        with open(path, encoding="utf-8", newline="") as f:
+            for row in csv.DictReader(f):
+                person = (row.get("person") or row.get("speaker") or "").strip()
+                line = (row.get("line") or row.get("text") or "").strip()
+                if line and person.lower() == persona_name.strip().lower():
+                    texts.append(line)
+    else:
+        with open(path, encoding="utf-8") as f:
+            for raw in f:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    entry = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                speaker = (entry.get("speaker") or "").strip()
+                text = (entry.get("text") or "").strip()
+                if not text:
+                    continue
+                # Cleaned JSONL is persona-filtered upstream; a speaker tag
+                # that names someone else (shared corpus) is excluded.
+                if speaker and speaker.lower() != persona_name.strip().lower():
+                    continue
+                texts.append(text)
+
+    stats = compute_corpus_length_stats(texts)
+    if stats is None:
+        print(
+            f"[provision] length corpus too thin ({len(texts)} persona lines in "
+            f"{path}); keeping default budget"
+        )
+    return stats
+
+
 async def provision(
     database_url: str,
     persona_id: uuid.UUID,
@@ -255,6 +317,17 @@ def main() -> None:
     parser.add_argument("--era-boundary", required=True, help="ISO date walling the persona's universe")
     parser.add_argument("--voice-profile", required=True, type=Path, help="Structured persona-profile.md")
     parser.add_argument("--corpus", default="unknown", help="Source corpus label for metadata")
+    parser.add_argument(
+        "--length-corpus",
+        default=None,
+        type=Path,
+        help=(
+            "Corpus to measure the persona's real-text length register from "
+            "(cleaned dialog JSONL or person,line CSV). Stored on the persona "
+            "record; drives the per-persona reply budget (HU-2231). Optional — "
+            "without it the persona keeps the default budget."
+        ),
+    )
     parser.add_argument("--structure-model", default=None, help="LLM used by the structure stage")
     parser.add_argument(
         "--database-url",
@@ -280,6 +353,22 @@ def main() -> None:
         "structure_model": args.structure_model,
         "provisioned_at": datetime.now(UTC).isoformat(),
     }
+    # HU-2231: measured length register (median/p75/p90 chars) from the
+    # persona's own lines; the engine derives the reply budget from this
+    # block at hydration time. Absent when no corpus / too-thin sample —
+    # the persona then keeps the safe default budget.
+    length_stats = (
+        load_length_corpus(args.length_corpus, args.persona_name)
+        if args.length_corpus
+        else None
+    )
+    if length_stats is not None:
+        metadata["corpus_length"] = stats_to_metadata(length_stats)
+        print(
+            f"[provision] length register: median {length_stats.median_chars}ch / "
+            f"p75 {length_stats.p75_chars}ch / p90 {length_stats.p90_chars}ch "
+            f"({length_stats.sample_lines} lines)"
+        )
     result = asyncio.run(
         provision(
             database_url=args.database_url,

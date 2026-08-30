@@ -51,19 +51,25 @@ from huible.memory.retrieval import (
 from huible.memory.retrieval import (
     ConversationTurn as RetrievalTurn,
 )
+from huible.persona.length import (
+    TEXTING_CONCISION_DIRECTIVE,
+    CorpusLengthStats,
+    render_texting_directive,
+)
 from huible.safety.crisis import UserAffect
 from huible.safety.framing import get_distress_addendum, get_framing
 
 __all__ = [
     "CONFIDENCE_LEVEL_METADATA_KEY",
+    "TEXTING_CONCISION_DIRECTIVE",
     "ConfidenceLevel",
     "ContextBuilder",
     "ConversationTurn",
+    "CorpusLengthStats",
     "ExcludedMemoryRef",
     "PersonaConfig",
     "PromptContext",
     "RelationshipTier",
-    "TEXTING_CONCISION_DIRECTIVE",
     "get_confidence_level",
 ]
 
@@ -158,38 +164,12 @@ def get_confidence_level(node: MemoryNode) -> ConfidenceLevel | None:
 # --- Relationship tier -> disclosure scope (INV-DS) -------------------------
 
 
-#: Channel-shape directive appended to every persona system prompt (Stage 0:
-#: texting-only, HU-1911 human-touch gate). Code-controlled like the framing
-#: block but presentation-layer, not clinical: it bounds reply *shape* so the
-#: persona texts like a person instead of writing essays. Rubric mapping:
-#: #2 (no bullets/markdown), #3 (texting length), and the §7.1 disclosure
-#: monologue — honesty about being a memory is mandated by G2 framing; this
-#: directive compresses its delivery to one in-voice line.
-#:
-#: Length register is corpus-derived (2026-08-30 spec, measured from
-#: friends-v2.csv: Chandler median 44ch / p75 79 / p90 129; 94% of his lines
-#: ≤160ch, 99% ≤300ch — all six friends cluster the same). Target median
-#: ~40-60ch, hard cap ~130ch for normal banter, allowance up to ~300ch only
-#: for rare sincere/emotional pivots. Enforced jointly with the per-turn
-#: ``persona_chat_max_tokens`` cap (~64 tokens) at the chat call site.
-#: Generalization rule: at onboarding, measure the persona's own real-text
-#: distribution and derive its reply budget from it — persona fidelity
-#: includes length register.
-TEXTING_CONCISION_DIRECTIVE = (
-    "[CHANNEL — texting]\n"
-    "This is a text thread. Reply the way this person really texts: one "
-    "line, like them. Their real lines are a quip, not a paragraph — "
-    "usually ONE short sentence of 5 to 12 words. When a quick line "
-    "answers it, never say more. A quick joke beats a long one; leaving "
-    "them wanting more is the bit.\n"
-    "Only when the moment genuinely turns sincere or emotional may you go "
-    "longer — at most ~300 characters, and rarely.\n"
-    "No bullet points, no numbered lists, no headings, no markdown "
-    "formatting.\n"
-    "If the moment calls for honesty about being a memory rather than the "
-    "living person, say it in one light line and move on — never a speech "
-    "about it."
-)
+#: Channel-shape fallback directive, re-exported from
+#: :mod:`huible.persona.length` (HU-2231) where the corpus-derived
+#: templating lives. Kept importable from this module for existing
+#: callers/tests; ``render_texting_directive`` is the sanctioned entry
+#: point (per-persona anchors when the persona has measured corpus
+#: stats, this constant verbatim when not).
 
 
 class RelationshipTier(StrEnum):
@@ -247,6 +227,11 @@ class PersonaConfig:
     era_knowledge_boundary: str = "2020-01-01"
     age_at_death: int | None = None
     death_date: str | None = None
+    #: Measured real-text length register (HU-2231), hydrated from the
+    #: persona record's ``metadata.corpus_length`` at boot. ``None`` (no
+    #: corpus / fail-closed parse) keeps the safe default budget: the
+    #: fallback directive + the global ``persona_chat_max_tokens`` cap.
+    length_stats: CorpusLengthStats | None = None
 
 
 @dataclass(slots=True)
@@ -443,10 +428,12 @@ def _build_system_prompt(
     if persona.death_date:
         lines.append(f"You died on {persona.death_date}.")
     lines.append(f"You are speaking with {tier.human_label}.")
-    # Channel shape (Stage 0 texting): bounds the reply to texting length and
-    # compresses mandated disclosure to one line (HU-1911 human-touch gate).
+    # Channel shape (Stage 0 texting): bounds the reply to the persona's own
+    # texting length register and compresses mandated disclosure to one line
+    # (HU-1911 human-touch gate; HU-2231 per-persona anchoring — measured
+    # corpus stats when present, verified Chandler-tuned fallback when not).
     lines.append("")
-    lines.append(TEXTING_CONCISION_DIRECTIVE)
+    lines.append(render_texting_directive(persona.length_stats))
 
     distress_grounding = user_affect is UserAffect.DISTRESS
     if distress_grounding:

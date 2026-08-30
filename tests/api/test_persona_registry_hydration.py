@@ -39,6 +39,10 @@ def _row(**overrides):
         "era_knowledge_boundary": dt.date(2021, 11, 3),
         "age_at_death": 69,
         "death_date": dt.date(2021, 11, 3),
+        # personas.metadata is a json column; asyncpg hands it back as a
+        # str (or None). HU-2231: carries the measured corpus length
+        # register when the persona was provisioned from transcripts.
+        "metadata": None,
     }
     row.update(overrides)
     return row
@@ -98,6 +102,8 @@ def test_hydrate_registers_db_persona_into_empty_registry():
         assert binding.persona.era_knowledge_boundary == "2021-11-03"
         assert binding.persona.death_date == "2021-11-03"
         assert binding.persona.age_at_death == 69
+        # No corpus_length block -> safe default budget (fail closed).
+        assert binding.persona.length_stats is None
         assert binding.backend is application.state.memory_backend
     finally:
         monkey.undo()
@@ -117,6 +123,42 @@ def test_hydrate_defaults_when_optional_fields_missing():
         assert persona.age_at_death is None
     finally:
         monkey.undo()
+
+
+def test_hydrate_loads_corpus_length_register_from_metadata():
+    """HU-2231: a provisioned persona's measured length register (json str
+    from asyncpg) hydrates onto PersonaConfig.length_stats; garbage in the
+    block fails closed to the default budget instead of breaking boot."""
+    import json
+
+    from huible.persona.length import CHANDLER_GROUND_TRUTH
+
+    good = json.dumps(
+        {"corpus": "friends-v2.csv", "corpus_length": {
+            "median_chars": 44, "p75_chars": 79,
+            "p90_chars": 129, "sample_lines": 8376,
+        }}
+    )
+    application, monkey = _app(rows=[_row(metadata=good)])
+    try:
+        asyncio.run(_hydrate_persona_registry(application))
+        persona = application.state.persona_registry.get(
+            PERSONA_ID, requester_tier=None
+        ).persona
+        assert persona.length_stats == CHANDLER_GROUND_TRUTH
+    finally:
+        monkey.undo()
+
+    bad = "{not json at all"
+    application2, monkey2 = _app(rows=[_row(metadata=bad)])
+    try:
+        assert asyncio.run(_hydrate_persona_registry(application2)) == 1
+        persona2 = application2.state.persona_registry.get(
+            PERSONA_ID, requester_tier=None
+        ).persona
+        assert persona2.length_stats is None
+    finally:
+        monkey2.undo()
 
 
 def test_hydrate_skipped_when_registry_preseeded():

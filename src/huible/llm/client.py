@@ -357,6 +357,10 @@ class FakeLLMClient:
         self._fixed_response = response
         self._persona_name = persona_name
         self.calls: list[tuple[str, str | None]] = []
+        # Per-call generation kwargs (e.g. ``max_tokens``), recorded so tests
+        # can assert on the reply budget the chat path handed the generator
+        # (HU-2231 per-persona caps) without changing :attr:`calls` shape.
+        self.kwargs_calls: list[dict[str, Any]] = []
         # Self-describing provider label, surfaced in the chat response trace.
         self.provider: str = LLMProvider.FAKE.value
 
@@ -368,6 +372,7 @@ class FakeLLMClient:
         **kwargs: Any,
     ) -> str:
         self.calls.append((prompt, system_prompt))
+        self.kwargs_calls.append(dict(kwargs))
         if self._fixed_response is not None:
             return self._fixed_response
         return self._deterministic_response(prompt, system_prompt)

@@ -161,6 +161,7 @@ from huible.persona.context import (
     RelationshipTier,
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
+from huible.persona.length import reply_budget_tokens, stats_from_metadata
 from huible.safety import (
     PAUSE_SESSION_RESPONSE,
     PROXY_USER_PAUSE_RESPONSE,
@@ -467,7 +468,7 @@ async def _hydrate_persona_registry(application: FastAPI) -> int:
     try:
         rows = await conn.fetch(
             "SELECT id, name, voice_instructions, era_knowledge_boundary,"
-            " age_at_death, death_date FROM personas"
+            " age_at_death, death_date, metadata FROM personas"
         )
         await conn.close()
     except Exception:  # pragma: no cover - defensive: schema not migrated yet
@@ -478,6 +479,14 @@ async def _hydrate_persona_registry(application: FastAPI) -> int:
     for row in rows:
         era = row["era_knowledge_boundary"]
         death = row["death_date"]
+        # HU-2231: measured corpus length register lives in the persona
+        # record's metadata JSON (written at provision time). asyncpg hands
+        # the json column back as a str; parse defensively and fail closed —
+        # a missing/garbage block keeps the safe default reply budget.
+        raw_metadata = row["metadata"]
+        if isinstance(raw_metadata, str):
+            with contextlib.suppress(ValueError):
+                raw_metadata = json.loads(raw_metadata)
         registry.register(
             PersonaConfig(
                 id=row["id"],
@@ -486,6 +495,7 @@ async def _hydrate_persona_registry(application: FastAPI) -> int:
                 era_knowledge_boundary=str(era) if era else "2020-01-01",
                 age_at_death=row["age_at_death"],
                 death_date=str(death) if death else None,
+                length_stats=stats_from_metadata(raw_metadata),
             ),
             backend,
         )
@@ -1392,7 +1402,13 @@ def _register_routes(application: FastAPI) -> None:
                 # Rubric #3 (HU-1911): texting-length ceiling per turn; the
                 # concision directive in the system prompt shapes style, this
                 # hard-caps the hosted generation budget for persona turns.
-                max_tokens=settings.persona_chat_max_tokens,
+                # HU-2231: per-persona cap derived from the persona's own
+                # corpus length register when measured (fallback: the
+                # global Chandler-tuned setting).
+                max_tokens=reply_budget_tokens(
+                    binding.persona.length_stats,
+                    default=settings.persona_chat_max_tokens,
+                ),
             )
         except LLMBudgetExceededError:
             # Board-approved degraded posture (HU-1774 decision sweep

@@ -47,6 +47,23 @@ def main():
     # Catchphrase candidates (phrases appearing 5+ times)
     catchphrases = [(w, c) for w, c in word_freq.most_common(50) if c >= 10]
     
+    # Character-length register (HU-2231 reply budgets): char percentiles of
+    # these lines. provision_persona.py copies this block onto the persona
+    # record and the engine derives the persona's reply budget (token cap +
+    # directive anchors) from it. Linear interpolation, matching
+    # statistics.quantiles(method='inclusive') in huible.persona.length.
+    char_lens = sorted(len(t) for t in texts)
+    
+    def _pct(sorted_vals, p):
+        if not sorted_vals:
+            return None
+        k = (len(sorted_vals) - 1) * (p / 100.0)
+        f = int(k)
+        c = min(f + 1, len(sorted_vals) - 1)
+        if f == c:
+            return sorted_vals[f]
+        return round(sorted_vals[f] + (sorted_vals[c] - sorted_vals[f]) * (k - f))
+    
     stats = {
         "total_lines": total,
         "avg_words_per_line": avg_len,
@@ -55,6 +72,12 @@ def main():
         "top_words": word_freq.most_common(20),
         "top_bigrams": bigram_freq.most_common(15),
         "frequent_words_10plus": catchphrases[:15],
+        "char_length": {
+            "median_chars": _pct(char_lens, 50),
+            "p75_chars": _pct(char_lens, 75),
+            "p90_chars": _pct(char_lens, 90),
+            "sample_lines": len(char_lens),
+        },
     }
     
     os.makedirs(os.path.dirname(args.output) or '.', exist_ok=True)
@@ -63,6 +86,7 @@ def main():
     
     print(f"Lines: {total}")
     print(f"Avg words/line: {avg_len}")
+    print(f"Length register: {stats['char_length']}")
     print(f"Exclamations: {stats['exclamation_ratio']}%")
     print(f"Questions: {stats['question_ratio']}%")
     print(f"Top words: {[w[0] for w in stats['top_words'][:10]]}")

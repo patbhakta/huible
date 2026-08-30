@@ -407,6 +407,66 @@ class TestDisclosureScoping:
 
 
 # ---------------------------------------------------------------------------
+# Per-persona reply budgets (HU-2231)
+# ---------------------------------------------------------------------------
+
+
+class TestReplyBudget:
+    """The chat call site must hand the generator the persona's own
+    corpus-derived cap, not the global ceiling (regression: the global
+    64-token cap clipped long-winded personas before HU-2231)."""
+
+    def _budget(self, persona: PersonaConfig) -> dict[str, Any]:
+        llm = FakeLLMClient(persona_name=persona.name)
+        registry = InMemoryPersonaRegistry({persona.id: (persona, _seeded_backend())})
+        keys = InMemoryApiKeyStore({API_KEY: persona.id}, read_env=False)
+        application = create_app(
+            api_key_store=keys, persona_registry=registry, llm_client=llm, start_time=0.0
+        )
+        client = TestClient(application)
+        conv = _consent(client, "conv-budget")
+        r = _chat(client, message="tell me about fishing", conv=conv)
+        assert r.status_code == 200, r.text
+        assert llm.kwargs_calls, "generator was never called"
+        return llm.kwargs_calls[0]
+
+    def test_persona_without_stats_gets_global_default_cap(self):
+        from huible.api.settings import Settings
+
+        budget = self._budget(_persona())
+        assert budget["max_tokens"] == Settings().persona_chat_max_tokens
+
+    def test_chandler_register_keeps_verified_64_token_cap(self):
+        from huible.persona.length import CHANDLER_GROUND_TRUTH
+
+        persona = _persona()
+        persona = PersonaConfig(
+            id=persona.id,
+            name=persona.name,
+            voice_instructions=persona.voice_instructions,
+            era_knowledge_boundary=persona.era_knowledge_boundary,
+            age_at_death=persona.age_at_death,
+            death_date=persona.death_date,
+            length_stats=CHANDLER_GROUND_TRUTH,
+        )
+        assert self._budget(persona)["max_tokens"] == 64
+
+    def test_long_winded_persona_cap_is_not_clipped_to_global(self):
+        from huible.persona.length import CorpusLengthStats
+
+        talkative = PersonaConfig(
+            id=PERSONA_ID,
+            name="Storyteller",
+            voice_instructions="Warm Texas storyteller.",
+            era_knowledge_boundary="2024-12-01",
+            length_stats=CorpusLengthStats(
+                median_chars=420, p75_chars=640, p90_chars=900, sample_lines=400
+            ),
+        )
+        assert self._budget(talkative)["max_tokens"] == 441
+
+
+# ---------------------------------------------------------------------------
 # Request validation
 # ---------------------------------------------------------------------------
 

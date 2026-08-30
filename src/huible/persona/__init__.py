@@ -26,12 +26,20 @@ from huible.persona.generator import (
     PersonaGeneratorClient,
     make_generator_client,
 )
+from huible.persona.length import (
+    CorpusLengthStats,
+    compute_corpus_length_stats,
+    derive_reply_max_tokens,
+    render_texting_directive,
+    reply_budget_tokens,
+)
 
 __all__ = [
     "DEFAULT_GENERATOR_PROVIDER",
     "ConfidenceLevel",
     "ContextBuilder",
     "ConversationTurn",
+    "CorpusLengthStats",
     "GeneratorConfig",
     "GeneratorProvider",
     "MockPersonaGeneratorClient",
@@ -40,6 +48,10 @@ __all__ = [
     "PersonaGeneratorClient",
     "PromptContext",
     "RelationshipTier",
+    "compute_corpus_length_stats",
+    "derive_reply_max_tokens",
     "get_confidence_level",
     "make_generator_client",
+    "render_texting_directive",
+    "reply_budget_tokens",
 ]
