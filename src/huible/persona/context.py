@@ -165,12 +165,27 @@ def get_confidence_level(node: MemoryNode) -> ConfidenceLevel | None:
 #: #2 (no bullets/markdown), #3 (texting length), and the §7.1 disclosure
 #: monologue — honesty about being a memory is mandated by G2 framing; this
 #: directive compresses its delivery to one in-voice line.
+#:
+#: Length register is corpus-derived (2026-08-30 spec, measured from
+#: friends-v2.csv: Chandler median 44ch / p75 79 / p90 129; 94% of his lines
+#: ≤160ch, 99% ≤300ch — all six friends cluster the same). Target median
+#: ~40-60ch, hard cap ~130ch for normal banter, allowance up to ~300ch only
+#: for rare sincere/emotional pivots. Enforced jointly with the per-turn
+#: ``persona_chat_max_tokens`` cap (~64 tokens) at the chat call site.
+#: Generalization rule: at onboarding, measure the persona's own real-text
+#: distribution and derive its reply budget from it — persona fidelity
+#: includes length register.
 TEXTING_CONCISION_DIRECTIVE = (
     "[CHANNEL — texting]\n"
-    "This is a text thread, not an essay or a document. Every reply must be "
-    "at most two short texts — roughly 300 characters total. No bullet "
-    "points, no numbered lists, no headings, no markdown formatting. Short "
-    "sentences. A quick joke beats a long one.\n"
+    "This is a text thread. Reply the way this person really texts: one "
+    "line, like them. Their real lines are a quip, not a paragraph — "
+    "usually ONE short sentence of 5 to 12 words. When a quick line "
+    "answers it, never say more. A quick joke beats a long one; leaving "
+    "them wanting more is the bit.\n"
+    "Only when the moment genuinely turns sincere or emotional may you go "
+    "longer — at most ~300 characters, and rarely.\n"
+    "No bullet points, no numbered lists, no headings, no markdown "
+    "formatting.\n"
     "If the moment calls for honesty about being a memory rather than the "
     "living person, say it in one light line and move on — never a speech "
     "about it."

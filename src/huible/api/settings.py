@@ -128,10 +128,14 @@ class Settings(BaseSettings):
     llm_request_timeout_s: float = 60.0
     # Persona-voiced turns on the texting channel get a per-turn ceiling
     # below the raw LLM budget (HU-1911 human-touch gate, rubric #3:
-    # hosted generators default to essay-length replies). ``llm_max_tokens``
-    # stays generous for provider headroom; this cap is applied at the
-    # persona-chat call site so non-persona consumers keep the full budget.
-    persona_chat_max_tokens: int = 160
+    # hosted generators default to essay-length replies). Corpus-derived
+    # 2026-08-30 spec: the persona's own lines (friends-v2.csv) run median
+    # 44ch / p90 129ch, so ~64 tokens covers the p90 banter register while
+    # clipping essay drift; rare sincere pivots (~300ch) fit marginally.
+    # ``llm_max_tokens`` stays generous for provider headroom; this cap is
+    # applied at the persona-chat call site so non-persona consumers keep
+    # the full budget.
+    persona_chat_max_tokens: int = 64
 
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
