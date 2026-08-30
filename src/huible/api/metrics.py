@@ -180,6 +180,20 @@ REAL_USER_TRAFFIC_DISABLED = Counter(
     "(HU-1462 primary rollback path). Internal/synthetic traffic is unaffected.",
 )
 
+# HU-2245 C2 coverage gate (CA floor, HU-2244 verdict): real-user persona-chat
+# admitted only inside the CA-seat coverage window. Counts warm non-persona
+# refusals of real-user turns that passed the kill switch + ramp gate but
+# arrived while the coverage window was closed. Expected to be non-zero
+# nightly once armed — it is the observability signal that the C2 floor is
+# actually enforcing, not an alert condition.
+CHAT_COVERAGE_REFUSED = Counter(
+    "huible_chat_coverage_refused_total",
+    "C2 coverage-gate refusals (HU-2244 floor) — real-user turns refused "
+    "with the warm non-persona response because the CA-seat coverage window "
+    "was closed while PERSONA_CHAT_COVERAGE_ENFORCEMENT=on. "
+    "Internal/synthetic traffic is unaffected.",
+)
+
 # HU-1926 chat-surface consolidation: the generic POST /api/v1/chat is a
 # deprecated 308 shim onto the persona-scoped surface. This counter is the
 # migration telemetry — any non-zero value after consumer migration means a

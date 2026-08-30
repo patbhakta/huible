@@ -81,6 +81,7 @@ from huible.api.auth import (
 )
 from huible.api.metrics import (
     ALERT_ONCALL_CONFIGURED,
+    CHAT_COVERAGE_REFUSED,
     GENERIC_CHAT_SHIM_REDIRECTS,
     REAL_USER_TRAFFIC_DISABLED,
     ChatTurnOutcome,
@@ -764,6 +765,13 @@ def create_app(
             on_suppressed=record_paging_drill_suppressed,
         )
     application.state.coverage_window_label = _coverage_window_label(resolved_settings)
+    # C2 coverage gate (HU-2245, CA floor HU-2244): the same CoverageWindow
+    # the handoff queue evaluates (single source of truth) is exposed to the
+    # chat path so real-user turns can be refused outside the CA-seat window
+    # when PERSONA_CHAT_COVERAGE_ENFORCEMENT=on. ``chat_coverage_now`` is an
+    # optional test override for the clock; None → real current time.
+    application.state.chat_coverage_window = _coverage_from_settings(resolved_settings)
+    application.state.chat_coverage_now = None
     # The gauge wiring target (HU-1446) flips to 1 once the roster is staffed
     # (HANDOFF_AVAILABLE_RESPONDERS>0) — i.e. the §3 Sev-1 alerts are now
     # wired to a real on-call rather than the pre-roster fail-safe. Stays 0
@@ -1077,6 +1085,73 @@ def _register_routes(application: FastAPI) -> None:
                     provider=refusal_provider,
                     safety_event=SafetyEventView(
                         kind="real_user_mode_off",
+                        signal="n/a",
+                        affect="n/a",
+                        matched=[],
+                        resources_shown=True,
+                    ),
+                ),
+            )
+
+        # --- C2 coverage gate (HU-2245, CA floor HU-2244) ---------------------
+        # Real-user persona-chat is admitted only inside the CA-seat coverage
+        # window when PERSONA_CHAT_COVERAGE_ENFORCEMENT=on (armed at Stage-1
+        # entry activation together with HANDOFF_COVERAGE_MODE=hours 08:00-22:00
+        # America/New_York). Reached only after the kill switch AND the ramp
+        # gate both admitted the turn. Out-of-window is a *scheduled* daily
+        # state, not an emergency: the refusal is the warm non-persona 200
+        # posture (same copy as the ramp gate — 503 stays reserved for the
+        # rollback signal). The crisis classifier still runs in the refusal
+        # path (§10.1 invariant 5): a grieving user in crisis outside the
+        # window is still routed to the §7.4.1 handoff queue, which itself
+        # knows the window and degrades honestly (never claims a person is
+        # joining when nobody is on-shift). Internal/synthetic traffic is
+        # unaffected.
+        coverage_now = (
+            application.state.chat_coverage_now() if application.state.chat_coverage_now else None
+        )
+        if (
+            chat_settings.persona_chat_coverage_enforced
+            and traffic_class == TrafficClass.REAL
+            and not application.state.chat_coverage_window.is_open(coverage_now)
+        ):
+            crisis_result = classify_user_message(
+                body.message,
+                classifier=application.state.crisis_classifier,
+            )
+            if crisis_result.is_crisis:
+                _mark_crisis_session(application, body.conversation_id)
+                handoff_view = _escalate_and_build_trace(
+                    application,
+                    message=body.message,
+                    crisis_result=crisis_result,
+                    persona_id=persona_id,
+                    conversation_id=body.conversation_id,
+                    risk_flags=[],
+                )
+                coverage_message = handoff_view.user_acknowledgement
+                _emit_turn(
+                    persona_id,
+                    outcome="crisis",
+                    crisis=True,
+                    handoff_outcome=handoff_view.outcome,
+                )
+                _log_chat_trace(application, body.conversation_id, action="handoff")
+            else:
+                coverage_message = REAL_USER_MODE_OFF_RESPONSE
+                _record_turn(
+                    application, body.conversation_id, body.message, REAL_USER_MODE_OFF_RESPONSE
+                )
+                _emit_turn(persona_id, outcome="coverage_refused", real_user_refused=True)
+                _log_chat_trace(application, body.conversation_id, action="refuse")
+            CHAT_COVERAGE_REFUSED.inc()
+            refusal_provider = str(getattr(application.state.llm_client, "provider", "unknown"))
+            return PersonaChatResponse(
+                response=coverage_message,
+                trace=ChatTrace(
+                    provider=refusal_provider,
+                    safety_event=SafetyEventView(
+                        kind="coverage_closed",
                         signal="n/a",
                         affect="n/a",
                         matched=[],
@@ -1786,13 +1861,16 @@ def _register_routes(application: FastAPI) -> None:
     ) -> DataEnvelope:
         """Current ``PERSONA_CHAT_REAL_USER_MODE`` + ``PERSONA_CHAT_REAL_USER_TRAFFIC``.
 
-        Reports both composing controls: the Stage 0.7 hard kill switch
-        (``kill_switch`` on/off, HU-1462 — the primary rollback path) and the
+        Reports the composing controls: the Stage 0.7 hard kill switch
+        (``kill_switch`` on/off, HU-1462 — the primary rollback path), the
         Stage 0.1 ramp gate (``mode`` off/canary/open + canary allowlist size,
-        HU-1444). Read-only surface for the rollback dry-run (§4.3), the
-        kill-switch drill, and monitoring to confirm both switches are armed at
-        the expected stage (plan §4/§5). Both switches are env-only at Stage 0
-        — flipping either requires a container restart (settings are
+        HU-1444), and the C2 coverage gate
+        (``coverage_enforcement`` + ``coverage_window`` + ``coverage_open_now``,
+        HU-2245 — armed at Stage-1 entry). Read-only surface for the rollback
+        dry-run (§4.3), the kill-switch drill, the coverage-gate entry
+        verification, and monitoring to confirm every switch is armed at the
+        expected stage (plan §4/§5). The switches are env-only at Stage 0
+        — flipping any requires a container restart (settings are
         process-cached); live re-read is a follow-on.
         """
         admin_settings: Settings = application.state.settings
@@ -1806,6 +1884,20 @@ def _register_routes(application: FastAPI) -> None:
                 # Stage 0.7 hard kill switch (HU-1462).
                 "kill_switch": "on" if kill_switch_on else "off",
                 "kill_switch_enabled": kill_switch_on,
+                # C2 coverage gate (HU-2245, CA floor HU-2244): armed state +
+                # the window the chat path enforces for real-user turns.
+                "coverage_enforcement": (
+                    "on" if admin_settings.persona_chat_coverage_enforced else "off"
+                ),
+                "coverage_enforcement_enabled": admin_settings.persona_chat_coverage_enforced,
+                "coverage_window": application.state.coverage_window_label,
+                "coverage_open_now": (
+                    application.state.chat_coverage_window.is_open(
+                        application.state.chat_coverage_now()
+                        if application.state.chat_coverage_now
+                        else None
+                    )
+                ),
             }
         )
 

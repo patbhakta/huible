@@ -296,6 +296,22 @@ class Settings(BaseSettings):
     # flip requires a container restart (same as the ramp gate).
     persona_chat_real_user_traffic: str = "off"
 
+    # ── C2 coverage gate (HU-2245, CA floor HU-2244) ─────────────────────────
+    # ``PERSONA_CHAT_COVERAGE_ENFORCEMENT`` (on|off, default ``off``): when
+    # ``on``, real-user persona-chat turns are admitted only inside the
+    # handoff coverage window (the same ``HANDOFF_COVERAGE_*`` settings the
+    # §7.4.1 queue uses — single source of truth). Outside the window a
+    # real-user turn is refused with the warm non-persona response + 988
+    # (never the deceased-persona voice); the crisis classifier still runs in
+    # the refusal path so a grieving user in crisis is routed to the handoff
+    # queue (§10.1 invariant 5). Internal/synthetic traffic is unaffected.
+    # Default ``off`` keeps today's behaviour unchanged until the Stage-1
+    # entry activation arms it together with
+    # ``HANDOFF_COVERAGE_MODE=hours`` 08:00-22:00 America/New_York (the
+    # verdict's C2 window). Settings are process-cached — a flip requires a
+    # container restart (same as the ramp gate / kill switch).
+    persona_chat_coverage_enforcement: str = "off"
+
     @field_validator("huible_log_level", mode="before")
     @classmethod
     def _normalize_log_level(cls, v: Any) -> Any:
@@ -422,6 +438,18 @@ class Settings(BaseSettings):
         from huible.api.real_user_gate import parse_real_user_traffic_switch
 
         return parse_real_user_traffic_switch(self.persona_chat_real_user_traffic)
+
+    @property
+    def persona_chat_coverage_enforced(self) -> bool:
+        """Whether the C2 coverage gate (``PERSONA_CHAT_COVERAGE_ENFORCEMENT``) is armed.
+
+        ``True`` only for an explicit ON spelling; empty/unknown → ``False``
+        (unarmed is the pre-Stage-1 default, HU-2245 — zero behaviour change
+        on deploy; the gate is armed at entry activation).
+        """
+        from huible.api.real_user_gate import parse_real_user_traffic_switch
+
+        return parse_real_user_traffic_switch(self.persona_chat_coverage_enforcement)
 
     def to_generator_config(self) -> GeneratorConfig:
         """Build a :class:`GeneratorConfig` from these settings.
