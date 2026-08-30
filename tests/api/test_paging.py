@@ -19,10 +19,15 @@ from huible.api.paging import (
     PAGE_SEVERITY_CRISIS,
     PAGE_SEVERITY_SEV1,
     PAGE_TRIGGER_SLA_BREACH,
+    HermesBridgePager,
     LoggingPager,
+    OnCallContact,
+    OnCallRoster,
     Pager,
     WebhookPager,
+    build_multichannel_pager,
     build_pager,
+    build_roster,
     escalate_sla_breaches,
 )
 from huible.safety import HandoffOutcome, HandoffTicket, InMemoryHandoffQueue
@@ -175,6 +180,147 @@ class TestBuildPager:
 
     def test_unknown_provider_is_logging_pager(self):
         pager = build_pager(provider="bogus", webhook_url="https://x")
+        assert isinstance(pager, LoggingPager)
+
+
+# --- HermesBridgePager (C1 device channel, HU-2245) ------------------------
+
+
+def _contacts(*whatsapp_ids: str) -> list[OnCallContact]:
+    return [
+        OnCallContact(seat_id=f"seat-{i}", whatsapp=w) for i, w in enumerate(whatsapp_ids)
+    ]
+
+
+class TestHermesBridgePager:
+    def test_fans_out_to_every_whatsapp_contact(self, monkeypatch):
+        """One POST /send per roster chat address, bridge contract shape."""
+        posted: list[dict] = []
+
+        def _fake_post(url, *, json, timeout):
+            posted.append({"url": url, "json": json})
+            return httpx.Response(200, request=httpx.Request("POST", url))
+
+        monkeypatch.setattr("huible.api.paging.httpx.post", _fake_post)
+        pager = HermesBridgePager("http://127.0.0.1:3000/")
+        pager.page(
+            _ticket(),
+            severity=PAGE_SEVERITY_CRISIS,
+            window="always",
+            contacts=_contacts("111@s.whatsapp.net", "222@s.whatsapp.net"),
+        )
+
+        assert len(posted) == 2
+        assert all(c["url"] == "http://127.0.0.1:3000/send" for c in posted)
+        bodies = {c["json"]["chatId"] for c in posted}
+        assert bodies == {"111@s.whatsapp.net", "222@s.whatsapp.net"}
+        # Aggregate-safe body (no PHI): severity + trigger + ticket id + window.
+        first = posted[0]["json"]["message"]
+        assert "hh-test" in first and "crisis" in first
+
+    def test_no_whatsapp_targets_degrades_to_log(self, caplog):
+        pager = HermesBridgePager("http://127.0.0.1:3000")
+        with caplog.at_level(logging.CRITICAL, logger="huible.api.paging"):
+            failures = pager.page(
+                _ticket(),
+                severity=PAGE_SEVERITY_CRISIS,
+                window="always",
+                contacts=[OnCallContact(seat_id="ceo", email="ceo@example.com")],
+            )
+        page_records = [r for r in caplog.records if r.message.startswith("handoff.page")]
+        assert len(page_records) == 1
+        assert page_records[0].levelno == logging.CRITICAL
+        assert failures == 0  # the log page itself succeeded
+
+    def test_all_sends_failed_falls_back_to_log(self, monkeypatch, caplog):
+        """Every device send failing still fires the honest log line."""
+
+        def _boom(url, *, json, timeout):
+            raise httpx.ConnectError("bridge down")
+
+        monkeypatch.setattr("huible.api.paging.httpx.post", _boom)
+        pager = HermesBridgePager("http://127.0.0.1:3000")
+        with caplog.at_level(logging.CRITICAL, logger="huible.api.paging"):
+            failures = pager.page(
+                _ticket(),
+                severity=PAGE_SEVERITY_CRISIS,
+                window="always",
+                contacts=_contacts("111@s.whatsapp.net"),
+            )
+        critical_pages = [
+            r
+            for r in caplog.records
+            if r.message.startswith("handoff.page") and r.levelno == logging.CRITICAL
+        ]
+        assert len(critical_pages) == 1
+        assert failures >= 1  # the failed send is counted, page never dropped
+
+    def test_partial_failure_still_counts_but_no_log_duplicate(self, monkeypatch):
+        """One channel failing while another lands: count it, no fallback page."""
+
+        def _flaky(url, *, json, timeout):
+            if json["chatId"].startswith("bad"):
+                raise httpx.ConnectError("nope")
+            return httpx.Response(200, request=httpx.Request("POST", url))
+
+        monkeypatch.setattr("huible.api.paging.httpx.post", _flaky)
+        pager = HermesBridgePager("http://127.0.0.1:3000")
+        failures = pager.page(
+            _ticket(),
+            severity=PAGE_SEVERITY_CRISIS,
+            window="always",
+            contacts=_contacts("good@s.whatsapp.net", "bad@s.whatsapp.net"),
+        )
+        assert failures == 1
+
+
+class TestBuildMultichannelHermes:
+    def _roster(self) -> OnCallRoster:
+        return build_roster(
+            contacts_json=(
+                '{"clinical-advisor": {"whatsapp": "185@lid"}, '
+                '"ceo": {"whatsapp": "999@lid"}}'
+            ),
+            canary_start_ts="2026-08-18T15:20:53Z",
+        )
+
+    def test_hermes_provider_builds_device_channel(self):
+        pager = build_multichannel_pager(
+            provider="hermes",
+            webhook_url="http://127.0.0.1:3000",
+            roster=self._roster(),
+            telnyx_api_key="",
+            telnyx_from="",
+            telnyx_api_base_url="",
+            smtp_host="",
+            smtp_port=25,
+            smtp_user="",
+            smtp_password="",
+            email_from_addr="",
+        )
+        assert isinstance(pager, HermesBridgePager) or type(pager).__name__ == (
+            "DrillSuppressingPager"
+        )
+
+    def test_roster_parses_whatsapp_seat_addresses(self):
+        roster = self._roster()
+        assert roster.contacts["clinical-advisor"].whatsapp == "185@lid"
+        assert roster.contacts["ceo"].whatsapp == "999@lid"
+
+    def test_log_provider_stays_logging_pager(self):
+        pager = build_multichannel_pager(
+            provider="log",
+            webhook_url="",
+            roster=self._roster(),
+            telnyx_api_key="",
+            telnyx_from="",
+            telnyx_api_base_url="",
+            smtp_host="",
+            smtp_port=25,
+            smtp_user="",
+            smtp_password="",
+            email_from_addr="",
+        )
         assert isinstance(pager, LoggingPager)
 
 

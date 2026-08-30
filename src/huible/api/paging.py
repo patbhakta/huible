@@ -217,6 +217,10 @@ class OnCallContact:
     seat_id: str
     phone: str = ""
     email: str = ""
+    # WhatsApp bridge chat address (``<lid>@lid`` / ``<number>@c.us``) for the
+    # HU-2245 hermes channel — the device-armed push path (C1, CA floor
+    # HU-2244). Rides HANDOFF_ONCALL_CONTACTS as ``"whatsapp": "..."``.
+    whatsapp: str = ""
 
 
 @dataclass(slots=True)
@@ -557,6 +561,66 @@ def _page_text(ticket: HandoffTicket, *, severity: str, trigger: str, window: st
     )
 
 
+class HermesBridgePager:
+    """WhatsApp device channel via the local hermes bridge (C1, HU-2245).
+
+    The CA-floor C1 requirement is *device-armed* paging: a page must reach a
+    human device, not a log line. The box runs the hermes WhatsApp bridge
+    (``POST {bridge_url}/send`` with ``{"chatId": ..., "message": ...}`` — the
+    same transport used for founder escalations), so this pager fans each page
+    out to every roster contact that carries a ``whatsapp`` chat address
+    (``HANDOFF_ONCALL_CONTACTS`` seat entries). Transport errors degrade to
+    the :class:`LoggingPager` fallback per channel — never silently, never
+    blocking the clinical turn (the WebhookPager convention).
+    """
+
+    def __init__(self, bridge_url: str, *, fallback: Pager | None = None) -> None:
+        self._url = bridge_url.rstrip("/")
+        self._fallback = fallback or LoggingPager()
+
+    def page(
+        self,
+        ticket: HandoffTicket,
+        *,
+        severity: str,
+        window: str,
+        trigger: str = PAGE_TRIGGER_CRISIS_ENQUEUE,
+        contacts: list[OnCallContact] | None = None,
+    ) -> int:
+        targets = [c.whatsapp for c in (contacts or []) if c.whatsapp]
+        if not targets or not self._url:
+            return self._fallback.page(
+                ticket, severity=severity, window=window, trigger=trigger,
+                contacts=contacts,
+            )
+        text = _page_text(ticket, severity=severity, trigger=trigger, window=window)
+        failures = 0
+        sent_any = False
+        for chat_id in targets:
+            try:
+                resp = httpx.post(
+                    self._url + "/send",
+                    json={"chatId": chat_id, "message": text},
+                    timeout=_WEBHOOK_TIMEOUT_S,
+                )
+                resp.raise_for_status()
+                sent_any = True
+            except Exception:
+                failures += 1
+                logger.exception(
+                    "handoff.page hermes-bridge send failed (chat_id=%s ticket=%s)",
+                    chat_id,
+                    ticket.id,
+                )
+        if not sent_any:
+            # Every device send failed → the honest log line still fires.
+            return failures + self._fallback.page(
+                ticket, severity=severity, window=window, trigger=trigger,
+                contacts=contacts,
+            )
+        return failures
+
+
 class TelnyxSmsPager:
     """Send an SMS page via the Telnyx Messaging API (HU-1451).
 
@@ -734,12 +798,14 @@ class MultiChannelPager:
         telnyx: TelnyxSmsPager | None = None,
         email: EmailPager | None = None,
         webhook: WebhookPager | None = None,
+        hermes: HermesBridgePager | None = None,
         fallback: Pager | None = None,
     ) -> None:
         self._roster = roster
         self._telnyx = telnyx
         self._email = email
         self._webhook = webhook
+        self._hermes = hermes
         self._fallback = fallback or LoggingPager()
 
     def page(
@@ -763,7 +829,7 @@ class MultiChannelPager:
                 escalated=escalated, clinical_always=clinical_always
             )
 
-        if not self._telnyx and not self._email and not self._webhook:
+        if not self._telnyx and not self._email and not self._webhook and not self._hermes:
             # Key-free default: no real channel configured → log only.
             return self._fallback.page(
                 ticket, severity=severity, window=window, trigger=trigger,
@@ -773,6 +839,11 @@ class MultiChannelPager:
         failures = 0
         if self._webhook is not None:
             failures += self._webhook.page(
+                ticket, severity=severity, window=window, trigger=trigger,
+                contacts=contacts,
+            )
+        if self._hermes is not None:
+            failures += self._hermes.page(
                 ticket, severity=severity, window=window, trigger=trigger,
                 contacts=contacts,
             )
@@ -847,6 +918,7 @@ def build_roster(
                     seat_id=seat_id,
                     phone=str(entry.get("phone", "")),
                     email=str(entry.get("email", "")),
+                    whatsapp=str(entry.get("whatsapp", "")),
                 )
     if canary_start_ts.strip():
         try:
@@ -916,11 +988,17 @@ def build_multichannel_pager(
         else None
     )
     webhook = WebhookPager(webhook_url) if (provider == "webhook" and webhook_url) else None
-    if telnyx is None and email is None and webhook is None:
+    # C1 device channel (HU-2245): HANDOFF_PAGER_PROVIDER=hermes +
+    # HANDOFF_PAGER_WEBHOOK_URL=<bridge base URL> fans pages to the WhatsApp
+    # chat addresses carried on the roster seats.
+    hermes = HermesBridgePager(webhook_url) if (provider == "hermes" and webhook_url) else None
+    if telnyx is None and email is None and webhook is None and hermes is None:
         # No real channel configured → key-free log pager (preserve HU-1450
         # default + the provider="log" path).
         return LoggingPager()
-    pager: Pager = MultiChannelPager(roster=roster, telnyx=telnyx, email=email, webhook=webhook)
+    pager: Pager = MultiChannelPager(
+        roster=roster, telnyx=telnyx, email=email, webhook=webhook, hermes=hermes
+    )
     markers = _parse_drill_markers(drill_markers)
     if not markers:
         return pager
