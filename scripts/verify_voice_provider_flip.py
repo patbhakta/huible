@@ -47,6 +47,7 @@ Exit:   0 when every posture passes, 1 otherwise.
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from typing import Any
 
@@ -121,9 +122,24 @@ def _provider_label(client: Any) -> str:
 
 def posture_a_default_fake(t: Transcript) -> None:
     t.section("(A) Default — no LLM env → FakeLLMClient (placeholder voice)")
-    cfg = Settings().to_llm_config()
-    client = build_llm_client(cfg)
-    reply = asyncio.run(client.generate("tell me about the lake"))
+    # The default posture must be evaluated free of ambient configuration:
+    # a staged .env (e.g. LLM_PROVIDER=zai on the prod box) or exported LLM_*
+    # vars would otherwise turn this into a re-test of the live provider
+    # posture instead of the key-free default the check exists to prove.
+    # _env_file=None disables the .env load; scrubbed vars isolate the process
+    # env (restored in the finally so later postures see the real posture).
+    _llm_env_keys = [
+        k for k in os.environ if k.startswith(("LLM_", "OPENROUTER_", "ZAI_", "GENERATOR_"))
+    ]
+    _saved_env = {k: os.environ[k] for k in _llm_env_keys}
+    for k in _llm_env_keys:
+        del os.environ[k]
+    try:
+        cfg = Settings(_env_file=None).to_llm_config()
+        client = build_llm_client(cfg)
+        reply = asyncio.run(client.generate("tell me about the lake"))
+    finally:
+        os.environ.update(_saved_env)
     t.check(
         "default Settings → FakeLLMClient (provider label 'fake')",
         _provider_label(client) == LLMProvider.FAKE.value,

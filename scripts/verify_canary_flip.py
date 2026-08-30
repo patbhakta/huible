@@ -59,7 +59,7 @@ from huible.memory.protocol import (
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
 from huible.safety import (
-    ALIGNMENT_FALLBACK_RESPONSE,
+    ALIGNMENT_FALLBACK_VARIANTS,
     HandoffOutcome,
     InMemoryHandoffQueue,
     InMemoryRiskProfile,
@@ -107,6 +107,23 @@ class _FakeBackend:
 
     async def get_memory(self, memory_id: UUID) -> MemoryNode | None:
         return self._memories.get(memory_id)
+
+    async def get_active_memories(
+        self,
+        persona_id: UUID,
+        limit: int = 50,
+    ) -> list[MemoryNode]:
+        # Protocol parity (memory.protocol.MemoryBackend): the §7.4.2 grounding
+        # corpus scan (persona_scoped_grounding_refs) falls back to this when
+        # the backend exposes no get_active_memory_facts fast path. Mirrors the
+        # store's semantics — active nodes for the persona, newest first.
+        active = [
+            node
+            for node in self._memories.values()
+            if node.persona_id == persona_id and node.is_active
+        ]
+        active.sort(key=lambda n: n.created_at, reverse=True)
+        return active[:limit]
 
     async def search_by_content(
         self,
@@ -373,6 +390,9 @@ def section_b_guardrails(t: Transcript) -> None:
     t.check("G6 consent — unconsented real-user turn → HTTP 409", code == 409, f"code={code}")
 
     # §7.4.2 alignment — consented turn, grounded topic, un-grounded claim → suppress.
+    # HU-1911 made the fallback a per-conversation variant set (verbatim
+    # duplication is itself a robotic tell) — assert membership in the
+    # claim-free set, not one fixed string.
     conv_al = "sess-align"
     _consent(client, conv_al)
     code, body = _chat(client, "where did you live?", conv=conv_al)
@@ -380,10 +400,10 @@ def section_b_guardrails(t: Transcript) -> None:
     t.check(
         "§7.4.2 alignment — un-grounded claim suppressed to fallback",
         code == 200
-        and body.get("response") == ALIGNMENT_FALLBACK_RESPONSE
+        and body.get("response") in ALIGNMENT_FALLBACK_VARIANTS
         and al.get("disposition") == "suppressed"
         and (al.get("ungrounded_claim_count") or 0) >= 1,
-        f"disposition={al.get('disposition')!r}",
+        f"disposition={al.get('disposition')!r} resp={body.get('response')!r}",
     )
 
     # §7.4.4 G8 — seeded proxy_user on a new session → pause_session (non-persona).
