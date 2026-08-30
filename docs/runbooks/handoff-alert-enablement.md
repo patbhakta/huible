@@ -50,6 +50,32 @@ activated** with `HANDOFF_COVERAGE_MODE=hours` defaults (nor `=always`): the
 configured window would claim staffed coverage that does not exist — the same
 never-lie rule that keeps `available_responders=0` pre-staffing.
 
+## Re-baseline on file: week-1 posture (b) (added 2026-08-30)
+
+Board approval **b18e611a** ("Roster re-raise at cohort key release…",
+approved 2026-08-30T16:41:14Z) is the superseding re-baseline this section
+requires. Approved week-1 shape, scoped to cohort 1/2 (5–10 consenting
+adults, fictional persona):
+
+- **Posture (b) G1-degrade + CA ceiling paging** — as-needed coverage, **no
+  committed responder windows**. Consequence: **do not run
+  `activate_responder_roster.sh --activate` in week 1** — `available_responders`
+  stays `0` by design, escalations degrade to the honest G1 safe response, and
+  `HuibleHandoffDegradeRateUnstaffed` (ticket severity, never pages) is the
+  *expected* firing state.
+- **Crisis page policy stays armed and audited** at HEAD (crisis-enqueue +
+  Sev-1 triggers → `handoff.page` CRITICAL lines + telemetry). Device-level
+  paging transport (`HANDOFF_PAGER_PROVIDER`≠log, `HANDOFF_ONCALL_CONTACTS`)
+  is grouped by the approval under option (a)'s remaining deploy/env steps.
+- **Binding commitments (activation triggers for option (a), approval
+  6334d570 defaults):** staff option (a) **before any scale-up beyond cohort
+  1/2**, and **immediately upon the first real-user crisis event**. Either
+  trigger fires this runbook's go-live sequence (same-day turnkey;
+  `--check` re-verified CHECK_OK 9/9 on 2026-08-30T16:50Z).
+- The coverage change is re-reviewed by the Clinical Advisor (HU-1428 AC #5)
+  before any real-user traffic; real-user persona-chat traffic remains gated
+  on HU-1425 until option (a) is staffed.
+
 ## Go-live sequence (roster staffing day)
 
 1. **Set the staffing env** per the HU-1432 decision (values pinned in the
