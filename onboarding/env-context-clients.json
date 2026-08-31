@@ -1,0 +1,16 @@
+{
+  "clients": [
+    {
+      "key": "pat",
+      "user_id": "185293546254362@lid",
+      "display_name": "Pat",
+      "home_label": "Phoenix AZ",
+      "latitude": 33.4484,
+      "longitude": -112.074,
+      "timezone": "America/Phoenix",
+      "tz_note": "UTC-7 no DST",
+      "seasonal_note": "hot summer / mild winter / monsoon",
+      "registered": "2026-08-31"
+    }
+  ]
+}
