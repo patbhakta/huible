@@ -55,11 +55,11 @@ inputs:
 - id: retry
   type: INT
   defaults: 1
-  required: false
+  required: true
 - id: confirm_rd_synthetic
   type: BOOLEAN
   defaults: false
-  required: false
+  required: true
   description: R&D ONLY — allow generation with a non-production_safe (synthetic-calibrated) gate for synthetic-seed pipeline tests
 variables:
   repo: /root/repos/huible
