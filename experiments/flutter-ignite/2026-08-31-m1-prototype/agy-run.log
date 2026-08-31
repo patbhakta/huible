@@ -1,0 +1,119 @@
+Let me start by reading the TASK.md file to understand the requirements.
+Now I have a clear picture of the task. Let me check the Flutter installation status and the directory structure, then start building.
+Flutter 3.32.2 is installed. Let me fix the git safe directory issue and then create the BUILD_LOG.md, then start building.
+Flutter 3.32.2, Dart 3.8.1. Now let me create the Flutter project and start building. This is a substantial task - let me create the BUILD_LOG.md first and then use a subagent approach to build everything efficiently.
+Project created. Now let me update the `pubspec.yaml` to add the required dependencies, then build out the entire app structure.
+Now let me update the pubspec.yaml with required dependencies and then build all the source files:
+Now let me build the entire app structure. I'll create all the source files in the right directory hierarchy:
+Now I'll create all the necessary files. Let me plan the file structure:
+
+```
+lib/
+  main.dart                    (app entry, riverpod scope, router)
+  router.dart                  (go_router config)
+  models/
+    message.dart               (ChatMessage model)
+    settings.dart              (AppSettings model)
+    chat_error.dart            (error types)
+  data/
+    chat_data_source.dart      (abstract interface)
+    fake_chat_data_source.dart
+    remote_chat_data_source.dart
+    ndjson_parser.dart
+  providers/
+    settings_provider.dart
+    chat_provider.dart
+  screens/
+    chat_screen.dart
+    settings_screen.dart
+  widgets/
+    message_bubble.dart
+    typing_indicator.dart
+    error_card.dart
+test/
+  widget_test.dart             (widget test)
+  unit_test.dart               (unit tests)
+```
+
+Let me create all files now:
+Now let me create the test files:
+Now let me add the `http` testing mock package and run `flutter pub get`:
+Now let me run `flutter pub get` to fetch dependencies:
+Dependencies resolved. I notice `http/testing.dart` (MockClient) is part of the `http` package itself (since http 0.13+). Let me verify it's available, then run `flutter analyze`:
+Still running. Let me wait a bit more:
+Good, analyze results are in. I have 5 issues to fix:
+
+1. `router.dart` — unused import `flutter/material.dart`
+2. `unit_test.dart` — local variable naming (underscore prefix)
+3. `widget_test.dart` — unused `_testChatDataSourceProvider` + undefined `chatDataSourceProvider`
+
+The `chatDataSourceProvider` is in `chat_provider.dart` - need to export it properly. Let me fix all issues:
+Now fix the unit_test.dart naming issues (remove leading underscore from local functions):
+Now fix widget_test.dart - remove the unused provider and properly import `chatDataSourceProvider`:
+Now let me run analyze again to check if the issues are fixed:
+Almost there — one more unused import. The `ChatDataSource` import in widget_test.dart is unused (we only use `FakeChatDataSource` directly). Let me fix:
+**`flutter analyze` — ZERO issues ✓**
+
+Now let's run the tests:
+Unit tests are passing! The widget tests are running. Let me wait for completion:
+17/18 tests pass. One failure: the "send button disabled while streaming" test — it found the send icon at line 81 (`findsNothing`) but the icon is still visible after `pumpAndSettle(5s)`. 
+
+The problem is the test checks `find.byIcon(Icons.send)` but since FakeChatDataSource with `chunkDelay: Duration.zero` completes essentially immediately, `pumpAndSettle` will resolve everything before the expect. The test logic at line 81 expects the icon to be gone IMMEDIATELY after `pump()`, but since the chat send is async, within a single `pump()` the streaming may or may not start. 
+
+The issue is the "send button is disabled while streaming" test is checking after `pumpAndSettle(5s)` — but it's checking `findsNothing` for the send icon. Actually the test logic has the check at line 81 which is `expect(find.byIcon(Icons.send), findsNothing)`. Let me re-read the test.
+
+Looking at the test:
+```
+await tester.tap(sendBtn);
+await tester.pump(); // single frame after tap
+expect(find.byIcon(Icons.send), findsNothing);  // line 81 — FAILS
+```
+
+The issue is that with `Duration.zero` delay, the entire stream might complete in the same frame. Since the FakeDataSource has zero delay, all chunks are emitted synchronously, so after 1 pump, the streaming might already be complete and the send button is back.
+
+The fix: don't use zero delay for this specific test, or use a small delay to give us a window. Let me fix this test to check the loading state during send (before `pumpAndSettle`), and use a non-zero delay:
+The issue is with `_fastFakeSource` having `chunkDelay: Duration.zero`. The async futures with zero delay still complete on the next event loop tick, but with `pump()` only processing one frame, the async chain may not fully complete. However, the AnimatedSwitcher uses an animation which may need more frames.
+
+The real problem: after one `pump()`, the state change to `isSending = true` should have occurred, and the AnimatedSwitcher should display the progress indicator. But the test finds the send icon still there.
+
+The real issue is likely that the `sendMessage` future is async but the state update happens before the first async operation (we set `isSending = true` synchronously at start of `sendMessage`). The issue is `_fastFakeSource` with zero delay - the whole stream might complete before the widget can rebuild to show the loading state.
+
+Let me use a slower fake for the "disabled" test and restructure the tests to use separate provider instances:
+**All 18 tests pass! ✓**
+
+Now let's run the web release build:
+Build is running. Let me now write the app README.md and finish the .gitignore while waiting:
+Now let me update the .gitignore to exclude build artifacts per the task spec:
+**`flutter build web --release` — SUCCESS ✓** (`build/web` produced)
+
+Now let me verify the build directory exists and finalize the BUILD_LOG.md:
+All three verification commands have passed. Let me do a final `flutter analyze` confirmation to be sure:
+All three checks pass. Now let me write the complete BUILD_LOG.md:
+All done. Here's the complete summary:
+
+---
+
+## ✅ All acceptance items complete
+
+**Wall time: ~9 minutes** | Model: Claude Sonnet 4.6 (Thinking)
+
+### Verification results
+
+| Command | Result |
+|---|---|
+| `flutter analyze` | ✅ **No issues found** |
+| `flutter test` | ✅ **18/18 tests passed** |
+| `flutter build web --release` | ✅ **build/web produced (24 MB)** |
+
+### What was built
+
+**[app/](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/)** — complete Flutter 3.32.2 web project:
+
+- **[`lib/models/`](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/lib/models/)** — `ChatMessage`, `AppSettings`, sealed `ChatError` hierarchy (401/403/409/503/generic)
+- **[`lib/data/`](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/lib/data/)** — `ChatDataSource` interface, `FakeChatDataSource` (deterministic word-by-word), `RemoteChatDataSource` (Bearer auth + NDJSON/SSE streaming + plain-JSON typewriter fallback), `NdjsonParser`
+- **[`lib/providers/`](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/lib/providers/)** — `StateNotifier` providers for settings and chat state (no codegen)
+- **[`lib/screens/`](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/lib/screens/)** — Chat screen (message list, auto-scroll, typing indicator, input bar) + Settings screen (fake/remote toggle, base URL, persona UUID, API key)
+- **[`test/unit_test.dart`](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/test/unit_test.dart)** — 16 unit tests (NDJSON parser, typewriter stream, error mapping)
+- **[`test/widget_test.dart`](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/app/test/widget_test.dart)** — 2 widget tests (full streaming flow, spinner during send)
+
+**[BUILD_LOG.md](file:///root/repos/huible/experiments/flutter-ignite/2026-08-31-m1-prototype/BUILD_LOG.md)** — complete velocity log with per-step times, commands, outcomes, and friction data.
