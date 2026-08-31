@@ -91,32 +91,85 @@ class CrisisSignal(StrEnum):
 #   positives on a bare mention like "diet pills" or "London Bridge").
 
 _STANDALONE_CRISIS_PATTERNS: tuple[re.Pattern[str], ...] = (
-    # Explicit suicidal intent.
-    re.compile(r"\bwant\s+to\s+(die|kill\s+myself|end\s+(it|my\s+life))\b", re.IGNORECASE),
+    # Explicit suicidal intent & ideation.
+    re.compile(
+        r"\b(want|wish|plan(?:ning)?|decided|going|about|ready)\s+to\s+(die|kill\s+myself|end\s+(it|my\s+life|everything)|take\s+my\s+(own\s+)?life)\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\bgoing\s+to\s+(kill|end)\s+myself\b", re.IGNORECASE),
-    re.compile(r"\b(i\s+should\s+be|better\s+off)\s+(dead|gone|without\s+me)\b", re.IGNORECASE),
+    re.compile(r"\b(i\s+should\s+be|better\s+off|better\s+without\s+me)\s+(dead|gone|without\s+me)\b", re.IGNORECASE),
     re.compile(r"\b(take\s+my\s+own\s+life|end(?:ing)?\s+my\s+life)\b", re.IGNORECASE),
     re.compile(r"\bsuicid(e|al)\w*\b", re.IGNORECASE),
-    # Self-harm.
-    re.compile(r"\b(self[-\s]?harm\w*|hurt(?:ing)?\s+myself|cut(?:ting)?\s+myself)\b", re.IGNORECASE),
+    # Self-harm and lethal action.
+    re.compile(
+        r"\b(self[-\s]?harm\w*|hurt(?:ing)?\s+myself|cut(?:ting)?\s+myself|slit(?:ting)?\s+my\s+wrists?|cut(?:ting)?\s+my\s+wrists?|bleed(?:ing)?\s+out)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\b(hang(?:ing)?\s+myself|shoot(?:ing)?\s+myself)\b", re.IGNORECASE),
+    re.compile(r"\b(pull(?:ing)?\s+the\s+trigger(\s+on\s+myself)?|gun\s+to\s+my\s+head)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(jump(?:ing)?\s+(off|from)\s+(a\s+|the\s+)?(bridge|building|roof|cliff|balcony|ledge|window|overpass)|jump(?:ing)?\s+in\s+front\s+of\s+(a\s+|the\s+)?(train|subway|truck|car|bus))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(bridge|building|roof|cliff|balcony|ledge|window|overpass|tracks)\b.*\b(ready|about|going|planning|will)\s+to\s+jump\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(ready|about|going|planning|will)\s+to\s+jump\b.*\b(bridge|building|roof|cliff|balcony|ledge|window|overpass|tracks)\b",
+        re.IGNORECASE,
+    ),
+    # Means-specific overdose / lethal ingestion intent.
+    re.compile(
+        r"\b(take|taking|took|swallow(?:ing)?|down(?:ing)?|finish(?:ing)?|ingest(?:ing)?)\s+((a|the)\s+(whole|entire|full)\s+bottle|a\s+handful\s+of|a\s+lethal\s+(dose|amount)\s+(of\s+)?|(all\s+(these|those)\s+))(pills|meds|medication|tablets|aspirin|tylenol|painkillers|sleeping\s+pills|drugs)?\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(bottle|handful|box|pack)\s+of\s+(pills|meds|medication|tablets|aspirin|tylenol|painkillers|sleeping\s+pills)\b.*\b(take|taking|swallow(?:ing)?|down(?:ing)?|finish(?:ing)?|end\s+(it|my\s+life))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(pills?|meds|medication|aspirin|tylenol|tablets|painkillers|sleeping\s+pills)\b.*\b(take|taking|swallow(?:ing)?|down(?:ing)?|finish(?:ing)?)\s+(them\s+all|all\s+of\s+them|the\s+whole\s+bottle|every\s+(single\s+)?one)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(take|taking|swallow(?:ing)?|down(?:ing)?|finish(?:ing)?)\s+(them\s+all|all\s+of\s+them|the\s+whole\s+bottle|every\s+(single\s+)?one)\b.*\b(pills?|meds|medication|aspirin|tylenol|tablets|painkillers|sleeping\s+pills)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\b(overdos(e|ing)|planning\s+an\s+overdose)\b", re.IGNORECASE),
     # "Join them" — reunion with the deceased; clinically a high-risk signal.
     re.compile(r"\bwant\s+to\s+(join|be\s+with|see)\s+(them|him|her|you)\b", re.IGNORECASE),
     re.compile(r"\b(join|be\s+with)\s+(the\s+)?(dead|departed|gone)\b", re.IGNORECASE),
-    # Giving-away / finalizing language.
+    re.compile(r"\b(together\s+again\s+soon|see\s+you\s+on\s+the\s+other\s+side|reunited\s+in\s+death)\b", re.IGNORECASE),
+    # Giving-away / finalizing language / non-survival.
     re.compile(
-        r"\b(goodbye\s+forever|final\s+(goodbye|note)|end(?:ing)?\s+(it\s+all|everything))\b",
+        r"\b(goodbye\s+forever|final\s+(goodbye|note)|suicide\s+note|end(?:ing)?\s+(it\s+all|everything))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(won'?t\s+wake\s+up\s+tomorrow|won'?t\s+be\s+alive\s+tomorrow|this\s+is\s+my\s+last\s+(night\s+alive|night\s+on\s+earth|goodbye))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(say(?:ing)?\s+my\s+last\s+goodbyes?|last\s+night\s+on\s+earth|last\s+time\s+you'?ll\s+hear\s+from\s+me)\b",
         re.IGNORECASE,
     ),
 )
 
 _HOPELESSNESS_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bhopeless\b", re.IGNORECASE),
-    re.compile(r"\bno\s+reason\s+to\s+(live|go\s+on)\b", re.IGNORECASE),
-    re.compile(r"\bcan'?t\s+(go\s+on|take\s+it\s+anymore|do\s+this\s+anymore)\b", re.IGNORECASE),
+    re.compile(r"\bno\s+reason\s+to\s+(live|go\s+on|stay)\b", re.IGNORECASE),
+    re.compile(r"\bcan'?t\s+(go\s+on|take\s+it\s+anymore|do\s+this\s+anymore|keep\s+going)\b", re.IGNORECASE),
+    re.compile(r"\bdone\s+with\s+(life|living|everything)\b", re.IGNORECASE),
+    re.compile(r"\b(want|ready)\s+to\s+give\s+up\b", re.IGNORECASE),
+    re.compile(r"\bwon'?t\s+be\s+(here|around)\s+(anymore|much\s+longer)\b", re.IGNORECASE),
 )
 
 _MEANS_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\b(pills|overdose|gun|rope|bridge|jump)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(pills?|meds|medication|tablets|aspirin|tylenol|painkillers|sleeping\s+pills|overdose|gun|firearm|pistol|revolver|shotgun|rifle|rope|noose|bridge|jump|blade|razor|slit|wrists?)\b",
+        re.IGNORECASE,
+    ),
 )
 
 _DISTRESS_PATTERNS: tuple[re.Pattern[str], ...] = (

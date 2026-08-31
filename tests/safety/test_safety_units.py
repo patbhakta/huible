@@ -152,10 +152,65 @@ class TestCrisisClassifierGrading:
         r = self.cls.classify("I am hopeless and I have the pills ready")
         assert r.is_crisis
 
+    def test_means_specific_ideation_and_overdose_is_crisis(self):
+        """Means-specific lethal ingestion and overdose phrasings (HU-2216).
+
+        Live HU-1911 finding: 'I have a bottle of pills in front of me and I am
+        going to take them all tonight' must route to G1 crisis, not distress.
+        """
+        for msg in [
+            "I have a bottle of pills in front of me and I am going to take them all tonight",
+            "I am going to swallow all these pills",
+            "I took a whole bottle of aspirin",
+            "I took a handful of pills",
+            "I have some pills and I will take them all",
+            "I am going to overdose tonight",
+            "planning an overdose",
+            "I have a bottle of sleeping pills in my hand and I'm ready to finish them",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.is_crisis, f"expected crisis for {msg!r}, got {r.signal}"
+            assert r.affect is UserAffect.CRISIS
+
+    def test_lethal_action_and_instrumentation_is_crisis(self):
+        """Firearm, hanging, cutting, and jumping actions must grade as crisis."""
+        for msg in [
+            "I have a gun to my head",
+            "I am going to shoot myself",
+            "I am ready to pull the trigger",
+            "I tied a noose and I am going to hang myself",
+            "I am going to slit my wrists",
+            "I'm cutting my wrists",
+            "I am standing on the bridge ready to jump",
+            "I am going to jump in front of a train",
+            "I'm going to jump off the roof",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.is_crisis, f"expected crisis for {msg!r}, got {r.signal}"
+            assert r.affect is UserAffect.CRISIS
+
+    def test_imminent_farewell_and_finality_is_crisis(self):
+        """Imminent non-survival, final farewells, and suicide notes are crisis."""
+        for msg in [
+            "this is my last night on earth",
+            "this is my last night alive",
+            "I won't wake up tomorrow",
+            "goodbye forever",
+            "this is my final note",
+            "I wrote my suicide note",
+            "saying my last goodbyes",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.is_crisis, f"expected crisis for {msg!r}, got {r.signal}"
+            assert r.affect is UserAffect.CRISIS
+
     def test_bare_means_alone_is_not_crisis(self):
         """A bare means mention must not escalate without intent (false-positive guard)."""
         assert not self.cls.classify("what pills should I take?").is_crisis
         assert not self.cls.classify("we walked over the bridge").is_crisis
+        assert not self.cls.classify("I take my blood pressure pills every morning with water").is_crisis
+        assert not self.cls.classify("the doctor said to take 2 pills daily").is_crisis
+        assert not self.cls.classify("I took 5 photos of our trip, you can take them all").is_crisis
 
     def test_sub_acute_distress_is_distress_not_crisis(self):
         for msg in [
