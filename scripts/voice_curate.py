@@ -13,7 +13,7 @@ voice-reference-set.json, then per clip:
 5. Rights check — fail-closed (voicepipe_common.valid_rights).
 
 Output: references/voice-curated.jsonl (accepted clips) + rejected clips in
-voice-curation-log.jsonl (audit, never deleted) + cached resemblyzer
+voice-curation-log.jsonl (audit, never deleted) + cached speaker
 embeddings in references/voice-embeddings.json. Curated >= 1 clip required;
 8-20 diverse clips is the production target. If any intake record is
 internal_only (benchmark corpus), the curated set is flagged internal_only

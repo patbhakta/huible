@@ -1,0 +1,136 @@
+{
+  "embedder": "ecapa-voxceleb-192d",
+  "pos": {
+    "min": 0.3238,
+    "mean": 0.5087
+  },
+  "neg": {
+    "max": 0.3379,
+    "mean": 0.1552
+  },
+  "overlap_band": 0.0141,
+  "tpr_at_fpr0_threshold": {
+    "threshold": 0.338,
+    "tpr": 0.95
+  },
+  "fpr_at_tpr1_threshold": {
+    "threshold": 0.3237,
+    "fpr": 0.0167
+  },
+  "top_negatives": [
+    {
+      "clip": "dia32_utt12.wav",
+      "speaker": "ross",
+      "vs_refs_of": "chandler",
+      "score": 0.3379
+    },
+    {
+      "clip": "dia0_utt0.wav",
+      "speaker": "chandler",
+      "vs_refs_of": "ross",
+      "score": 0.3208
+    },
+    {
+      "clip": "dia312_utt17.wav",
+      "speaker": "chandler",
+      "vs_refs_of": "rachel",
+      "score": 0.3021
+    },
+    {
+      "clip": "dia51_utt6.wav",
+      "speaker": "ross",
+      "vs_refs_of": "chandler",
+      "score": 0.3007
+    },
+    {
+      "clip": "dia93_utt0.wav",
+      "speaker": "chandler",
+      "vs_refs_of": "ross",
+      "score": 0.2928
+    },
+    {
+      "clip": "dia51_utt6.wav",
+      "speaker": "ross",
+      "vs_refs_of": "joey",
+      "score": 0.2844
+    },
+    {
+      "clip": "dia32_utt12.wav",
+      "speaker": "ross",
+      "vs_refs_of": "joey",
+      "score": 0.2809
+    },
+    {
+      "clip": "dia113_utt5.wav",
+      "speaker": "ross",
+      "vs_refs_of": "joey",
+      "score": 0.2569
+    }
+  ],
+  "lowest_positives": [
+    {
+      "clip": "dia109_utt8.wav",
+      "speaker": "rachel",
+      "score": 0.3238
+    },
+    {
+      "clip": "dia34_utt1.wav",
+      "speaker": "rachel",
+      "score": 0.3813
+    },
+    {
+      "clip": "dia111_utt4.wav",
+      "speaker": "joey",
+      "score": 0.3897
+    },
+    {
+      "clip": "dia18_utt3.wav",
+      "speaker": "joey",
+      "score": 0.4325
+    },
+    {
+      "clip": "dia24_utt1.wav",
+      "speaker": "rachel",
+      "score": 0.4367
+    },
+    {
+      "clip": "dia43_utt1.wav",
+      "speaker": "rachel",
+      "score": 0.4477
+    },
+    {
+      "clip": "dia182_utt1.wav",
+      "speaker": "rachel",
+      "score": 0.4687
+    },
+    {
+      "clip": "dia76_utt2.wav",
+      "speaker": "ross",
+      "score": 0.4926
+    }
+  ],
+  "joey_chandler": {
+    "n": 10,
+    "max": 0.2365,
+    "in_top8": 0
+  },
+  "neutral_subset": {
+    "pos_n": 9,
+    "neg_n": 27,
+    "pos_min": 0.3813,
+    "neg_max": 0.3208
+  },
+  "lowest_positive_detail": {
+    "clip": "dia109_utt8.wav",
+    "speaker": "rachel",
+    "score": 0.3238,
+    "emotion": "sadness"
+  },
+  "top_negative_detail": {
+    "clip": "dia32_utt12.wav",
+    "speaker": "ross",
+    "vs_refs_of": "chandler",
+    "score": 0.3379,
+    "emotion": "anger"
+  }
+}

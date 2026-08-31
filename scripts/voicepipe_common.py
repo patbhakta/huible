@@ -4,11 +4,14 @@ Stages: voice_collect → voice_curate → voice_clone → voice_gate →
 voice_registry. See docs/IDENTITY_VOICE_PIPELINE.md.
 
 Mirrors refpipe_common.py (HU-2150 image twin) but is audio-native and does
-not import OpenCV/insightface. Speaker embeddings: resemblyzer
-(VoiceEncoder 256-d, weights bundled with the wheel). Decoding: ffmpeg to
-16 kHz mono PCM — no audioread dependency.
+not import OpenCV/insightface. Speaker embeddings: speechbrain ECAPA-TDNN
+(spkrec-ecapa-voxceleb, 192-d; HU-2160 swap from resemblyzer 256-d after
+HU-2159 showed it does not separate sitcom speech). VAD-trim still uses
+resemblyzer's preprocess_wav (webrtcvad). Decoding: ffmpeg to 16 kHz mono
+PCM — no audioread dependency.
 
-Requires: torch (CPU), resemblyzer (scripts/requirements-voicepipe.txt).
+Requires: torch (CPU), speechbrain, resemblyzer
+(scripts/requirements-voicepipe.txt).
 """
 
 import datetime
@@ -21,6 +24,10 @@ import numpy as np
 
 SAMPLE_RATE = 16000
 
+# Identity of the speaker gate — recorded in gate configs and gate log rows
+# so a config calibrated with one embedder is never silently used with another.
+GATE_ID = "ecapa-voxceleb-192d-cosine-max"
+
 # Module-level singleton — loading the encoder takes ~5 s; do it once.
 _ENCODER = None
 
@@ -28,9 +35,12 @@ _ENCODER = None
 def voice_encoder():
     global _ENCODER
     if _ENCODER is None:
-        from resemblyzer import VoiceEncoder
-
-        _ENCODER = VoiceEncoder("cpu")
+        try:
+            from speechbrain.inference.speaker import EncoderClassifier
+        except ImportError:
+            from speechbrain.pretrained import EncoderClassifier
+        _ENCODER = EncoderClassifier.from_hparams(
+            source="speechbrain/spkrec-ecapa-voxceleb", run_opts={"device": "cpu"})
     return _ENCODER
 
 
@@ -97,11 +107,13 @@ def preprocess(wav):
 
 
 def embed_wav(wav):
-    """(256-d normed embedding, metrics) for a decoded waveform."""
+    """(192-d normed embedding, metrics) for a decoded waveform."""
     q = audio_quality(wav)
     trimmed = preprocess(wav)
     q["speech_s"] = round(len(trimmed) / SAMPLE_RATE, 2)
-    emb = voice_encoder().embed_utterance(trimmed)
+    import torch
+    wav_tensor = torch.tensor(trimmed).unsqueeze(0)
+    emb = voice_encoder().encode_batch(wav_tensor).squeeze().cpu().numpy()
     return np.asarray(emb, dtype=np.float32), q
 
 

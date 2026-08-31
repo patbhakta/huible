@@ -3,7 +3,7 @@
 
 Mirrors ref_gate.py (image twin). For each --audio file:
 
-1. Decode → 16 kHz mono → VAD-trim → resemblyzer 256-d speaker embedding.
+1. Decode → 16 kHz mono → VAD-trim → ECAPA-TDNN 192-d speaker embedding.
 2. Cosine similarity vs EVERY embedding in the curated reference set; the
    gate score is the max similarity (best-matching reference clip).
 3. Score ≥ threshold (from references/voice-gate-config.json) → pass; else
@@ -26,6 +26,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from voicepipe_common import (
+    GATE_ID,
     append_jsonl,
     cosine,
     embed_file,
@@ -50,7 +51,7 @@ def gate_one(persona_root, path, cfg, ref_embs):
         "quality": q,
         "audio": path,
         "sha256": sha256_of(path),
-        "gate": "resemblyzer-256d-cosine-max",
+        "gate": GATE_ID,
         "checked_at": now_iso(),
     }
 

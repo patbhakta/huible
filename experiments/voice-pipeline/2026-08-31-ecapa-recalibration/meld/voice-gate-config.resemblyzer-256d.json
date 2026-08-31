@@ -1,10 +1,10 @@
 {
-  "gate": "ecapa-voxceleb-192d-cosine-max",
-  "threshold": 0.3308,
+  "gate": "resemblyzer-256d-cosine-max",
+  "threshold": 0.8022,
   "passed": false,
   "production_safe": false,
   "internal_only": true,
-  "calibrated_at": "2026-08-31T12:54:55+00:00",
+  "calibrated_at": "2026-08-27T23:05:52+00:00",
   "gold_set": {
     "speakers": [
       "chandler",
@@ -14,13 +14,13 @@
     ],
     "pos_pairs": 20,
     "neg_pairs": 60,
-    "pos_min": 0.3238,
-    "pos_mean": 0.5087,
-    "neg_max": 0.3379,
-    "neg_mean": 0.1552,
+    "pos_min": 0.7076,
+    "pos_mean": 0.8108,
+    "neg_max": 0.8967,
+    "neg_mean": 0.7099,
     "separated": false,
-    "tpr": 0.95,
-    "fpr": 0.016666666666666666,
+    "tpr": 0.6,
+    "fpr": 0.06666666666666667,
     "protocol": "held-out same-speaker positives (zero-spend proxy), cross-speaker negatives",
     "promotion_requires": "clone-output gold set + consented human gold set (~50 clips/class)"
   },

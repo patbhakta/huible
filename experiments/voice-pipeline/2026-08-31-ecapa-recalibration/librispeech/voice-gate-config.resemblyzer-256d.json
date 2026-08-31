@@ -1,10 +1,10 @@
 {
-  "gate": "ecapa-voxceleb-192d-cosine-max",
-  "threshold": 0.5049,
+  "gate": "resemblyzer-256d-cosine-max",
+  "threshold": 0.8323,
   "passed": true,
   "production_safe": false,
   "internal_only": false,
-  "calibrated_at": "2026-08-31T12:55:28+00:00",
+  "calibrated_at": "2026-08-27T22:07:49+00:00",
   "gold_set": {
     "speakers": [
       "spkr-1089",
@@ -14,10 +14,10 @@
     ],
     "pos_pairs": 32,
     "neg_pairs": 96,
-    "pos_min": 0.6648,
-    "pos_mean": 0.8305,
-    "neg_max": 0.345,
-    "neg_mean": 0.186,
+    "pos_min": 0.8403,
+    "pos_mean": 0.9301,
+    "neg_max": 0.8243,
+    "neg_mean": 0.6012,
     "separated": true,
     "tpr": 1.0,
     "fpr": 0.0,

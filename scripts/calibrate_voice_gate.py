@@ -36,7 +36,15 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from voicepipe_common import append_jsonl, cosine, embed_file, load_json, now_iso, vault_paths
+from voicepipe_common import (
+    GATE_ID,
+    append_jsonl,
+    cosine,
+    embed_file,
+    load_json,
+    now_iso,
+    vault_paths,
+)
 
 
 def main():
@@ -89,7 +97,7 @@ def main():
         internal_only = bool(load_json(set_json).get("internal_only"))
 
     cfg = {
-        "gate": "resemblyzer-256d-cosine-max",
+        "gate": GATE_ID,
         "threshold": threshold,
         "passed": passed,
         "production_safe": False,

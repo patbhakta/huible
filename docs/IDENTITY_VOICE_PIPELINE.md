@@ -33,13 +33,15 @@ Stage tools live in `scripts/`:
 | COLLECT | `voice_collect.py` | filesystem + rights JSON schema |
 | CURATE | `voice_curate.py` | sha256 + waveform-signature dedupe, ffmpeg decode, webrtcvad speech trim |
 | CLONE | `voice_clone.py` | `elevenlabs-ivc` (Instant Voice Cloning, spend-gated) · `xtts-local` / `openvoice-local` (zero-spend, documented) |
-| VALIDATE | `voice_gate.py` | resemblyzer 256-d speaker embedding, cosine vs curated set |
+| VALIDATE | `voice_gate.py` | ECAPA-TDNN (speechbrain) 192-d speaker embedding, cosine vs curated set |
 | CALIBRATE | `calibrate_voice_gate.py` | gold-set distributions → threshold + TPR/FPR (Hume-gate pattern) |
 | REGISTRY | `voice_registry.py` | flat append-only JSONL |
 
-Requires `torch` (CPU wheel), `resemblyzer`, system `ffmpeg`
-(`scripts/requirements-voicepipe.txt`). Resemblyzer weights ship inside the
-wheel (~17 MB); CPU-only embed is ≈ 0.2–1 s per clip.
+Requires `torch` (CPU wheel), `speechbrain`, `resemblyzer` (VAD trim only),
+system `ffmpeg` (`scripts/requirements-voicepipe.txt`). ECAPA weights
+(`spkrec-ecapa-voxceleb`, ~85 MB) download once from HF Hub and cache;
+CPU-only embed is ≈ 0.5–2 s per clip. Python 3.12 venvs need
+`setuptools<81` (webrtcvad imports `pkg_resources`).
 
 ---
 
@@ -133,8 +135,8 @@ registry never depends on memory of invocation flags.
 
 `voice_gate.py --persona-root <vault> --audio out.wav`:
 
-1. ffmpeg decode → 16 kHz mono → webrtcvad speech trim → resemblyzer
-   256-d speaker embedding.
+1. ffmpeg decode → 16 kHz mono → webrtcvad speech trim → ECAPA-TDNN
+   192-d speaker embedding.
 2. Cosine similarity vs **every** curated reference embedding; gate score =
    **max** similarity (best-matching clip — same speaker if *any* reference
    matches).
@@ -178,17 +180,29 @@ gating, no spend, no registry). Read-speech thresholds do **not** transfer
 to sitcom speech. Evidence:
 `experiments/voice-pipeline/2026-08-28-meld-chandler/`.
 
+**ECAPA recalibration (2026-08-31, HU-2160): sitcom still not separated,
+read speech much stronger.** Embedder swapped to speechbrain ECAPA-TDNN
+(192-d) behind the same `embed_wav` interface; both gold sets recalibrated.
+MELD: pos_min 0.3238 vs neg_max 0.3379 — overlap collapses from 0.189 to
+0.014, TPR 0.95 / FPR 0.017 at midpoint 0.3308, Joey↔Chandler confusion
+**gone** (pair max 0.2365; was 0.8967 and 6 of the top 8 negatives), and
+the neutral-emotion subset now separates (0.3813 vs 0.3208). The two
+residual outliers are emotion-extreme clips (rachel/sadness positive at
+0.3238; ross/anger negative at 0.3379), so the Chandler gate stays
+`passed: false` (fail-closed). LibriSpeech regression: cleanly separated —
+pos_min 0.6648 vs neg_max 0.3450, **margin 0.32 (was 0.016)**, threshold
+0.5049, TPR 1.0 / FPR 0.0; vault re-embedded and gate smoke-tested
+(same-speaker 0.7737 pass, cross-speaker 0.1881 reject). Evidence:
+`experiments/voice-pipeline/2026-08-31-ecapa-recalibration/`.
+
 **Production promotion requires** (in order): (a) **clone-output gold set**
 — same protocol with cloned lines vs held-out references, per cloning
 model+version; (b) for client personas, a **consented human gold set
 (~50 clips/class)** built from onboarding-style recordings; (c) re-run
-calibration, threshold from *measured* clone distribution. Note the v1
-margin is thin (pos_min − neg_max ≈ 0.016) — honest reading: resemblyzer
-separates read-speech speakers less strongly than ArcFace separates faces.
-If production margins need to be wider, swap the embedder to
-speechbrain **ECAPA-TDNN** (VoxCeleb-class, the other issue-named option)
-behind the same `embed_wav` interface and recalibrate — the gate, config,
-registry, and spend rule do not change.
+calibration, threshold from *measured* clone distribution. The ECAPA swap
+(2026-08-31) widened the read-speech margin from ≈0.016 to ≈0.32, so the
+embedder is no longer the weak link; the remaining limits are corpus-domain
+transfer and emotion-extreme delivery (§Known limits).
 
 ## 4. PROVENANCE — flat append-only registry
 
@@ -250,22 +264,27 @@ gate→registry path, zero generation).
 
 ## Known limits / next steps
 
-- **Chandler benchmark set exists (MELD.Raw ingested, HU-2159) but the
-  sitcom gate is honestly not-separated** — resemblyzer confuses
-  Joey↔Chandler and expressive delivery shifts positives below the
-  negatives band. Production-path implication unchanged (set is
-  internal_only forever); benchmark-path implication: a trial clone
-  benchmark needs a stronger embedder first.
+- **Chandler benchmark set exists (MELD.Raw ingested, HU-2159) and the
+  sitcom gate is still honestly not-separated after the ECAPA swap
+  (2026-08-31)** — but the failure collapsed to two emotion-extreme outlier
+  clips (overlap 0.014; was 0.189 with resemblyzer). Joey↔Chandler
+  confusion and the neutral-subset overlap are fixed. Production-path
+  implication unchanged (set is internal_only forever); benchmark-path
+  implication: the next lever is emotion-stratified calibration or
+  reference sets, not another embedder swap.
 - **Threshold is R&D-calibrated on natural speech, not clone outputs.**
   Clone-output gold set required before any production persona voice
   (§3). Consented human gold set (~50 clips/class) required before client
   personas.
-- **Read-speech ↔ sitcom transfer fails (v1 0.8323 → TPR 0.35 on MELD)**
-  — thresholds are corpus-domain-specific; recalibrate per domain.
-- **ECAPA swap is now evidence-motivated, not speculative (§3, §Known
-  limits)** — swap the embedder to speechbrain ECAPA-TDNN behind the same
-  `embed_wav` interface and recalibrate on the MELD gold set (follow-up
-  issue; Joey↔Chandler on expressive TV audio is the hard case).
+- **Read-speech ↔ sitcom transfer fails (resemblyzer v1: 0.8323 → TPR 0.35
+  on MELD; ECAPA thresholds are corpus-domain-specific too — LibriSpeech
+  0.5049 vs MELD midpoint 0.3308 in different embedding spaces)** —
+  recalibrate per domain; never reuse a threshold across embedders or
+  corpora (gate configs carry `gate` labels for exactly this).
+- **ECAPA swap DONE (2026-08-31, HU-2160)** — speechbrain ECAPA-TDNN
+  behind `embed_wav`, vaults re-embedded via `scripts/voice_reembed.py`,
+  both gold sets recalibrated (see §3 evidence). Old resemblyzer-labeled
+  configs are obsolete.
 - **Local clone adapters: chatterbox-local is real and measured; XTTS /
   OpenVoice remain documented stubs** — chatterbox-turbo gate-passed on the
   spkr-1089 gold set (0.9263 ≥ 0.8323, CPU 47.9 s/sentence, zero spend);
