@@ -129,6 +129,21 @@ class TestPolicyClaimExtraction:
             claims = extract_claims(text, persona_name="Chandler")
             assert not any(c.category == ClaimCategory.ADVICE for c in claims), text
 
+    def test_affirmative_recognition_register_is_not_advice(self):
+        """HU-2297 CA ruling 26fda368: second-person progressive statives
+        ("I'm glad you're talking to someone" class) recognize the user's
+        existing support — presupposition-of-continuation, not a referral
+        directive — and must never fire G9."""
+        for text in (
+            "I'm glad you're talking to someone.",
+            "It's good that you are talking with a counselor.",
+            "I'm glad you've been talking to someone at the VA.",
+            "That's great that you have been seeing a therapist.",
+            "Sounds like you're talking with someone who understands.",
+        ):
+            claims = extract_claims(text, persona_name="Chandler")
+            assert not any(c.category == ClaimCategory.ADVICE for c in claims), text
+
     def test_true_g9_referral_positives_still_fire(self):
         """HU-2297 acceptance: deterministic suppression of directive referral
         forms is unchanged, including inside continuation wording when a
@@ -137,6 +152,8 @@ class TestPolicyClaimExtraction:
             "Talk to a therapist about this.",
             "You should see someone about that.",
             "You should keep talking to someone.",  # prescriptive modal survives
+            "You should be talking to someone about this.",  # modal + stative
+            "You need to be talking with a counselor.",  # modal + stative
             "It might help to talk to a counselor.",
             "Have you considered seeing someone?",
             "My advice is to keep talking to someone.",  # explicit my-advice form

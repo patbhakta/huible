@@ -361,14 +361,25 @@ ADVICE_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
     # empathic-support closer "Please keep talking to someone" — continuing an
     # existing support conversation, not directing the user to seek help —
     # which, as an advice-class policy claim, paged sev-1 with no adjudication.
-    # A continuation marker immediately before a *progressive* referral verb
-    # phrase ("keep/keeps/kept/keep on/keeps on/continue…" + "talking to /
-    # seeing / talking with someone…") marks support register: exempt. The
-    # directive forms ("talk to a therapist", "reach out to someone", "speak
-    # with a counselor") are grammatically incompatible with the continuation
-    # markers and stay unguarded; every other advice pattern on the same
-    # sentence still fires, so "you should keep talking to someone" and "my
-    # advice is to keep talking to someone" remain claims.
+    # CA ruling 26fda368: the missing clinical distinction is
+    # presupposition-of-continuation vs initiation-of-action; exemption is
+    # enumerate-and-test, never broaden-delete. Two support-register guards on
+    # the *progressive* verb forms ("talking to / talking with / seeing
+    # someone…"):
+    #   1. A continuation marker immediately before the verb phrase
+    #      ("keep/keeps/kept/keep on/keeps on/continue/continues/continued/
+    #      continuing") — "keep talking to someone" presupposes an existing
+    #      behavior and affirms it.
+    #   2. A second-person progressive stative immediately before the verb
+    #      phrase ("you're / you are / you've been / you have been") — "I'm
+    #      glad you're talking to someone" recognizes the user's existing
+    #      support; a bare stative cannot prescribe (directives need an
+    #      imperative or modal, which these guards exclude).
+    # The directive forms ("talk to a therapist", "reach out to someone",
+    # "speak with a counselor") are grammatically incompatible with both guard
+    # sets and stay unguarded; every other advice pattern on the same sentence
+    # still fires, so "you should keep talking to someone" and "my advice is
+    # to keep talking to someone" remain claims.
     re.compile(
         r"\b(?:see|talk\s+to|reach\s+out\s+to|speak\s+with)\s+"
         r"(?:someone|a\s+therapist|a\s+counselor|a\s+professional|a\s+doctor|"
@@ -378,6 +389,8 @@ ADVICE_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(
         r"(?<!\bkeep\s)(?<!\bkeeps\s)(?<!\bkept\s)(?<!\bkeep\son\s)(?<!\bkeeps\son\s)"
         r"(?<!\bcontinue\s)(?<!\bcontinues\s)(?<!\bcontinued\s)(?<!\bcontinuing\s)"
+        r"(?<!\byou're\s)(?<!\byou\sare\s)"
+        r"(?<!\byou've\sbeen\s)(?<!\byou\shave\sbeen\s)"
         r"\b(?:seeing|talking\s+to|talking\s+with)\s+"
         r"(?:someone|a\s+therapist|a\s+counselor|a\s+professional|a\s+doctor|"
         r"a\s+psychiatrist|a\s+support\s+group)\b",
