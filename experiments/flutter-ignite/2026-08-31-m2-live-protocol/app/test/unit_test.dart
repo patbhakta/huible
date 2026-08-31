@@ -50,6 +50,21 @@ http.Client _mockClient(
 }
 
 void main() {
+  // ─── AppSettings ───────────────────────────────────────────────────────────
+
+  group('AppSettings defaults', () {
+    test('baseUrl defaults to compile-time API_BASE_URL (localhost fallback)',
+        () {
+      // No --dart-define in this test run: must fall back to localhost.
+      expect(const AppSettings().baseUrl, 'http://localhost:8000');
+    });
+
+    test('copyWith keeps baseUrl when not provided', () {
+      final s = const AppSettings(baseUrl: 'https://api.example.com');
+      expect(s.copyWith(personaId: 'x').baseUrl, 'https://api.example.com');
+    });
+  });
+
   // ─── NDJSON Parser ─────────────────────────────────────────────────────────
 
   group('NdjsonParser.parseLine', () {

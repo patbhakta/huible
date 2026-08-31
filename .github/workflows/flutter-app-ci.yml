@@ -1,0 +1,36 @@
+name: flutter-app-ci
+
+# HU-2162 §3a.4 — CI build step for the FlutterIgnite SaaS-shell prototype.
+# Path-filtered: only runs when the prototype app changes.
+
+on:
+  push:
+    paths:
+      - 'experiments/flutter-ignite/**'
+      - '.github/workflows/flutter-app-ci.yml'
+  pull_request:
+    paths:
+      - 'experiments/flutter-ignite/**'
+      - '.github/workflows/flutter-app-ci.yml'
+
+jobs:
+  flutter-app:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - experiments/flutter-ignite/2026-08-31-m1-prototype/app
+          - experiments/flutter-ignite/2026-08-31-m2-live-protocol/app
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub
+      - run: flutter build web --release

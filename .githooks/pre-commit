@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# HU-2162 §3a.4 — Flutter analyze/test gate.
+#
+# Runs only when staged changes touch Dart sources (or pubspec) inside
+# experiments/flutter-ignite/**, and only for the app(s) actually changed.
+# Fails OPEN when the Flutter SDK is not on PATH (CI enforces authoritatively;
+# see .github/workflows/flutter-app-ci.yml).
+#
+# One-time activation (idempotent): git config core.hooksPath .githooks
+
+set -uo pipefail
+
+if ! command -v flutter >/dev/null 2>&1; then
+  echo "pre-commit: flutter SDK not on PATH — skipping Dart gate (CI will enforce)" >&2
+  exit 0
+fi
+
+# Staged files (committed, added, modified, renamed, copied)
+mapfile -t staged < <(git diff --cached --name-only --diff-filter=ACMRT)
+
+apps=()
+for f in "${staged[@]:-}"; do
+  case "$f" in
+    experiments/flutter-ignite/*.dart|experiments/flutter-ignite/*/pubspec.yaml|experiments/flutter-ignite/*/pubspec.lock)
+      # nearest ancestor dir of the file that contains a pubspec.yaml = app root
+      d=$(dirname "$f")
+      while [ "$d" != "experiments/flutter-ignite" ] && [ "$d" != "." ] && [ "$d" != "/" ]; do
+        [ -f "$d/pubspec.yaml" ] && break
+        d=$(dirname "$d")
+      done
+      [ -f "$d/pubspec.yaml" ] && apps+=("$d")
+      ;;
+  esac
+done
+
+# unique, preserve order
+apps=($(printf '%s\n' "${apps[@]:-}" | awk 'NF' | awk '!seen[$0]++'))
+
+[ ${#apps[@]} -eq 0 ] && exit 0
+
+rc=0
+for app in "${apps[@]}"; do
+  echo "pre-commit: flutter gate for $app" >&2
+  ( cd "$app" || exit 1
+    flutter analyze --no-pub || rc=1
+    flutter test --no-pub || rc=1
+  ) || rc=1
+done
+
+if [ $rc -ne 0 ]; then
+  echo "pre-commit: Flutter gate FAILED — fix analyze/test before committing (or commit with --no-verify at your own risk)" >&2
+fi
+exit $rc
