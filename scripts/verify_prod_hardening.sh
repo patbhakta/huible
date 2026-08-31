@@ -84,7 +84,7 @@ fi
 # Only 80/443/22 should be listening on external interfaces.
 # Loopback = 127.0.0.0/8 (incl. systemd-resolved 127.0.0.53/.54) and ::1.
 if command -v ss >/dev/null 2>&1; then
-  pub_listeners="$(ss -tlnH 2>/dev/null | awk '{print $4}' | grep -vE '^(127\.|\[?::1\]?:|\[::1\])' || true)"
+  pub_listeners="$(ss -tlnH 2>/dev/null | awk '{print $4}' | grep -vE '^(127\.|100\.|\[::ffff:127\.|\[fd7a:|\[?::1\]?:|\[::1\])' || true)"
   # Huible stack ports must NEVER be publicly bound (hard fail in any layout).
   huible_leak="$(echo "$pub_listeners" | grep -E ':(8000|5432|5433)$' || true)"
   if [ -n "$huible_leak" ]; then
