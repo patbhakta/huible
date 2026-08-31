@@ -2,6 +2,8 @@
 // FastAPI server (huible-app, 127.0.0.1:8000). Run from app/ with `dart run`.
 // Sequence: sendMessage (expect 409) -> acknowledgeConsent -> retry (expect 200).
 
+// ignore_for_file: avoid_print — this is a CLI diagnostic harness; printing is
+// its entire output contract.
 import 'dart:async';
 
 import 'package:huible_m1/models/chat_error.dart';
@@ -44,8 +46,8 @@ Future<void> main() async {
 
   // 2. Acknowledge consent with the adopted id.
   final ackOk = await source.acknowledgeConsent(
-    conversationId: adoptedConversationId!,
-    cardVersion: cardVersion!,
+    conversationId: adoptedConversationId,
+    cardVersion: cardVersion,
     acknowledgeUrl: ackUrl,
   );
   print('consent ack accepted=$ackOk');
