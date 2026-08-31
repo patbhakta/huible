@@ -184,6 +184,7 @@ CREATE TABLE llm_usage (
     latency_ms       INT NOT NULL DEFAULT 0,
     modeled_cost_usd NUMERIC(14, 8) NOT NULL DEFAULT 0,
     cost_basis       VARCHAR(16) NOT NULL DEFAULT 'modeled',
+    key_source       VARCHAR(16) NOT NULL DEFAULT 'shared',
     day              DATE NOT NULL,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -193,3 +194,4 @@ CREATE INDEX idx_llm_usage_key_day ON llm_usage (api_key_id, day);
 CREATE INDEX idx_llm_usage_persona_day ON llm_usage (persona_id, day);
 CREATE INDEX idx_llm_usage_conversation ON llm_usage (conversation_id);
 CREATE INDEX idx_llm_usage_org_day ON llm_usage (org_id, day);
+CREATE INDEX idx_llm_usage_key_source_day ON llm_usage (key_source, day);

@@ -827,3 +827,11 @@ class UsageDailyRowView(BaseModel):
     )
     avg_latency_ms: float = Field(..., description="Mean LLM latency in milliseconds.")
     conversations: int = Field(..., description="Distinct conversation ids in the group.")
+    key_source: str = Field(
+        default="shared",
+        description=(
+            "Which provider key served the group's turns (HU-2243 key "
+            "separation / BYOK): 'byok' client-supplied key, 'product' "
+            "dedicated product key, 'shared' internals key."
+        ),
+    )

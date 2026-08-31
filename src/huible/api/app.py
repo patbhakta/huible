@@ -159,6 +159,8 @@ from huible.llm.client import FakeLLMClient as _FakeLLMClient
 from huible.llm.client import (
     LLMBudgetExceededError,
     LLMClient,
+    LLMConfigError,
+    LLMProvider,
     build_llm_client,
 )
 from huible.memory.protocol import MemoryBackend, MemoryNode
@@ -667,7 +669,25 @@ def create_app(
     application.state.generator = generator or make_generator_client(
         resolved_settings.to_generator_config()
     )
-    application.state.llm_client = llm_client or build_llm_client(resolved_settings.to_llm_config())
+    # HU-2243 key separation: the persona voice (product surface — chat turns
+    # + the alignment judge that backstops them) builds from the dedicated
+    # product-provider overlay when ``PERSONA_LLM_PROVIDER`` is configured,
+    # and from the shared internals config otherwise (unchanged posture).
+    # ``llm_key_source`` feeds the metering rows so usage splits by which
+    # key served the turn. An explicitly injected ``llm_client`` (tests,
+    # pinned deployments) wins over both.
+    application.state.llm_client = llm_client or build_llm_client(
+        resolved_settings.to_persona_llm_config()
+    )
+    application.state.llm_key_source = (
+        "product"
+        if resolved_settings.persona_llm_provider.strip() and llm_client is None
+        else "shared"
+    )
+    # HU-2243 BYOK: per-turn client cache keyed by (key digest, provider,
+    # model) — raw provider keys are never stored, logged, or persisted; the
+    # digest exists only to reuse the constructed client across turns.
+    application.state.byok_clients: dict[str, LLMClient] = {}
     application.state.context_builder = context_builder or ContextBuilder()
     # HU-2070: TTL cache for the persona-scope §7.4.2 grounding corpus (see
     # ``_persona_scope_grounding_refs``). Keyed by persona + disclosure scope
@@ -950,6 +970,9 @@ def _register_routes(application: FastAPI) -> None:
         real_user_traffic_class: str | None = Header(
             default=None, alias=REAL_USER_TRAFFIC_CLASS_HEADER
         ),
+        provider_key: str | None = Header(
+            default=None, alias=PROVIDER_KEY_HEADER
+        ),
     ) -> PersonaChatResponse:
         """Persona-scoped chat endpoint — the Phase-1 integration milestone (HU-1406).
 
@@ -1223,7 +1246,12 @@ def _register_routes(application: FastAPI) -> None:
                 },
             )
 
-        llm: LLMClient = application.state.llm_client
+        # HU-2243 BYOK hook: resolve which provider key serves this turn —
+        # client-supplied key (``X-Provider-Key``, gated by ``BYOK_ENABLED``)
+        # → house key (dedicated product key when configured, else the
+        # shared internals key). Metering attribution stays the caller's own
+        # bearer-key digest either way; ``key_source`` records the split.
+        llm, llm_key_source = _resolve_turn_llm(application, provider_key)
         provider_label = str(getattr(llm, "provider", "unknown"))
 
         # --- §7.4.4 G8: load the session risk profile (once per turn) -------
@@ -1540,7 +1568,8 @@ def _register_routes(application: FastAPI) -> None:
         # call (requests, tokens in/out, latency, modeled cost) keyed on the
         # caller's API key + persona + conversation. The budget-fallback
         # fake-voice turn is metered too (it served the product surface); a
-        # metering failure must never break the clinical turn.
+        # metering failure must never break the clinical turn. Sprint 2:
+        # ``key_source`` splits byok / product / shared (key separation).
         _meter_llm_turn(
             application,
             api_key=principal.api_key,
@@ -1548,6 +1577,7 @@ def _register_routes(application: FastAPI) -> None:
             conversation_id=body.conversation_id,
             client=(fallback if budget_fallback else llm),
             latency_ms=int((time.perf_counter() - _llm_t0) * 1000),
+            key_source=llm_key_source,
         )
 
         # G3 generation-time guard: on the distress branch (forced or graded),
@@ -1945,6 +1975,7 @@ def _register_routes(application: FastAPI) -> None:
                 modeled_cost_usd=a.modeled_cost_usd,
                 avg_latency_ms=a.avg_latency_ms,
                 conversations=a.conversations,
+                key_source=a.key_source,
             )
             for a in aggregates
         ]
@@ -2377,6 +2408,76 @@ def _record_turn(
     store.append_turn(conversation_id, ConversationTurn(speaker="persona", content=reply))
 
 
+#: HU-2243 BYOK: chat-turn header carrying a client-supplied provider API
+#: key. Honored only when ``BYOK_ENABLED`` arms the gate and the product
+#: voice runs on a real hosted provider; otherwise ignored (house key). The
+#: raw value is used for the upstream call only — never logged, never
+#: persisted; metering attributes the turn to the caller's own bearer key
+#: with ``key_source='byok'``.
+PROVIDER_KEY_HEADER = "X-Provider-Key"
+
+
+def _resolve_turn_llm(
+    application: FastAPI, raw_provider_key: str | None
+) -> tuple[LLMClient, str]:
+    """Resolve the LLM client + key source for one chat turn (HU-2243).
+
+    Resolution order: client-supplied provider key (BYOK, gated) → house
+    client (``application.state.llm_client``, already the dedicated product
+    key when ``PERSONA_LLM_PROVIDER`` is configured). Returns the client and
+    the metering ``key_source`` (``byok`` | ``product`` | ``shared``).
+
+    BYOK semantics: the key is applied to the *product voice's* provider and
+    model (the client brings the credential, not the model choice), cached
+    per (key digest, provider, model) so repeated turns reuse the constructed
+    client. Any construction failure — or the gate being closed, or the
+    product voice being the key-free fake — falls back to the house key;
+    BYOK can never break a turn.
+    """
+    house: LLMClient = application.state.llm_client
+    house_source = str(getattr(application.state, "llm_key_source", "shared"))
+    settings: Settings = application.state.settings
+    raw = (raw_provider_key or "").strip()
+    if not raw or not settings.byok_enabled:
+        return house, house_source
+    try:
+        persona_config = settings.to_persona_llm_config()
+    except Exception:  # pragma: no cover - defensive: settings are validated
+        return house, house_source
+    if persona_config.provider is LLMProvider.FAKE:
+        # No hosted provider to key — the header is meaningless here.
+        return house, house_source
+    cache: dict[str, LLMClient] = getattr(application.state, "byok_clients", {})
+    key_field = {
+        LLMProvider.ZAI: "zai_api_key",
+        LLMProvider.OPENROUTER: "openrouter_api_key",
+        LLMProvider.GEMINI: "gemini_api_key",
+    }[persona_config.provider]
+    model = (
+        persona_config.zai_model
+        if persona_config.provider is LLMProvider.ZAI
+        else persona_config.openrouter_model
+        if persona_config.provider is LLMProvider.OPENROUTER
+        else persona_config.gemini_model
+    )
+    cache_key = f"{api_key_attribution_id(raw)}:{persona_config.provider.value}:{model}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached, "byok"
+    try:
+        client = build_llm_client(persona_config, **{key_field: raw})
+    except LLMConfigError:
+        # Deterministic construction failure (e.g. empty after trim) —
+        # negative-cache so abusive turns do not retry construction.
+        logger.warning(
+            "byok client construction failed (provider=%s); using house key",
+            persona_config.provider.value,
+        )
+        return house, house_source
+    cache[cache_key] = client
+    return client, "byok"
+
+
 def _meter_llm_turn(
     application: FastAPI,
     *,
@@ -2385,6 +2486,7 @@ def _meter_llm_turn(
     conversation_id: str | None,
     client: object,
     latency_ms: int,
+    key_source: str = "shared",
 ) -> None:
     """Record one usage row for a metered chat-turn LLM call (HU-2243).
 
@@ -2415,6 +2517,7 @@ def _meter_llm_turn(
             reported_cost_usd=(
                 float(reported_cost) if reported_cost is not None else None
             ),
+            key_source=key_source,
         )
         recorder.record_turn(record)
     except Exception:  # pragma: no cover - defensive; never break a turn

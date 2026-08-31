@@ -202,6 +202,10 @@ class UsageRecord:
     org_id: str | None = None
     requests: int = 1
     reported_cost_usd: float | None = None
+    #: Which provider key served the turn (HU-2243 key separation / BYOK):
+    #: ``byok`` client-supplied key, ``product`` dedicated product key,
+    #: ``shared`` the shared internals key (pre-separation default).
+    key_source: str = "shared"
     day: date = field(default_factory=utc_day)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -229,6 +233,7 @@ class UsageDailyAggregate:
     avg_latency_ms: float
     conversations: int
     org_id: str | None = None
+    key_source: str = "shared"
 
 
 @runtime_checkable
@@ -273,7 +278,7 @@ class InMemoryUsageRecorder:
         persona_id: str | None = None,
         api_key_id: str | None = None,
     ) -> list[UsageDailyAggregate]:
-        grouped: dict[tuple[date, str, str], list[UsageRecord]] = {}
+        grouped: dict[tuple[date, str, str, str], list[UsageRecord]] = {}
         for row in self.rows:
             if not (from_day <= row.day <= to_day):
                 continue
@@ -281,9 +286,11 @@ class InMemoryUsageRecorder:
                 continue
             if api_key_id is not None and row.api_key_id != api_key_id:
                 continue
-            grouped.setdefault((row.day, row.api_key_id, row.persona_id), []).append(row)
+            grouped.setdefault(
+                (row.day, row.api_key_id, row.persona_id, row.key_source), []
+            ).append(row)
         aggregates: list[UsageDailyAggregate] = []
-        for (day, key_id, pid), rows in grouped.items():
+        for (day, key_id, pid, source), rows in grouped.items():
             costs = [row.resolved_cost()[0] for row in rows]
             org_ids = {row.org_id for row in rows if row.org_id}
             aggregates.append(
@@ -295,16 +302,13 @@ class InMemoryUsageRecorder:
                     tokens_in=sum(r.tokens_in for r in rows),
                     tokens_out=sum(r.tokens_out for r in rows),
                     modeled_cost_usd=round(sum(costs), 8),
-                    avg_latency_ms=round(
-                        sum(r.latency_ms for r in rows) / len(rows), 2
-                    ),
-                    conversations=len(
-                        {r.conversation_id for r in rows if r.conversation_id}
-                    ),
+                    avg_latency_ms=round(sum(r.latency_ms for r in rows) / len(rows), 2),
+                    conversations=len({r.conversation_id for r in rows if r.conversation_id}),
                     org_id=org_ids.pop() if len(org_ids) == 1 else None,
+                    key_source=source,
                 )
             )
-        aggregates.sort(key=lambda a: (a.day, a.api_key_id, a.persona_id))
+        aggregates.sort(key=lambda a: (a.day, a.api_key_id, a.persona_id, a.key_source))
         return aggregates
 
 
@@ -348,6 +352,10 @@ class UsageRow(MeteringBase):
     latency_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     modeled_cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     cost_basis: Mapped[str] = mapped_column(String(16), nullable=False, default="modeled")
+    # HU-2243 key separation / BYOK: which provider key served the turn —
+    # ``byok`` | ``product`` | ``shared`` (migration 005; historical rows
+    # backfilled ``shared`` — they ran on the shared internals key).
+    key_source: Mapped[str] = mapped_column(String(16), nullable=False, default="shared")
     day: Mapped[date] = mapped_column(Date, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -415,6 +423,7 @@ class PostgresUsageRecorder:
                     latency_ms=record.latency_ms,
                     modeled_cost_usd=cost,
                     cost_basis=basis,
+                    key_source=record.key_source,
                     day=record.day,
                     created_at=record.created_at,
                 )
@@ -435,6 +444,7 @@ class PostgresUsageRecorder:
                 day.label("day"),
                 UsageRow.api_key_id.label("api_key_id"),
                 UsageRow.persona_id.label("persona_id"),
+                UsageRow.key_source.label("key_source"),
                 func.sum(UsageRow.requests).label("requests"),
                 func.sum(UsageRow.tokens_in).label("tokens_in"),
                 func.sum(UsageRow.tokens_out).label("tokens_out"),
@@ -447,8 +457,8 @@ class PostgresUsageRecorder:
             )
             .where(day >= from_day)
             .where(day <= to_day)
-            .group_by(day, UsageRow.api_key_id, UsageRow.persona_id)
-            .order_by(day, UsageRow.api_key_id, UsageRow.persona_id)
+            .group_by(day, UsageRow.api_key_id, UsageRow.persona_id, UsageRow.key_source)
+            .order_by(day, UsageRow.api_key_id, UsageRow.persona_id, UsageRow.key_source)
         )
         if persona_id is not None:
             stmt = stmt.where(UsageRow.persona_id == persona_id)
@@ -469,6 +479,7 @@ class PostgresUsageRecorder:
                         avg_latency_ms=_round_half_up(row.avg_latency_ms),
                         conversations=int(row.conversations or 0),
                         org_id=row.org_id,
+                        key_source=row.key_source,
                     )
                 )
         return aggregates

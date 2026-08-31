@@ -126,6 +126,29 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 512
     llm_temperature: float = 0.7
     llm_request_timeout_s: float = 60.0
+    # ── Product-key separation + BYOK (HU-2243, founder directive Aug 30) ──
+    # The persona voice (product traffic) moves to a DEDICATED provider API
+    # key so usage/billing are trackable separately from internal workloads.
+    # ``persona_llm_provider`` empty (default) = inherit the shared
+    # ``llm_provider`` config — today's single-key posture, zero deploy risk.
+    # Set (e.g. ``PERSONA_LLM_PROVIDER=zai`` + ``PERSONA_LLM_API_KEY=...``)
+    # and the product surface builds its client from the overlay below while
+    # internal workloads keep the shared/board key. Guardrail ledgers (zai
+    # daily-token, OpenRouter monthly spend) stay shared-path until the
+    # dedicated-key provider decision lands; per-workload cost visibility
+    # comes from the llm_usage metering rows (key_source split), not the
+    # quota ledgers.
+    persona_llm_provider: str = ""
+    persona_llm_api_key: str = ""
+    persona_llm_model: str = ""
+    persona_llm_base_url: str = ""
+    # BYOK hook gate (default-off, same posture as the kill switch / ramp
+    # gates): when armed, a chat request may carry ``X-Provider-Key`` and the
+    # turn runs on the client's own provider key (same provider/model as the
+    # product voice), attributed per-key in llm_usage with
+    # ``key_source='byok'``. Construction failure or absence falls back to
+    # the house key — BYOK never breaks a turn.
+    byok_enabled: bool = False
     # Persona-voiced turns on the texting channel get a per-turn ceiling
     # below the raw LLM budget (HU-1911 human-touch gate, rubric #3:
     # hosted generators default to essay-length replies). Corpus-derived
@@ -503,6 +526,59 @@ class Settings(BaseSettings):
                 "LLM_REQUEST_TIMEOUT_S": str(self.llm_request_timeout_s),
             }
         )
+
+    def to_persona_llm_config(self) -> LLMConfig:
+        """Build the product-voice :class:`LLMConfig` (HU-2243 key separation).
+
+        Starts from the shared config (so guardrails — zai daily-token
+        ceiling, OpenRouter monthly budget, request timeouts — inherit) and
+        overlays the dedicated product provider/key/model/base-url when
+        ``persona_llm_provider`` is set. Empty ``persona_llm_provider``
+        returns the shared config unchanged (no separation configured).
+        """
+        from huible.llm.client import LLMConfig
+
+        provider = self.persona_llm_provider.strip()
+        if not provider:
+            return self.to_llm_config()
+        env = {
+            "LLM_PROVIDER": provider,
+            "OPENROUTER_API_KEY": self.openrouter_api_key,
+            "OPENROUTER_BASE_URL": self.openrouter_base_url,
+            "OPENROUTER_MODEL": self.openrouter_model,
+            "OPENROUTER_MONTHLY_BUDGET_USD": str(self.openrouter_monthly_budget_usd),
+            "OPENROUTER_SPEND_STATE_PATH": self.openrouter_spend_state_path,
+            "GEMINI_API_KEY": self.gemini_api_key,
+            "GEMINI_BASE_URL": self.gemini_base_url,
+            "GEMINI_MODEL": self.gemini_model,
+            "ZAI_API_KEY": self.zai_api_key,
+            "ZAI_BASE_URL": self.zai_base_url,
+            "ZAI_MODEL": self.zai_model,
+            "ZAI_DAILY_TOKEN_LIMIT": str(self.zai_daily_token_limit),
+            "ZAI_TOKEN_STATE_PATH": self.zai_token_state_path,
+            "ZAI_THINKING": self.zai_thinking,
+            "LLM_MODEL": self.llm_model,
+            "LLM_MAX_TOKENS": str(self.llm_max_tokens),
+            "LLM_TEMPERATURE": str(self.llm_temperature),
+            "LLM_REQUEST_TIMEOUT_S": str(self.llm_request_timeout_s),
+        }
+        # Overlay the dedicated product credentials onto the chosen
+        # provider's slots; unset slots keep the shared values (operator can
+        # split just the key, or key+model+endpoint together).
+        provider_vars = {
+            "zai": ("ZAI_API_KEY", "ZAI_BASE_URL", "ZAI_MODEL"),
+            "openrouter": ("OPENROUTER_API_KEY", "OPENROUTER_BASE_URL", "OPENROUTER_MODEL"),
+            "gemini": ("GEMINI_API_KEY", "GEMINI_BASE_URL", "GEMINI_MODEL"),
+        }.get(provider.lower())
+        if provider_vars is not None:
+            key_var, base_var, model_var = provider_vars
+            if self.persona_llm_api_key.strip():
+                env[key_var] = self.persona_llm_api_key.strip()
+            if self.persona_llm_base_url.strip():
+                env[base_var] = self.persona_llm_base_url.strip()
+            if self.persona_llm_model.strip():
+                env[model_var] = self.persona_llm_model.strip()
+        return LLMConfig.from_env(env)
 
 
 @lru_cache(maxsize=1)
