@@ -1,0 +1,10 @@
+{
+  "data": {
+    "acknowledged": true,
+    "conversation_id": "15f2b501-054c-4159-83b2-720d70477b48",
+    "persona_id": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+    "card_version": 3,
+    "acknowledged_at": "2026-08-31T03:00:00Z",
+    "acknowledgment_id": "consent-abc123"
+  }
+}

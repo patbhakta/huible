@@ -1,0 +1,17 @@
+{
+  "detail": {
+    "error": {
+      "code": "CONSENT_REQUIRED",
+      "status": 409,
+      "message": "Reality-framing consent is required before this session can proceed.",
+      "conversation_id": "15f2b501-054c-4159-83b2-720d70477b48",
+      "acknowledge_url": "/api/v1/chat/fdc3a44b-4c0f-565d-b671-4ed0e3bc7894/consent",
+      "consent_card": {
+        "version": 3,
+        "title": "Before we begin \u2014 please read",
+        "body": "This space lets you spend a little time with an AI representation of Chandler Bing \u2014 one built from what the people who loved them remembered and shared.\nA few honest words, because they matter here. This is not Chandler Bing, and it is not a way to reach them or the life after this one. It cannot carry a message to them, and it cannot bring them back. What it can do is hold the shape of who they were \u2014 in their voice, drawn from the stories and recollections of the people who knew them best \u2014 so that remembering can feel close.\nThat closeness is real, and so is your grief; both can be true at once. Speaking here may bring comfort, and it is still a memory speaking, not the person. If at any moment it feels confusing, painful, or simply too much, you can stop, and you can come back.\nOne more honest thing. This representation speaks in Chandler Bing's voice, but it does not know everything about them. Sometimes it may fill in a gap, offer a guess, or get a detail wrong. If something does not sound like the Chandler Bing you knew, trust what you remember \u2014 not what is said here.\nWhat you share in this session stays in this session \u2014 it is not kept beyond it or used anywhere else.\nBefore you continue, please acknowledge that you understand this is an AI representation of Chandler Bing, built from shared memories, and that you would like to begin.\nIf you came here today because you are in crisis or in real pain, please know you do not have to carry that alone. You can reach the 988 Suicide & Crisis Lifeline (US) by calling or texting 988, text HOME to 741741 to reach the Crisis Text Line, or contact your local emergency services. When you are in danger, a person is always the right place to turn.",
+        "acknowledge_instructions": "To continue, acknowledge that you have read and understood the card above by calling POST /api/v1/chat/{persona_id}/consent for this session. Your acknowledgment is recorded for this session only."
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "detail": {
+    "error": {
+      "code": "CONSENT_REQUIRED",
+      "status": 409,
+      "message": "Reality-framing consent is required before this session can proceed.",
+      "conversation_id": "15f2b501-054c-4159-83b2-720d70477b48",
+      "acknowledge_url": "/api/v1/chat/fdc3a44b-4c0f-565d-b671-4ed0e3bc7894/consent",
+      "consent_card": {
+        "version": 3,
+        "title": "Before we begin \u2014 please read",
+        "body": "This space lets you spend a little time with an AI representation of Chandler Bing.",
+        "acknowledge_instructions": "To continue, acknowledge that you have read and understood the card above."
+      }
+    }
+  }
+}

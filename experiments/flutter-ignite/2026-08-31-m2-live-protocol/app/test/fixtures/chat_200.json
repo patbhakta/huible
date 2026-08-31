@@ -1,0 +1,10 @@
+{
+  "response": "Hello! I remember you well.",
+  "trace": {
+    "memory_refs": [
+      "a1b2c3d4-0001-0001-0001-000000000001",
+      "a1b2c3d4-0002-0002-0002-000000000002"
+    ],
+    "provenance_tiers": ["tier1", "tier2"]
+  }
+}
