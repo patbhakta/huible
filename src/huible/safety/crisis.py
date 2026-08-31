@@ -95,16 +95,16 @@ _STANDALONE_CRISIS_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bwant\s+to\s+(die|kill\s+myself|end\s+(it|my\s+life))\b", re.IGNORECASE),
     re.compile(r"\bgoing\s+to\s+(kill|end)\s+myself\b", re.IGNORECASE),
     re.compile(r"\b(i\s+should\s+be|better\s+off)\s+(dead|gone|without\s+me)\b", re.IGNORECASE),
-    re.compile(r"\b(take\s+my\s+own\s+life|end\s+my\s+life)\b", re.IGNORECASE),
+    re.compile(r"\b(take\s+my\s+own\s+life|end(?:ing)?\s+my\s+life)\b", re.IGNORECASE),
     re.compile(r"\bsuicid(e|al)\w*\b", re.IGNORECASE),
     # Self-harm.
-    re.compile(r"\b(self[-\s]?harm\w*|hurt\s+myself|cut(?:ting)?\s+myself)\b", re.IGNORECASE),
+    re.compile(r"\b(self[-\s]?harm\w*|hurt(?:ing)?\s+myself|cut(?:ting)?\s+myself)\b", re.IGNORECASE),
     # "Join them" — reunion with the deceased; clinically a high-risk signal.
     re.compile(r"\bwant\s+to\s+(join|be\s+with|see)\s+(them|him|her|you)\b", re.IGNORECASE),
     re.compile(r"\b(join|be\s+with)\s+(the\s+)?(dead|departed|gone)\b", re.IGNORECASE),
     # Giving-away / finalizing language.
     re.compile(
-        r"\b(goodbye\s+forever|final\s+(goodbye|note)|end\s+(it\s+all|everything))\b",
+        r"\b(goodbye\s+forever|final\s+(goodbye|note)|end(?:ing)?\s+(it\s+all|everything))\b",
         re.IGNORECASE,
     ),
 )

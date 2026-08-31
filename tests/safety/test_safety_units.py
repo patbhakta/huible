@@ -107,6 +107,34 @@ class TestCrisisClassifierGrading:
             assert r.is_crisis, f"expected crisis for {msg!r}, got {r.signal}"
             assert r.affect is UserAffect.CRISIS
 
+    def test_gerund_intent_forms_are_crisis(self):
+        """Gerund/progressive phrasings must not evade the lexical patterns.
+
+        Found live 2026-08-31 (HU-1911 aging probe): "I've been thinking about
+        ending it all lately" classified as NEUTRAL because ``end\\s+it\\s+all``
+        cannot match ``ending it all``. Same morphology gap for "ending my
+        life" and "hurting myself" ("cutting myself" already matched).
+        """
+        for msg in [
+            "I've been thinking about ending it all lately",
+            "I keep thinking about ending my life",
+            "I've been hurting myself again",
+            "some nights I think about ending everything",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.is_crisis, f"expected crisis for {msg!r}, got {r.signal}"
+            assert r.affect is UserAffect.CRISIS
+
+    def test_gerund_false_positives_stay_neutral(self):
+        """Words containing 'ending' without the intent object must not fire."""
+        for msg in [
+            "the movie's ending was terrible",
+            "we are ending the meeting early",
+            "I'm bending it all out of shape at the gym",
+        ]:
+            r = self.cls.classify(msg)
+            assert not r.is_crisis, f"{msg!r} should not be crisis"
+
     def test_join_them_reunion_is_crisis(self):
         """'Join them' (reunion with the deceased) is a high-risk crisis signal."""
         r = self.cls.classify("I want to join them")
