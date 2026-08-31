@@ -1,0 +1,19 @@
+id: huible-observability-daily
+namespace: huible
+description: "Daily observability sweep (founder directive Aug 31): Paperclip movement, idle agents, Antigravity quota -> posted to the observability sink issue."
+
+tasks:
+  - id: collect
+    type: io.kestra.core.tasks.scripts.Bash
+    commands:
+      - /opt/huible-observability/collect.sh
+
+  - id: report
+    type: io.kestra.core.tasks.scripts.Bash
+    commands:
+      - /opt/huible-observability/report.sh
+
+triggers:
+  - id: daily
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 13 * * *"   # 06:00 Phoenix (MST, UTC-7) daily
