@@ -13,3 +13,4 @@ resemblyzer>=0.1.1
 #   uv pip install --python <venv>/bin/python chatterbox-tts
 # chatterbox-tts>=0.1.7
 
+speechbrain>=1.0.0
