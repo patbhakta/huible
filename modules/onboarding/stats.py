@@ -5,23 +5,27 @@ from collections import Counter
 
 STOPWORDS = set('the a an and or but in on at to for of is are was were be been being have has had do does did will would could should may might must can this that these those i you he she it we they me him her us them my your his its our their what which who whom whose where when why how all each every both few more most other some such no not only own same so than too very just but is it i\'m i\'ve i\'ll i\'d don\'t didn\'t can\'t won\'t that\'s there\'s he\'s she\'s it\'s they\'re we\'re you\'re'.split())
 
-def main():
-    parser = argparse.ArgumentParser(description='Deterministic stats from dialog')
-    parser.add_argument('--input', required=True)
-    parser.add_argument('--output', required=True)
-    args = parser.parse_args()
-    
-    lines = []
-    with open(args.input) as f:
-        for line in f:
-            line = line.strip()
-            if not line: continue
-            try: lines.append(json.loads(line))
-            except: continue
-    
-    texts = [e['text'] for e in lines if e.get('text')]
+def _pct(sorted_vals, p):
+    if not sorted_vals:
+        return None
+    k = (len(sorted_vals) - 1) * (p / 100.0)
+    f = int(k)
+    c = min(f + 1, len(sorted_vals) - 1)
+    if f == c:
+        return sorted_vals[f]
+    return round(sorted_vals[f] + (sorted_vals[c] - sorted_vals[f]) * (k - f))
+
+
+def compute_stats(texts):
+    """Deterministic stats over a list of dialog lines (no LLM).
+
+    Shared by the onboarding CLI (Stage 4) and scripts/vault_writeback.py
+    (HU-2153 chat→vault write-back) so baseline and session numbers always
+    come from the same tokenizer/metrics.
+    """
+    texts = list(texts)
     total = len(texts)
-    
+
     # Word frequency (filtered)
     word_freq = Counter()
     for text in texts:
@@ -29,7 +33,7 @@ def main():
             w = word.strip('.,!?";\'()[]{}')
             if w and w not in STOPWORDS and len(w) > 2:
                 word_freq[w] += 1
-    
+
     # Bigrams
     bigram_freq = Counter()
     for text in texts:
@@ -38,33 +42,23 @@ def main():
             if words[i] not in STOPWORDS and words[i+1] not in STOPWORDS:
                 if len(words[i]) > 2 and len(words[i+1]) > 2:
                     bigram_freq[f"{words[i]} {words[i+1]}"] += 1
-    
+
     # Metrics
     exclamations = sum(1 for t in texts if '!' in t)
     questions = sum(1 for t in texts if '?' in t)
     avg_len = sum(len(t.split()) for t in texts) // max(total, 1)
-    
+
     # Catchphrase candidates (phrases appearing 5+ times)
     catchphrases = [(w, c) for w, c in word_freq.most_common(50) if c >= 10]
-    
+
     # Character-length register (HU-2231 reply budgets): char percentiles of
     # these lines. provision_persona.py copies this block onto the persona
     # record and the engine derives the persona's reply budget (token cap +
     # directive anchors) from it. Linear interpolation, matching
     # statistics.quantiles(method='inclusive') in huible.persona.length.
     char_lens = sorted(len(t) for t in texts)
-    
-    def _pct(sorted_vals, p):
-        if not sorted_vals:
-            return None
-        k = (len(sorted_vals) - 1) * (p / 100.0)
-        f = int(k)
-        c = min(f + 1, len(sorted_vals) - 1)
-        if f == c:
-            return sorted_vals[f]
-        return round(sorted_vals[f] + (sorted_vals[c] - sorted_vals[f]) * (k - f))
-    
-    stats = {
+
+    return {
         "total_lines": total,
         "avg_words_per_line": avg_len,
         "exclamation_ratio": round(exclamations * 100 / max(total, 1), 1),
@@ -79,13 +73,31 @@ def main():
             "sample_lines": len(char_lens),
         },
     }
-    
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Deterministic stats from dialog')
+    parser.add_argument('--input', required=True)
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
+
+    lines = []
+    with open(args.input) as f:
+        for line in f:
+            line = line.strip()
+            if not line: continue
+            try: lines.append(json.loads(line))
+            except: continue
+
+    texts = [e['text'] for e in lines if e.get('text')]
+    stats = compute_stats(texts)
+
     os.makedirs(os.path.dirname(args.output) or '.', exist_ok=True)
     with open(args.output, 'w') as f:
         json.dump(stats, f, indent=2)
     
-    print(f"Lines: {total}")
-    print(f"Avg words/line: {avg_len}")
+    print(f"Lines: {stats['total_lines']}")
+    print(f"Avg words/line: {stats['avg_words_per_line']}")
     print(f"Length register: {stats['char_length']}")
     print(f"Exclamations: {stats['exclamation_ratio']}%")
     print(f"Questions: {stats['question_ratio']}%")

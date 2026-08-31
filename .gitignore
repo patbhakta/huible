@@ -14,3 +14,4 @@ logs/
 # code-review-graph local knowledge graph DB
 .code-review-graph/
 docker/runtime/app-state/*.json
+
