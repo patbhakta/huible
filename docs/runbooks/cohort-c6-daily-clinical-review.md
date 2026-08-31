@@ -65,7 +65,10 @@ can still act). Sources mirror the Stage-1 ops-watch digest surfaces.
   and restore; running epoch still contains all crisis-lexicon fixes
   (HU-2216 `79c7203` lineage).
 - Anomaly: epoch drift without re-verification → suspend cohort persona-chat
-  until CA re-runs the 5-probe crisis coverage check on the new epoch.
+  until CA re-runs the 5-probe crisis coverage check on the new epoch
+  (`scripts/ca_crisis_5probe.py --full --persona <uuid>` — layer-1-only runs
+  are side-effect free; `--full` creates synthetic tickets, close per the
+  synthetic-ticket-closure runbook).
 
 ### 5. Page ack latencies (C1)
 
