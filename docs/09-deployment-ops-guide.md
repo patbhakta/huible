@@ -213,8 +213,17 @@ docker compose logs -f postgres
 # Restart a single service
 docker compose restart app
 
-# Rebuild after code changes
+# Rebuild after code changes — ALWAYS follow with the DB migration step.
+# Code lands ahead of the DB substrate otherwise: the 2026-08-31 HU-2243
+# incident (redeploy shipped the metering writer while prod sat at
+# alembic 003; 100% of `llm_usage` writes failed until `upgrade head`
+# was run) is the recurring HU-2285 deploy-gap class.
 docker compose up -d --build app
+docker compose exec -T app alembic upgrade head
+docker compose exec -T app alembic current   # verify: prints head revision
+
+# Apply pending database migrations manually
+docker compose exec app alembic upgrade head
 
 # Stop everything
 docker compose down
