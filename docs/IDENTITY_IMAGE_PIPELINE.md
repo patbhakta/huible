@@ -1,6 +1,6 @@
 # Reference-Grounded Identity Image Pipeline
 
-**Issue:** HU-2150 · **Status:** R&D design + calibration v1 (2026-08-27)
+**Issue:** HU-2150 (R&D) · HU-2157 (productionization) · **Status:** onboarding intake + guarded generation runner live (2026-08-31); human gold-set promotion pending consented photos
 **Directive (Pat, Aug 27):** clients' loved ones are not celebrities — there is no
 photo coverage of them online to harvest. Text-to-image guessing produces
 ungrounded "AI slop" (bad entropy). We need our own pipeline to clean, validate,
@@ -76,6 +76,21 @@ record per photo:
 A photo with no rights record is **rejected at intake** (fail closed). No rights
 record → never enters a reference set.
 
+**Onboarding door (HU-2157):** `scripts/onboarding_ref_intake.py` is the
+one-command operator path over a consented upload folder — it runs COLLECT
+(with the consent attestation) + CURATE and writes
+`references/intake-report.json`: what was collected, what was kept, every
+rejection with its reason, curated-set size vs the 3–10 target, and the gate
+promotion status. Refuses to run without `--consent-by` (or `--license-ref`
+for licensed imagery).
+
+```bash
+python3 scripts/onboarding_ref_intake.py \
+  --persona-root /root/repos/personas/<p> \
+  --upload-dir /path/to/consented-uploads \
+  --consent-by "client:<persona>:onboarding"
+```
+
 ## 2. CURATE — dedupe, quality, rights
 
 `ref_curate.py --persona-root <vault> [--min-edge 512]` reads every record in
@@ -127,6 +142,21 @@ Batch provenance: each successful generation also writes a sidecar
 the registry never depends on memory of invocation flags.
 
 ## 4. VALIDATE — quantitative identity gate
+
+**Production runner (HU-2157):** `scripts/ref_generate_validated.py` chains
+CONDITION → VALIDATE → REGISTRY for one output, with gate retries
+(`--retry N`, each retry is a fresh Kontext generation and a new gate row),
+and **refuses to generate at all** unless a curated set exists AND
+`gate-config.json` says `production_safe=true` (override for R&D synthetic
+seeds only: `--allow-unsafe-gate`). Picks the best-quality curated reference
+by default (`--ref-photo-id` to pin one).
+
+```bash
+python3 scripts/ref_generate_validated.py \
+  --persona-root /root/repos/personas/<p> \
+  --prompt "same person, hiking in running clothes on a mountain trail at sunrise" \
+  --retry 2
+```
 
 `ref_gate.py --persona-root <vault> --image <path>` (or `--images glob`):
 
@@ -197,14 +227,22 @@ themselves, committed under `experiments/identity-pipeline/`.
 - **Threshold is R&D-calibrated on synthetic identities.** Face-embedding
   separation is typically large (ArcFace same-person ≈ 0.5–0.8, different ≈
   0.0–0.25) but the production threshold must be re-proven on a consented human
-  gold set (~50 images/class) before any client persona goes live.
+  gold set (~50 images/class) before any client persona goes live. `ref_generate_validated.py`
+  and the Kestra flow enforce this fail-closed (`production_safe=false` → no generation).
+  Gold-set procedure when consented photos arrive: intake → curate → generate outputs
+  per identity → lay out `<gold_dir>/<identity>/reference.png + outputs/` →
+  `calibrate_gate.py --persona-root <vault> --gold-dir <dir>` (NO `--force`).
 - **Multi-face references** are rejected at curation (identity ambiguity — the
   demoted Aug-27 portrait has a background face and would fail).
 - **Older/dated references** (decade-old photos): not yet modeled; the curated
   set schema has room for `quality.notes`/date attributes if drift becomes a
   problem.
-- **Kestra productionization** (`flows/vault-media.yaml` replacement: collect →
-  curate → condition → validate → register as a flow) is a follow-up once the
-  gate config is promoted from R&D to production.
+- **Kestra productionization** (`flows/vault-media.yaml`): LANDED 2026-08-31
+  (HU-2157) — the paused slop flow is replaced by the grounded pipeline
+  (`huible-vault-media`: guard → intake → generate → manifest). Guard fails
+  closed unless the gate config is `production_safe=true` or an explicit
+  `confirm_rd_synthetic` R&D ack is set; text-to-image stays refused by
+  `generate_image.py` itself. Voice lane removed (belongs to the HU-2151 voice
+  pipeline; `generate_voice.py` CLI remains available).
 - **Cost/latency:** flux-pro/kontext ≈ $0.04/gen, 15–45 s each; gate is local
   and free. Gold calibration ≈ $1.5 one-off per model version.
