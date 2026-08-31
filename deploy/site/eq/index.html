@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EQ Demo — HUible</title>
+<meta name="description" content="Measured, not vibes: HUible's emotion-corpus gold set, the open-model baseline it must beat, and where the public data landscape runs dry.">
+<style>
+:root{color-scheme:dark}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Georgia,'Times New Roman',serif;background:#0e0f12;color:#e8e4da;min-height:100vh;padding:32px 20px}
+.wrap{max-width:880px;margin:0 auto}
+header{margin-bottom:44px}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c9a86a;margin-bottom:14px}
+h1{font-size:clamp(30px,6vw,46px);font-weight:400;color:#f2ede1;line-height:1.15}
+.lede{font-size:17px;color:#9a948a;margin-top:14px;line-height:1.6;font-style:italic;max-width:660px}
+.stats{display:flex;gap:34px;flex-wrap:wrap;margin:34px 0 8px;padding:22px 0;border-top:1px solid #26282e;border-bottom:1px solid #26282e}
+.stat b{display:block;font-size:30px;color:#c9a86a;font-weight:400}
+.stat span{font-size:12.5px;color:#6f6a61;letter-spacing:.06em;text-transform:uppercase}
+h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#c9a86a;font-weight:400;margin:48px 0 18px}
+p{font-size:15.5px;color:#8a857c;line-height:1.7;margin-bottom:14px}
+p b,li b{color:#e8e4da;font-weight:400}
+figure{margin:26px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:13px;color:#6f6a61;margin-top:10px;line-height:1.5}
+ul.plain{list-style:none}
+ul.plain li{padding:12px 0;border-bottom:1px solid #1d1f24;font-size:15px;color:#8a857c;line-height:1.6}
+ul.plain li:last-child{border-bottom:none}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:18px 0}
+th{text-align:left;color:#6f6a61;font-weight:400;letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;padding:8px 10px;border-bottom:1px solid #26282e}
+td{padding:9px 10px;border-bottom:1px solid #1d1f24;color:#9a948a}
+td:first-child{color:#e8e4da}
+.note{font-size:13.5px;color:#6f6a61;margin-top:44px;padding:16px 18px;background:#14161b;border:1px solid #26282e;border-radius:10px;line-height:1.6}
+.note a{color:#c9a86a}
+footer{margin-top:56px;text-align:center}
+footer a{color:#c9a86a;text-decoration:none;font-size:14px;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="kicker">EQ Demo · Measured</div>
+<h1>What the machines can't hear yet.</h1>
+<p class="lede">We built a 416-sample gold set of human-labeled emotional speech
+and vocal bursts, ran the best open emotion model against it, and mapped
+exactly where it fails. These are measured numbers, not marketing.</p>
+</header>
+
+<div class="stats">
+<div class="stat"><b>416</b><span>Gold samples</span></div>
+<div class="stat"><b>320</b><span>MELD-verified speech clips</span></div>
+<div class="stat"><b>2,001</b><span>Public sampler URLs indexed</span></div>
+<div class="stat"><b>49.7%</b><span>Open-model accuracy</span></div>
+</div>
+
+<h2>The correlation map</h2>
+<p>Every cell is the signed phi correlation between what a human heard (rows)
+and what <b>emotion2vec</b> — the strongest open speech-emotion model —
+predicted (columns), across 320 human-annotated conversational clips. Gold
+cells are agreement. Blue is the model actively avoiding the right answer.</p>
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 688 608" font-family="Georgia,serif" role="img" aria-label="Gold emotion vs predicted emotion phi correlation map">
+<rect width="688" height="608" fill="#0e0f12"/>
+<text x="96" y="24" fill="#c9a86a" font-size="13" letter-spacing="2">GOLD (human-annotated) vs PREDICTED (emotion2vec)</text>
+<text x="84" y="125.0" fill="#9a948a" font-size="13" text-anchor="end">joy</text>
+<rect x="98" y="90" width="62" height="62" rx="7" fill="#c9a86a" stroke="#c9a86a" stroke-width="2"><title>joy -> joy: phi=+0.43, 62% of joy gold</title></rect>
+<text x="129.0" y="126.0" fill="#0e0f12" font-size="14" text-anchor="middle">+0.43</text>
+<rect x="164" y="90" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>joy -> surprise: phi=-0.20, 8% of joy gold</title></rect>
+<text x="195.0" y="126.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.20</text>
+<rect x="230" y="90" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>joy -> anger: phi=-0.17, 4% of joy gold</title></rect>
+<text x="261.0" y="126.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.17</text>
+<rect x="296" y="90" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>joy -> sadness: phi=-0.12, 6% of joy gold</title></rect>
+<text x="327.0" y="126.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.12</text>
+<rect x="362" y="90" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>joy -> fear: phi=-0.00, 0% of joy gold</title></rect>
+<text x="393.0" y="126.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="428" y="90" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>joy -> disgust: phi=+0.00, 1% of joy gold</title></rect>
+<text x="459.0" y="126.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.00</text>
+<rect x="494" y="90" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>joy -> neutral: phi=-0.00, 17% of joy gold</title></rect>
+<text x="525.0" y="126.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<text x="84" y="191.0" fill="#9a948a" font-size="13" text-anchor="end">surprise</text>
+<rect x="98" y="156" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>surprise -> joy: phi=-0.20, 11% of surprise gold</title></rect>
+<text x="129.0" y="192.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.20</text>
+<rect x="164" y="156" width="62" height="62" rx="7" fill="#c9a86a" stroke="#c9a86a" stroke-width="2"><title>surprise -> surprise: phi=+0.53, 66% of surprise gold</title></rect>
+<text x="195.0" y="192.0" fill="#0e0f12" font-size="14" text-anchor="middle">+0.53</text>
+<rect x="230" y="156" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>surprise -> anger: phi=-0.10, 3% of surprise gold</title></rect>
+<text x="261.0" y="192.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.10</text>
+<rect x="296" y="156" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>surprise -> sadness: phi=-0.09, 3% of surprise gold</title></rect>
+<text x="327.0" y="192.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.09</text>
+<rect x="362" y="156" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>surprise -> fear: phi=-0.00, 0% of surprise gold</title></rect>
+<text x="393.0" y="192.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="428" y="156" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>surprise -> disgust: phi=-0.00, 0% of surprise gold</title></rect>
+<text x="459.0" y="192.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="494" y="156" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>surprise -> neutral: phi=-0.05, 13% of surprise gold</title></rect>
+<text x="525.0" y="192.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.05</text>
+<text x="84" y="257.0" fill="#9a948a" font-size="13" text-anchor="end">anger</text>
+<rect x="98" y="222" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>anger -> joy: phi=-0.21, 14% of anger gold</title></rect>
+<text x="129.0" y="258.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.21</text>
+<rect x="164" y="222" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>anger -> surprise: phi=-0.14, 11% of anger gold</title></rect>
+<text x="195.0" y="258.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.14</text>
+<rect x="230" y="222" width="62" height="62" rx="7" fill="#c9a86a" stroke="#c9a86a" stroke-width="2"><title>anger -> anger: phi=+0.50, 45% of anger gold</title></rect>
+<text x="261.0" y="258.0" fill="#0e0f12" font-size="14" text-anchor="middle">+0.50</text>
+<rect x="296" y="222" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>anger -> sadness: phi=-0.07, 8% of anger gold</title></rect>
+<text x="327.0" y="258.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.07</text>
+<rect x="362" y="222" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>anger -> fear: phi=-0.00, 1% of anger gold</title></rect>
+<text x="393.0" y="258.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="428" y="222" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>anger -> disgust: phi=+0.01, 1% of anger gold</title></rect>
+<text x="459.0" y="258.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.01</text>
+<rect x="494" y="222" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>anger -> neutral: phi=+0.00, 17% of anger gold</title></rect>
+<text x="525.0" y="258.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.00</text>
+<text x="84" y="323.0" fill="#9a948a" font-size="13" text-anchor="end">sadness</text>
+<rect x="98" y="288" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>sadness -> joy: phi=-0.11, 13% of sadness gold</title></rect>
+<text x="129.0" y="324.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.11</text>
+<rect x="164" y="288" width="62" height="62" rx="7" fill="#33455c" stroke="#0e0f12" stroke-width="1"><title>sadness -> surprise: phi=-0.07, 6% of sadness gold</title></rect>
+<text x="195.0" y="324.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.07</text>
+<rect x="230" y="288" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>sadness -> anger: phi=-0.00, 0% of sadness gold</title></rect>
+<text x="261.0" y="324.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="296" y="288" width="62" height="62" rx="7" fill="#c9a86a" stroke="#c9a86a" stroke-width="2"><title>sadness -> sadness: phi=+0.47, 62% of sadness gold</title></rect>
+<text x="327.0" y="324.0" fill="#0e0f12" font-size="14" text-anchor="middle">+0.47</text>
+<rect x="362" y="288" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>sadness -> fear: phi=-0.00, 0% of sadness gold</title></rect>
+<text x="393.0" y="324.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="428" y="288" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>sadness -> disgust: phi=-0.00, 0% of sadness gold</title></rect>
+<text x="459.0" y="324.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="494" y="288" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>sadness -> neutral: phi=+0.00, 17% of sadness gold</title></rect>
+<text x="525.0" y="324.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.00</text>
+<text x="84" y="389.0" fill="#9a948a" font-size="13" text-anchor="end">fear</text>
+<rect x="98" y="354" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>fear -> joy: phi=-0.04, 16% of fear gold</title></rect>
+<text x="129.0" y="390.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.04</text>
+<rect x="164" y="354" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>fear -> surprise: phi=-0.03, 8% of fear gold</title></rect>
+<text x="195.0" y="390.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.03</text>
+<rect x="230" y="354" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>fear -> anger: phi=-0.02, 8% of fear gold</title></rect>
+<text x="261.0" y="390.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.02</text>
+<rect x="296" y="354" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>fear -> sadness: phi=+0.01, 16% of fear gold</title></rect>
+<text x="327.0" y="390.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.01</text>
+<rect x="362" y="354" width="62" height="62" rx="7" fill="#4a4436" stroke="#0e0f12" stroke-width="1"><title>fear -> fear: phi=+0.17, 16% of fear gold</title></rect>
+<text x="393.0" y="390.0" fill="#e8e4da" font-size="14" text-anchor="middle">+0.17</text>
+<rect x="428" y="354" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>fear -> disgust: phi=-0.00, 0% of fear gold</title></rect>
+<text x="459.0" y="390.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="494" y="354" width="62" height="62" rx="7" fill="#23252b" stroke="#0e0f12" stroke-width="1"><title>fear -> neutral: phi=+0.08, 33% of fear gold</title></rect>
+<text x="525.0" y="390.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.08</text>
+<text x="84" y="455.0" fill="#9a948a" font-size="13" text-anchor="end">disgust</text>
+<rect x="98" y="420" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>disgust -> joy: phi=-0.06, 20% of disgust gold</title></rect>
+<text x="129.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.06</text>
+<rect x="164" y="420" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>disgust -> surprise: phi=-0.03, 15% of disgust gold</title></rect>
+<text x="195.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.03</text>
+<rect x="230" y="420" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>disgust -> anger: phi=-0.02, 10% of disgust gold</title></rect>
+<text x="261.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.02</text>
+<rect x="296" y="420" width="62" height="62" rx="7" fill="#23252b" stroke="#0e0f12" stroke-width="1"><title>disgust -> sadness: phi=+0.05, 20% of disgust gold</title></rect>
+<text x="327.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.05</text>
+<rect x="362" y="420" width="62" height="62" rx="7" fill="#23252b" stroke="#0e0f12" stroke-width="1"><title>disgust -> fear: phi=+0.04, 5% of disgust gold</title></rect>
+<text x="393.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.04</text>
+<rect x="428" y="420" width="62" height="62" rx="7" fill="#23252b" stroke="#0e0f12" stroke-width="1"><title>disgust -> disgust: phi=+0.05, 5% of disgust gold</title></rect>
+<text x="459.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.05</text>
+<rect x="494" y="420" width="62" height="62" rx="7" fill="#23252b" stroke="#0e0f12" stroke-width="1"><title>disgust -> neutral: phi=+0.05, 25% of disgust gold</title></rect>
+<text x="525.0" y="456.0" fill="#6f6a61" font-size="14" text-anchor="middle">+0.05</text>
+<text x="84" y="521.0" fill="#9a948a" font-size="13" text-anchor="end">neutral</text>
+<rect x="98" y="486" width="62" height="62" rx="7" fill="#4a4436" stroke="#0e0f12" stroke-width="1"><title>neutral -> joy: phi=+0.13, 52% of neutral gold</title></rect>
+<text x="129.0" y="522.0" fill="#e8e4da" font-size="14" text-anchor="middle">+0.13</text>
+<rect x="164" y="486" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>neutral -> surprise: phi=-0.01, 20% of neutral gold</title></rect>
+<text x="195.0" y="522.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.01</text>
+<rect x="230" y="486" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>neutral -> anger: phi=-0.04, 8% of neutral gold</title></rect>
+<text x="261.0" y="522.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.04</text>
+<rect x="296" y="486" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>neutral -> sadness: phi=-0.03, 8% of neutral gold</title></rect>
+<text x="327.0" y="522.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.03</text>
+<rect x="362" y="486" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>neutral -> fear: phi=-0.00, 0% of neutral gold</title></rect>
+<text x="393.0" y="522.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="428" y="486" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>neutral -> disgust: phi=-0.00, 0% of neutral gold</title></rect>
+<text x="459.0" y="522.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.00</text>
+<rect x="494" y="486" width="62" height="62" rx="7" fill="#1d1f24" stroke="#0e0f12" stroke-width="1"><title>neutral -> neutral: phi=-0.03, 12% of neutral gold</title></rect>
+<text x="525.0" y="522.0" fill="#6f6a61" font-size="14" text-anchor="middle">-0.03</text>
+<text x="123.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 123.0 82)">joy</text>
+<text x="189.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 189.0 82)">surprise</text>
+<text x="255.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 255.0 82)">anger</text>
+<text x="321.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 321.0 82)">sadness</text>
+<text x="387.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 387.0 82)">fear</text>
+<text x="453.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 453.0 82)">disgust</text>
+<text x="519.0" y="82" fill="#9a948a" font-size="12.5" text-anchor="start" transform="rotate(-40 519.0 82)">neutral</text>
+<text x="96" y="576" fill="#6f6a61" font-size="12">&#8594; predicted class (columns) &#183; signed phi correlation &#183; MELD speech layer n=320</text>
+</svg>
+<figcaption>Signed phi correlation, gold vs predicted, basic-7 classes.
+Darker cell = no signal. The diagonal is where the model works; everything
+else is the product opportunity.</figcaption>
+</figure>
+<ul class="plain">
+<li><b>Neutral is the blind spot.</b> Over half of calm, neutral speech is
+read as joy. A voice AI that can't recognize calm misreads every quiet
+conversation.</li>
+<li><b>Disgust barely registers</b> (+0.05) — it scatters into joy, sadness
+and neutral almost at random.</li>
+<li><b>The big four hold.</b> Joy (+0.43), surprise (+0.53), anger (+0.50),
+sadness (+0.47) — the model genuinely hears high-arousal emotions. Human
+texture lives in the classes it can't.</li>
+</ul>
+
+<h2>Where the public data runs dry</h2>
+<p>Our corpus target is 250–500 samples per emotion class. The basic seven
+are publicly covered many times over. The classes that make speech feel
+human — amusement, confusion, pain, interest, contempt, awe — have <b>no
+public source at all</b>. That gap is our collection lane.</p>
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 808 934" font-family="Georgia,serif" role="img" aria-label="Public dataset coverage per emotion class vs 250 to 500 target">
+<rect width="808" height="934" fill="#0e0f12"/>
+<text x="118" y="30" fill="#c9a86a" font-size="13" letter-spacing="2">SAMPLES PER EMOTION CLASS &#8212; BEST PUBLIC SOURCE vs 250&#8211;500 TARGET</text>
+<rect x="176.33333333333334" y="46" width="58.333333333333336" height="840" fill="#c9a86a" opacity="0.07"/>
+<line x1="176.33333333333334" y1="46" x2="176.33333333333334" y2="886" stroke="#c9a86a" stroke-dasharray="4 5" stroke-width="1"/>
+<text x="182.33333333333334" y="892" fill="#8a857c" font-size="11.5">250 target</text>
+<text x="106" y="83.0" fill="#9a948a" font-size="13" text-anchor="end">neutral</text>
+<rect x="118" y="56" width="560.0" height="46" rx="4" fill="#c9a86a"><title>neutral: 6,436 (research (MELD))</title></rect>
+<text x="687.0" y="83.0" fill="#8a857c" font-size="12.5">6,436</text>
+<text x="106" y="143.0" fill="#9a948a" font-size="13" text-anchor="end">joy</text>
+<rect x="118" y="116" width="538.5333333333333" height="46" rx="4" fill="#c9a86a"><title>joy: 2,308 (research (MELD))</title></rect>
+<text x="665.5333333333333" y="143.0" fill="#8a857c" font-size="12.5">2,308</text>
+<text x="106" y="203.0" fill="#9a948a" font-size="13" text-anchor="end">surprise</text>
+<rect x="118" y="176" width="381.73333333333335" height="46" rx="4" fill="#c9a86a"><title>surprise: 1,636 (research (MELD))</title></rect>
+<text x="508.73333333333335" y="203.0" fill="#8a857c" font-size="12.5">1,636</text>
+<text x="106" y="263.0" fill="#9a948a" font-size="13" text-anchor="end">anger</text>
+<rect x="118" y="236" width="374.96666666666664" height="46" rx="4" fill="#c9a86a"><title>anger: 1,607 (research (MELD))</title></rect>
+<text x="501.96666666666664" y="263.0" fill="#8a857c" font-size="12.5">1,607</text>
+<text x="106" y="323.0" fill="#9a948a" font-size="13" text-anchor="end">sadness</text>
+<rect x="118" y="296" width="233.8" height="46" rx="4" fill="#c9a86a"><title>sadness: 1,002 (research (MELD))</title></rect>
+<text x="360.8" y="323.0" fill="#8a857c" font-size="12.5">1,002</text>
+<text x="106" y="383.0" fill="#9a948a" font-size="13" text-anchor="end">disgust</text>
+<rect x="118" y="356" width="296.56666666666666" height="46" rx="4" fill="#7da37a"><title>disgust: 1,271 (open (CREMA-D))</title></rect>
+<text x="423.56666666666666" y="383.0" fill="#8a857c" font-size="12.5">1,271</text>
+<text x="106" y="443.0" fill="#9a948a" font-size="13" text-anchor="end">fear</text>
+<rect x="118" y="416" width="296.56666666666666" height="46" rx="4" fill="#7da37a"><title>fear: 1,271 (open (CREMA-D))</title></rect>
+<text x="423.56666666666666" y="443.0" fill="#8a857c" font-size="12.5">1,271</text>
+<text x="106" y="503.0" fill="#9a948a" font-size="13" text-anchor="end">amusement</text>
+<rect x="118" y="476" width="3" height="46" rx="4" fill="#b05a4a"><title>amusement: 11 (none - self-collect)</title></rect>
+<text x="130" y="503.0" fill="#8a857c" font-size="12.5">11</text>
+<text x="106" y="563.0" fill="#9a948a" font-size="13" text-anchor="end">confusion</text>
+<rect x="118" y="536" width="3" height="46" rx="4" fill="#b05a4a"><title>confusion: 10 (none - self-collect)</title></rect>
+<text x="130" y="563.0" fill="#8a857c" font-size="12.5">10</text>
+<text x="106" y="623.0" fill="#9a948a" font-size="13" text-anchor="end">pain</text>
+<rect x="118" y="596" width="3" height="46" rx="4" fill="#b05a4a"><title>pain: 8 (none - self-collect)</title></rect>
+<text x="130" y="623.0" fill="#8a857c" font-size="12.5">8</text>
+<text x="106" y="683.0" fill="#9a948a" font-size="13" text-anchor="end">interest</text>
+<rect x="118" y="656" width="3" height="46" rx="4" fill="#b05a4a"><title>interest: 6 (none - self-collect)</title></rect>
+<text x="130" y="683.0" fill="#8a857c" font-size="12.5">6</text>
+<text x="106" y="743.0" fill="#9a948a" font-size="13" text-anchor="end">contempt</text>
+<rect x="118" y="716" width="3" height="46" rx="4" fill="#b05a4a"><title>contempt: 5 (none - self-collect)</title></rect>
+<text x="130" y="743.0" fill="#8a857c" font-size="12.5">5</text>
+<text x="106" y="803.0" fill="#9a948a" font-size="13" text-anchor="end">awe</text>
+<rect x="118" y="776" width="3" height="46" rx="4" fill="#b05a4a"><title>awe: 4 (none - self-collect)</title></rect>
+<text x="130" y="803.0" fill="#8a857c" font-size="12.5">4</text>
+<text x="106" y="863.0" fill="#9a948a" font-size="13" text-anchor="end">disappointment</text>
+<rect x="118" y="836" width="3" height="46" rx="4" fill="#b05a4a"><title>disappointment: 3 (none - self-collect)</title></rect>
+<text x="130" y="863.0" fill="#8a857c" font-size="12.5">3</text>
+<text x="118" y="926" fill="#6f6a61" font-size="12">green = open license &#183; gold = research-only &#183; red = no public source (self-collect lane) &#183; axis capped at 2,400</text>
+</svg>
+<figcaption>Best public source per class (log-capped axis at 2,400).
+Green = open license · gold = research-only · red = no public source.
+The 250–500 target band is marked.</figcaption>
+</figure>
+
+<h2>Per-class detail</h2>
+<table>
+<tr><th>Class</th><th>Gold n</th><th>Precision</th><th>Recall</th><th>F1</th></tr>
+<tr><td>joy</td><td>96</td><td>0.54</td><td>0.63</td><td>0.58</td></tr>
+<tr><td>surprise</td><td>79</td><td>0.58</td><td>0.61</td><td>0.59</td></tr>
+<tr><td>anger</td><td>85</td><td>0.77</td><td>0.45</td><td>0.56</td></tr>
+<tr><td>sadness</td><td>39</td><td>0.44</td><td>0.61</td><td>0.51</td></tr>
+<tr><td>fear</td><td>29</td><td>0.50</td><td>0.09</td><td>0.15</td></tr>
+<tr><td>disgust</td><td>21</td><td>0.25</td><td>0.10</td><td>0.14</td></tr>
+<tr><td>neutral</td><td>25</td><td>0.05</td><td>0.12</td><td>0.08</td></tr>
+</table>
+
+<h2>Why we publish our failure analysis</h2>
+<p>Every paid emotion API we consider must beat this open baseline on our
+gold set before we spend a dollar on it. Publishing the map keeps us honest:
+the numbers above <b>are</b> the gate. And the empty half of the coverage
+chart is the roadmap — the emotions nobody has data for are the ones worth
+collecting.</p>
+
+<div class="note">Methodology: gold labels are human-annotated MELD majority
+votes (320/320 join verified) and Hume research-page sampler filenames (96
+vocal bursts); model scored via emotion2vec_plus_large. Full methodology,
+manifest and per-sample predictions live in our
+<a href="https://github.com/patbhakta/eq-vaults">EQ corpus vault</a>.</div>
+
+<footer><a href="https://huible.com">&larr; HUible</a> &nbsp;&middot;&nbsp; <a href="/datasets">Datasets</a></footer>
+</div>
+</body>
+</html>
