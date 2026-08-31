@@ -356,8 +356,29 @@ ADVICE_CLAIM_PATTERNS: tuple[re.Pattern[str], ...] = (
         r"\b(?:try|trying)\s+(?:writing|talking|to\s+write|to\s+talk|reaching|journaling)\b",
         re.IGNORECASE,
     ),
+    # HU-2297: the clinical-referral pattern is split by verb form. The live
+    # HU-1911 control epoch (40dda40cfcca, 14:38Z) false-fired G9 on the
+    # empathic-support closer "Please keep talking to someone" — continuing an
+    # existing support conversation, not directing the user to seek help —
+    # which, as an advice-class policy claim, paged sev-1 with no adjudication.
+    # A continuation marker immediately before a *progressive* referral verb
+    # phrase ("keep/keeps/kept/keep on/keeps on/continue…" + "talking to /
+    # seeing / talking with someone…") marks support register: exempt. The
+    # directive forms ("talk to a therapist", "reach out to someone", "speak
+    # with a counselor") are grammatically incompatible with the continuation
+    # markers and stay unguarded; every other advice pattern on the same
+    # sentence still fires, so "you should keep talking to someone" and "my
+    # advice is to keep talking to someone" remain claims.
     re.compile(
-        r"\b(?:see|seeing|talk\s+to|talking\s+to|talking\s+with|reach\s+out\s+to|speak\s+with)\s+"
+        r"\b(?:see|talk\s+to|reach\s+out\s+to|speak\s+with)\s+"
+        r"(?:someone|a\s+therapist|a\s+counselor|a\s+professional|a\s+doctor|"
+        r"a\s+psychiatrist|a\s+support\s+group)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?<!\bkeep\s)(?<!\bkeeps\s)(?<!\bkept\s)(?<!\bkeep\son\s)(?<!\bkeeps\son\s)"
+        r"(?<!\bcontinue\s)(?<!\bcontinues\s)(?<!\bcontinued\s)(?<!\bcontinuing\s)"
+        r"\b(?:seeing|talking\s+to|talking\s+with)\s+"
         r"(?:someone|a\s+therapist|a\s+counselor|a\s+professional|a\s+doctor|"
         r"a\s+psychiatrist|a\s+support\s+group)\b",
         re.IGNORECASE,

@@ -108,6 +108,43 @@ class TestPolicyClaimExtraction:
         )
         assert any(c.category == ClaimCategory.ADVICE for c in claims)
 
+    def test_empathic_keep_talking_to_someone_is_not_a_claim(self):
+        """HU-2297: the exact live HU-1911 control false positive (epoch
+        40dda40cfcca, 14:38Z) — an empathic-support closer continuing an
+        existing support conversation — must not fire G9 (it paged sev-1
+        un-adjudicated as an advice-class policy claim)."""
+        claims = extract_claims("Please keep talking to someone.", persona_name="Chandler")
+        assert not any(c.category == ClaimCategory.ADVICE for c in claims)
+
+    def test_continuation_register_variants_are_not_advice(self):
+        """HU-2297: keep/keep-on/kept/continue + progressive referral verb is
+        support register in every variant, not a referral directive."""
+        for text in (
+            "Keep talking with a counselor about that.",
+            "She keeps talking to someone at the VA, and it helps.",
+            "I kept seeing a therapist after the funeral.",
+            "Keep on talking to someone who knew him.",
+            "Continue talking with someone from your group.",
+        ):
+            claims = extract_claims(text, persona_name="Chandler")
+            assert not any(c.category == ClaimCategory.ADVICE for c in claims), text
+
+    def test_true_g9_referral_positives_still_fire(self):
+        """HU-2297 acceptance: deterministic suppression of directive referral
+        forms is unchanged, including inside continuation wording when a
+        prescriptive pattern co-occurs in the sentence."""
+        for text in (
+            "Talk to a therapist about this.",
+            "You should see someone about that.",
+            "You should keep talking to someone.",  # prescriptive modal survives
+            "It might help to talk to a counselor.",
+            "Have you considered seeing someone?",
+            "My advice is to keep talking to someone.",  # explicit my-advice form
+            "Keep talking to someone, and you should see a doctor.",  # mixed sentence
+        ):
+            claims = extract_claims(text, persona_name="Chandler")
+            assert any(c.category == ClaimCategory.ADVICE for c in claims), text
+
 
 # --- Claim taxonomy: biographical / relationship (entity-anchored) ---------
 
@@ -361,6 +398,15 @@ class TestAlignResponse:
         )
         assert report.disposition == "suppressed"
         assert report.ungrounded[0].category == ClaimCategory.ADVICE
+
+    def test_empathic_support_closer_passes_alignment(self):
+        """HU-2297 e2e: the empathic closer that paged sev-1 live now passes
+        the guard untouched — no suppression, so no page and no voice break."""
+        report = align_response(
+            "Please keep talking to someone.", refs=VAULT_REFS, persona=PERSONA
+        )
+        assert report.disposition == "passed"
+        assert report.ungrounded == []
 
     def test_relationship_ungrounded_flagged(self):
         report = align_response(
