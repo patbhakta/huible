@@ -147,15 +147,20 @@ def cmd_gen(args):
 
 def embed_refs_and_clones(exp_dir, goldset_dir):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from voicepipe_common import embed_file  # noqa: E402
+    from voicepipe_common import embed_file
     ref_emb = {}
     for spk, refs in speaker_refs(goldset_dir).items():
         for name, path in refs.items():
             emb, q = embed_file(path)
             ref_emb[(spk, name)] = emb
     clones = []
-    for prov_path in sorted(glob.glob(os.path.join(exp_dir, "*.wav.prov.json"))):
-        prov = json.load(open(prov_path, encoding="utf-8"))
+    prov_paths = sorted(glob.glob(os.path.join(exp_dir, "*.wav.prov.json")))
+    if not prov_paths:  # gen writes under <exp-dir>/clones/
+        prov_paths = sorted(glob.glob(os.path.join(exp_dir, "clones",
+                                                   "*.wav.prov.json")))
+    for prov_path in prov_paths:
+        with open(prov_path, encoding="utf-8") as f:
+            prov = json.load(f)
         wav = prov_path[:-len(".prov.json")]
         emb, q = embed_file(wav)
         clones.append({"asset": os.path.basename(wav)[:-4],
@@ -167,7 +172,7 @@ def embed_refs_and_clones(exp_dir, goldset_dir):
 
 def cmd_score(args):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from voicepipe_common import cosine, GATE_ID  # noqa: E402
+    from voicepipe_common import GATE_ID, cosine
     ref_emb, clones = embed_refs_and_clones(args.exp_dir, args.goldset_dir)
     speakers = sorted({spk for spk, _ in ref_emb})
     by_speaker = {s: {n: e for (sp, n), e in ref_emb.items() if sp == s}
@@ -182,12 +187,6 @@ def cmd_score(args):
                               "clone_variant": c["variant"], "ref_speaker": spk,
                               "ref": name, "score": round(score, 4),
                               "label": "pos" if spk == c["speaker"] else "neg"})
-        # gate-equivalent score per (clone, speaker): max over that speaker's refs
-        own = max(p["score"] for p in pairs
-                  if p["clone"] == c["asset"] and p["ref_speaker"] == c["speaker"])
-        cross = {spk: max(p["score"] for p in pairs
-                          if p["clone"] == c["asset"] and p["ref_speaker"] == spk)
-                 for spk in speakers if spk != c["speaker"]}
 
     pos = [p["score"] for p in pairs if p["label"] == "pos"]
     neg = [p["score"] for p in pairs if p["label"] == "neg"]

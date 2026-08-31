@@ -3,8 +3,8 @@
   "gate": "ecapa-voxceleb-192d-cosine-max",
   "clones": 20,
   "per_variant": {
-    "turbo": 12,
-    "std": 8
+    "std": 8,
+    "turbo": 12
   },
   "speakers": [
     "spkr-1089",
@@ -49,5 +49,5 @@
     "fpr_at_baseline": 0.0
   },
   "protocol": "positives = (clone, own-speaker refs) max-cosine; negatives = (clone, each other speaker's refs) max-cosine \u2014 the voice_gate.py scoring rule on CLONE outputs",
-  "scored_at": "2026-08-31T14:58:23+00:00"
+  "scored_at": "2026-08-31T15:03:52+00:00"
 }
