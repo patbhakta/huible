@@ -79,6 +79,14 @@ from huible.api.auth import (
     get_persona_registry,
     raise_forbidden,
 )
+from huible.api.byok_vault import (
+    BYOK_PROVIDERS,
+    ByokCipher,
+    ByokVault,
+    ByokVaultError,
+    InMemoryByokVault,
+    PostgresByokVault,
+)
 from huible.api.metering import (
     InMemoryUsageRecorder,
     PostgresUsageRecorder,
@@ -129,6 +137,8 @@ from huible.api.real_user_gate import (
 from huible.api.schemas import (
     ActivatedMemoryView,
     AlignmentView,
+    ByokKeyPutRequest,
+    ByokKeyView,
     ChatRequest,
     ChatTrace,
     ConsentAcknowledgeData,
@@ -623,6 +633,7 @@ def create_app(
     risk_profile: RiskProfileProvider | None = None,
     conversation_store: ConversationStore | None = None,
     usage_recorder: UsageRecorder | None = None,
+    byok_vault: ByokVault | None = None,
     pager: Pager | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
@@ -776,6 +787,31 @@ def create_app(
         else:
             usage_recorder = InMemoryUsageRecorder()
     application.state.usage_recorder = usage_recorder
+    # HU-2243 Sprint 3: encrypted per-tenant BYOK vault. Durable Postgres
+    # backend on the same sync-safety-DB posture when both a URL and
+    # ``BYOK_VAULT_MASTER_KEY`` are configured; in-memory (still encrypted)
+    # when only the master key is set (dev); disabled entirely when the
+    # master key is absent — same default-off posture as ``BYOK_ENABLED``.
+    # An injected vault (tests) wins; when this app constructs the durable
+    # backend it owns the engine and disposes it via the safety disposables.
+    if byok_vault is None and resolved_settings.byok_vault_master_key.strip():
+        vault_url = resolved_settings.effective_safety_database_url
+        try:
+            if vault_url:
+                byok_vault = PostgresByokVault(
+                    resolved_settings.byok_vault_master_key, vault_url
+                )
+                logger.info("durable BYOK vault wired (byok_keys)")
+                application.state.safety_disposables.append(byok_vault)
+            else:
+                byok_vault = InMemoryByokVault(
+                    ByokCipher(resolved_settings.byok_vault_master_key)
+                )
+                logger.info("in-memory BYOK vault wired (no safety DB URL)")
+        except Exception:  # pragma: no cover - defensive, misconfiguration only
+            logger.exception("failed to construct BYOK vault; vault disabled")
+            byok_vault = None
+    application.state.byok_vault = byok_vault
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
     application.state.memory_backend: MemoryBackend | None = None
@@ -1248,10 +1284,11 @@ def _register_routes(application: FastAPI) -> None:
 
         # HU-2243 BYOK hook: resolve which provider key serves this turn —
         # client-supplied key (``X-Provider-Key``, gated by ``BYOK_ENABLED``)
-        # → house key (dedicated product key when configured, else the
-        # shared internals key). Metering attribution stays the caller's own
-        # bearer-key digest either way; ``key_source`` records the split.
-        llm, llm_key_source = _resolve_turn_llm(application, provider_key)
+        # → the caller's vaulted key (per-tenant registry) → house key
+        # (dedicated product key when configured, else the shared internals
+        # key). Metering attribution stays the caller's own bearer-key digest
+        # either way; ``key_source`` records the split.
+        llm, llm_key_source = _resolve_turn_llm(application, provider_key, principal.api_key)
         provider_label = str(getattr(llm, "provider", "unknown"))
 
         # --- §7.4.4 G8: load the session risk profile (once per turn) -------
@@ -1986,6 +2023,87 @@ def _register_routes(application: FastAPI) -> None:
             }
         )
 
+    @application.put(
+        "/api/v1/byok/keys/{provider}",
+        tags=["byok"],
+        summary="Register/replace the caller's provider key (BYOK vault).",
+    )
+    async def byok_store_key(
+        provider: str,
+        body: ByokKeyPutRequest,
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        """Per-tenant BYOK key registry (HU-2243 Sprint 3, directive part 3).
+
+        Seals the client's own provider key (AES-256-GCM under
+        ``BYOK_VAULT_MASTER_KEY``) bound to the caller's bearer-key digest;
+        subsequent chat turns run on it with usage attributed to the caller
+        (``key_source='byok'``). Only the fingerprint is ever returned.
+        """
+        _vault, _settings = _byok_vault_or_403(application)
+        if provider.lower() not in BYOK_PROVIDERS:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "UNKNOWN_PROVIDER",
+                        "status": 404,
+                        "message": (
+                            f"BYOK supports {sorted(BYOK_PROVIDERS)}; "
+                            f"got {provider!r}."
+                        ),
+                    }
+                },
+            )
+        fingerprint = _vault.store(
+            api_key_attribution_id(principal.api_key),
+            provider.lower(),
+            body.provider_key.strip(),
+        )
+        return DataEnvelope(
+            data={"provider": provider.lower(), "key_fingerprint": fingerprint}
+        )
+
+    @application.get(
+        "/api/v1/byok/keys",
+        tags=["byok"],
+        summary="List the caller's registered BYOK keys (fingerprints only).",
+    )
+    async def byok_list_keys(
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        """The caller's registered providers + fingerprints — never raw keys."""
+        vault, _settings = _byok_vault_or_403(application)
+        rows = vault.list_keys(api_key_attribution_id(principal.api_key))
+        return DataEnvelope(
+            data={
+                "keys": [
+                    ByokKeyView(
+                        provider=r.provider,
+                        key_fingerprint=r.key_fingerprint,
+                        updated_at=r.updated_at,
+                    ).model_dump(mode="json")
+                    for r in rows
+                ]
+            }
+        )
+
+    @application.delete(
+        "/api/v1/byok/keys/{provider}",
+        tags=["byok"],
+        summary="Delete the caller's registered provider key.",
+    )
+    async def byok_delete_key(
+        provider: str,
+        principal: ApiKeyPrincipal = Depends(authenticate),
+    ) -> DataEnvelope:
+        """Remove the sealed key; turns fall back to the house key."""
+        vault, _settings = _byok_vault_or_403(application)
+        deleted = vault.delete(
+            api_key_attribution_id(principal.api_key), provider.lower()
+        )
+        return DataEnvelope(data={"provider": provider.lower(), "deleted": deleted})
+
     @application.get(
         "/api/v1/admin/real-user-mode",
         tags=["admin"],
@@ -2417,28 +2535,79 @@ def _record_turn(
 PROVIDER_KEY_HEADER = "X-Provider-Key"
 
 
+def _byok_vault_or_403(application: FastAPI) -> tuple[ByokVault, Settings]:
+    """The wired BYOK vault, or 403 when the feature is not armed.
+
+    Armed means ``BYOK_ENABLED`` **and** a vault (``BYOK_VAULT_MASTER_KEY``
+    set) — the same default-off posture as the other product gates. The
+    per-request header hook (``X-Provider-Key``) works with
+    ``BYOK_ENABLED`` alone; the durable registry additionally needs the
+    master key.
+    """
+    settings: Settings = application.state.settings
+    vault: ByokVault | None = getattr(application.state, "byok_vault", None)
+    if not settings.byok_enabled or vault is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": {
+                    "code": "BYOK_VAULT_DISABLED",
+                    "status": 403,
+                    "message": (
+                        "BYOK vault is not enabled (requires BYOK_ENABLED and "
+                        "BYOK_VAULT_MASTER_KEY)."
+                    ),
+                }
+            },
+        )
+    return vault, settings
+
+
 def _resolve_turn_llm(
-    application: FastAPI, raw_provider_key: str | None
+    application: FastAPI,
+    raw_provider_key: str | None,
+    caller_api_key: str | None = None,
 ) -> tuple[LLMClient, str]:
     """Resolve the LLM client + key source for one chat turn (HU-2243).
 
-    Resolution order: client-supplied provider key (BYOK, gated) → house
-    client (``application.state.llm_client``, already the dedicated product
-    key when ``PERSONA_LLM_PROVIDER`` is configured). Returns the client and
-    the metering ``key_source`` (``byok`` | ``product`` | ``shared``).
+    Resolution order: client-supplied provider key (``X-Provider-Key``
+    header, gated) → the caller's vaulted key (per-tenant registry, gated +
+    master key configured) → house client (``application.state.llm_client``,
+    already the dedicated product key when ``PERSONA_LLM_PROVIDER`` is
+    configured). Returns the client and the metering ``key_source``
+    (``byok`` | ``product`` | ``shared``).
 
     BYOK semantics: the key is applied to the *product voice's* provider and
     model (the client brings the credential, not the model choice), cached
     per (key digest, provider, model) so repeated turns reuse the constructed
-    client. Any construction failure — or the gate being closed, or the
-    product voice being the key-free fake — falls back to the house key;
+    client. Any construction or vault failure — or the gate being closed, or
+    the product voice being the key-free fake — falls back to the house key;
     BYOK can never break a turn.
     """
     house: LLMClient = application.state.llm_client
     house_source = str(getattr(application.state, "llm_key_source", "shared"))
     settings: Settings = application.state.settings
     raw = (raw_provider_key or "").strip()
-    if not raw or not settings.byok_enabled:
+    if not settings.byok_enabled:
+        return house, house_source
+    if not raw and caller_api_key:
+        # Sprint 3: per-tenant vault leg — the caller's registered key, if
+        # any. A vault miss or tamper (ByokVaultError) is a plain house
+        # fallback, never a turn failure.
+        vault: ByokVault | None = getattr(application.state, "byok_vault", None)
+        if vault is not None:
+            try:
+                raw = vault.fetch(
+                    api_key_attribution_id(caller_api_key),
+                    settings.to_persona_llm_config().provider.value,
+                ) or ""
+            except ByokVaultError:
+                logger.warning(
+                    "byok vault fetch failed (tampered row or master key "
+                    "rotation); using house key"
+                )
+                raw = ""
+    if not raw:
         return house, house_source
     try:
         persona_config = settings.to_persona_llm_config()

@@ -195,3 +195,18 @@ CREATE INDEX idx_llm_usage_persona_day ON llm_usage (persona_id, day);
 CREATE INDEX idx_llm_usage_conversation ON llm_usage (conversation_id);
 CREATE INDEX idx_llm_usage_org_day ON llm_usage (org_id, day);
 CREATE INDEX idx_llm_usage_key_source_day ON llm_usage (key_source, day);
+
+-- HU-2243 Sprint 3: encrypted per-tenant BYOK provider-key registry.
+-- key_ciphertext is AES-256-GCM sealed under BYOK_VAULT_MASTER_KEY
+-- (scrypt per-row salt, tenant+provider as AAD); raw keys never stored.
+CREATE TABLE byok_keys (
+    id              BIGSERIAL PRIMARY KEY,
+    api_key_id      VARCHAR(64) NOT NULL,
+    provider        VARCHAR(32) NOT NULL,
+    key_ciphertext  TEXT NOT NULL,
+    key_fingerprint VARCHAR(64) NOT NULL,
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_byok_keys_tenant_provider UNIQUE (api_key_id, provider)
+);
+
+CREATE INDEX idx_byok_keys_tenant ON byok_keys (api_key_id);

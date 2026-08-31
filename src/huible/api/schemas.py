@@ -18,7 +18,7 @@ layer. When omitted it defaults to ``family`` (spec default).
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -27,6 +27,8 @@ from pydantic import BaseModel, Field
 __all__ = [
     "ActivatedMemoryView",
     "AlignmentView",
+    "ByokKeyPutRequest",
+    "ByokKeyView",
     "ChatRequest",
     "ChatResponse",
     "ChatResponseData",
@@ -835,3 +837,32 @@ class UsageDailyRowView(BaseModel):
             "dedicated product key, 'shared' internals key."
         ),
     )
+
+
+# --- BYOK vault management (HU-2243 Sprint 3) -----------------------------------
+
+
+class ByokKeyPutRequest(BaseModel):
+    """Register/replace the caller's provider key in the BYOK vault.
+
+    The raw key is sealed (AES-256-GCM under ``BYOK_VAULT_MASTER_KEY``)
+    before storage; no endpoint ever returns it — only the fingerprint.
+    """
+
+    provider_key: str = Field(
+        ...,
+        min_length=8,
+        max_length=4096,
+        description="The client's own provider API key (sealed at rest).",
+    )
+
+
+class ByokKeyView(BaseModel):
+    """One registered BYOK key (fingerprint only — never the raw key)."""
+
+    provider: str = Field(..., description="Provider the key is registered for.")
+    key_fingerprint: str = Field(
+        ...,
+        description="SHA-256/16 fingerprint of the sealed key (non-secret).",
+    )
+    updated_at: datetime = Field(..., description="When the key was last replaced.")

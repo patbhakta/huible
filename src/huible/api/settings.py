@@ -149,6 +149,13 @@ class Settings(BaseSettings):
     # ``key_source='byok'``. Construction failure or absence falls back to
     # the house key — BYOK never breaks a turn.
     byok_enabled: bool = False
+    # BYOK vault master secret (HU-2243 Sprint 3): derives the AES-256-GCM
+    # row keys that seal tenant provider keys in ``byok_keys`` (migration
+    # 006). Empty = vault disabled (management endpoints 403, resolver skips
+    # the vault leg — header BYOK still works). Generate with
+    # `openssl rand -hex 32`; losing it invalidates every stored tenant key
+    # (tenants re-register; house key serves meanwhile).
+    byok_vault_master_key: str = ""
     # Persona-voiced turns on the texting channel get a per-turn ceiling
     # below the raw LLM budget (HU-1911 human-touch gate, rubric #3:
     # hosted generators default to essay-length replies). Corpus-derived
