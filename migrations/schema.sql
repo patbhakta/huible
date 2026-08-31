@@ -169,3 +169,27 @@ CREATE TABLE risk_profiles (
 
 CREATE INDEX idx_risk_profile_persona ON risk_profiles (scope, persona_id);
 CREATE INDEX idx_risk_profile_session ON risk_profiles (scope, persona_id, session_id);
+
+CREATE TABLE llm_usage (
+    id               BIGSERIAL PRIMARY KEY,
+    org_id           UUID,
+    api_key_id       VARCHAR(64) NOT NULL,
+    persona_id       VARCHAR(64) NOT NULL,
+    conversation_id  TEXT,
+    provider         VARCHAR(32) NOT NULL,
+    model            VARCHAR(128),
+    requests         INT NOT NULL DEFAULT 1,
+    tokens_in        INT NOT NULL DEFAULT 0,
+    tokens_out       INT NOT NULL DEFAULT 0,
+    latency_ms       INT NOT NULL DEFAULT 0,
+    modeled_cost_usd NUMERIC(14, 8) NOT NULL DEFAULT 0,
+    cost_basis       VARCHAR(16) NOT NULL DEFAULT 'modeled',
+    day              DATE NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_llm_usage_day ON llm_usage (day);
+CREATE INDEX idx_llm_usage_key_day ON llm_usage (api_key_id, day);
+CREATE INDEX idx_llm_usage_persona_day ON llm_usage (persona_id, day);
+CREATE INDEX idx_llm_usage_conversation ON llm_usage (conversation_id);
+CREATE INDEX idx_llm_usage_org_day ON llm_usage (org_id, day);

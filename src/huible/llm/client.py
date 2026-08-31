@@ -363,6 +363,9 @@ class FakeLLMClient:
         self.kwargs_calls: list[dict[str, Any]] = []
         # Self-describing provider label, surfaced in the chat response trace.
         self.provider: str = LLMProvider.FAKE.value
+        # HU-2243 metering: usage of the most recent generate() call, so the
+        # chat path can meter every turn without changing the str protocol.
+        self.last_usage: dict[str, Any] | None = None
 
     async def generate(
         self,
@@ -374,14 +377,33 @@ class FakeLLMClient:
         self.calls.append((prompt, system_prompt))
         self.kwargs_calls.append(dict(kwargs))
         if self._fixed_response is not None:
-            return self._fixed_response
-        return self._deterministic_response(prompt, system_prompt)
+            text = self._fixed_response
+        else:
+            text = self._deterministic_response(prompt, system_prompt)
+        # Estimated usage (~4 chars/token) — the fake voice consumes no
+        # hosted resource, but the metering write path still records the
+        # turn's shape (HU-2243).
+        self.last_usage = {
+            "model": "fake",
+            "prompt_tokens": _estimate_tokens((system_prompt or "") + "\n" + prompt),
+            "completion_tokens": _estimate_tokens(text),
+            "total_tokens": _estimate_tokens((system_prompt or "") + "\n" + prompt)
+            + _estimate_tokens(text),
+        }
+        return text
 
     @staticmethod
     def _deterministic_response(prompt: str, system_prompt: str | None) -> str:
         key = (system_prompt or "") + "\n" + prompt
         digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:8]
         return f"[fake-llm:{digest}] Deterministic response."
+
+
+def _estimate_tokens(text: str) -> int:
+    """Cheap ~4-chars/token estimate for providers with no usage block."""
+    if not text:
+        return 0
+    return max(1, len(text) // 4)
 
 
 # --- Shared HTTP helpers ----------------------------------------------------
@@ -464,6 +486,8 @@ class OpenRouterLLMClient:
         self._transport = transport
         # Self-describing provider label, surfaced in the chat response trace.
         self.provider: str = LLMProvider.OPENROUTER.value
+        # HU-2243 metering: usage of the most recent generate() call.
+        self.last_usage: dict[str, Any] | None = None
         self.spend = MonthlySpendTracker(
             budget_usd=config.openrouter_monthly_budget_usd,
             state_path=config.openrouter_spend_state_path,
@@ -504,7 +528,16 @@ class OpenRouterLLMClient:
             timeout_s=timeout,
             transport=self._transport,
         )
-        self.spend.record_cost(_extract_cost(data))
+        reported_cost = _extract_cost(data)
+        self.spend.record_cost(reported_cost)
+        # HU-2243 metering: exact token counts + the provider-reported USD
+        # cost of this call (``cost_basis='reported'`` in the usage row).
+        usage = _extract_usage(data)
+        self.last_usage = {
+            **usage,
+            "model": str(payload.get("model", self._config.openrouter_model)),
+            "cost": reported_cost,
+        }
         return self._extract_content(data, url)
 
     def _chat_completions_url(self) -> str:
@@ -605,6 +638,8 @@ class GeminiLLMClient:
         self._transport = transport
         # Self-describing provider label, surfaced in the chat response trace.
         self.provider: str = LLMProvider.GEMINI.value
+        # HU-2243 metering: usage of the most recent generate() call.
+        self.last_usage: dict[str, Any] | None = None
 
     async def generate(
         self,
@@ -627,6 +662,11 @@ class GeminiLLMClient:
             timeout_s=timeout,
             transport=self._transport,
         )
+        # HU-2243 metering: Gemini reports usageMetadata token counts.
+        self.last_usage = {
+            **_extract_gemini_usage(data),
+            "model": self._config.gemini_model,
+        }
         return self._extract_text(data, url)
 
     def _generate_content_url(self) -> str:
@@ -724,6 +764,8 @@ class ZaiLLMClient:
         self._transport = transport
         # Self-describing provider label, surfaced in the chat response trace.
         self.provider: str = LLMProvider.ZAI.value
+        # HU-2243 metering: usage of the most recent generate() call.
+        self.last_usage: dict[str, Any] | None = None
         self.tokens = DailyTokenTracker(
             limit_tokens=config.zai_daily_token_limit,
             state_path=config.zai_token_state_path,
@@ -766,6 +808,13 @@ class ZaiLLMClient:
         )
         usage = _extract_usage(data)
         self.tokens.record_tokens(usage["total_tokens"])
+        # HU-2243 metering: exact in/out counts from the usage block; the
+        # subscription bills quota not tokens, so the usage row carries a
+        # *modeled* cost at reference rates (cost_basis='modeled').
+        self.last_usage = {
+            **usage,
+            "model": str(payload.get("model", self._config.zai_model)),
+        }
         snapshot = self.tokens.snapshot()
         logger.info(
             "zai.usage conversation=%s model=%s tokens_in=%d tokens_out=%d "
@@ -871,6 +920,31 @@ def _extract_usage(data: Mapping[str, Any]) -> dict[str, int]:
         "prompt_tokens": _count("prompt_tokens"),
         "completion_tokens": _count("completion_tokens"),
         "total_tokens": _count("total_tokens"),
+    }
+
+
+def _extract_gemini_usage(data: Mapping[str, Any]) -> dict[str, int]:
+    """Pull token counts from a Gemini ``usageMetadata`` block.
+
+    ``promptTokenCount`` / ``candidatesTokenCount`` /
+    ``totalTokenCount``; missing or unusable values count as ``0``
+    (same under-count posture as the OpenAI-compatible extractor).
+    """
+    usage = data.get("usageMetadata")
+    if not isinstance(usage, Mapping):
+        return {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+    def _count(name: str) -> int:
+        try:
+            value = int(usage[name])  # type: ignore[index]
+            return value if value > 0 else 0
+        except (KeyError, TypeError, ValueError):
+            return 0
+
+    return {
+        "prompt_tokens": _count("promptTokenCount"),
+        "completion_tokens": _count("candidatesTokenCount"),
+        "total_tokens": _count("totalTokenCount"),
     }
 
 

@@ -64,7 +64,7 @@ from importlib.metadata import version as _pkg_version
 from logging.handlers import RotatingFileHandler
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
@@ -78,6 +78,14 @@ from huible.api.auth import (
     authenticate,
     get_persona_registry,
     raise_forbidden,
+)
+from huible.api.metering import (
+    InMemoryUsageRecorder,
+    PostgresUsageRecorder,
+    UsageRecord,
+    UsageRecorder,
+    api_key_attribution_id,
+    default_window,
 )
 from huible.api.metrics import (
     ALERT_ONCALL_CONFIGURED,
@@ -144,6 +152,7 @@ from huible.api.schemas import (
     RiskIntakeResponse,
     SafetyEventView,
     SessionMetaView,
+    UsageDailyRowView,
 )
 from huible.api.settings import Settings, get_settings
 from huible.llm.client import FakeLLMClient as _FakeLLMClient
@@ -611,6 +620,7 @@ def create_app(
     consent_card_provider: ConsentCardProvider | None = None,
     risk_profile: RiskProfileProvider | None = None,
     conversation_store: ConversationStore | None = None,
+    usage_recorder: UsageRecorder | None = None,
     pager: Pager | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
@@ -723,6 +733,29 @@ def create_app(
     # does not silently go inert and disable G8 enforcement mid-ramp.
     application.state.risk_profile = risk_profile or durable_risk_profile
     application.state.start_time = start_time if start_time is not None else time.time()
+    # HU-2243 Sprint 1: usage/billing metering recorder. One row per metered
+    # chat-turn LLM call (per-org / per-conversation attribution), read back
+    # through ``GET /api/v1/usage/daily`` as per-key / per-persona daily
+    # aggregates. Durable Postgres backend on the same sync-safety-DB posture
+    # as the §7.4 backends when a URL is configured; deterministic in-memory
+    # default otherwise so the key-free path still meters. An injected
+    # recorder (tests) wins; when this app constructs the durable backend it
+    # owns the engine and disposes it via the safety disposables list.
+    if usage_recorder is None:
+        usage_url = resolved_settings.effective_safety_database_url
+        if usage_url:
+            try:
+                usage_recorder = PostgresUsageRecorder(usage_url)
+                logger.info("durable usage metering recorder wired (llm_usage)")
+                application.state.safety_disposables.append(usage_recorder)
+            except Exception:  # pragma: no cover - defensive, misconfiguration only
+                logger.exception(
+                    "failed to construct usage recorder; metering falls back to in-memory"
+                )
+                usage_recorder = InMemoryUsageRecorder()
+        else:
+            usage_recorder = InMemoryUsageRecorder()
+    application.state.usage_recorder = usage_recorder
     # Default: no DB wired. The lifespan constructs the real backend on startup
     # when an asyncpg DATABASE_URL is configured; health reads this attribute.
     application.state.memory_backend: MemoryBackend | None = None
@@ -1466,6 +1499,7 @@ def _register_routes(application: FastAPI) -> None:
         if enforcement.forces_reframe:
             system_prompt = system_prompt + "\n\n" + build_reframe_addendum(binding.persona.name)
         budget_fallback = False
+        _llm_t0 = time.perf_counter()
         try:
             # conversation_id rides along for the per-conversation cost log
             # line emitted by metered/ceilinged providers (zai HU-1910); the
@@ -1501,6 +1535,20 @@ def _register_routes(application: FastAPI) -> None:
             fallback = _FakeLLMClient(persona_name=binding.persona.name)
             response_text = await fallback.generate(prompt, system_prompt=system_prompt)
             provider_label = f"{provider_label}->fake(budget)"
+
+        # HU-2243 Sprint 1: meter the LLM turn — one usage row per generate
+        # call (requests, tokens in/out, latency, modeled cost) keyed on the
+        # caller's API key + persona + conversation. The budget-fallback
+        # fake-voice turn is metered too (it served the product surface); a
+        # metering failure must never break the clinical turn.
+        _meter_llm_turn(
+            application,
+            api_key=principal.api_key,
+            persona_id=persona_id,
+            conversation_id=body.conversation_id,
+            client=(fallback if budget_fallback else llm),
+            latency_ms=int((time.perf_counter() - _llm_t0) * 1000),
+        )
 
         # G3 generation-time guard: on the distress branch (forced or graded),
         # replace a sarcastic / dismissive generation with a safe grounded
@@ -1848,6 +1896,62 @@ def _register_routes(application: FastAPI) -> None:
             data={
                 "tickets": [_queue_item_view(t, with_sla=False) for t in log],
                 "telemetry": _telemetry_view(telemetry),
+            }
+        )
+
+    @application.get(
+        "/api/v1/usage/daily",
+        tags=["usage"],
+        summary="Daily LLM usage aggregates per key / persona (HU-2243 metering).",
+    )
+    async def usage_daily(
+        principal: ApiKeyPrincipal = Depends(authenticate),
+        days: int = Query(default=7, ge=1, le=366),
+        persona_id: UUID | None = Query(default=None),
+        api_key_id: str | None = Query(default=None, min_length=4, max_length=64),
+    ) -> DataEnvelope:
+        """Usage/billing metering read surface (HU-2243 Sprint 1).
+
+        One row per (UTC day, API-key digest, persona): metered requests,
+        tokens in/out, modeled cost at reference rates, mean LLM latency,
+        and distinct-conversation count. This is the aggregate that makes
+        valuation data, plan pricing, and B2B API billing possible
+        (founder four-reasons) — the per-key column separates product
+        traffic from internals ahead of the dedicated provider key.
+
+        Auth: persona-scoped bearer key (401 when missing/unknown), the
+        same defense-in-depth posture as the §7.4.1 ops surfaces. An
+        explicit ``persona_id`` filter outside the key's scope is 403.
+        """
+        if persona_id is not None and persona_id != principal.persona_id:
+            raise_forbidden()
+        recorder: UsageRecorder = application.state.usage_recorder
+        from_day, to_day = default_window(days)
+        aggregates = recorder.daily_aggregates(
+            from_day=from_day,
+            to_day=to_day,
+            persona_id=str(persona_id) if persona_id is not None else None,
+            api_key_id=(api_key_id.strip() or None) if api_key_id else None,
+        )
+        rows = [
+            UsageDailyRowView(
+                day=a.day,
+                org_id=a.org_id,
+                api_key_id=a.api_key_id,
+                persona_id=a.persona_id,
+                requests=a.requests,
+                tokens_in=a.tokens_in,
+                tokens_out=a.tokens_out,
+                modeled_cost_usd=a.modeled_cost_usd,
+                avg_latency_ms=a.avg_latency_ms,
+                conversations=a.conversations,
+            )
+            for a in aggregates
+        ]
+        return DataEnvelope(
+            data={
+                "window": {"from": from_day.isoformat(), "to": to_day.isoformat()},
+                "rows": [r.model_dump(mode="json") for r in rows],
             }
         )
 
@@ -2271,6 +2375,50 @@ def _record_turn(
     store = _conversation_store(application)
     store.append_turn(conversation_id, ConversationTurn(speaker="user", content=message))
     store.append_turn(conversation_id, ConversationTurn(speaker="persona", content=reply))
+
+
+def _meter_llm_turn(
+    application: FastAPI,
+    *,
+    api_key: str,
+    persona_id: UUID,
+    conversation_id: str | None,
+    client: object,
+    latency_ms: int,
+) -> None:
+    """Record one usage row for a metered chat-turn LLM call (HU-2243).
+
+    Reads the just-populated ``last_usage`` on the client that actually
+    generated (exact provider token counts; the fake voice estimates) and
+    writes one :class:`~huible.api.metering.UsageRecord` through the wired
+    recorder — per-key attribution via a SHA-256 digest, never the raw key.
+    Best-effort by construction: a metering failure logs and the turn
+    continues unmetered (same posture as the metrics/paging helpers —
+    billing telemetry must never break a clinical turn).
+    """
+    recorder: UsageRecorder | None = getattr(application.state, "usage_recorder", None)
+    if recorder is None:
+        return
+    try:
+        usage = getattr(client, "last_usage", None) or {}
+        provider = str(getattr(client, "provider", None) or "unknown")
+        reported_cost = usage.get("cost")
+        record = UsageRecord(
+            api_key_id=api_key_attribution_id(api_key),
+            persona_id=str(persona_id),
+            conversation_id=conversation_id,
+            provider=provider,
+            model=str(usage["model"]) if usage.get("model") else None,
+            tokens_in=int(usage.get("prompt_tokens") or 0),
+            tokens_out=int(usage.get("completion_tokens") or 0),
+            latency_ms=latency_ms,
+            reported_cost_usd=(
+                float(reported_cost) if reported_cost is not None else None
+            ),
+        )
+        recorder.record_turn(record)
+    except Exception:  # pragma: no cover - defensive; never break a turn
+        logger.exception("usage metering write failed; turn continues unmetered")
 
 
 def _session_meta(application: FastAPI, conversation_id: str | None) -> SessionMetaView:

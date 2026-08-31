@@ -18,6 +18,7 @@ layer. When omitted it defaults to ``family`` (spec default).
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 from uuid import UUID
 
@@ -49,6 +50,7 @@ __all__ = [
     "RiskEnforcementView",
     "SafetyEventView",
     "SessionMetaView",
+    "UsageDailyRowView",
 ]
 
 #: Admissible ``disclosure_tier`` request values (spec section 3.2).
@@ -793,3 +795,35 @@ class RiskIntakeResponse(BaseModel):
     """Full intake response envelope."""
 
     data: RiskIntakeData
+
+
+# --- Usage metering (HU-2243 Sprint 1) ---------------------------------------
+
+
+class UsageDailyRowView(BaseModel):
+    """One (day, api_key_id, persona_id) daily aggregate of LLM usage.
+
+    The metering read surface (``GET /api/v1/usage/daily``): requests,
+    tokens in/out, modeled cost at reference rates, average LLM latency,
+    and distinct-conversation count — the minimum aggregate that feeds
+    valuation data, plan pricing, and B2B API billing (founder four-reasons).
+    ``api_key_id`` is a SHA-256 digest of the caller's bearer key, never
+    the raw key.
+    """
+
+    day: date = Field(..., description="UTC calendar day of the aggregate.")
+    org_id: str | None = Field(
+        default=None,
+        description="Tenant org attribution (NULL until keys gain org bindings).",
+    )
+    api_key_id: str = Field(..., description="SHA-256 digest prefix of the caller API key.")
+    persona_id: str = Field(..., description="Persona the metered turns spoke as.")
+    requests: int = Field(..., description="Metered LLM requests (rows) in the group.")
+    tokens_in: int = Field(..., description="Prompt tokens summed.")
+    tokens_out: int = Field(..., description="Completion tokens summed.")
+    modeled_cost_usd: float = Field(
+        ...,
+        description="Modeled cost at reference rates (or provider-reported when available).",
+    )
+    avg_latency_ms: float = Field(..., description="Mean LLM latency in milliseconds.")
+    conversations: int = Field(..., description="Distinct conversation ids in the group.")
