@@ -1,0 +1,21 @@
+{
+  "model": "chatterbox-local",
+  "model_version": "ResembleAI/chatterbox std (chatterbox-tts 0.1.7)",
+  "references_used": [
+    "ref-1089-01.wav"
+  ],
+  "speaker": "spkr-1089",
+  "device": "cpu",
+  "controls": {
+    "exaggeration": 0.5,
+    "cfg_weight": 0.5,
+    "controls_applied": true
+  },
+  "watermark": "perth-implicit (built into every Chatterbox output)",
+  "privacy": "self-hosted \u2014 reference audio never leaves our boundary",
+  "experiment": "HU-2163 clone-output gold set (experiment-only, not a persona asset)",
+  "text": "Could you hand me that notebook before you leave the room?",
+  "latency_s": 30.54,
+  "bytes": 147918,
+  "generated_at": "2026-08-31T14:52:51+00:00"
+}

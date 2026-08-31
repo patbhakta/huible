@@ -1,0 +1,20 @@
+{
+  "model": "chatterbox-local",
+  "model_version": "ResembleAI/chatterbox-turbo turbo (chatterbox-tts 0.1.7)",
+  "references_used": [
+    "ref-1221-02.wav"
+  ],
+  "speaker": "spkr-1221",
+  "device": "cpu",
+  "controls": {
+    "controls_applied": false,
+    "note": "turbo ignores exaggeration/cfg_weight (chatterbox-tts 0.1.7)"
+  },
+  "watermark": "perth-implicit (built into every Chatterbox output)",
+  "privacy": "self-hosted \u2014 reference audio never leaves our boundary",
+  "experiment": "HU-2163 clone-output gold set (experiment-only, not a persona asset)",
+  "text": "It was a bright cold day in April, and the clocks were striking thirteen.",
+  "latency_s": 14.91,
+  "bytes": 199758,
+  "generated_at": "2026-08-31T14:48:35+00:00"
+}

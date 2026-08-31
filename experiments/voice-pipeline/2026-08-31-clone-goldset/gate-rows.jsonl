@@ -1,0 +1,80 @@
+{"clone": "clone-spkr-1089-std-01", "variant": "std", "gate_score": 0.8298, "label": "pos"}
+{"clone": "clone-spkr-1089-std-01", "variant": "std", "gate_score": 0.3031, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1089-std-01", "variant": "std", "gate_score": 0.1827, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1089-std-01", "variant": "std", "gate_score": 0.1464, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1089-std-02", "variant": "std", "gate_score": 0.7624, "label": "pos"}
+{"clone": "clone-spkr-1089-std-02", "variant": "std", "gate_score": 0.181, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1089-std-02", "variant": "std", "gate_score": 0.1221, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1089-std-02", "variant": "std", "gate_score": 0.1773, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1089-turbo-01", "variant": "turbo", "gate_score": 0.7516, "label": "pos"}
+{"clone": "clone-spkr-1089-turbo-01", "variant": "turbo", "gate_score": 0.2911, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1089-turbo-01", "variant": "turbo", "gate_score": 0.1093, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1089-turbo-01", "variant": "turbo", "gate_score": 0.1677, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1089-turbo-02", "variant": "turbo", "gate_score": 0.7502, "label": "pos"}
+{"clone": "clone-spkr-1089-turbo-02", "variant": "turbo", "gate_score": 0.2797, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1089-turbo-02", "variant": "turbo", "gate_score": 0.1998, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1089-turbo-02", "variant": "turbo", "gate_score": 0.1871, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1089-turbo-03", "variant": "turbo", "gate_score": 0.8466, "label": "pos"}
+{"clone": "clone-spkr-1089-turbo-03", "variant": "turbo", "gate_score": 0.2852, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1089-turbo-03", "variant": "turbo", "gate_score": 0.0935, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1089-turbo-03", "variant": "turbo", "gate_score": 0.1494, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1188-std-01", "variant": "std", "gate_score": 0.8807, "label": "pos"}
+{"clone": "clone-spkr-1188-std-01", "variant": "std", "gate_score": 0.3766, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1188-std-01", "variant": "std", "gate_score": 0.1951, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1188-std-01", "variant": "std", "gate_score": 0.1511, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1188-std-02", "variant": "std", "gate_score": 0.8009, "label": "pos"}
+{"clone": "clone-spkr-1188-std-02", "variant": "std", "gate_score": 0.2702, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1188-std-02", "variant": "std", "gate_score": 0.0656, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1188-std-02", "variant": "std", "gate_score": 0.1111, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1188-turbo-01", "variant": "turbo", "gate_score": 0.8322, "label": "pos"}
+{"clone": "clone-spkr-1188-turbo-01", "variant": "turbo", "gate_score": 0.3476, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1188-turbo-01", "variant": "turbo", "gate_score": 0.1976, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1188-turbo-01", "variant": "turbo", "gate_score": 0.1537, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1188-turbo-02", "variant": "turbo", "gate_score": 0.7512, "label": "pos"}
+{"clone": "clone-spkr-1188-turbo-02", "variant": "turbo", "gate_score": 0.2187, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1188-turbo-02", "variant": "turbo", "gate_score": 0.1095, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1188-turbo-02", "variant": "turbo", "gate_score": 0.0871, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1188-turbo-03", "variant": "turbo", "gate_score": 0.6865, "label": "pos"}
+{"clone": "clone-spkr-1188-turbo-03", "variant": "turbo", "gate_score": 0.3256, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1188-turbo-03", "variant": "turbo", "gate_score": 0.101, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1188-turbo-03", "variant": "turbo", "gate_score": 0.1444, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-121-std-01", "variant": "std", "gate_score": 0.8673, "label": "pos"}
+{"clone": "clone-spkr-121-std-01", "variant": "std", "gate_score": 0.164, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-121-std-01", "variant": "std", "gate_score": 0.174, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-121-std-01", "variant": "std", "gate_score": 0.1029, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-121-std-02", "variant": "std", "gate_score": 0.7866, "label": "pos"}
+{"clone": "clone-spkr-121-std-02", "variant": "std", "gate_score": 0.1834, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-121-std-02", "variant": "std", "gate_score": 0.173, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-121-std-02", "variant": "std", "gate_score": 0.1593, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-121-turbo-01", "variant": "turbo", "gate_score": 0.8104, "label": "pos"}
+{"clone": "clone-spkr-121-turbo-01", "variant": "turbo", "gate_score": 0.1336, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-121-turbo-01", "variant": "turbo", "gate_score": 0.1751, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-121-turbo-01", "variant": "turbo", "gate_score": 0.1021, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-121-turbo-02", "variant": "turbo", "gate_score": 0.7631, "label": "pos"}
+{"clone": "clone-spkr-121-turbo-02", "variant": "turbo", "gate_score": 0.1507, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-121-turbo-02", "variant": "turbo", "gate_score": 0.1462, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-121-turbo-02", "variant": "turbo", "gate_score": 0.1778, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-121-turbo-03", "variant": "turbo", "gate_score": 0.846, "label": "pos"}
+{"clone": "clone-spkr-121-turbo-03", "variant": "turbo", "gate_score": 0.1957, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-121-turbo-03", "variant": "turbo", "gate_score": 0.1449, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-121-turbo-03", "variant": "turbo", "gate_score": 0.225, "label": "neg", "vs_speaker": "spkr-1221"}
+{"clone": "clone-spkr-1221-std-01", "variant": "std", "gate_score": 0.8384, "label": "pos"}
+{"clone": "clone-spkr-1221-std-01", "variant": "std", "gate_score": 0.1942, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1221-std-01", "variant": "std", "gate_score": 0.1952, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1221-std-01", "variant": "std", "gate_score": 0.2701, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1221-std-02", "variant": "std", "gate_score": 0.7773, "label": "pos"}
+{"clone": "clone-spkr-1221-std-02", "variant": "std", "gate_score": 0.1881, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1221-std-02", "variant": "std", "gate_score": 0.1703, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1221-std-02", "variant": "std", "gate_score": 0.1968, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1221-turbo-01", "variant": "turbo", "gate_score": 0.7612, "label": "pos"}
+{"clone": "clone-spkr-1221-turbo-01", "variant": "turbo", "gate_score": 0.1756, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1221-turbo-01", "variant": "turbo", "gate_score": 0.1306, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1221-turbo-01", "variant": "turbo", "gate_score": 0.2596, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1221-turbo-02", "variant": "turbo", "gate_score": 0.7355, "label": "pos"}
+{"clone": "clone-spkr-1221-turbo-02", "variant": "turbo", "gate_score": 0.1953, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1221-turbo-02", "variant": "turbo", "gate_score": 0.1652, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1221-turbo-02", "variant": "turbo", "gate_score": 0.2614, "label": "neg", "vs_speaker": "spkr-121"}
+{"clone": "clone-spkr-1221-turbo-03", "variant": "turbo", "gate_score": 0.7703, "label": "pos"}
+{"clone": "clone-spkr-1221-turbo-03", "variant": "turbo", "gate_score": 0.2166, "label": "neg", "vs_speaker": "spkr-1089"}
+{"clone": "clone-spkr-1221-turbo-03", "variant": "turbo", "gate_score": 0.1243, "label": "neg", "vs_speaker": "spkr-1188"}
+{"clone": "clone-spkr-1221-turbo-03", "variant": "turbo", "gate_score": 0.2521, "label": "neg", "vs_speaker": "spkr-121"}

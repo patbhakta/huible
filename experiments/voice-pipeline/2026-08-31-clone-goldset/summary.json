@@ -1,0 +1,53 @@
+{
+  "experiment": "HU-2163 clone-output gold set",
+  "gate": "ecapa-voxceleb-192d-cosine-max",
+  "clones": 20,
+  "per_variant": {
+    "turbo": 12,
+    "std": 8
+  },
+  "speakers": [
+    "spkr-1089",
+    "spkr-1188",
+    "spkr-121",
+    "spkr-1221"
+  ],
+  "pairs_all": {
+    "pos": {
+      "n": 60,
+      "min": 0.5758,
+      "max": 0.8807,
+      "mean": 0.7205
+    },
+    "neg": {
+      "n": 180,
+      "min": 0.03,
+      "max": 0.3766,
+      "mean": 0.1548
+    }
+  },
+  "gate_equivalent_max_cosine": {
+    "pos": {
+      "n": 20,
+      "min": 0.6865,
+      "max": 0.8807,
+      "mean": 0.7924
+    },
+    "neg": {
+      "n": 60,
+      "min": 0.0656,
+      "max": 0.3766,
+      "mean": 0.1856
+    }
+  },
+  "separated": true,
+  "clone_calibrated_threshold": 0.5315,
+  "baseline": {
+    "threshold": 0.5049,
+    "note": "LibriSpeech natural-speech ECAPA threshold (2026-08-31 recalibration, HU-2160)",
+    "tpr_at_baseline": 1.0,
+    "fpr_at_baseline": 0.0
+  },
+  "protocol": "positives = (clone, own-speaker refs) max-cosine; negatives = (clone, each other speaker's refs) max-cosine \u2014 the voice_gate.py scoring rule on CLONE outputs",
+  "scored_at": "2026-08-31T14:58:23+00:00"
+}

@@ -1,0 +1,24 @@
+{
+  "gate": "ecapa-voxceleb-192d-cosine-max",
+  "passed": true,
+  "threshold": 0.5315,
+  "basis": "clone-output gold set (HU-2163)",
+  "distributions": {
+    "pos": {
+      "n": 20,
+      "min": 0.6865,
+      "max": 0.8807,
+      "mean": 0.7924
+    },
+    "neg": {
+      "n": 60,
+      "min": 0.0656,
+      "max": 0.3766,
+      "mean": 0.1856
+    }
+  },
+  "clones": 20,
+  "production_safe": false,
+  "internal_only": false,
+  "calibrated_at": "2026-08-31T14:58:23+00:00"
+}

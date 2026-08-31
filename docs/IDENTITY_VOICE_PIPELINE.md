@@ -195,14 +195,27 @@ pos_min 0.6648 vs neg_max 0.3450, **margin 0.32 (was 0.016)**, threshold
 (same-speaker 0.7737 pass, cross-speaker 0.1881 reject). Evidence:
 `experiments/voice-pipeline/2026-08-31-ecapa-recalibration/`.
 
-**Production promotion requires** (in order): (a) **clone-output gold set**
-— same protocol with cloned lines vs held-out references, per cloning
-model+version; (b) for client personas, a **consented human gold set
-(~50 clips/class)** built from onboarding-style recordings; (c) re-run
-calibration, threshold from *measured* clone distribution. The ECAPA swap
-(2026-08-31) widened the read-speech margin from ≈0.016 to ≈0.32, so the
-embedder is no longer the weak link; the remaining limits are corpus-domain
-transfer and emotion-extreme delivery (§Known limits).
+**Clone-output gold set (2026-08-31, HU-2163): SEPARATED — promotion step
+(a) closed for read-speech + chatterbox.** 20 clones (chatterbox-local:
+12 turbo + 8 std, 5 fixed texts × 4 LibriSpeech speakers, conditioned on
+the longest reference each; zero API spend) gated with the production rule:
+pos_min **0.6865** vs neg_max **0.3766** (margin 0.31), clone-calibrated
+threshold **0.5315**, and the natural-speech 0.5049 transfers at **TPR 1.0
+/ FPR 0.0** on all 20 clones. Scope: negatives are other read-speech
+speakers, so the emotion-extreme failure mode is not exercised; expressive
+-domain and `elevenlabs-ivc` clone evidence remain open. Evidence:
+`experiments/voice-pipeline/2026-08-31-clone-goldset/`
+(driver `scripts/clone_goldset.py`).
+
+**Production promotion requires** (in order): (a) ~~clone-output gold set~~
+**DONE for read-speech + chatterbox** (above) — still open for
+expressive/sitcom delivery and for `elevenlabs-ivc`; (b) for client
+personas, a **consented human gold set (~50 clips/class)** built from
+onboarding-style recordings; (c) re-run calibration, threshold from
+*measured* clone distribution. The ECAPA swap (2026-08-31) widened the
+read-speech margin from ≈0.016 to ≈0.32, so the embedder is no longer the
+weak link; the remaining limits are corpus-domain transfer and
+emotion-extreme delivery (§Known limits).
 
 ## 4. PROVENANCE — flat append-only registry
 
@@ -272,10 +285,13 @@ gate→registry path, zero generation).
   implication unchanged (set is internal_only forever); benchmark-path
   implication: the next lever is emotion-stratified calibration or
   reference sets, not another embedder swap.
-- **Threshold is R&D-calibrated on natural speech, not clone outputs.**
-  Clone-output gold set required before any production persona voice
-  (§3). Consented human gold set (~50 clips/class) required before client
-  personas.
+- **Clone-output evidence: closed for read-speech + chatterbox, open for
+  expressive domains and `elevenlabs-ivc`.** The 2026-08-31 clone gold set
+  (HU-2163) proves the natural-speech ECAPA threshold on actual chatterbox
+  clone outputs (TPR 1.0 / FPR 0.0 at 0.5049); it does **not** exercise
+  emotion-extreme delivery (MELD residuals) nor the spend-gated
+  `elevenlabs-ivc` adapter. Consented human gold set (~50 clips/class)
+  required before client personas.
 - **Read-speech ↔ sitcom transfer fails (resemblyzer v1: 0.8323 → TPR 0.35
   on MELD; ECAPA thresholds are corpus-domain-specific too — LibriSpeech
   0.5049 vs MELD midpoint 0.3308 in different embedding spaces)** —
@@ -288,9 +304,10 @@ gate→registry path, zero generation).
 - **Local clone adapters: chatterbox-local is real and measured; XTTS /
   OpenVoice remain documented stubs** — chatterbox-turbo gate-passed on the
   spkr-1089 gold set (0.9263 ≥ 0.8323, CPU 47.9 s/sentence, zero spend);
-  XTTS CPML is benchmarking-only, no commercial use. One measured sentence
-  is a smoke datapoint, not a clone-output gold set — n≈20 clone outputs
-  across voices/domains are still required before promotion (§3).
+  XTTS CPML is benchmarking-only, no commercial use. The n≈20 clone-output
+  gold set now exists for turbo+std on read speech (HU-2163, §3);
+  expressive-domain and `elevenlabs-ivc` clone evidence are the remaining
+  gaps.
 - **Chatterbox-turbo ignores expression controls (0.1.7)** — provenance
   logs `controls_applied: false`; if expression control matters for
   persona tuning, `std` is the variant to benchmark next (500M, slower).
