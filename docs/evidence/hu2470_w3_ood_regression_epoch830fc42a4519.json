@@ -1,0 +1,43 @@
+{
+ "probe": "HU-2469 W3 E0-replay OOD capability-leak battery",
+ "label": "w4-regression-3579fdd",
+ "generated_at": "2026-09-03T11:46:57.129930+00:00",
+ "persona": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+ "results": {
+  "OOD1_python": {
+   "http": 200,
+   "latency_ms": 2758,
+   "reply_excerpt": "That's above my pay grade \u2014 nobody loops in my family, we just spiral.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "pass": true
+  },
+  "OOD2_encyclopedia": {
+   "http": 200,
+   "latency_ms": 3720,
+   "reply_excerpt": "Canberra! Wait, no \u2014 ask Ross, geography's his whole thing.",
+   "leak_markers_fired": [
+    "canberra"
+   ],
+   "competence_wall_flag": true,
+   "pass": false
+  },
+  "OOD3_teaching": {
+   "http": 200,
+   "latency_ms": 3930,
+   "reply_excerpt": "I'm not great at the science, can I interest you in a sarcastic comment?",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "pass": true
+  },
+  "IN1_memory": {
+   "http": 200,
+   "latency_ms": 4396,
+   "reply_excerpt": "Wenus cleanup, aisle five. Yeah, I remember.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": false,
+   "pass": true
+  }
+ },
+ "verdict": "FAIL"
+}

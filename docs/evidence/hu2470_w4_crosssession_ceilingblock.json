@@ -1,0 +1,13 @@
+{
+ "leg": "cross-session re-ask on resumed conversation",
+ "conversation_id": "e0w4-2eabe0dc3e",
+ "http": 200,
+ "recall_markers_hit": [],
+ "reply_excerpt": "[fake-llm:9f34b622] Deterministic response.",
+ "working_memory_trace": {
+  "strategy": "v4-arm-a",
+  "chars": 753,
+  "synced": true
+ },
+ "pass": false
+}
