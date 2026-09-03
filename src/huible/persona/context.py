@@ -35,15 +35,16 @@ the memory-integrity hard rules before any memory reaches the generator:
    rendered as adjective sheets.
 
 6. **Working memory (W4, HU-2309 v1.8 §1.7.2 / M-0R-B).** The
-   ``HISTORY_WINDOW`` tail stays the recent-verbatim surface, but long-range
-   session state is no longer evicted by it: the caller fetches the TencentDB
-   Arm A working-memory block (session-gist digest + session-scoped verbatim
-   excerpts — BEAM Arm A, deployed prod read path) and hands it to the
-   builder via ``working_memory``. It renders in its own section *before*
-   the conversation-history window, killing the RC-3 eviction failure
-   (E0 turn-34 "what was the first thing I said to you?"). An empty block
-   (lane disabled / degraded) renders nothing — same B2 doctrine as the
-   exemplar wall.
+   history section is working-memory-shaped instead of a naive eviction
+   window: the last ``HISTORY_WINDOW`` turns render verbatim, the pre-window
+   turns render as a bounded head (``WORKING_MEMORY_HEAD_CAP`` — together
+   one 40-turn gist block), and the caller hands in the TencentDB Arm A
+   working-memory block (session-gist digest + session-scoped verbatim
+   excerpts, rendered in its own section *before* the history) which carries
+   everything older and every prior session on this conversation. This kills
+   the RC-3 eviction failure (E0 turn-34 "what was the first thing I said to
+   you?"). An empty working-memory block (lane disabled / degraded) renders
+   nothing — same B2 doctrine as the exemplar wall.
 
 Design constraints:
 - Async throughout.
@@ -538,10 +539,25 @@ def _render_working_memory(working_memory: str) -> str:
     return f"{_WORKING_MEMORY_HEADER}:\n{working_memory}"
 
 
-def _format_history(turns: Sequence[ConversationTurn], window: int) -> str:
-    """Render the conversation-history window (last ``window`` turns)."""
-    recent = list(turns[-window:]) if window > 0 else []
-    return "\n".join(f"{t.speaker}: {t.content}" for t in recent)
+def _format_history(
+    turns: Sequence[ConversationTurn],
+    window: int,
+    head_cap: int = 0,
+) -> str:
+    """Render the conversation-history window in narrative order.
+
+    W4 (M-0R-B): ``window`` is the recent-verbatim tail (F5 spec); when the
+    session is longer, the pre-window turns render as a bounded verbatim
+    head (``head_cap``) so the current, not-yet-gisted block keeps full
+    coverage — the TencentDB digest + excerpts carry everything older.
+    """
+    if window <= 0:
+        return ""
+    recent = list(turns[-window:])
+    head: list[ConversationTurn] = []
+    if head_cap and len(turns) > window:
+        head = list(turns[:-window])[-head_cap:]
+    return "\n".join(f"{t.speaker}: {t.content}" for t in [*head, *recent])
 
 
 #: W3 competence-wall system directive (appended only on wall turns). Same
@@ -646,6 +662,15 @@ class ContextBuilder:
 
     #: Conversation-history window size (last N turns rendered), per F5 spec.
     HISTORY_WINDOW = 10
+
+    #: W4 working-memory verbatim head (M-0R-B): the pre-window turns stay in
+    #: the prompt, bounded to one 40-turn gist block (10 + 30 = 40). The
+    #: TencentDB Arm A digest settles per 40-turn block, so within the
+    #: current block the prompt keeps full verbatim coverage (the RC-3
+    #: eviction failure — "what was the first thing I said?" forgotten by
+    #: ~turn 22 — is dead at any session length), while older turns are
+    #: carried by the working-memory digest + excerpts.
+    WORKING_MEMORY_HEAD_CAP = 30
 
     #: Upper bound on the persona-scoped grounding scan (HU-2070). The scan
     #: backs the §7.4.2 alignment corpus widening with every active memory
@@ -764,6 +789,7 @@ class ContextBuilder:
         history_text = _format_history(
             conversation_history or (),
             self.HISTORY_WINDOW,
+            self.WORKING_MEMORY_HEAD_CAP,
         )
         wall_exemplars = list(deflection_exemplars)
         system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(

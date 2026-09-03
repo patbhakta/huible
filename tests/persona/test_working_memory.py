@@ -23,7 +23,12 @@ from uuid import uuid4
 
 import pytest
 
-from huible.persona.context import ContextBuilder, PersonaConfig, RelationshipTier
+from huible.persona.context import (
+    ContextBuilder,
+    ConversationTurn,
+    PersonaConfig,
+    RelationshipTier,
+)
 from huible.persona.working_memory import (
     ARM_A_STRATEGY,
     NullWorkingMemory,
@@ -272,3 +277,18 @@ def test_empty_working_memory_renders_pre_w4_shape() -> None:
     )
     assert armed.render() == baseline.render()
     assert "WORKING MEMORY" not in baseline.render()
+
+
+def test_first_utterance_survives_beyond_the_window() -> None:
+    # The RC-3 eviction shape: the probe at turn 15 (29 stored turns) must
+    # still see session turn 1 ("hey who r u?") verbatim in the history —
+    # bounded head keeps the unsettled block fully covered.
+    turns = [
+        ConversationTurn(speaker="user" if i % 2 == 0 else "persona", content=f"m{i}")
+        for i in range(29)
+    ]
+    turns[0] = ConversationTurn(speaker="user", content="hey who r u?")
+    ctx = ContextBuilder().filter_and_render(
+        [], _persona(), RelationshipTier.FAMILY, conversation_history=turns
+    )
+    assert "user: hey who r u?" in ctx.conversation_history

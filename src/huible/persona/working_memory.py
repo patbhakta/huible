@@ -1,9 +1,10 @@
 """W4 working memory (HU-2309 v1.8 §1.7.2 / M-0R-B): TencentDB client.
 
 BEAM Arm A (HU-1899 winner, deployed prod read path since HU-1917) is ported
-into the chat path here. The ``HISTORY_WINDOW`` tail in the prompt keeps the
-last few turns verbatim; long-range session state lives in TencentDB as real
-working memory (V2 point 4) — per-block session gists (the digest) plus
+into the chat path here. The prompt keeps a one-block verbatim band of the
+live conversation (``HISTORY_WINDOW`` tail + ``WORKING_MEMORY_HEAD_CAP``
+head in the context builder); long-range session state lives in TencentDB as
+real working memory (V2 point 4) — per-block session gists (the digest) plus
 session-scoped verbatim drill-down excerpts. This kills the RC-3 eviction
 failure: ``HISTORY_WINDOW=10`` had forgotten session turn 1 by ~turn 22, so
 "what was the first thing I said to you?" was answered wrong at E0 turn-34.

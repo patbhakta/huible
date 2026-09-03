@@ -369,14 +369,29 @@ class TestRendering:
         ctx = ContextBuilder().filter_and_render([], _persona(), RelationshipTier.FAMILY)
         assert ctx.memory_blocks == ""
 
-    def test_history_window_capped_at_ten(self):
+    def test_history_window_tail_plus_w4_head(self):
+        # W4 (M-0R-B): pre-window turns stay as a bounded verbatim head, so
+        # the session's opening turns are never evicted (RC-3).
         turns = [ConversationTurn(speaker=f"s{i}", content=f"m{i}") for i in range(25)]
         ctx = ContextBuilder().filter_and_render(
             [], _persona(), RelationshipTier.FAMILY, conversation_history=turns,
         )
         lines = [ln for ln in ctx.conversation_history.split("\n") if ln]
-        assert len(lines) == 10
+        assert len(lines) == 25  # nothing evicted below the one-block bound
+        assert lines[0] == "s0: m0"
         assert lines[-1] == "s24: m24"
+
+    def test_history_head_capped_at_one_block(self):
+        # 10-turn tail + 30-turn head = one 40-turn gist block; older turns
+        # are the TencentDB working-memory digest's job (W4).
+        turns = [ConversationTurn(speaker=f"s{i}", content=f"m{i}") for i in range(60)]
+        ctx = ContextBuilder().filter_and_render(
+            [], _persona(), RelationshipTier.FAMILY, conversation_history=turns,
+        )
+        lines = [ln for ln in ctx.conversation_history.split("\n") if ln]
+        assert len(lines) == 40
+        assert lines[0] == "s20: m20"
+        assert lines[-1] == "s59: m59"
 
     def test_history_format(self):
         turns = [

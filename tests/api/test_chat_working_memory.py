@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 
 from huible.api.app import create_app
 from huible.api.auth import InMemoryApiKeyStore, InMemoryPersonaRegistry
+from huible.api.settings import Settings
 from huible.conversation import InMemoryMemoryBackend
 from huible.llm.client import FakeLLMClient
 from huible.persona.context import PersonaConfig
@@ -66,6 +67,10 @@ def _make_app(
         api_key_store=keys,
         persona_registry=registry,
         llm_client=FakeLLMClient(persona_name="Chandler"),
+        # Hermetic: an armed host .env (WORKING_MEMORY_ENABLED=on) must not
+        # leak a network-calling lane into the suite — tests control their
+        # own lane by injection (constructor kwargs win over env).
+        settings=Settings(working_memory_enabled=False),
         start_time=0.0,
     )
     if lane is not None:
