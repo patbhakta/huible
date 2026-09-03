@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import sys
 from pathlib import Path
@@ -84,6 +85,13 @@ async def _reembed_batch(conn, embedder) -> int:
     updates = []
     for r, vec in zip(rows, vectors, strict=True):
         meta = r["metadata"] or {}
+        if isinstance(meta, str):  # legacy rows store metadata as a JSON string
+            try:
+                meta = json.loads(meta)
+            except (TypeError, ValueError):
+                meta = {}
+        if not isinstance(meta, dict):
+            meta = {}
         sensory = meta.get("sensory")
         sensory_vec = None
         if isinstance(sensory, str) and sensory.strip():
