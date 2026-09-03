@@ -5,8 +5,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from uuid import UUID
 
+from huible.memory.fusion import DEFAULT_RRF_K, rrf_fuse
 from huible.memory.protocol import (
     DisclosureScope,
+    LexicalSearchBackend,
+    LexicalSearchUnsupported,
     MemoryBackend,
     MemoryNode,
     SearchResult,
@@ -25,6 +28,8 @@ class RetrievalConfig:
     motif_boost_factor: float = 1.3
     motif_threshold: int = 3
     motif_max_themes: int = 5
+    #: RRF rank-constant for the W2 hybrid fusion (1 / (k + rank) per lane).
+    rrf_k: int = DEFAULT_RRF_K
 
 
 @dataclass(slots=True)
@@ -45,7 +50,26 @@ async def multi_vector_search(
     query_embedding_sensory: list[float] | None = None,
     query_embedding_affect: list[float] | None = None,
     top_k: int = 20,
+    query_text: str | None = None,
+    lexical_floor: float = 0.0,
+    rrf_k: int = DEFAULT_RRF_K,
 ) -> list[SearchResult]:
+    """Seed search: multi-lane vector retrieval, RRF-fused with the lexical
+    lane when a query text is available (HU-2309 W2 hybrid seed).
+
+    Score semantics (deliberately asymmetric, to keep every W1 downstream
+    behavior — spreading thresholds, motif boosts, activation floor, trace
+    passthrough — byte-comparable):
+
+    - Documents that a vector lane surfaced keep their vector similarity
+      score, exactly as before W2. RRF decides *membership and order* of the
+      seed set; it never rewrites vector scores.
+    - Documents that ONLY the lexical lane surfaced (the exact-topic matches
+      embeddings miss — proper nouns, surnames) enter the seed set at
+      ``lexical_floor``. Callers pass the retrieval activation floor so these
+      seeds clear the final inclusion gate exactly, rank below any real
+      vector match, and still participate in spreading/motif escalation.
+    """
     content_results = await backend.search_by_content(
         persona_id, query_embedding_content, top_k=top_k
     )
@@ -77,7 +101,67 @@ async def multi_vector_search(
             else:
                 seen[sr.node.id] = sr
 
-    return sorted(seen.values(), key=lambda sr: sr.score, reverse=True)[:top_k]
+    vector_ranking = sorted(seen.values(), key=lambda sr: sr.score, reverse=True)
+
+    fused = await _fuse_lexical_lane(
+        backend,
+        persona_id,
+        vector_ranking=vector_ranking,
+        query_text=query_text,
+        top_k=top_k,
+        lexical_floor=lexical_floor,
+        rrf_k=rrf_k,
+    )
+    if fused is not None:
+        return fused
+    return vector_ranking[:top_k]
+
+
+async def _fuse_lexical_lane(
+    backend: MemoryBackend,
+    persona_id: UUID,
+    vector_ranking: list[SearchResult],
+    query_text: str | None,
+    top_k: int,
+    lexical_floor: float,
+    rrf_k: int,
+) -> list[SearchResult] | None:
+    """RRF-fuse the lexical lane into the vector ranking.
+
+    Returns ``None`` when the lexical lane is absent (no query text, backend
+    without the capability, or backend declaring FTS unsupported) so the
+    caller falls back to the pure vector ranking — the pre-W2 behavior.
+    """
+    if not query_text or not query_text.strip():
+        return None
+    if not isinstance(backend, LexicalSearchBackend):
+        return None
+    try:
+        lexical_results = await backend.search_lexical(
+            persona_id, query_text, top_k=top_k
+        )
+    except LexicalSearchUnsupported:
+        return None
+
+    lexical_ranking = sorted(lexical_results, key=lambda sr: sr.score, reverse=True)
+    fused = rrf_fuse(
+        [
+            [sr.node.id for sr in vector_ranking],
+            [sr.node.id for sr in lexical_ranking],
+        ],
+        k=rrf_k,
+    )
+    lexical_nodes = {sr.node.id: sr.node for sr in lexical_results}
+    vector_by_id = {sr.node.id: sr for sr in vector_ranking}
+    fused_results: list[SearchResult] = []
+    for doc_id, _rrf_score in fused[:top_k]:
+        if doc_id in vector_by_id:
+            fused_results.append(vector_by_id[doc_id])
+        else:
+            fused_results.append(
+                SearchResult(node=lexical_nodes[doc_id], score=lexical_floor)
+            )
+    return fused_results
 
 
 def get_recently_activated(
@@ -186,6 +270,7 @@ async def retrieve(
     conversation_history: Sequence[ConversationTurn] | None = None,
     disclosure_tier: DisclosureScope = DisclosureScope.FAMILY,
     config: RetrievalConfig | None = None,
+    query_text: str | None = None,
 ) -> list[ActivatedMemory]:
     if config is None:
         config = RetrievalConfig()
@@ -199,6 +284,9 @@ async def retrieve(
         query_embedding_sensory,
         query_embedding_affect,
         top_k=config.seed_top_k,
+        query_text=query_text,
+        lexical_floor=config.activation_threshold,
+        rrf_k=config.rrf_k,
     )
 
     activation_map: dict[UUID, float] = {}

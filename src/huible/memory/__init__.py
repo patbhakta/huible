@@ -1,8 +1,11 @@
+from huible.memory.fusion import rrf_fuse
 from huible.memory.protocol import (
     ContentType,
     DisclosureScope,
     EdgeType,
     IngestionResult,
+    LexicalSearchBackend,
+    LexicalSearchUnsupported,
     MemoryBackend,
     MemoryEdge,
     MemoryNode,
@@ -34,6 +37,8 @@ __all__ = [
     "DisclosureScope",
     "EdgeType",
     "IngestionResult",
+    "LexicalSearchBackend",
+    "LexicalSearchUnsupported",
     "MemoryBackend",
     "MemoryEdge",
     "MemoryNode",
@@ -51,5 +56,6 @@ __all__ = [
     "get_recently_activated",
     "multi_vector_search",
     "retrieve",
+    "rrf_fuse",
     "spread_activation",
 ]

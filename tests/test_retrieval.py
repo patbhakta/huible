@@ -585,3 +585,185 @@ class TestConfigDefaults:
         assert config.decay_factor == 0.6
         assert config.suppression_window == 10
         assert config.max_spread_depth == 3
+        assert config.rrf_k == 60
+
+
+class HybridFakeMemoryBackend(FakeMemoryBackend):
+    """Fake backend with a scriptable lexical lane (HU-2309 W2)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._lexical_index: list[MemoryNode] = []
+        self.lexical_raises: Exception | None = None
+        self.lexical_queries: list[str] = []
+
+    def index_lexical(self, nodes: list[MemoryNode]) -> None:
+        self._lexical_index = list(nodes)
+
+    async def search_lexical(
+        self,
+        persona_id: Any,
+        query: str,
+        top_k: int = 20,
+        disclosure_scope: DisclosureScope | None = None,
+    ) -> list[SearchResult]:
+        self.lexical_queries.append(query)
+        if self.lexical_raises is not None:
+            raise self.lexical_raises
+        return [SearchResult(node=n, score=1.0) for n in self._lexical_index[:top_k]]
+
+
+class TestHybridSeedSearch:
+    """W2: lexical lane RRF-fused with the vector seed lanes."""
+
+    async def test_lexical_only_match_rescues_exact_topic(self) -> None:
+        # Vector lane: two conceptual matches. Lexical lane: the surname /
+        # proper-noun memory the embedding lane missed entirely.
+        vec_a, vec_b = make_node("janice explains boss"), make_node("coffee order")
+        surname = make_node("My full name is Chandler Muriel Bing.")
+        backend = HybridFakeMemoryBackend()
+        backend.add_memory(vec_a)
+        backend.add_memory(vec_b)
+        backend.add_memory(surname)
+        backend.index_content([0.0] * 10, [vec_a, vec_b])
+        backend.index_lexical([surname])
+
+        results = await multi_vector_search(
+            backend,
+            PERSONA_ID,
+            [0.0] * 10,
+            top_k=3,
+            query_text="What is your last name?",
+            lexical_floor=0.3,
+        )
+
+        by_id = {r.node.id: r for r in results}
+        assert surname.id in by_id
+        # Lexical-only seed enters at the floor, below real vector matches.
+        assert by_id[surname.id].score == 0.3
+        assert by_id[vec_a.id].score == 0.9
+        assert backend.lexical_queries == ["What is your last name?"]
+
+    async def test_overlap_doc_outranks_single_lane_docs(self) -> None:
+        a, b, c = make_node("a"), make_node("b"), make_node("c")
+        backend = HybridFakeMemoryBackend()
+        for n in (a, b, c):
+            backend.add_memory(n)
+        backend.index_content([0.0] * 10, [a, b])
+        backend.index_lexical([b, c])
+
+        results = await multi_vector_search(
+            backend,
+            PERSONA_ID,
+            [0.0] * 10,
+            top_k=5,
+            query_text="b",
+            lexical_floor=0.3,
+        )
+
+        # b is in both lanes -> top; a and c tie at 1/61, a first-seen wins.
+        assert [r.node.id for r in results] == [b.id, a.id, c.id]
+        # Vector scores are never rewritten by the fusion.
+        assert results[0].score == 0.9
+        assert results[1].score == 0.9
+        assert results[2].score == 0.3
+
+    async def test_no_query_text_keeps_pure_vector_behavior(self) -> None:
+        a, b = make_node("a"), make_node("b")
+        backend = HybridFakeMemoryBackend()
+        backend.index_content([0.0] * 10, [a, b])
+        backend.index_lexical([b])
+
+        results = await multi_vector_search(
+            backend, PERSONA_ID, [0.0] * 10, top_k=5
+        )
+
+        assert [r.node.id for r in results] == [a.id, b.id]
+        assert backend.lexical_queries == []
+
+    async def test_whitespace_query_text_keeps_pure_vector_behavior(self) -> None:
+        a = make_node("a")
+        backend = HybridFakeMemoryBackend()
+        backend.index_content([0.0] * 10, [a])
+
+        results = await multi_vector_search(
+            backend, PERSONA_ID, [0.0] * 10, top_k=5, query_text="   "
+        )
+        assert [r.node.id for r in results] == [a.id]
+        assert backend.lexical_queries == []
+
+    async def test_backend_without_lexical_capability_degrades(self) -> None:
+        a, b = make_node("a"), make_node("b")
+        backend = FakeMemoryBackend()  # no search_lexical method at all
+        backend.index_content([0.0] * 10, [a, b])
+
+        results = await multi_vector_search(
+            backend, PERSONA_ID, [0.0] * 10, top_k=5, query_text="anything"
+        )
+        assert [r.node.id for r in results] == [a.id, b.id]
+
+    async def test_unsupported_lexical_backend_degrades(self) -> None:
+        from huible.memory.protocol import LexicalSearchUnsupported
+
+        a, b = make_node("a"), make_node("b")
+        backend = HybridFakeMemoryBackend()
+        backend.lexical_raises = LexicalSearchUnsupported("sqlite has no fts")
+        backend.index_content([0.0] * 10, [a, b])
+
+        results = await multi_vector_search(
+            backend, PERSONA_ID, [0.0] * 10, top_k=5, query_text="anything"
+        )
+        assert [r.node.id for r in results] == [a.id, b.id]
+
+    async def test_top_k_truncates_fused_set(self) -> None:
+        vec_nodes = [make_node(f"v-{i}") for i in range(5)]
+        lexical_node = make_node("lexical only")
+        backend = HybridFakeMemoryBackend()
+        backend.index_content([0.0] * 10, vec_nodes)
+        backend.index_lexical([lexical_node])
+
+        results = await multi_vector_search(
+            backend, PERSONA_ID, [0.0] * 10, top_k=3, query_text="q"
+        )
+        assert len(results) == 3
+
+    async def test_retrieve_includes_lexical_only_seed_end_to_end(self) -> None:
+        surname = make_node("My full name is Chandler Muriel Bing.")
+        other = make_node("unrelated")
+        backend = HybridFakeMemoryBackend()
+        backend.add_memory(surname)
+        backend.add_memory(other)
+        backend.index_content([0.0] * 10, [other])
+        backend.index_lexical([surname])
+
+        results = await retrieve(
+            backend,
+            PERSONA_ID,
+            [0.0] * 10,
+            query_text="What is your last name?",
+        )
+
+        ids = {r.node.id for r in results}
+        assert surname.id in ids
+        # Floor == activation_threshold == the final inclusion gate.
+        activation_by_id = {r.node.id: r.activation for r in results}
+        assert activation_by_id[surname.id] == pytest.approx(0.3)
+
+    async def test_retrieve_disclosure_filter_still_applies_to_lexical_seeds(
+        self,
+    ) -> None:
+        secret = make_node(
+            "My full name is Chandler Muriel Bing.",
+            disclosure=DisclosureScope.PRIVATE,
+        )
+        backend = HybridFakeMemoryBackend()
+        backend.add_memory(secret)
+        backend.index_lexical([secret])
+
+        results = await retrieve(
+            backend,
+            PERSONA_ID,
+            [0.0] * 10,
+            query_text="What is your last name?",
+        )
+        assert results == []

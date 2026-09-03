@@ -249,3 +249,68 @@ class TestVectorSearchDimensionGuard:
             await configured_backend.search_by_content(
                 _make_node().persona_id, [0.5] * 384, top_k=5
             )
+
+
+class TestLexicalSearchDialectGuard:
+    """HU-2309 W2: FTS lane is Postgres-only; SQLite must refuse loudly.
+
+    Retrieval catches :class:`LexicalSearchUnsupported` and degrades to the
+    vector-only seed (pre-W2 behavior) — same posture as the W1 dim guard.
+    """
+
+    async def test_sqlite_dialect_raises_unsupported(self, configured_backend):
+        from huible.memory.protocol import LexicalSearchUnsupported
+
+        with pytest.raises(LexicalSearchUnsupported, match="postgresql"):
+            await configured_backend.search_lexical(
+                _make_node().persona_id, "what is your last name?", top_k=5
+            )
+
+    async def test_protocol_probe_recognizes_capability(self):
+        from huible.memory.protocol import LexicalSearchBackend
+
+        assert isinstance(PostgresMemoryBackend, type)
+        # Instance-level structural check: the Postgres backend implements
+        # the optional capability protocol.
+        assert LexicalSearchBackend.__protocol_attrs__ <= set(
+            dir(PostgresMemoryBackend)
+        )
+
+
+class TestWebsearchOrQuery:
+    """BEAM v4 Arm C sanitizer pattern: OR-join surviving terms, else ''."""
+
+    def test_natural_language_or_joins_terms(self):
+        from huible.memory.store import websearch_or_query
+
+        q = websearch_or_query("What is your last name?")
+        assert q == "what OR your OR last name".replace("last name", "last OR name")
+
+    def test_dedupes_and_lowercases(self):
+        from huible.memory.store import websearch_or_query
+
+        assert websearch_or_query("Bing bing BING!") == "bing"
+
+    def test_drops_short_tokens_and_syntax_chars(self):
+        from huible.memory.store import websearch_or_query
+
+        # 'a'/'to' too short; '-' would be websearch negation — must not survive
+        assert websearch_or_query("a to -exclude") == "exclude"
+
+    def test_numbers_survive(self):
+        from huible.memory.store import websearch_or_query
+
+        assert websearch_or_query("in 1993 we, moved") == "1993 OR moved"
+
+    def test_empty_when_nothing_survives(self):
+        from huible.memory.store import websearch_or_query
+
+        assert websearch_or_query("") == ""
+        assert websearch_or_query("!!! ??? ...") == ""
+        assert websearch_or_query("no") == ""
+
+    def test_max_terms_cap(self):
+        from huible.memory.store import websearch_or_query
+
+        q = websearch_or_query(" ".join(f"term{i}" for i in range(60)), max_terms=5)
+        assert len(q.split(" OR ")) == 5

@@ -123,6 +123,16 @@ class SearchResult:
     score: float
 
 
+class LexicalSearchUnsupported(RuntimeError):
+    """Raised by backends whose storage engine has no FTS capability.
+
+    HU-2309 W2: the lexical lane is optional — retrieval must degrade to the
+    vector-only lane (the pre-W2 behavior) when a backend cannot serve
+    ``search_lexical`` (e.g. the SQLite test engine has no ``tsvector``).
+    Callers catch this specific type, never a bare ``Exception``.
+    """
+
+
 @dataclass(slots=True)
 class IngestionResult:
     accepted: bool = False
@@ -187,3 +197,22 @@ class MemoryBackend(Protocol):
     ) -> UUID: ...
 
     async def get_all_versions(self, memory_id: UUID) -> list[MemoryNode]: ...
+
+
+@runtime_checkable
+class LexicalSearchBackend(Protocol):
+    """Optional capability protocol: a backend that can serve FTS queries.
+
+    HU-2309 W2. Kept separate from :class:`MemoryBackend` so every existing
+    ``MemoryBackend`` implementation (and every test fake) stays valid — the
+    hybrid seed search probes this protocol and simply skips the lexical lane
+    when a backend does not provide it.
+    """
+
+    async def search_lexical(
+        self,
+        persona_id: UUID,
+        query: str,
+        top_k: int = 20,
+        disclosure_scope: DisclosureScope | None = None,
+    ) -> list[SearchResult]: ...

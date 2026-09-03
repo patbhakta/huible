@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from uuid import UUID
 
 from sqlalchemy import func, literal_column, select, text, update
@@ -14,6 +15,7 @@ from huible.memory.models import (
 from huible.memory.protocol import (
     ContentType,
     DisclosureScope,
+    LexicalSearchUnsupported,
     MemoryBackend,
     MemoryEdge,
     MemoryNode,
@@ -24,6 +26,47 @@ from huible.memory.protocol import (
 )
 
 logger = logging.getLogger(__name__)
+
+#: HU-2309 W2: the FTS expression indexed over persona memories — narrative
+#: content plus the provenance reference (``source_ref`` JSONB rendered to
+#: text, so proper nouns recorded only in provenance — speakers, scenes — are
+#: findable). The 2-arg ``to_tsvector`` (explicit regconfig) is IMMUTABLE in
+#: Postgres, which is what allows this exact expression to carry the GIN
+#: index created by migration 008_w2_lexical_fts. The lexical query in
+#: :meth:`PostgresMemoryBackend.search_lexical` must render this expression
+#: byte-identically for the planner to use that index.
+_FTS_TSV_EXPRESSION = (
+    "to_tsvector('english', coalesce({table}.content, '') || ' ' "
+    "|| coalesce({table}.source_ref::text, ''))"
+)
+
+#: Term extractor for :func:`websearch_or_query` — mirrors the BEAM v4 Arm C
+#: FTS sanitizer (``beam/v4_arms.py:_fts_sanitize``): alnum terms of >= 3
+#: chars (or multi-digit numbers), lowercased. Only safe websearch-syntax
+#: characters survive, so terms are emitted bare and Postgres stems them.
+_WEBSEARCH_TERM_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]{2,}|\d[\d,.]{2,}")
+
+
+def websearch_or_query(text: str, max_terms: int = 40) -> str:
+    """Build a ``websearch_to_tsquery`` OR query from raw user text.
+
+    Natural-language turns under ``websearch_to_tsquery``'s default AND
+    semantics zero out ("what is your last name?" — 'last' appears in few
+    memories). The BEAM v4 Arm C pattern (isolated lexical gain, Pat's idea)
+    ORs the sanitized terms and lets the ranker (``ts_rank`` here, BM25
+    there) surface documents matching more terms. Returns ``""`` when no
+    term survives, which callers treat as "no lexical signal".
+    """
+    seen: set[str] = set()
+    terms: list[str] = []
+    for raw in _WEBSEARCH_TERM_RE.findall(text.lower()):
+        term = raw.replace(",", "").rstrip(".")
+        if term and term not in seen:
+            seen.add(term)
+            terms.append(term)
+        if len(terms) >= max_terms:
+            break
+    return " OR ".join(terms)
 
 
 class PostgresMemoryBackend(MemoryBackend):
@@ -242,6 +285,72 @@ class PostgresMemoryBackend(MemoryBackend):
             .where(MemoryRow.is_active.is_(True))
             .where(col.isnot(None))
             .order_by(text("similarity DESC"))
+            .limit(top_k)
+        )
+        if disclosure_scope is not None:
+            scope_value = (
+                disclosure_scope.value
+                if hasattr(disclosure_scope, "value")
+                else str(disclosure_scope)
+            )
+            stmt = stmt.where(MemoryRow.disclosure_scope == scope_value)
+
+        async with self._session() as session:
+            result = await session.execute(stmt)
+            rows_with_scores = result.all()
+            return [
+                SearchResult(node=self._row_to_node(row), score=score)
+                for row, score in rows_with_scores
+            ]
+
+    async def search_lexical(
+        self,
+        persona_id: UUID,
+        query: str,
+        top_k: int = 20,
+        disclosure_scope: DisclosureScope | None = None,
+    ) -> list[SearchResult]:
+        """BM25-style lexical lane over persona memories (HU-2309 W2).
+
+        Postgres full-text search: the raw user turn is sanitized into an
+        OR-joined tsquery (``websearch_or_query`` — BEAM v4 Arm C pattern,
+        so natural-language turns don't zero out on AND semantics), matched
+        against the indexed :data:`_FTS_TSV_EXPRESSION` tsvector (content +
+        provenance), ranked with ``ts_rank``. Catches exact-topic matches
+        the embedding lane misses — proper nouns, surnames — the
+        surname-intro micro-tell class.
+
+        Raises:
+            LexicalSearchUnsupported: On engines without FTS (e.g. the SQLite
+                test engine). Retrieval treats this as "lane absent" and
+                degrades to the vector-only seed, mirroring the W1 dim-guard
+                degrade posture.
+        """
+        dialect = self._engine.dialect.name
+        if dialect != "postgresql":
+            raise LexicalSearchUnsupported(
+                f"lexical search requires postgresql, engine dialect is {dialect!r}"
+            )
+
+        # OR-semantics query construction (BEAM v4 Arm C pattern); empty when
+        # no term survives the sanitizer -> no lexical signal, empty lane.
+        or_query = websearch_or_query(query)
+        if not or_query:
+            return []
+
+        tsv_expr = literal_column(
+            "(" + _FTS_TSV_EXPRESSION.format(table=MemoryRow.__tablename__) + ")"
+        )
+        # ``or_query`` rides as a bound parameter; 'english' is a fixed
+        # regconfig constant inside the expression. No injection surface.
+        tsquery = func.websearch_to_tsquery("english", or_query)
+        rank = func.ts_rank(tsv_expr, tsquery).label("rank")
+        stmt = (
+            select(MemoryRow, rank)
+            .where(MemoryRow.persona_id == persona_id)
+            .where(MemoryRow.is_active.is_(True))
+            .where(tsv_expr.op("@@")(tsquery))
+            .order_by(text("rank DESC"))
             .limit(top_k)
         )
         if disclosure_scope is not None:

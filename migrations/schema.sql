@@ -74,6 +74,14 @@ CREATE INDEX idx_memories_affect_emb ON memories
 CREATE INDEX idx_memories_active ON memories (persona_id, is_active)
     WHERE is_active = TRUE;
 
+-- Full-text search index (W2 hybrid lexical lane — HU-2309 v1.8 M-0R-A):
+-- content + provenance tsvector, matched with websearch_to_tsquery, ranked
+-- with ts_rank. Expression must stay byte-identical to
+-- huible.memory.store._FTS_TSV_EXPRESSION / migration 008_w2_lexical_fts.
+CREATE INDEX idx_memories_fts_content ON memories
+    USING gin ((to_tsvector('english', coalesce(memories.content, '') || ' '
+        || coalesce(memories.source_ref::text, ''))));
+
 CREATE TABLE memory_edges (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     source_id   UUID NOT NULL REFERENCES memories(id),

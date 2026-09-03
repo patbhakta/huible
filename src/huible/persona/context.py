@@ -565,6 +565,11 @@ class ContextBuilder:
         ``user_affect`` (G3 dynamic half) is threaded into :meth:`filter_and_render`
         so the shared crisis/distress signal (HU-1407 §7.1 G3 — one classifier,
         two consumers) branches the persona voice for a distress turn.
+
+        ``current_message`` doubles as the W2 hybrid lexical query: retrieval
+        RRF-fuses a Postgres FTS lane (exact-topic / proper-noun matches) with
+        the vector lanes; backends without FTS degrade to the vector-only
+        seed unchanged.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         activated = await retrieve(
@@ -576,6 +581,7 @@ class ContextBuilder:
             conversation_history=retrieval_history,
             disclosure_tier=requester_tier.disclosure_scope,
             config=config,
+            query_text=current_message or None,
         )
         return self.filter_and_render(
             activated,
