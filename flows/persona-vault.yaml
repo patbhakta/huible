@@ -1,0 +1,174 @@
+id: persona-vault
+namespace: huible
+description: |
+  Official V0–V5 Persona Vault lifecycle pipeline (Kestra-orchestrated).
+
+  Semantics: Librarian vault doc v1.8 (HU-2446) —
+  /root/repos/brain/HUible/architecture/persona-vaults.md §3, per the accepted
+  HU-2309 v1.8 plan (HU-2447).
+
+  Stage mapping onto committed entry points (no invented scripts):
+    V0 Collect      modules/onboarding/extract.py      raw dialog intake
+    V1 Ingest Atoms modules/onboarding/clean.py        immutable typed units
+                                                       (dedupe/normalize, provenance kept)
+    V2 Curate       scripts/vault_abuse_exclusion.py   B3 abuse-log exclusion FIRST
+                    modules/onboarding/stats.py        style stats on SURVIVING corpus
+    V3 Vaultify     huible.distillation.cli            L0–L3 memory pyramid (TencentDB)
+                    modules/onboarding/structure.py    flat OKF persona docs
+                    modules/onboarding/validate.py     OKF conformance GATE (exit 1 on fail)
+    V4 Sync         scripts/verify_tencentdb_memory.py independent L0/L1/L2/L3
+                                                       queryability gate via gateway
+    V5 Prove        scripts/ca_crisis_5probe.py        --list wiring check; live --full
+                                                       battery only when run_live_probe=true
+                                                       AND persona_uuid supplied
+
+  B3 doctrine: exclusion is replace-only-on-concrete-fire (word-boundary lexicon,
+  no LLM); banter/sarcasm survive; excluded records + reasons go to an audit
+  JSONL; raw intake stays immutable downstream of 01-raw. Lexicon extension is
+  Librarian governance (--patterns-file), not a runtime knob.
+
+inputs:
+- id: persona_name
+  type: STRING
+  description: Persona name (vault dir under /root/repos/personas)
+  required: true
+- id: input_dir
+  type: STRING
+  description: Directory containing raw data (01-raw intake)
+  required: true
+- id: use_llm
+  type: BOOLEAN
+  description: Enable LLM stages (distill/structure LLM hooks). false = deterministic smoke path, zero API spend
+  required: true
+  defaults: false
+- id: persona_uuid
+  type: STRING
+  description: Persona UUID — required only for the V5 live crisis battery
+  required: false
+- id: run_live_probe
+  type: BOOLEAN
+  description: Run the V5 live 5-probe crisis battery (--full, creates synthetic tickets). Default false
+  required: true
+  defaults: false
+
+variables:
+  work_dir: /root/repos/huible
+  vault_root: /root/repos/personas
+  venv_python: /root/repos/huible/.venv/bin/python
+  stage_dir: /tmp/persona-vault/{{ inputs.persona_name }}
+
+tasks:
+- id: v0-collect
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V0 Collect: intake of raw multi-format dialog data"
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/extract.py --input-dir \"{{ inputs.input_dir }}\" --persona \"{{ inputs.persona_name }}\" --output \"{{ vars.stage_dir }}/extracted.jsonl\""
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+
+- id: v1-ingest-atoms
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V1 Ingest Atoms: immutable typed units with strict provenance"
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/clean.py --input \"{{ vars.stage_dir }}/extracted.jsonl\" --output \"{{ vars.stage_dir }}/atoms.jsonl\""
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+
+- id: v2-abuse-exclusion
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V2 Curate (B3): abuse-log exclusion — replace-only-on-concrete-fire, audit sidecar"
+  commands:
+  - "python3 /root/repos/huible/scripts/vault_abuse_exclusion.py --input \"{{ vars.stage_dir }}/atoms.jsonl\" --output \"{{ vars.stage_dir }}/curated.jsonl\" --audit \"{{ vars.stage_dir }}/abuse-exclusions.jsonl\" --report \"{{ vars.stage_dir }}/abuse-exclusion-report.json\""
+
+- id: v2-style-stats
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V2 Curate: deterministic style statistics on the SURVIVING corpus"
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/stats.py --input \"{{ vars.stage_dir }}/curated.jsonl\" --output \"{{ vars.stage_dir }}/stats.json\""
+
+- id: v3-distill
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V3 Vaultify: TencentDB L0–L3 distillation with citations (grounding anchor)"
+  commands:
+  - "ARGS=\"--input {{ vars.stage_dir }}/curated.jsonl --stats {{ vars.stage_dir }}/stats.json --persona {{ inputs.persona_name }} --out-dir {{ vars.stage_dir }}/memory --strict\"; [ \"{{ inputs.use_llm }}\" = \"true\" ] && ARGS=\"$ARGS --llm\"; cd /root/repos/huible && PYTHONPATH=/root/repos/huible/src {{ vars.venv_python }} -m huible.distillation.cli $ARGS"
+  retry:
+    type: constant
+    interval: PT10S
+    maxAttempt: 3
+
+- id: v3-structure
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V3 Vaultify: structure curated corpus + memory into flat OKF markdown persona docs"
+  commands:
+  - "ARGS=\"--memory-dir {{ vars.stage_dir }}/memory --input {{ vars.stage_dir }}/curated.jsonl --output-dir {{ vars.vault_root }}/{{ inputs.persona_name }} --persona-name {{ inputs.persona_name }}\"; [ \"{{ inputs.use_llm }}\" != \"true\" ] && ARGS=\"$ARGS --no-llm\"; {{ vars.venv_python }} /root/repos/huible/modules/onboarding/structure.py $ARGS"
+  retry:
+    type: constant
+    interval: PT30S
+    maxAttempt: 3
+
+- id: v3-validate
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V3 Vaultify GATE: OKF frontmatter + body conformance (fails the flow on nonconformance)"
+  commands:
+  - "python3 /root/repos/huible/modules/onboarding/validate.py --dir \"{{ vars.vault_root }}/{{ inputs.persona_name }}\" --output \"{{ vars.stage_dir }}/report.json\""
+
+- id: v4-sync-verify
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V4 Sync GATE: independent L0/L1/L2/L3 TencentDB memory queryability (isolation headers)"
+  commands:
+  - "{{ vars.venv_python }} /root/repos/huible/scripts/verify_tencentdb_memory.py"
+
+- id: v5-probe-wiring
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V5 Prove: crisis-battery wiring check (offline --list)"
+  commands:
+  - "python3 /root/repos/huible/scripts/ca_crisis_5probe.py --list"
+
+- id: v5-probe-live
+  type: io.kestra.plugin.scripts.python.Commands
+  pythonVersion: '3.11'
+  taskRunner:
+    type: io.kestra.plugin.core.runner.Process
+  description: "V5 Prove: LIVE 5-probe crisis battery (only when run_live_probe=true and persona_uuid set)"
+  commands:
+  - "if [ \"{{ inputs.run_live_probe }}\" = \"true\" ] && [ -n \"{{ inputs.persona_uuid }}\" ]; then python3 /root/repos/huible/scripts/ca_crisis_5probe.py --full --persona \"{{ inputs.persona_uuid }}\"; else echo \"v5-probe-live: skipped (run_live_probe=false or persona_uuid empty) — offline wiring check only\"; fi"
+
+- id: summary
+  type: io.kestra.plugin.core.log.Log
+  message: "Persona Vault pipeline complete for {{ inputs.persona_name }}\n\nCurated corpus: {{ vars.stage_dir }}/curated.jsonl\nB3 audit: {{ vars.stage_dir }}/abuse-exclusions.jsonl\nStyle stats: {{ vars.stage_dir }}/stats.json\nMemory pyramid: {{ vars.stage_dir }}/memory\nPersona docs: {{ vars.vault_root }}/{{ inputs.persona_name }}/\nOKF report: {{ vars.stage_dir }}/report.json\n"
+
+errors:
+- id: on-error
+  type: io.kestra.plugin.core.log.Log
+  message: "Persona Vault pipeline FAILED for {{ inputs.persona_name }}"
