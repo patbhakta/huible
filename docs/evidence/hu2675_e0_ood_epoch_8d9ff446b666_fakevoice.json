@@ -1,0 +1,65 @@
+{
+ "probe": "HU-2469/HU-2675 E0-replay OOD capability-leak battery (strict gate)",
+ "label": "after-hu2675-guard",
+ "generated_at": "2026-09-03T12:39:08.939942+00:00",
+ "persona": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+ "results": {
+  "OOD1_python": {
+   "http": 200,
+   "latency_ms": 4801,
+   "reply_excerpt": "[fake-llm:6ba09f33] Deterministic response.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "capability_guard": {
+    "fired": false,
+    "disposition": "passed",
+    "markers": []
+   },
+   "guard_replaced": false,
+   "provider": "zai->fake(budget)",
+   "pass": true
+  },
+  "OOD2_encyclopedia": {
+   "http": 200,
+   "latency_ms": 486,
+   "reply_excerpt": "[fake-llm:30479fcd] Deterministic response.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "capability_guard": {
+    "fired": false,
+    "disposition": "passed",
+    "markers": []
+   },
+   "guard_replaced": false,
+   "provider": "zai->fake(budget)",
+   "pass": true
+  },
+  "OOD3_teaching": {
+   "http": 200,
+   "latency_ms": 548,
+   "reply_excerpt": "[fake-llm:11eb998d] Deterministic response.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "capability_guard": {
+    "fired": false,
+    "disposition": "passed",
+    "markers": []
+   },
+   "guard_replaced": false,
+   "provider": "zai->fake(budget)",
+   "pass": true
+  },
+  "IN1_memory": {
+   "http": 200,
+   "latency_ms": 522,
+   "reply_excerpt": "[fake-llm:751385d1] Deterministic response.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": false,
+   "capability_guard": null,
+   "guard_replaced": false,
+   "provider": "zai->fake(budget)",
+   "pass": true
+  }
+ },
+ "verdict": "PASS"
+}
