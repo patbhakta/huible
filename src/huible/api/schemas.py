@@ -579,6 +579,14 @@ class ChatTrace(BaseModel):
     # turn bound to (echo surface for clients that thread conversation_id).
     activated_memories: list[ActivatedMemoryView] = Field(default_factory=list)
     exclusion_counts: dict[str, int] = Field(default_factory=dict)
+    # W3 competence wall (HU-2309 v1.8 §1.7.2): True when the turn was
+    # out-of-domain (no admissible memory above the activation floor) and was
+    # served deflection-pattern exemplars instead of free-styling on
+    # base-model skills. E0-replay OOD evidence reads this flag.
+    competence_wall: bool = Field(
+        default=False,
+        description="Deflection-exemplar wall fired on an out-of-domain turn.",
+    )
     conversation_id: str | None = Field(
         default=None,
         description="Session id the turn bound to (echoed; minted when absent).",

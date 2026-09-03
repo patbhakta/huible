@@ -21,7 +21,18 @@ the memory-integrity hard rules before any memory reaches the generator:
 
 4. **Deterministic rendering.** Memory blocks (``[TYPE] content``), a
    conversation-history window (last 10 turns), and the system-prompt skeleton
-   (persona name, voice instructions, era boundary).
+   (persona name, era boundary).
+
+5. **Description-free persona (W3, HU-2309 v1.8 §1.7.2).** The
+   ``voice_instructions`` adjective sheet (RC-1: hand-written character
+   sheet) is *never* rendered — persona voice is carried by retrieved real
+   exemplar lines from the vault. On an out-of-domain turn (nothing above the
+   activation floor survives the hard gates) the competence wall retrieves the
+   persona's own deflection-pattern exemplars instead, so base-model
+   generalist skills (the E0 "code fluency" tell) cannot leak into the reply.
+   Measured stats (corpus length register, §7 essence profile) stay in the
+   measurement/eval layer and condition retrieval/budgets — they are never
+   rendered as adjective sheets.
 
 Design constraints:
 - Async throughout.
@@ -31,6 +42,8 @@ Design constraints:
 
 from __future__ import annotations
 
+import re
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date
@@ -47,6 +60,7 @@ from huible.memory.retrieval import (
     DISCLOSURE_ORDER,
     ActivatedMemory,
     RetrievalConfig,
+    multi_vector_search,
     retrieve,
 )
 from huible.memory.retrieval import (
@@ -62,6 +76,7 @@ from huible.safety.framing import get_distress_addendum, get_framing
 
 __all__ = [
     "CONFIDENCE_LEVEL_METADATA_KEY",
+    "DEFLECTION_PROBE_TEXT",
     "TEXTING_CONCISION_DIRECTIVE",
     "ConfidenceLevel",
     "ContextBuilder",
@@ -112,6 +127,34 @@ PROMPT_ALLOWED_CONFIDENCE_LEVELS = frozenset({ConfidenceLevel.HIGH, ConfidenceLe
 # ``confidence`` but no categorical ``confidence_level`` tag.
 _NUMERIC_HIGH_THRESHOLD = 0.75  # machine_verified or better
 _NUMERIC_MEDIUM_THRESHOLD = 0.50  # agent_inferred or better
+
+
+# --- W3 competence wall (HU-2309 v1.8 §1.7.2) --------------------------------
+
+#: Retrieval key for the deflection-pattern exemplar lane. When a turn is
+#: out-of-domain (no admissible memory above the activation floor), the
+#: persona's own corpus lines nearest to this semantics are retrieved and
+#: rendered as voice exemplars — the reply imitates the deflection pattern of
+#: real vault lines instead of leaking base-model generalist skills (the E0
+#: "code fluency" / encyclopedia tells). This text is a *retrieval probe* only:
+#: it is embedded and searched against the vault, never rendered into a prompt.
+DEFLECTION_PROBE_TEXT = (
+    "deflecting a question instead of answering it: joking it off, changing "
+    "the subject, admitting I have no idea, dodging anything technical or "
+    "outside my own life"
+)
+
+#: Corpus-atom relation prefix (e.g. ``general — is: ``) attached by the
+#: distillation pipeline. Stripped from exemplar renderings so the generator
+#: imitates the raw line, not the pipeline label. Anchored at string start and
+#: requires the `` — <predicate>: `` shape, so genuine dialogue containing an
+#: em-dash is untouched unless it matches the full atom form.
+_ATOM_PREFIX_PATTERN = re.compile(r"^\S+\s+—\s+\S+:\s+")
+
+
+def _exemplar_line(node: MemoryNode) -> str:
+    """Render one exemplar's raw line (atom relation prefix stripped)."""
+    return _ATOM_PREFIX_PATTERN.sub("", node.content, count=1)
 
 
 def _confidence_from_numeric(value: Any) -> ConfidenceLevel | None:
@@ -224,6 +267,11 @@ class PersonaConfig:
 
     id: Any
     name: str
+    #: Hand-written voice sheet (RC-1). W3 (description-free prompt): never
+    #: rendered into the prompt — kept only because the safety layers
+    #: (alignment corpus HU-2070, §7.4.2 judge prompt) still consume it as
+    #: measurement input. The prompt carries the persona via retrieved
+    #: exemplar lines instead.
     voice_instructions: str = ""
     era_knowledge_boundary: str = "2020-01-01"
     age_at_death: int | None = None
@@ -287,9 +335,19 @@ class PromptContext:
     activation_scores: dict[UUID, float] = field(default_factory=dict)
     exclusion_counts: dict[str, int] = field(default_factory=dict)
     excluded_memory_refs: list[ExcludedMemoryRef] = field(default_factory=list)
+    # W3 competence wall: the persona's own deflection-pattern exemplars,
+    # retrieved only when the turn is out-of-domain (no admissible memory).
+    # Evidence + prompt surface are kept separate: these nodes are rendered
+    # in the VOICE EXEMPLARS section, never as activated memories.
+    deflection_exemplars: list[MemoryNode] = field(default_factory=list)
     current_message: str = ""
     framing_version: int = 0
     distress_grounding: bool = False
+
+    @property
+    def competence_wall_fired(self) -> bool:
+        """True when the out-of-domain turn was served deflection exemplars."""
+        return bool(self.deflection_exemplars)
 
     def render(self) -> str:
         """Render the full flat prompt string for a generator.
@@ -301,6 +359,8 @@ class PromptContext:
         parts: list[str] = [f"SYSTEM: {self.system_prompt}"]
         parts.append("ACTIVATED MEMORIES:")
         parts.append(self.memory_blocks if self.memory_blocks else "(none)")
+        if self.deflection_exemplars:
+            parts.append(_render_exemplar_block(self.deflection_exemplars))
         parts.append("CONVERSATION HISTORY:")
         parts.append(self.conversation_history if self.conversation_history else "(none)")
         if self.current_message:
@@ -390,6 +450,26 @@ def _format_memory_block(node: MemoryNode) -> str:
     return f"[{node.content_type.value.upper()}] {node.content}"
 
 
+#: W3 competence-wall exemplar section header. Structural machinery (same
+#: category as the ``ACTIVATED MEMORIES:`` marker), not a voice sheet: it
+#: tells the generator these are *behavior* exemplars for an out-of-domain
+#: turn, not memories to recite. The persona's voice itself comes from the
+#: exemplar lines below it — real vault lines, never adjectives.
+_EXEMPLAR_SECTION_HEADER = (
+    "VOICE EXEMPLARS — this exchange has left what you actually know. "
+    "Reply only in the manner of these real lines of yours: deflect, joke, "
+    "or change the subject. Never explain, teach, or answer from outside "
+    "your own life."
+)
+
+
+def _render_exemplar_block(exemplars: Sequence[MemoryNode]) -> str:
+    """Render the W3 competence-wall exemplar section."""
+    lines = [_EXEMPLAR_SECTION_HEADER]
+    lines.extend(f"[EXEMPLAR] {_exemplar_line(node)}" for node in exemplars)
+    return "\n".join(lines)
+
+
 def _format_history(turns: Sequence[ConversationTurn], window: int) -> str:
     """Render the conversation-history window (last ``window`` turns)."""
     recent = list(turns[-window:]) if window > 0 else []
@@ -423,8 +503,10 @@ def _build_system_prompt(
     lines.append(f"You are embodying {persona.name}.")
     if persona.age_at_death is not None:
         lines.append(f"You lived to {persona.age_at_death} years old.")
-    if persona.voice_instructions:
-        lines.append(f"Voice & style: {persona.voice_instructions}")
+    # W3 (description-free prompt, HU-2309 v1.8 §1.7.2): the hand-written
+    # ``voice_instructions`` adjective sheet (RC-1) is deliberately NOT
+    # rendered. Persona voice is carried by the retrieved real exemplar lines
+    # below (memory blocks; deflection exemplars on out-of-domain turns).
     lines.append(
         "Era knowledge boundary: you must not know, remember, or reference "
         f"anything that happened after {boundary_label}."
@@ -487,8 +569,72 @@ class ContextBuilder:
     #: caller TTL-caches the result.
     GROUNDING_SCOPE_SCAN_LIMIT = 20_000
 
+    #: W3 competence wall: max deflection exemplars rendered on an
+    #: out-of-domain turn. Kept small — the section is a voice pattern,
+    #: not a context dump.
+    DEFLECTION_EXEMPLAR_LIMIT = 5
+
+    #: How many probe seeds to inspect before the hard gates thin the set to
+    #: :data:`DEFLECTION_EXEMPLAR_LIMIT` (excluded exemplars do not count).
+    DEFLECTION_EXEMPLAR_SEED_K = 20
+
+    #: TTL for the per-(backend, persona, tier) deflection-exemplar cache.
+    #: Exemplar lines change only through ingestion, never through chat —
+    #: same doctrine as the HU-2070 grounding-corpus cache.
+    DEFLECTION_EXEMPLAR_TTL_SECONDS = 900.0
+
     def __init__(self, retrieval_config: RetrievalConfig | None = None) -> None:
         self._default_retrieval_config = retrieval_config
+        # (backend id, persona id, disclosure scope) -> (monotonic, exemplars)
+        self._deflection_cache: dict[
+            tuple[int, str, DisclosureScope], tuple[float, list[MemoryNode]]
+        ] = {}
+
+    async def _deflection_exemplars(
+        self,
+        *,
+        backend: MemoryBackend,
+        persona: PersonaConfig,
+        requester_tier: RelationshipTier,
+        probe_embedding: list[float],
+        config: RetrievalConfig,
+    ) -> list[MemoryNode]:
+        """Return the persona's deflection-pattern exemplars (W3 competence wall).
+
+        One deterministic vector probe (:data:`DEFLECTION_PROBE_TEXT`) against
+        the persona's own corpus; seeds are thinned through the *same* hard
+        gates as the prompt firewall (confidence fail-closed, disclosure scope,
+        era boundary) and the retrieval activation floor, then capped at
+        :data:`DEFLECTION_EXEMPLAR_LIMIT`. Cached per (backend, persona, tier)
+        with :data:`DEFLECTION_EXEMPLAR_TTL_SECONDS` — the exemplar set is a
+        corpus property, not a turn property, so out-of-domain turns cost no
+        extra embedding traffic after the first.
+        """
+        scope = requester_tier.disclosure_scope
+        cache_key = (id(backend), str(persona.id), scope)
+        now = time.monotonic()
+        cached = self._deflection_cache.get(cache_key)
+        if cached is not None and now - cached[0] < self.DEFLECTION_EXEMPLAR_TTL_SECONDS:
+            return cached[1]
+
+        seeds = await multi_vector_search(
+            backend,
+            persona.id,
+            probe_embedding,
+            top_k=self.DEFLECTION_EXEMPLAR_SEED_K,
+        )
+        era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+        exemplars: list[MemoryNode] = []
+        for sr in seeds:  # similarity-descending seed order
+            if sr.score < config.activation_threshold:
+                break  # seeds are sorted; nothing further clears the floor
+            ok, _reason = _check_admissible(sr.node, scope, era_boundary)
+            if ok:
+                exemplars.append(sr.node)
+                if len(exemplars) >= self.DEFLECTION_EXEMPLAR_LIMIT:
+                    break
+        self._deflection_cache[cache_key] = (now, exemplars)
+        return exemplars
 
     def filter_and_render(
         self,
@@ -499,6 +645,7 @@ class ContextBuilder:
         current_message: str = "",
         *,
         user_affect: UserAffect = UserAffect.NEUTRAL,
+        deflection_exemplars: Sequence[MemoryNode] = (),
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
@@ -510,6 +657,10 @@ class ContextBuilder:
         grade appends the affect-grounding addendum that flattens the persona
         voice for that turn. The default (neutral) branch still enforces the
         static tonal bounds baked into the immutable framing block (G3-static).
+
+        ``deflection_exemplars`` (W3 competence wall) renders the VOICE
+        EXEMPLARS section for an out-of-domain turn. Callers fetch them via
+        :meth:`_deflection_exemplars`; an empty sequence renders nothing.
         """
         era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
         admissible, exclusion_counts, excluded_refs = _filter_activated(
@@ -536,6 +687,7 @@ class ContextBuilder:
             activation_scores={am.node.id: float(am.activation) for am in admissible},
             exclusion_counts=exclusion_counts,
             excluded_memory_refs=excluded_refs,
+            deflection_exemplars=list(deflection_exemplars),
             current_message=current_message,
             framing_version=framing_version,
             distress_grounding=distress_grounding,
@@ -555,6 +707,7 @@ class ContextBuilder:
         current_message: str = "",
         retrieval_config: RetrievalConfig | None = None,
         user_affect: UserAffect = UserAffect.NEUTRAL,
+        deflection_probe_embedding: list[float] | None = None,
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
@@ -570,6 +723,14 @@ class ContextBuilder:
         RRF-fuses a Postgres FTS lane (exact-topic / proper-noun matches) with
         the vector lanes; backends without FTS degrade to the vector-only
         seed unchanged.
+
+        ``deflection_probe_embedding`` (W3 competence wall) is the embedding of
+        :data:`DEFLECTION_PROBE_TEXT` — computed once by the caller. When the
+        turn is out-of-domain (no memory survives the activation floor + hard
+        gates), the persona's deflection-pattern exemplars are retrieved and
+        rendered so base-model generalist skills cannot leak into the reply.
+        ``None`` (legacy callers) disables the wall; empty retrieval stays a
+        valid, exemplar-free state (B2 doctrine).
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         activated = await retrieve(
@@ -583,6 +744,27 @@ class ContextBuilder:
             config=config,
             query_text=current_message or None,
         )
+
+        # W3 competence wall: fire only on a genuinely empty turn — nothing
+        # retrieved, or everything retrieved fails a hard gate. In-domain
+        # turns are served by their own retrieved exemplar lines.
+        exemplars: list[MemoryNode] = []
+        if deflection_probe_embedding is not None:
+            era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+            admissible, _, _ = _filter_activated(
+                activated,
+                requester_scope=requester_tier.disclosure_scope,
+                era_boundary=era_boundary,
+            )
+            if not admissible:
+                exemplars = await self._deflection_exemplars(
+                    backend=backend,
+                    persona=persona,
+                    requester_tier=requester_tier,
+                    probe_embedding=deflection_probe_embedding,
+                    config=config,
+                )
+
         return self.filter_and_render(
             activated,
             persona=persona,
@@ -590,6 +772,7 @@ class ContextBuilder:
             conversation_history=conversation_history,
             current_message=current_message,
             user_affect=user_affect,
+            deflection_exemplars=exemplars,
         )
 
     async def persona_scoped_grounding_refs(

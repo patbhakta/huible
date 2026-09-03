@@ -177,6 +177,7 @@ from huible.memory.protocol import MemoryBackend, MemoryNode
 from huible.memory.store import PostgresMemoryBackend
 from huible.persona.context import (
     CONFIDENCE_LEVEL_METADATA_KEY,
+    DEFLECTION_PROBE_TEXT,
     ContextBuilder,
     ConversationTurn,
     PersonaConfig,
@@ -1592,6 +1593,7 @@ def _register_routes(application: FastAPI) -> None:
             current_message=body.message,
             user_affect=effective_affect,
             conversation_history=_history(application, body.conversation_id),
+            deflection_probe_embedding=_get_deflection_probe_embedding(),
         )
 
         prompt = ctx.render()
@@ -1812,6 +1814,7 @@ def _register_routes(application: FastAPI) -> None:
                     _view(node, ctx.activation_scores) for node in ctx.included_memories
                 ],
                 exclusion_counts=dict(ctx.exclusion_counts),
+                competence_wall=ctx.competence_wall_fired,
                 conversation_id=session_id,
                 provider=provider_label,
                 framing_version=ctx.framing_version,
@@ -2366,6 +2369,20 @@ def _embed(message: str) -> list[float]:
     from huible.embeddings import embed_query_text
 
     return embed_query_text(message)
+
+
+#: Process-lifetime cache for the W3 competence-wall probe embedding
+#: (:func:`huible.persona.context.DEFLECTION_PROBE_TEXT`). Deterministic
+#: provider output, so one embed per process; out-of-domain turns pay zero
+#: recurring probe cost (exemplar sets are TTL-cached in the builder).
+_deflection_probe_embedding: list[float] | None = None
+
+
+def _get_deflection_probe_embedding() -> list[float]:
+    global _deflection_probe_embedding
+    if _deflection_probe_embedding is None:
+        _deflection_probe_embedding = _embed(DEFLECTION_PROBE_TEXT)
+    return _deflection_probe_embedding
 
 
 def _conversation_store(application: FastAPI) -> ConversationStore:

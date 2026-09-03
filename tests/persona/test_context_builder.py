@@ -32,12 +32,12 @@ from huible.memory.protocol import (
 from huible.memory.retrieval import ActivatedMemory, RetrievalConfig
 from huible.persona.context import (
     CONFIDENCE_LEVEL_METADATA_KEY,
+    TEXTING_CONCISION_DIRECTIVE,
     ConfidenceLevel,
     ContextBuilder,
     ConversationTurn,
     PersonaConfig,
     RelationshipTier,
-    TEXTING_CONCISION_DIRECTIVE,
     get_confidence_level,
 )
 from huible.safety.crisis import UserAffect
@@ -319,11 +319,20 @@ class TestDisclosureScoping:
 
 
 class TestRendering:
-    def test_system_prompt_contains_persona_name_and_voice(self):
+    def test_system_prompt_contains_persona_name(self):
         persona = _persona()
         ctx = ContextBuilder().filter_and_render([], persona, RelationshipTier.FAMILY)
         assert "Bob" in ctx.system_prompt
-        assert persona.voice_instructions in ctx.system_prompt
+
+    def test_voice_instructions_never_rendered(self):
+        # W3 description-free prompt (HU-2309 v1.8 §1.7.2): the hand-written
+        # adjective sheet (RC-1) is deleted from the render path. Voice is
+        # carried by retrieved exemplar lines, never by adjectives.
+        persona = _persona()
+        ctx = ContextBuilder().filter_and_render([], persona, RelationshipTier.FAMILY)
+        assert persona.voice_instructions not in ctx.system_prompt
+        assert "Voice & style" not in ctx.system_prompt
+        assert persona.voice_instructions not in ctx.render()
 
     def test_system_prompt_contains_era_boundary(self):
         persona = _persona(boundary="2019-12-31")

@@ -14,4 +14,6 @@ logs/
 # code-review-graph local knowledge graph DB
 .code-review-graph/
 docker/runtime/app-state/*.json
+# W1 durable fastembed model cache (mounted at /var/lib/huible, 9ae81ea)
+docker/runtime/app-state/.cache/
 
