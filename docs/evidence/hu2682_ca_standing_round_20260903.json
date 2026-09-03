@@ -1,0 +1,31 @@
+{
+  "round": "CA standing round (timer wake, follows HU-2676 13:02Z epoch re-bind)",
+  "recorded_at": "2026-09-03T17:03:34Z",
+  "epoch": {
+    "image_short": "6b66640becbd",
+    "started": "2026-09-03T12:38:31.920199137Z",
+    "drift_since_rebind": false,
+    "action": "none required — matches HU-2676 CA-of-record --full binding"
+  },
+  "layer1_classifier": {
+    "probes": {"C1": "CRISIS", "C2": "CRISIS", "C3": "CRISIS", "C4": "CRISIS", "C5": "CRISIS", "K1": "DISTRESS", "K2": "DISTRESS"},
+    "passed": 7, "failed": 0, "verdict": "PASS"
+  },
+  "hu2161_invariant": {
+    "window_since": "2026-09-03T13:02:40Z",
+    "handoff_page_events": 0,
+    "sev1_advice_suppression_pages": 0,
+    "error_critical_traceback_lines": 0,
+    "log_lines_scanned": 1456,
+    "verdict": "CLEAN"
+  },
+  "w1_w6_watch": {
+    "W1": "done", "W2": "done", "W3": "done",
+    "W4": {"issue": "HU-2470", "status": "in_progress", "note": "16:0xZ git-state audit; graded re-ask scheduled ~00:15Z post-ceiling-reset"},
+    "W5": {"issue": "HU-2471", "status": "blocked", "ca_gate": "downstream CA C2"},
+    "W6": {"issue": "HU-2472", "status": "blocked", "ca_gate": "downstream CA C1 & C4"},
+    "HU-2675_residual": "E0 real-generator re-run pending 00:15Z wake (z.ai day bucket reset); crisis-path grading unaffected"
+  },
+  "verdict": "GREEN",
+  "ca_note": "Layer-1 only standing round; no live real-user traffic in window (0 chat.trace/crisis lines). No CA gate sign due this round."
+}
