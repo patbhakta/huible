@@ -478,6 +478,43 @@ class AlignmentView(BaseModel):
     )
 
 
+class CapabilityGuardView(BaseModel):
+    """Post-generation capability-leak guard report on the trace (HU-2675).
+
+    Non-null on every persona-voiced turn where the W3 competence wall fired
+    (``competence_wall`` true); null elsewhere — the guard never runs on an
+    in-domain turn. The guard detects base-model assistant-register output
+    (code fluency, teaching register, capability boasts, bare encyclopedia
+    answers untraceable to persona memory) and replaces it with an in-voice
+    deflection fallback. This view feeds the W6 micro-tell baseline: a
+    ``replaced`` disposition on a wall-fired turn is the recorded footprint
+    of a generator capability leak that was stopped before it reached the
+    user.
+    """
+
+    fired: bool = Field(
+        default=False,
+        description="True when a concrete capability-leak marker fired this turn.",
+    )
+    disposition: str = Field(
+        default="passed",
+        description=(
+            "'passed' when the reply showed verbatim; 'replaced' when a leak "
+            "marker fired and the reply was swapped for the in-voice "
+            "deflection fallback."
+        ),
+    )
+    markers: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Concrete marker names that fired: assistant-register classes "
+            "(code_block, code_fluency, teaching_register, capability_boast, "
+            "assistant_register) or 'bare_answer' (short out-of-corpus "
+            "factual answer). Empty when clean."
+        ),
+    )
+
+
 class RiskEnforcementView(BaseModel):
     """G8 risk-flag enforcement report surfaced on the trace (§7.4.4).
 
@@ -659,6 +696,16 @@ class ChatTrace(BaseModel):
             "binding action, required-actions set, fired flags, and session-"
             "signal contributions for the per-flag fire-count + per-action "
             "distribution telemetry."
+        ),
+    )
+    capability_guard: CapabilityGuardView | None = Field(
+        default=None,
+        description=(
+            "Post-generation capability-leak guard report (HU-2675). Non-null "
+            "when the W3 competence wall fired this turn; null on in-domain "
+            "turns (the guard never runs there). Carries the disposition and "
+            "the concrete leak markers that fired, feeding the W6 micro-tell "
+            "baseline."
         ),
     )
 

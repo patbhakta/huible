@@ -139,6 +139,7 @@ from huible.api.schemas import (
     AlignmentView,
     ByokKeyPutRequest,
     ByokKeyView,
+    CapabilityGuardView,
     ChatRequest,
     ChatTrace,
     ConsentAcknowledgeData,
@@ -216,6 +217,7 @@ from huible.safety import (
     UserAffect,
     apply_affect_guard,
     apply_alignment_guard,
+    apply_capability_guard,
     build_reframe_addendum,
     classify_user_message,
     compute_handoff_telemetry,
@@ -1706,6 +1708,27 @@ def _register_routes(application: FastAPI) -> None:
         # fabricated entities absent from the whole persona corpus are still
         # caught. Scan failure degrades to turn-refs-only (strict) grounding.
         persona_scope_refs = await _persona_scope_grounding_refs(application, binding)
+
+        # HU-2675 (W3 residual): post-generation capability-leak guard. The
+        # competence wall keeps base-model competence out of the prompt, but
+        # the live OOD replay proved the hosted generator can still emit an
+        # encyclopedia answer on a wall-fired turn ("Canberra! And yes, I'm
+        # as surprised as you are that I knew that."). G3-pattern backstop:
+        # only on wall-fired turns, replace-only-on-concrete-fire, in-voice
+        # deflection fallback. Its output is claim-free, so the §7.4.2
+        # alignment filter below sees the final text.
+        capability = apply_capability_guard(
+            response_text,
+            wall_fired=ctx.competence_wall_fired,
+            refs=ctx.included_memories,
+            persona=binding.persona,
+            persona_scope_refs=persona_scope_refs,
+            conversation_history=_history(application, body.conversation_id),
+            current_message=body.message,
+            deflection_exemplars=ctx.deflection_exemplars,
+            fallback_seed=str(body.conversation_id),
+        )
+        response_text = capability.text
         alignment = apply_alignment_guard(
             response_text,
             refs=ctx.included_memories,
@@ -1873,6 +1896,15 @@ def _register_routes(application: FastAPI) -> None:
                     judge_adjudication=(
                         judge_verdict.outcome if judge_verdict is not None else None
                     ),
+                ),
+                capability_guard=(
+                    CapabilityGuardView(
+                        fired=bool(capability.fired_markers),
+                        disposition=capability.disposition,
+                        markers=list(capability.fired_markers),
+                    )
+                    if ctx.competence_wall_fired
+                    else None
                 ),
                 risk_enforcement=_risk_enforcement_view(enforcement),
             ),
