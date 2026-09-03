@@ -135,7 +135,7 @@ def wait_for_gist(session_key: str, timeout_s: float = 420.0) -> bool:
     while time.monotonic() < deadline:
         try:
             out = gateway_recall(session_key, "gist probe: first thing said")
-        except Exception as exc:  # noqa: BLE001 — retried until deadline
+        except Exception as exc:
             log(f"  gist poll failed ({exc}); retrying")
             time.sleep(15.0)
             continue
@@ -156,8 +156,55 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--label", required=True)
     parser.add_argument("--cross-session", action="store_true")
+    parser.add_argument(
+        "--reask-conversation",
+        default="",
+        help="Skip the replay; run only the graded cross-session re-ask on an "
+        "existing conversation id (the post-ceiling-reset leg).",
+    )
     args = parser.parse_args()
     api_key = resolve_key()
+
+    evidence: dict = {
+        "probe": "HU-2309 W4 E0-replay turn-34 first-utterance recall gate",
+        "label": args.label,
+        "persona": PERSONA,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "expected_markers": EXPECTED_MARKERS,
+        "turns": [],
+    }
+
+    if args.reask_conversation:
+        conv = args.reask_conversation
+        evidence["conversation_id"] = conv
+        consented_conv(api_key, conv)
+        t0 = time.perf_counter()
+        status, body = turn(api_key, conv, PROBE_TEXT)
+        latency_ms = round((time.perf_counter() - t0) * 1000)
+        reply = (body.get("response") or "").strip()
+        trace = body.get("trace") or {}
+        ok, markers = grade(reply)
+        probe_result = {
+            "turn": PROBE_INDEX + 1,
+            "message": PROBE_TEXT,
+            "http": status,
+            "latency_ms": latency_ms,
+            "reply_excerpt": reply[:200],
+            "is_probe": True,
+            "recall_markers_hit": markers,
+            "pass": status == 200 and ok,
+            "working_memory_trace": trace.get("working_memory"),
+        }
+        evidence["probe"] = probe_result
+        evidence["leg"] = "cross-session re-ask on resumed conversation"
+        evidence["verdict"] = "PASS" if probe_result["pass"] else "FAIL"
+        log(
+            f"VERDICT[{args.label}]: {evidence['verdict']} "
+            f"(markers={markers} wm={trace.get('working_memory')} latency={latency_ms}ms)"
+        )
+        log(f"         reply: {reply[:200]!r}")
+        print(json.dumps(evidence, indent=1))
+        return 0 if probe_result["pass"] else 1
 
     conv = f"e0w4-{uuid.uuid4().hex[:10]}"
     consented_conv(api_key, conv)
@@ -252,7 +299,10 @@ def main() -> int:
     evidence["avg_turn_latency_ms"] = round(total_ms / len(E0_USER_TURNS))
     gate_pass = within_ok and (cross_ok is not False)
     evidence["verdict"] = "PASS" if gate_pass else "FAIL"
-    log(f"VERDICT[{args.label}]: {evidence['verdict']} (within-session={within_ok}, cross-session={cross_ok})")
+    log(
+        f"VERDICT[{args.label}]: {evidence['verdict']} "
+        f"(within-session={within_ok}, cross-session={cross_ok})"
+    )
     print(json.dumps(evidence, indent=1))
     return 0 if gate_pass else 1
 
