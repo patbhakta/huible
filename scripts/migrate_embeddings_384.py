@@ -140,16 +140,20 @@ async def main_async(dry_run: bool, force: bool) -> None:
             "the legacy token-hash lane."
         )
 
+    # asyncpg requires postgresql:// (not postgres://); the deployed env_url is
+    # the SQLAlchemy form (postgresql+asyncpg://, what the alembic subprocess
+    # needs), so derive the plain DSN for the direct asyncpg connection while
+    # leaving os.environ untouched for alembic.
     database_url = settings.effective_database_url or os.environ.get("DATABASE_URL", "")
     if not database_url:
         _fail("DATABASE_URL is not set")
-    # asyncpg requires postgresql:// (not postgres://)
     if database_url.startswith("postgres://"):
         database_url = "postgresql://" + database_url[len("postgres://"):]
+    asyncpg_url = database_url.replace("+asyncpg", "")
 
     import asyncpg
 
-    conn = await asyncpg.connect(dsn=database_url)
+    conn = await asyncpg.connect(dsn=asyncpg_url)
     try:
         dims = await _column_dims(conn)
         print(f"column dims before: {dims}")
