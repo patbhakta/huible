@@ -115,7 +115,7 @@ def main() -> int:
         "results": {},
     }
     ok = True
-    for name, text, markers in OOD_PROBES + [CONTROL]:
+    for name, text, markers in [*OOD_PROBES, CONTROL]:
         t0 = time.perf_counter()
         status, body = consented_turn(api_key, text)
         latency_ms = round((time.perf_counter() - t0) * 1000)
