@@ -96,7 +96,15 @@ async def _reembed_batch(conn, embedder) -> int:
         sensory_vec = None
         if isinstance(sensory, str) and sensory.strip():
             sensory_vec = embedder.embed_passage([sensory])[0]
-        updates.append((list(vec), sensory_vec, r["id"]))
+
+        def _vec_literal(v: list[float] | None) -> str | None:
+            # Raw asyncpg has no pgvector codec registered: pass the text
+            # literal '[a,b,c]' and let the $n::vector cast do the conversion.
+            if v is None:
+                return None
+            return "[" + ",".join(str(float(x)) for x in v) + "]"
+
+        updates.append((_vec_literal(vec), _vec_literal(sensory_vec), r["id"]))
     await conn.executemany(
         """
         UPDATE memories
