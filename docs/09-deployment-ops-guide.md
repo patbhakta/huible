@@ -552,6 +552,29 @@ files — months of retention at the observed telemetry rate. Empty path or an
 unwritable path degrades to stdout-only (startup never blocks); the compose
 `app` service also caps json-file stdout at 20 MB × 3 for the live window.
 
+**Sink liveness gate (HU-2674):** a zero-line window is not automatically a
+quiet window. On 2026-09-01/02 the sink wrote 0 lines/day and the digest could
+not distinguish "platform quiet" from "sink blind" — root cause (HU-2674, see
+`docs/evidence/hu2674_sink_gap_root_cause_20260903.md`): **no recreate or
+deploy happened in the gap** (dockerd journal: no container lifecycle events
+between 08-31 15:34:42Z and 09-03 08:59:02Z) and the DB mirrors
+(`conversation_turns` / `consent_records` / `llm_usage`) also show zero rows
+Sep 1–2 — the sink was healthy; the platform was genuinely quiet, but the
+digest had no way to prove it. Before calling surfaces (2)–(5) GREEN, run:
+
+```bash
+# 1. sink attached in the running container (assert after every recreate)
+# 2. sink has fresh lines OR the DB confirms the window was truly quiet
+python3 scripts/telemetry_window.py --assert-live --since 24h
+```
+
+Exit 0 = live (or confirmed-quiet); exit 1 = sink dead / false-GREEN /
+unverifiable — treat the window as RED, never GREEN. A failed sink attach now
+also degrades `GET /api/v1/health` (`checks.telemetry_sink = "failed (...)"`,
+status `degraded` → `HuibleHealthDegraded` alert) instead of dying as a single
+stdout warning; an intentionally sinkless deployment (`TELEMETRY_LOG_PATH=""`)
+reports `disabled` and stays `ok`.
+
 ### 7.5 On-Call Paging & Sev-1 Alerts (§7.4.1, Stage 0.4)
 
 The `GET /metrics` endpoint exposes the guardrail counters shipped in Stage 0.3

@@ -294,6 +294,15 @@ class _TelemetrySinkFilter(logging.Filter):
         return record.getMessage().startswith(TELEMETRY_LINE_PREFIXES)
 
 
+#: Outcome of the last :func:`_attach_telemetry_file_sink` attempt (HU-2674).
+#: ``state`` is ``unknown`` before the first ``configure_logging`` call,
+#: ``active`` / ``disabled`` (explicit empty path) on a healthy startup, and
+#: ``failed`` when the configured path was unwritable — the loud path that
+#: ``GET /health`` surfaces as a ``telemetry_sink`` check (and overall
+#: ``degraded``) instead of a single stdout warning nobody greps.
+telemetry_sink_status: dict[str, str] = {"state": "unknown", "path": "", "detail": ""}
+
+
 def _attach_telemetry_file_sink(settings: Settings) -> logging.Handler | None:
     """Mirror telemetry JSON lines to a durable rotating file (HU-1945).
 
@@ -304,10 +313,14 @@ def _attach_telemetry_file_sink(settings: Settings) -> logging.Handler | None:
 
     Graceful degradation: an empty :attr:`Settings.telemetry_log_path` disables
     the sink, and an unwritable path logs one warning and leaves the app on
-    stdout-only logging (never blocks startup).
+    stdout-only logging (never blocks startup) — but the failure is recorded in
+    :data:`telemetry_sink_status` and surfaced loudly by ``GET /health``
+    (HU-2674), so a misconfigured recreate can no longer false-GREEN the daily
+    digest silently.
     """
     path = settings.telemetry_log_path.strip()
     if not path:
+        telemetry_sink_status.update(state="disabled", path="", detail="")
         return None
     root = logging.getLogger()
     if any(getattr(h, "_huible_telemetry_sink", False) for h in root.handlers):
@@ -320,7 +333,8 @@ def _attach_telemetry_file_sink(settings: Settings) -> logging.Handler | None:
             backupCount=settings.telemetry_log_backup_count,
             encoding="utf-8",
         )
-    except OSError:
+    except OSError as exc:
+        telemetry_sink_status.update(state="failed", path=path, detail=str(exc))
         logger.warning(
             "telemetry file sink disabled (path not writable): %s", path
         )
@@ -329,6 +343,7 @@ def _attach_telemetry_file_sink(settings: Settings) -> logging.Handler | None:
     handler.addFilter(_TelemetrySinkFilter())
     handler._huible_telemetry_sink = True  # type: ignore[attr-defined]
     root.addHandler(handler)
+    telemetry_sink_status.update(state="active", path=path, detail="")
     logger.info(
         "telemetry file sink active: %s (surfaces survive container recreations)",
         path,
@@ -608,6 +623,26 @@ async def _health_data(application: FastAPI) -> HealthCheck:
         except Exception:  # pragma: no cover - defensive; never fail /health
             logger.exception("llm spend snapshot failed")
             checks["llm_budget"] = "unknown"
+
+    # Durable telemetry sink liveness (HU-2674): a failed attach used to be a
+    # single stdout warning, which let a misconfigured recreate false-GREEN the
+    # daily-review surfaces. Surface the attach outcome here — ``failed``
+    # degrades the probe so HuibleHealthDegraded pages instead of the gap being
+    # discovered at the next digest. ``disabled`` (explicit empty path) and
+    # ``unknown`` (probe hit before configure_logging, e.g. key-free tests)
+    # stay ``ok``: an intentionally sinkless deployment is a valid config, and
+    # scripts/telemetry_window.py --assert-live covers the digest side.
+    sink_state = telemetry_sink_status.get("state", "unknown")
+    sink_path = telemetry_sink_status.get("path", "")
+    if sink_state == "active":
+        checks["telemetry_sink"] = f"active ({sink_path})"
+    elif sink_state == "failed":
+        checks["telemetry_sink"] = f"failed ({telemetry_sink_status.get('detail', '')})"
+        overall = "degraded"
+    elif sink_state == "disabled":
+        checks["telemetry_sink"] = "disabled (no telemetry_log_path configured)"
+    else:
+        checks["telemetry_sink"] = "unknown (logging not configured)"
 
     uptime = max(0.0, time.time() - float(application.state.start_time))
     return HealthCheck(

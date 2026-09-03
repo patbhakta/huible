@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -109,3 +110,78 @@ class TestTelemetryWindow:
         parsed = mod._parse_ts(ts)
         assert parsed is not None, f"reader must parse the real stamp: {ts}"
         assert parsed.tzinfo is not None
+
+
+class TestAssertLive:
+    """HU-2674 liveness gate: zero sink lines must not false-GREEN a digest."""
+
+    def test_green_with_fresh_sink_lines(self, tmp_path, monkeypatch):
+        mod = _load_module()
+        log = tmp_path / "telemetry.log"
+        log.write_text(_line("chat.trace session=s action=continue", age_hours=1) + "\n")
+        rc = mod.assert_live(log, timedelta(hours=24), skip_startup_line=True)
+        assert rc == 0
+
+    def test_false_green_fails_when_db_shows_traffic(self, tmp_path, monkeypatch):
+        mod = _load_module()
+        empty = tmp_path / "telemetry.log"
+        empty.write_text("")
+        monkeypatch.setattr(mod, "_resolve_db_dsn", lambda explicit: "postgresql://x")
+        monkeypatch.setattr(mod, "_db_traffic_rows", lambda dsn, seconds: 14)
+        rc = mod.assert_live(empty, timedelta(hours=24), skip_startup_line=True)
+        assert rc == 1
+
+    def test_green_on_confirmed_quiet_window(self, tmp_path, monkeypatch):
+        mod = _load_module()
+        empty = tmp_path / "telemetry.log"
+        empty.write_text("")
+        monkeypatch.setattr(mod, "_resolve_db_dsn", lambda explicit: "postgresql://x")
+        monkeypatch.setattr(mod, "_db_traffic_rows", lambda dsn, seconds: 0)
+        rc = mod.assert_live(empty, timedelta(hours=24), skip_startup_line=True)
+        assert rc == 0
+
+    def test_fails_unverifiable_when_no_dsn(self, tmp_path, monkeypatch):
+        mod = _load_module()
+        empty = tmp_path / "telemetry.log"
+        empty.write_text("")
+        monkeypatch.setattr(mod, "_resolve_db_dsn", lambda explicit: "")
+        rc = mod.assert_live(empty, timedelta(hours=24), skip_startup_line=True)
+        assert rc == 1
+
+    def test_fails_when_db_unreachable_and_sink_empty(self, tmp_path, monkeypatch):
+        mod = _load_module()
+        empty = tmp_path / "telemetry.log"
+        empty.write_text("")
+        monkeypatch.setattr(mod, "_resolve_db_dsn", lambda explicit: "postgresql://x")
+        monkeypatch.setattr(mod, "_db_traffic_rows", lambda dsn, seconds: None)
+        rc = mod.assert_live(empty, timedelta(hours=24), skip_startup_line=True)
+        assert rc == 1
+
+    def test_startup_line_gate(self, tmp_path, monkeypatch):
+        mod = _load_module()
+        log = tmp_path / "telemetry.log"
+        log.write_text(_line("chat.trace session=s action=continue", age_hours=1) + "\n")
+
+        def _docker_ok(cmd, **kwargs):
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout=f"app-1 | {mod.SINK_ACTIVE_MARKER}: /x\n", stderr=""
+            )
+
+        def _docker_no_marker(cmd, **kwargs):
+            return subprocess.CompletedProcess(cmd, 0, stdout="up and fine\n", stderr="")
+
+        monkeypatch.setattr(mod.subprocess, "run", _docker_ok)
+        assert mod._startup_line_confirmed() is True
+        assert mod.assert_live(log, timedelta(hours=24)) == 0
+
+        monkeypatch.setattr(mod.subprocess, "run", _docker_no_marker)
+        assert mod._startup_line_confirmed() is False
+        assert mod.assert_live(log, timedelta(hours=24)) == 1
+
+    def test_resolve_db_dsn_translates_service_host(self, monkeypatch):
+        mod = _load_module()
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        dsn = mod._resolve_db_dsn(
+            "postgresql+asyncpg://huible:pw@postgres:5432/huible"
+        )
+        assert dsn == "postgresql://huible:pw@127.0.0.1:5433/huible"

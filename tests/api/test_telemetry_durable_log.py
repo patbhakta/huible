@@ -6,17 +6,26 @@ window, but docker json-file history dies with the container on every
 recreate. HU-1945 mirrors those lines to a rotating file under the
 bind-mounted app-state volume via :func:`configure_logging`. These tests
 assert the sink captures exactly the telemetry surfaces, stays idempotent,
-and degrades to stdout-only when the path is disabled or unwritable.
+and degrades to stdout-only when the path is disabled or unwritable — and,
+since HU-2674, that a failed attach is surfaced loudly by ``GET /health``
+instead of dying as a single stdout warning.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+import time
 
 import pytest
 
-from huible.api.app import configure_logging
+from huible.api.app import (
+    _health_data,
+    configure_logging,
+    create_app,
+    telemetry_sink_status,
+)
 from huible.api.settings import Settings
 
 
@@ -110,3 +119,50 @@ class TestTelemetryFileSink:
         assert "turn=39" in active
         total = sum(p.read_text().count("chat.trace") for p in log_dir.iterdir())
         assert total > 10, f"rotation discarded too much history: {total} lines"
+
+
+class TestHealthTelemetrySinkCheck:
+    """HU-2674: the digest must never false-GREEN a dead sink again."""
+
+    @staticmethod
+    def _checks_and_status():
+        application = create_app()
+        application.state.start_time = time.time()
+        payload = asyncio.run(_health_data(application))
+        return payload.checks, payload.status
+
+    def test_active_sink_reported_and_ok(self, tmp_path, root_logger_restored):
+        path = _settings(tmp_path)
+        configure_logging(path)
+        try:
+            checks, status = self._checks_and_status()
+        finally:
+            telemetry_sink_status.update(state="unknown", path="", detail="")
+        assert checks["telemetry_sink"] == f"active ({path.telemetry_log_path})"
+        assert status == "ok"
+
+    def test_failed_attach_degrades_health(self, tmp_path, caplog, root_logger_restored):
+        blocker = tmp_path / "not-a-dir"
+        blocker.write_text("occupied")
+        with caplog.at_level(logging.WARNING):
+            configure_logging(Settings(telemetry_log_path=str(blocker / "logs" / "telemetry.log")))
+        try:
+            checks, status = self._checks_and_status()
+        finally:
+            telemetry_sink_status.update(state="unknown", path="", detail="")
+        assert checks["telemetry_sink"].startswith("failed (")
+        assert status == "degraded", "a dead sink must page via HuibleHealthDegraded"
+
+    def test_disabled_sink_is_explicit_and_ok(self, root_logger_restored):
+        configure_logging(Settings(telemetry_log_path=""))
+        try:
+            checks, status = self._checks_and_status()
+        finally:
+            telemetry_sink_status.update(state="unknown", path="", detail="")
+        assert checks["telemetry_sink"] == "disabled (no telemetry_log_path configured)"
+        assert status == "ok"
+
+    def test_unknown_state_never_degrades(self):
+        checks, status = self._checks_and_status()
+        assert checks["telemetry_sink"] == "unknown (logging not configured)"
+        assert status == "ok"
