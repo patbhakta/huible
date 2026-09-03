@@ -491,10 +491,8 @@ def _format_memory_block(node: MemoryNode) -> str:
 #: turn, not memories to recite. The persona's voice itself comes from the
 #: exemplar lines below it — real vault lines, never adjectives.
 _EXEMPLAR_SECTION_HEADER = (
-    "VOICE EXEMPLARS — this exchange has left what you actually know. "
-    "Reply only in the manner of these real lines of yours: deflect, joke, "
-    "or change the subject. Never explain, teach, or answer from outside "
-    "your own life."
+    "VOICE EXEMPLARS — how you deflect when a question is outside your life. "
+    "Copy this move: joke it off, change the subject, refuse to explain."
 )
 
 
@@ -511,12 +509,24 @@ def _format_history(turns: Sequence[ConversationTurn], window: int) -> str:
     return "\n".join(f"{t.speaker}: {t.content}" for t in recent)
 
 
+#: W3 competence-wall system directive (appended only on wall turns). Same
+#: category as the era-boundary line — a situational behavioral bound, not a
+#: persona adjective sheet. It names the trap (assistant/search-engine) and
+#: binds the reply to the exemplar pattern rendered in the body.
+_WALL_SYSTEM_LINE = (
+    "Competence wall: this question is outside your life and your knowledge. "
+    "You are not a search engine and not a teacher — do not answer it and do "
+    "not explain it. Deflect it exactly the way the VOICE EXEMPLARS below do."
+)
+
+
 def _build_system_prompt(
     persona: PersonaConfig,
     tier: RelationshipTier,
     era_boundary: date | None,
     *,
     user_affect: UserAffect = UserAffect.NEUTRAL,
+    competence_wall: bool = False,
 ) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
@@ -555,6 +565,13 @@ def _build_system_prompt(
     # corpus stats when present, verified Chandler-tuned fallback when not).
     lines.append("")
     lines.append(render_texting_directive(persona.length_stats))
+
+    # W3 competence wall (out-of-domain turn): the directive rides in the
+    # system prompt — the highest-compliance position — and binds the reply
+    # to the VOICE EXEMPLARS pattern rendered in the prompt body.
+    if competence_wall:
+        lines.append("")
+        lines.append(_WALL_SYSTEM_LINE)
 
     distress_grounding = user_affect is UserAffect.DISTRESS
     if distress_grounding:
@@ -709,8 +726,13 @@ class ContextBuilder:
             conversation_history or (),
             self.HISTORY_WINDOW,
         )
+        wall_exemplars = list(deflection_exemplars)
         system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(
-            persona, requester_tier, era_boundary, user_affect=user_affect
+            persona,
+            requester_tier,
+            era_boundary,
+            user_affect=user_affect,
+            competence_wall=bool(wall_exemplars),
         )
 
         return PromptContext(
@@ -722,7 +744,7 @@ class ContextBuilder:
             activation_scores={am.node.id: float(am.activation) for am in admissible},
             exclusion_counts=exclusion_counts,
             excluded_memory_refs=excluded_refs,
-            deflection_exemplars=list(deflection_exemplars),
+            deflection_exemplars=wall_exemplars,
             current_message=current_message,
             framing_version=framing_version,
             distress_grounding=distress_grounding,
