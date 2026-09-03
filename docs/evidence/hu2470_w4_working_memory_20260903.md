@@ -48,6 +48,13 @@ Working memory is durable in TencentDB (not the app process) and the digest path
 - New suites: `tests/persona/test_working_memory.py` (19: client failure doctrine, arm-a parsing, session-key isolation, render order, eviction-shape regression), `tests/api/test_chat_working_memory.py` (4: recall→prompt, capture of completed turn, disabled-lane inertness, degraded-recall survival; pinned hermetic against an armed host `.env`).
 - `pytest tests/persona tests/api tests/safety tests/f5` → **879 passed, 3 skipped**. ruff clean on all touched files.
 
+## Pre-flight for the 00:15Z Sep 4 re-ask (checked 2026-09-03T13:20Z, zero generator tokens)
+
+- Epoch advanced `830fc42a4519` → `8d9ff446b666` at 12:37Z (HU-2675 guard deploy; does not touch the recall lane). W4 lane verified on the new epoch at 13:05Z: `WORKING_MEMORY_ENABLED=on`, `/health` ok, relay 200 from inside the container.
+- Conversation `e0w4-2eabe0dc3e` verified durable in Postgres `conversation_turns` across the redeploy: **36 rows**, 11:44:12Z–12:12:43Z, first utterance `hey who r u?` verbatim at row 1 (head position 1 — inside the 30-head verbatim band, covered even after the extra rows).
+- The 12:12:43Z ceiling-blocked attempt is itself in history: an identical probe turn (`user: what was the first thing I said to you?`) answered by the fake-voice fallback (`[fake-llm:9f34b622] Deterministic response.`). The graded re-ask will therefore be the **second identical ask** in the same conversation — expected and harmless (grading targets the first-utterance markers, and the durable recall path already proved out on the 12:12:43 turn: `wm={strategy: v4-arm-a, chars: 753, synced: true}`); noted here so the 00:15Z wake run does not mistake it for a fresh anomaly.
+- z.ai day bucket at block: `2026-09-03: 200205/200000` (this work's own replay/battery traffic). Resets 00:00 UTC Sep 4; monitor `hu2470-crosssession-graded-rereask` fires 00:15Z.
+
 ## Remaining
 
 - Graded cross-session re-ask (scripted; ceiling-blocked attempt in `hu2470_w4_crosssession_ceilingblock.json`) reruns after the 00:00 UTC Sep 4 z.ai ceiling reset — issue monitor `hu2470-crosssession-graded-rereask` wakes the assignee 00:15Z; on PASS the issue closes.
