@@ -163,6 +163,7 @@ from huible.api.schemas import (
     SafetyEventView,
     SessionMetaView,
     UsageDailyRowView,
+    WorkingMemoryView,
 )
 from huible.api.settings import Settings, get_settings
 from huible.llm.client import FakeLLMClient as _FakeLLMClient
@@ -185,6 +186,12 @@ from huible.persona.context import (
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.persona.length import reply_budget_tokens, stats_from_metadata
+from huible.persona.working_memory import (
+    NullWorkingMemory,
+    TencentWorkingMemory,
+    WorkingMemoryClient,
+    working_memory_session_key,
+)
 from huible.safety import (
     PAUSE_SESSION_RESPONSE,
     PROXY_USER_PAUSE_RESPONSE,
@@ -736,6 +743,18 @@ def create_app(
     # digest exists only to reuse the constructed client across turns.
     application.state.byok_clients: dict[str, LLMClient] = {}
     application.state.context_builder = context_builder or ContextBuilder()
+    # W4 working memory (HU-2309 v1.8 §1.7.2 / M-0R-B): the TencentDB Arm A
+    # client when armed, a no-op lane otherwise. Every call degrades to
+    # "no working memory" on failure — the lane never breaks a turn.
+    if resolved_settings.working_memory_enabled:
+        application.state.working_memory: WorkingMemoryClient = TencentWorkingMemory(
+            resolved_settings.working_memory_base_url,
+            api_key=resolved_settings.working_memory_api_key,
+            service_id=resolved_settings.working_memory_service_id,
+            timeout_s=resolved_settings.working_memory_timeout_s,
+        )
+    else:
+        application.state.working_memory = NullWorkingMemory()
     # HU-2070: TTL cache for the persona-scope §7.4.2 grounding corpus (see
     # ``_persona_scope_grounding_refs``). Keyed by persona + disclosure scope
     # + era boundary; per-app so tests with fresh registries never share
@@ -1585,6 +1604,15 @@ def _register_routes(application: FastAPI) -> None:
         effective_affect = (
             UserAffect.DISTRESS if enforcement.forces_tighten else crisis_result.affect
         )
+        # --- W4 working memory recall (HU-2309 v1.8 §1.7.2 / M-0R-B) -------
+        # TencentDB Arm A read path: the session-gist digest + session-scoped
+        # verbatim excerpts for this conversation — the long-range session
+        # state the HISTORY_WINDOW tail evicts (RC-3). Any failure degrades
+        # to an empty block (pre-W4 prompt shape); the lane never breaks a
+        # clinical turn.
+        working_memory = application.state.working_memory
+        wm_session_key = working_memory_session_key(persona_id, session_id)
+        wm_recall = await working_memory.recall(wm_session_key, body.message)
         ctx = await application.state.context_builder.build(
             persona=binding.persona,
             requester_tier=binding.requester_tier,
@@ -1594,6 +1622,7 @@ def _register_routes(application: FastAPI) -> None:
             user_affect=effective_affect,
             conversation_history=_history(application, body.conversation_id),
             deflection_probe_embedding=_get_deflection_probe_embedding(),
+            working_memory=wm_recall.context,
         )
 
         prompt = ctx.render()
@@ -1752,6 +1781,13 @@ def _register_routes(application: FastAPI) -> None:
                 record_alignment_unconfirmed_suppression()
 
         _record_turn(application, body.conversation_id, body.message, response_text)
+        # W4 working-memory capture: commit the completed turn (user message
+        # + post-guard reply — exactly what the user saw) to TencentDB so the
+        # next turn's recall — and later sessions on this conversation — see
+        # it. Failure-tolerant by contract; sync result rides the trace.
+        wm_synced = await working_memory.capture(
+            wm_session_key, body.message, response_text
+        )
         _emit_turn(
             persona_id,
             outcome="persona_budget_fallback" if budget_fallback else "persona",
@@ -1815,6 +1851,15 @@ def _register_routes(application: FastAPI) -> None:
                 ],
                 exclusion_counts=dict(ctx.exclusion_counts),
                 competence_wall=ctx.competence_wall_fired,
+                working_memory=(
+                    WorkingMemoryView(
+                        strategy=wm_recall.strategy,
+                        chars=wm_recall.chars,
+                        synced=wm_synced,
+                    )
+                    if not isinstance(working_memory, NullWorkingMemory)
+                    else None
+                ),
                 conversation_id=session_id,
                 provider=provider_label,
                 framing_version=ctx.framing_version,

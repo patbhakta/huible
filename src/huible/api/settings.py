@@ -180,6 +180,24 @@ class Settings(BaseSettings):
     # the full budget.
     persona_chat_max_tokens: int = 64
 
+    # ── W4 working memory (HU-2309 v1.8 §1.7.2 / M-0R-B) ───────────────────
+    # TencentDB as real working memory in the chat path (BEAM Arm A read
+    # path, HU-1899/HU-1912 lineage): per-turn recall of the session-gist
+    # digest + session-scoped verbatim excerpts, and capture of every
+    # completed persona turn to the store. Kills the RC-3 HISTORY_WINDOW
+    # eviction failure (E0 turn-34 "what was the first thing I said?"
+    # answered wrong). Default off (pre-W4 behavior unchanged); failures
+    # degrade to "no working memory this turn" — the lane never breaks a
+    # clinical turn. Session keys are namespaced ``huible-`` and scoped per
+    # (persona, conversation) per the 2026-08-16 contamination doctrine.
+    working_memory_enabled: bool = False
+    working_memory_base_url: str = "http://127.0.0.1:8420"
+    # Gateway API key (server.apiKey in tdai-gateway.yaml); empty = gateway
+    # auth off (local standalone default).
+    working_memory_api_key: str = ""
+    working_memory_service_id: str = "default"
+    working_memory_timeout_s: float = 10.0
+
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
 

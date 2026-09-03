@@ -535,6 +535,28 @@ class RiskEnforcementView(BaseModel):
     )
 
 
+class WorkingMemoryView(BaseModel):
+    """W4 working-memory observability (HU-2309 v1.8 §1.7.2 / M-0R-B).
+
+    Evidence-only surface for the TencentDB Arm A lane this turn: what the
+    recall returned (strategy + payload size) and whether the completed turn
+    was captured back to the store. ``None`` when the lane is disabled.
+    """
+
+    strategy: str = Field(
+        default="",
+        description="Gateway read path used (v4-arm-a, or a v3 fallback label).",
+    )
+    chars: int = Field(
+        default=0,
+        description="Size of the working-memory block rendered into the prompt.",
+    )
+    synced: bool = Field(
+        default=False,
+        description="Whether the completed turn was captured to the store.",
+    )
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
     passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
@@ -586,6 +608,14 @@ class ChatTrace(BaseModel):
     competence_wall: bool = Field(
         default=False,
         description="Deflection-exemplar wall fired on an out-of-domain turn.",
+    )
+    working_memory: WorkingMemoryView | None = Field(
+        default=None,
+        description=(
+            "W4 TencentDB working-memory lane observability (M-0R-B). Null "
+            "when the lane is disabled; populated on persona-voiced turns "
+            "when armed."
+        ),
     )
     conversation_id: str | None = Field(
         default=None,

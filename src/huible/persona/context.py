@@ -34,6 +34,17 @@ the memory-integrity hard rules before any memory reaches the generator:
    measurement/eval layer and condition retrieval/budgets — they are never
    rendered as adjective sheets.
 
+6. **Working memory (W4, HU-2309 v1.8 §1.7.2 / M-0R-B).** The
+   ``HISTORY_WINDOW`` tail stays the recent-verbatim surface, but long-range
+   session state is no longer evicted by it: the caller fetches the TencentDB
+   Arm A working-memory block (session-gist digest + session-scoped verbatim
+   excerpts — BEAM Arm A, deployed prod read path) and hands it to the
+   builder via ``working_memory``. It renders in its own section *before*
+   the conversation-history window, killing the RC-3 eviction failure
+   (E0 turn-34 "what was the first thing I said to you?"). An empty block
+   (lane disabled / degraded) renders nothing — same B2 doctrine as the
+   exemplar wall.
+
 Design constraints:
 - Async throughout.
 - Read-only over memory.
@@ -375,6 +386,11 @@ class PromptContext:
     # Evidence + prompt surface are kept separate: these nodes are rendered
     # in the VOICE EXEMPLARS section, never as activated memories.
     deflection_exemplars: list[MemoryNode] = field(default_factory=list)
+    # W4 working memory (M-0R-B): the TencentDB Arm A block (session-gist
+    # digest + verbatim excerpts) for this conversation — long-range session
+    # state the HISTORY_WINDOW tail would otherwise have evicted (RC-3).
+    # Prompt surface only; never counted as activated vault memory.
+    working_memory: str = ""
     current_message: str = ""
     framing_version: int = 0
     distress_grounding: bool = False
@@ -396,6 +412,8 @@ class PromptContext:
         parts.append(self.memory_blocks if self.memory_blocks else "(none)")
         if self.deflection_exemplars:
             parts.append(_render_exemplar_block(self.deflection_exemplars))
+        if self.working_memory:
+            parts.append(_render_working_memory(self.working_memory))
         parts.append("CONVERSATION HISTORY:")
         parts.append(self.conversation_history if self.conversation_history else "(none)")
         if self.current_message:
@@ -501,6 +519,23 @@ def _render_exemplar_block(exemplars: Sequence[MemoryNode]) -> str:
     lines = [_EXEMPLAR_SECTION_HEADER]
     lines.extend(f"[EXEMPLAR] {_exemplar_line(node)}" for node in exemplars)
     return "\n".join(lines)
+
+
+#: W4 working-memory section header. Structural machinery (same category as
+#: the ``ACTIVATED MEMORIES:`` marker): it tells the generator this block is
+#: the earlier part of *this* conversation, retrieved from memory — not vault
+#: facts and not an instruction sheet. The gateway's Arm A payload carries
+#: its own digest/excerpt sub-structure inside.
+_WORKING_MEMORY_HEADER = (
+    "WORKING MEMORY — earlier turns of this current conversation, recalled "
+    "from memory (session digest, then verbatim excerpts). This already "
+    "happened here; you were part of it."
+)
+
+
+def _render_working_memory(working_memory: str) -> str:
+    """Render the W4 working-memory section (digest + excerpts)."""
+    return f"{_WORKING_MEMORY_HEADER}:\n{working_memory}"
 
 
 def _format_history(turns: Sequence[ConversationTurn], window: int) -> str:
@@ -698,6 +733,7 @@ class ContextBuilder:
         *,
         user_affect: UserAffect = UserAffect.NEUTRAL,
         deflection_exemplars: Sequence[MemoryNode] = (),
+        working_memory: str = "",
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
@@ -713,6 +749,9 @@ class ContextBuilder:
         ``deflection_exemplars`` (W3 competence wall) renders the VOICE
         EXEMPLARS section for an out-of-domain turn. Callers fetch them via
         :meth:`_deflection_exemplars`; an empty sequence renders nothing.
+
+        ``working_memory`` (W4) is the TencentDB Arm A block fetched by the
+        caller; an empty string (lane disabled / degraded) renders nothing.
         """
         era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
         admissible, exclusion_counts, excluded_refs = _filter_activated(
@@ -745,6 +784,7 @@ class ContextBuilder:
             exclusion_counts=exclusion_counts,
             excluded_memory_refs=excluded_refs,
             deflection_exemplars=wall_exemplars,
+            working_memory=working_memory,
             current_message=current_message,
             framing_version=framing_version,
             distress_grounding=distress_grounding,
@@ -765,6 +805,7 @@ class ContextBuilder:
         retrieval_config: RetrievalConfig | None = None,
         user_affect: UserAffect = UserAffect.NEUTRAL,
         deflection_probe_embedding: list[float] | None = None,
+        working_memory: str = "",
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
@@ -788,6 +829,10 @@ class ContextBuilder:
         rendered so base-model generalist skills cannot leak into the reply.
         ``None`` (legacy callers) disables the wall; empty retrieval stays a
         valid, exemplar-free state (B2 doctrine).
+
+        ``working_memory`` (W4) is the caller-fetched TencentDB Arm A block
+        (see :mod:`huible.persona.working_memory`); rendered verbatim in its
+        own section ahead of the history window. Empty renders nothing.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         activated = await retrieve(
@@ -833,6 +878,7 @@ class ContextBuilder:
             current_message=current_message,
             user_affect=user_affect,
             deflection_exemplars=exemplars,
+            working_memory=working_memory,
         )
 
     async def persona_scoped_grounding_refs(
