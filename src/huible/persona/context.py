@@ -152,6 +152,41 @@ DEFLECTION_PROBE_TEXT = (
 _ATOM_PREFIX_PATTERN = re.compile(r"^\S+\s+—\s+\S+:\s+")
 
 
+#: Conservative interrogative shapes that mark a turn as out-of-domain for the
+#: competence wall: direct requests for world knowledge, procedural skills, or
+#: explanations — the assistant trap that leaks base-model competence (E0
+#: micro-tells: code fluency, encyclopedia answers, teaching register).
+#:
+#: Measured rationale (epoch 39a6d1ef5ac1, Chandler corpus): retrieval
+#: activation does NOT separate domains — an encyclopedia probe scores 0.656
+#: on word-overlap lines vs 0.703 for an in-domain memory probe, and the W2
+#: lexical lane guarantees non-empty retrieval — so neither the activation
+#: floor nor a score threshold can route. Question *shape* is the measured,
+#: conservative discriminator. Deliberately NOT matched: autobiographical and
+#: conversational interrogatives ("do you remember...", "what are you talking
+#: about?", "what is your favorite...") — a false wall there would suppress
+#: legitimate memory answers, so the pattern list stays narrow and misses are
+#: accepted (they are caught downstream by the W6 replay / owner review).
+_COMPETENCE_WALL_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"\bhow\s+(do|can|would|does)\s+(i|you|we|one)\b",
+        r"\bwhat\s+(is|are|was|were)\s+the\b",
+        r"\bwhat'?s\s+the\b",
+        r"\bcan\s+you\s+(explain|teach|show|walk\s+\w+\s+through)\b",
+        r"\bexplain\s+(how|why|what)\b",
+        r"\bdo\s+you\s+know\s+(how|what|why|about)\b",
+    )
+)
+
+
+def _competence_wall_triggered(message: str) -> bool:
+    """True when the inbound message trips an assistant-trap question shape."""
+    if not message:
+        return False
+    return any(p.search(message) for p in _COMPETENCE_WALL_PATTERNS)
+
+
 def _exemplar_line(node: MemoryNode) -> str:
     """Render one exemplar's raw line (atom relation prefix stripped)."""
     return _ATOM_PREFIX_PATTERN.sub("", node.content, count=1)
@@ -745,9 +780,12 @@ class ContextBuilder:
             query_text=current_message or None,
         )
 
-        # W3 competence wall: fire only on a genuinely empty turn — nothing
-        # retrieved, or everything retrieved fails a hard gate. In-domain
-        # turns are served by their own retrieved exemplar lines.
+        # W3 competence wall: fire on a genuinely empty turn (nothing
+        # retrieved, or everything retrieved fails a hard gate) OR on an
+        # assistant-trap question shape (world-knowledge / explanation
+        # request — retrieval activation does not separate domains, see
+        # _COMPETENCE_WALL_PATTERNS). In-domain turns are served by their own
+        # retrieved exemplar lines.
         exemplars: list[MemoryNode] = []
         if deflection_probe_embedding is not None:
             era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
@@ -756,7 +794,7 @@ class ContextBuilder:
                 requester_scope=requester_tier.disclosure_scope,
                 era_boundary=era_boundary,
             )
-            if not admissible:
+            if not admissible or _competence_wall_triggered(current_message):
                 exemplars = await self._deflection_exemplars(
                     backend=backend,
                     persona=persona,

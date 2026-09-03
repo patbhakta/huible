@@ -19,6 +19,8 @@ from datetime import date
 from typing import Any
 from uuid import UUID, uuid4
 
+import pytest
+
 from huible.memory.protocol import (
     ContentType,
     DisclosureScope,
@@ -295,10 +297,63 @@ class TestCompetenceWall:
             backend=backend,
             query_embedding_content=[0.1],
             deflection_probe_embedding=PROBE,
+            current_message="What's the capital of Australia?",
         )
         assert ctx.included_memories == []
         assert ctx.exclusion_counts.get("confidence_low") == 1
         assert ctx.competence_wall_fired
+
+
+# ---------------------------------------------------------------------------
+# Assistant-trap question-shape trigger
+# ---------------------------------------------------------------------------
+
+
+class TestQuestionShapeTrigger:
+    async def _build(self, backend: _WallBackend, message: str):
+        return await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+            query_embedding_content=[0.1],
+            deflection_probe_embedding=PROBE,
+            current_message=message,
+        )
+
+    @pytest.mark.parametrize(
+        "message",
+        [
+            "Hey, quick one — how do I write a for loop in Python?",
+            "What's the capital of Australia?",
+            "What is the airspeed of an unladen swallow?",
+            "Can you explain how photosynthesis works?",
+            "Explain how a transistor works.",
+            "Do you know about the French Revolution?",
+        ],
+    )
+    async def test_assistant_trap_questions_fire_wall(self, message):
+        backend = _WallBackend([_seed(_node())])
+        ctx = await self._build(backend, message)
+        assert ctx.competence_wall_fired, message
+        assert "VOICE EXEMPLARS" in ctx.render()
+
+    @pytest.mark.parametrize(
+        "message",
+        [
+            "Do you remember those days at work?",
+            "What are you talking about?",
+            "What is your favorite memory of us?",
+            "hey you guys!",
+            "How have you been?",
+        ],
+    )
+    async def test_conversational_questions_never_fire(self, message):
+        memory = _node(content="general — is: warm memory line")
+        backend = _WallBackend(turn_seeds=[SearchResult(node=memory, score=0.8)])
+        ctx = await self._build(backend, message)
+        assert not ctx.competence_wall_fired, message
+        assert ctx.included_memories
+        assert "VOICE EXEMPLARS" not in ctx.render()
 
 
 # ---------------------------------------------------------------------------
