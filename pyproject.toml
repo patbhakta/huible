@@ -16,6 +16,8 @@ dependencies = [
     "httpx>=0.27.0",
     "prometheus-client>=0.21.0",
     "cryptography>=43.0",
+    # W1 local ONNX embeddings lane (bge-small-en-v1.5, 384-dim) — HU-2309
+    "fastembed>=0.3",
 ]
 
 [project.optional-dependencies]

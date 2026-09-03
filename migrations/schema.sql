@@ -26,9 +26,10 @@ CREATE TABLE memories (
     content_type  VARCHAR(32) NOT NULL DEFAULT 'narrative',
                  -- 'narrative', 'fact', 'sensory', 'relationship', 'preference'
 
-    -- Multi-vector embeddings
-    embedding_content  vector(1536),   -- semantic content embedding
-    embedding_sensory  vector(1536),   -- sensory/situational embedding
+    -- Multi-vector embeddings (W1: 384-dim local ONNX bge-small-en-v1.5;
+    -- migrated from 1536 with a full re-embed — HU-2309 v1.8 M-0R-A)
+    embedding_content  vector(384),   -- semantic content embedding
+    embedding_sensory  vector(384),   -- sensory/situational embedding
     embedding_affect   vector(512),    -- emotional valence embedding
 
     -- Temporal scoping

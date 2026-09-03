@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 from typing import Any
+from uuid import UUID
 
 from huible.memory.protocol import (
     DisclosureScope,
@@ -281,6 +282,9 @@ class PromptContext:
     conversation_history: str
     constraints: list[str]
     included_memories: list[MemoryNode] = field(default_factory=list)
+    # W1 trace-score passthrough (M-0R-A observability): retrieval activation
+    # per included memory id, so traces can verify the activation floor (CA C3).
+    activation_scores: dict[UUID, float] = field(default_factory=dict)
     exclusion_counts: dict[str, int] = field(default_factory=dict)
     excluded_memory_refs: list[ExcludedMemoryRef] = field(default_factory=list)
     current_message: str = ""
@@ -529,6 +533,7 @@ class ContextBuilder:
             conversation_history=history_text,
             constraints=constraints,
             included_memories=[am.node for am in admissible],
+            activation_scores={am.node.id: float(am.activation) for am in admissible},
             exclusion_counts=exclusion_counts,
             excluded_memory_refs=excluded_refs,
             current_message=current_message,

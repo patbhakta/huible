@@ -622,3 +622,32 @@ class TestPersonaScopedGroundingRefs:
         )
         assert [n.content for n in refs] == ["admissible fact"]
         assert backend.facts_scan_limit == ContextBuilder.GROUNDING_SCOPE_SCAN_LIMIT
+
+
+class TestActivationScorePassthrough:
+    """W1 trace-score passthrough (M-0R-A observability prerequisite)."""
+
+    def test_filter_and_render_populates_activation_scores(self):
+        node = _node(content="admissible high-conf", confidence_level=ConfidenceLevel.HIGH)
+        builder = ContextBuilder()
+        ctx = builder.filter_and_render(
+            [_activated(node, activation=0.73)],
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+        )
+        assert node.id in ctx.activation_scores
+        assert ctx.activation_scores[node.id] == pytest.approx(0.73)
+
+    def test_excluded_memories_have_no_score(self):
+        quarantined = _node(
+            content="quarantined", confidence_level=ConfidenceLevel.QUARANTINE
+        )
+        admitted = _node(content="clean fact", confidence_level=ConfidenceLevel.HIGH)
+        ctx = ContextBuilder().filter_and_render(
+            [_activated(quarantined, activation=0.99), _activated(admitted, activation=0.42)],
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+        )
+        assert [m.id for m in ctx.included_memories] == [admitted.id]
+        assert set(ctx.activation_scores) == {admitted.id}
+        assert ctx.activation_scores[admitted.id] == pytest.approx(0.42)

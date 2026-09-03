@@ -125,8 +125,8 @@ class MemoryRow(Base):
     content_type: Mapped[str] = mapped_column(
         String(32), nullable=False, server_default="narrative",
     )
-    embedding_content: Mapped[list[float] | None] = mapped_column(_PortableVector(1536))
-    embedding_sensory: Mapped[list[float] | None] = mapped_column(_PortableVector(1536))
+    embedding_content: Mapped[list[float] | None] = mapped_column(_PortableVector(384))
+    embedding_sensory: Mapped[list[float] | None] = mapped_column(_PortableVector(384))
     embedding_affect: Mapped[list[float] | None] = mapped_column(_PortableVector(512))
     valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

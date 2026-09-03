@@ -7,11 +7,13 @@ profile into the running Postgres/pgvector store, so the boot-time
 ``_hydrate_persona_registry`` hook (HU-1435) registers the persona and
 ``/api/v1/chat/{persona_id}`` serves retrieval-grounded replies.
 
-Retrieval contract (Stage-1 fake-posture): the API query embedder is the
-token-hash from ``huible.conversation.simple_embedding`` emitted at the
-``memories.embedding_content`` schema dim (1536, HU-1909); stored
-``embedding_content`` vectors MUST use the same function/dimension or
-``PostgresMemoryBackend`` skips the vector search (HU-1435 dim guard).
+Retrieval contract (W1, HU-2309 v1.8 M-0R-A): the API query embedder and the
+provisioning embedder both route through ``huible.embeddings`` (the live
+``EMBEDDING_PROVIDER`` setting — ``local_onnx`` 384-dim or the legacy
+token-hash 1536 lane); stored ``embedding_content`` vectors MUST use the same
+provider/dimension as the query path or ``PostgresMemoryBackend`` skips the
+vector search (HU-1435 dim guard). The dim is validated against the settings
+provider at startup.
 
 Memory mapping (distillation tier → store tier):
   L1 facts      → accrued   (content_type=fact,  source_type=extraction)
@@ -48,14 +50,21 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from huible.conversation import simple_embedding
+from huible.api.settings import get_settings
+from huible.embeddings import embed_passage_text
 from huible.persona.length import (
     CorpusLengthStats,
     compute_corpus_length_stats,
     stats_to_metadata,
 )
 
-QUERY_EMBEDDING_DIM = 1536  # memories.embedding_content schema dim (HU-1909)
+# Retrieval contract (W1, HU-2309 v1.8 M-0R-A): stored vectors use the active
+# EMBEDDING_PROVIDER passage embedder; the dim must match the schema the store
+# was migrated to (384 for local_onnx, 1536 for the legacy token-hash lane).
+# The HU-1435 dim guard skips searches on mismatch, so a provider/schema
+# mismatch means provisioned memories are silently unsearchable — refuse here
+# instead by validating against the ORM column dim at insert time.
+QUERY_EMBEDDING_DIM = get_settings().embedding_schema_dim
 
 PERSONA_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "huible:persona")
 
@@ -282,7 +291,7 @@ async def provision(
                     m["tier"],
                     m["content"],
                     m["content_type"],
-                    simple_embedding(m["content"], dim=QUERY_EMBEDDING_DIM),
+                    embed_passage_text(m["content"]),
                     m["source_type"],
                     json.dumps({**(m["metadata"] or {}), "confidence": float(m["confidence"] or 0.6)}),
                 )

@@ -224,13 +224,14 @@ class TestPostgresMemoryBackendSearch:
 class TestVectorSearchDimensionGuard:
     """HU-1435: dim mismatch degrades to empty results, never raises.
 
-    Prod caught a 64-dim query embedder against 1536-dim stored vectors
+    Prod caught a 64-dim query embedder against the stored-vector schema dim
+    (1536 pre-W1, 384 since migration 007 — HU-2309 M-0R-A)
     (asyncpg DataError -> 500 on the chat turn). The guard must fire before
     any SQL runs, so it is provable on sqlite.
     """
 
     async def test_wrong_dim_query_returns_empty(self, configured_backend):
-        wrong_dim = [0.1] * 64  # columns are 1536/1536/512
+        wrong_dim = [0.1] * 64  # columns are 384/384/512 (post-W1 schema)
         results = await configured_backend.search_by_content(
             _make_node().persona_id, wrong_dim, top_k=5
         )
@@ -238,7 +239,7 @@ class TestVectorSearchDimensionGuard:
 
     async def test_matching_dim_query_proceeds_to_sql(self, configured_backend):
         node = await configured_backend.store_memory(
-            _make_node(embedding_content=[0.5] * 1536)
+            _make_node(embedding_content=[0.5] * 384)
         )
         assert node is not None
         # sqlite cannot execute cosine_distance; the point is that the dim
@@ -246,5 +247,5 @@ class TestVectorSearchDimensionGuard:
         # fails on the dialect, proving the guard passed).
         with pytest.raises(Exception):  # noqa: B017 - dialect error expected
             await configured_backend.search_by_content(
-                _make_node().persona_id, [0.5] * 1536, top_k=5
+                _make_node().persona_id, [0.5] * 384, top_k=5
             )

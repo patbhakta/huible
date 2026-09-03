@@ -1773,7 +1773,9 @@ def _register_routes(application: FastAPI) -> None:
                     ExcludedMemoryRefView(id=ref.id, reason=ref.reason)
                     for ref in ctx.excluded_memory_refs
                 ],
-                activated_memories=[_view(node) for node in ctx.included_memories],
+                activated_memories=[
+                    _view(node, ctx.activation_scores) for node in ctx.included_memories
+                ],
                 exclusion_counts=dict(ctx.exclusion_counts),
                 conversation_id=session_id,
                 provider=provider_label,
@@ -2316,24 +2318,19 @@ def _register_routes(application: FastAPI) -> None:
 
 
 def _embed(message: str) -> list[float]:
-    """Token-hashed embedding for the inbound message.
+    """Embed one inbound message via the active embeddings provider (W1).
 
-    Mirrors :func:`huible.conversation.simple_embedding` semantics so retrieval
-    hits memories that share keywords with the inbound turn. Kept local to the
-    API layer to avoid coupling the HTTP path to the demo conversation module.
-
-    The vector is emitted at the ``memories.embedding_content`` schema dim
-    (1536) so the HU-1435 dimension guard lets the pgvector cosine search run:
-    a 64-dim Stage-1 query vector against the 1536-dim column silently skipped
-    every search (activated memories always empty). Keyword-overlap semantics
-    are unchanged — the token hash simply spreads over 1536 buckets, and the
-    provisioned persona memories are stored with this same function/dim
-    (HU-1909). A real embedding provider swaps both sides later via
-    ``EMBEDDING_PROVIDER``.
+    Pre-W1 this hardwired the token-hash ``simple_embedding`` at dim 1536
+    (RC-2: ``EMBEDDING_PROVIDER`` was dead config and the vault was never
+    semantically read — evidence E4). The W1 provider layer makes the setting
+    live: ``legacy``/``fake`` keeps the byte-identical token-hash behavior at
+    the legacy schema dim, and ``local_onnx`` serves real 384-dim bge
+    vectors. The HU-1435 dim-skip guard in the memory store stays as the
+    safety net for any provider/schema mismatch during the cutover window.
     """
-    from huible.conversation import simple_embedding
+    from huible.embeddings import embed_query_text
 
-    return simple_embedding(message, dim=1536)
+    return embed_query_text(message)
 
 
 def _conversation_store(application: FastAPI) -> ConversationStore:
@@ -3057,16 +3054,24 @@ def _mint_conversation_id() -> str:
     return str(_uuid.uuid4())
 
 
-def _view(node) -> ActivatedMemoryView:
-    """Render a provenance-safe view of an included memory node."""
+def _view(node, activation_scores: dict | None = None) -> ActivatedMemoryView:
+    """Render a provenance-safe view of an included memory node.
+
+    W1 trace-score passthrough: the spreading-activation score travels with
+    the node in ``PromptContext.activation_scores`` and is surfaced here so
+    ``chat.trace`` records the real retrieval activation instead of the
+    hardcoded ``0.0`` that made the activation-floor gate (CA C3) unverifiable
+    (M-0R-A observability prerequisite).
+    """
     confidence = (node.metadata or {}).get(CONFIDENCE_LEVEL_METADATA_KEY)
+    scores = activation_scores or {}
     return ActivatedMemoryView(
         id=node.id,
         content=node.content,
         content_type=node.content_type.value,
         disclosure_scope=node.disclosure_scope.value,
         confidence_level=str(confidence) if confidence is not None else "unknown",
-        activation_score=0.0,
+        activation_score=float(scores.get(node.id, 0.0)),
     )
 
 

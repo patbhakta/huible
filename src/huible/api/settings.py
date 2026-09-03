@@ -71,10 +71,23 @@ class Settings(BaseSettings):
     postgres_password: str = ""
     postgres_db: str = ""
 
-    # ── Embedding provider (Phase 2+; fake in Phase 1) ─────────────────────
+    # ── Embedding provider (W1 makes the setting live; HU-2309 v1.8 M-0R-A) ─
+    # ``legacy`` / ``fake`` → Stage-1 token-hash at the 1536 schema dim
+    # (pre-W1 behavior, byte-identical). ``local_onnx`` → CPU ONNX
+    # bge-small-en-v1.5 at 384 dims (the W1 cutover provider; requires the
+    # one-window schema migration + re-embed to run first).
     embedding_provider: str = "fake"
     openai_api_key: str = ""
     embedding_model: str = "text-embedding-3-small"
+    # Local ONNX lane (only read when ``embedding_provider == local_onnx``).
+    embeddings_model: str = "BAAI/bge-small-en-v1.5"
+
+    @property
+    def embedding_schema_dim(self) -> int:
+        """Vector dim the schema + query path must agree on (HU-1435 contract)."""
+        from huible.embeddings import provider_dim
+
+        return provider_dim(self.embedding_provider)
 
     # ── Advisory (Tier 2) — never the persona voice ────────────────────────
     claude_api_key: str = ""
