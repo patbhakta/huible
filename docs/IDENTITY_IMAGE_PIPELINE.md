@@ -229,9 +229,12 @@ themselves, committed under `experiments/identity-pipeline/`.
   0.0–0.25) but the production threshold must be re-proven on a consented human
   gold set (~50 images/class) before any client persona goes live. `ref_generate_validated.py`
   and the Kestra flow enforce this fail-closed (`production_safe=false` → no generation).
-  Gold-set procedure when consented photos arrive: intake → curate → generate outputs
-  per identity → lay out `<gold_dir>/<identity>/reference.png + outputs/` →
-  `calibrate_gate.py --persona-root <vault> --gold-dir <dir>` (NO `--force`).
+  gold-set procedure when consented photos arrive: lay out `<src>/<person>/*.jpg`
+  + a consent manifest CSV (`person,file,basis,consent_by,license_ref`) →
+  `build_human_goldset.py --src <src> --consent manifest.csv --out <gold_dir>`
+  (fails closed on missing consent; dedupes; picks references; dry-scores the
+  pos/neg distributions BEFORE any spend) → `calibrate_gate.py --persona-root
+  <vault> --gold-dir <dir>` (NO `--force`).
 - **Multi-face references** are rejected at curation (identity ambiguity — the
   demoted Aug-27 portrait has a background face and would fail).
 - **Older/dated references** (decade-old photos): not yet modeled; the curated
