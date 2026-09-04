@@ -1,0 +1,27 @@
+RIDGEFIELD AUTO REPAIR - SERVICE LOG
+Customer: Dana Whitfield    Vehicle: 2016 Honda Civic LX
+VIN: 2HGFC2F59GH554102    Odometer: 87,412 miles
+
+Complaint: Intermittent rattle from front-right suspension over
+potholes at speeds above 35 mph; noise disappears on smooth road.
+
+Diagnosis: Worn stabilizer bar end link bushing (right side).
+Sway bar bushings within spec; struts pass bounce test.
+
+Work performed: Replaced both stabilizer bar end links
+ (OEM 51320-SVB-A02). Torqued to 40 Nm. Road tested 8 miles.
+
+Parts: 2x end link @ $38.50, 1x washer kit @ $6.20
+Labor: 1.2 hours @ $110/hr
+Total: $240.80    Warranty: 24 months parts and labor
+
+Monthly Revenue H1 2026 (USD millions)
+Jan Feb Mar Apr May Jun
+12.4 13.1 15.8 14.2 17.9 19.3
+
+Table 2: Regional unit sales, merged-quarter view
+Quarter	Region	Units	Unit price	Revenue
+Q1 2026	North	1,204	$212.00	$255,248.00
+Q1 2026	South	987	$205.00	$202,335.00
+Q2 2026	North	1,510	$214.50	$323,895.00
+Q2 2026	South	1,044	$209.90	$219,135.60

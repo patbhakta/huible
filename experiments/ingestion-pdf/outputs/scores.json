@@ -1,0 +1,26 @@
+{
+  "real_mixed": {
+    "pymupdf_full": 1.0,
+    "docling_full": 0.915,
+    "docling_formula_not_decoded": 6,
+    "vlm_page": 0.817
+  },
+  "scanned_formula": {
+    "pymupdf_full": 0.0,
+    "docling_full": 0.931,
+    "docling_formula_not_decoded": 1,
+    "vlm_page": 0.792
+  },
+  "scanned_mixed": {
+    "pymupdf_full": 0.0,
+    "docling_full": 0.978,
+    "docling_formula_not_decoded": 1,
+    "vlm_page": 0.891
+  },
+  "chart_table": {
+    "pymupdf_full": 0.394,
+    "docling_full": 0.352,
+    "docling_formula_not_decoded": 0,
+    "vlm_page": 0.372
+  }
+}
