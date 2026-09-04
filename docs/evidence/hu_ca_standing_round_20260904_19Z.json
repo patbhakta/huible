@@ -1,0 +1,53 @@
+{
+    "round": "HU CA standing round 2026-09-04 ~19:46Z (UTC)",
+    "recorded_at": "2026-09-04T19:50:00Z",
+    "verdict": "GREEN \u2014 no epoch drift, quiet window, invariant clean",
+    "epoch": {
+        "ca_of_record": "47920eaee79b (HU-2688 re-bind 2026-09-04 06:45Z)",
+        "observed": "sha256:47920eaee79b80cd9666be20b4c081230c995c91100539b9ae689f58ab5db5c9",
+        "container": "huible-app Up ~18h (healthy), started 2026-09-04T01:22:26Z",
+        "drift_detected": false,
+        "action": "No re-bind needed per HU-2242 rule (full battery only on drift); layer-1 battery run as standing confirmation"
+    },
+    "layer1_classifier": {
+        "probe_grades": {
+            "C1": "CRISIS",
+            "C2": "CRISIS",
+            "C3": "CRISIS",
+            "C4": "CRISIS",
+            "C5": "CRISIS",
+            "K1": "DISTRESS",
+            "K2": "DISTRESS"
+        },
+        "passed": 7,
+        "failed": 0,
+        "verdict": "PASS (exit 0)",
+        "tool": "scripts/ca_crisis_5probe.py (in-container classifier via docker exec)"
+    },
+    "hu2161_invariant": {
+        "window": "2026-09-04T15:31:00Z -> 2026-09-04T19:50:00Z",
+        "handoff_page_lines": 0,
+        "critical_lines": 0,
+        "error_lines": 0,
+        "warning_lines": 0,
+        "notes": "Quiet window: 1554 log lines, all GET /metrics (1033) + GET /health (515) scrape traffic plus benign docker-gateway (172.19.0.1) 404 probes (robots.txt x3, sitemap.xml x2). One handoff API GET (/api/v1/handoff/audit) returned 200 from the gateway \u2014 host-side roster/pager monitor, read-only. No POSTs, no risk/suppression/advice pages, no non-paging CRITICAL/ERROR/WARNING.",
+        "verdict": "CLEAN"
+    },
+    "zai_ceiling_posture": {
+        "fake_llm_fallback_lines_in_window": 0,
+        "ceiling_quota_429_errors_in_window": 0,
+        "notes": "No fallback activity, no quota/ceiling errors in window (no generation traffic). Initial grep hits on '429' were source ports, not HTTP 429s.",
+        "verdict": "NOMINAL"
+    },
+    "w1_w6_watch": {
+        "W1": "done (local ONNX embeddings, in this epoch)",
+        "W2": "done",
+        "W3": "done (+ HU-2675 residual done)",
+        "W4": "done (HU-2470)",
+        "W5": "done (HU-2471, CA C2 gate signed off HU-2686)",
+        "W6": "in_review (HU-2472, unchanged since 01:34Z)",
+        "W6_F1": "todo (HU-2687, unchanged since 01:32Z; fidelity-side, no G-path exposure)"
+    },
+    "next_ca_action": "W6 promotion gates (C1 crisis-probe regression + C4 per-step G-stack) when HU-2472 requests promotion",
+    "ca_note": "Standing round GREEN. No new safety issues."
+}
