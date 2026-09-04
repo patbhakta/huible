@@ -1,0 +1,32 @@
+{
+ "gate": "HU-2309 W4 E0-replay turn-34 first-utterance recall gate",
+ "label": "hu2470-w4-rereask-0015z",
+ "persona": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+ "generated_at": "2026-09-04T00:15:58.924968+00:00",
+ "expected_markers": [
+  "hey who r u",
+  "who r u"
+ ],
+ "turns": [],
+ "probe": {
+  "turn": 15,
+  "message": "what was the first thing I said to you?",
+  "http": 200,
+  "latency_ms": 3501,
+  "reply_excerpt": "\"hey who r u?\" — still a literary landmark, Pat.",
+  "is_probe": true,
+  "recall_markers_hit": [
+   "hey who r u",
+   "who r u"
+  ],
+  "pass": true,
+  "working_memory_trace": {
+   "strategy": "v4-arm-a",
+   "chars": 551,
+   "synced": true
+  }
+ },
+ "conversation_id": "e0w4-2eabe0dc3e",
+ "leg": "cross-session re-ask on resumed conversation",
+ "verdict": "PASS"
+}

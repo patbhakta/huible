@@ -55,7 +55,14 @@ Working memory is durable in TencentDB (not the app process) and the digest path
 - The 12:12:43Z ceiling-blocked attempt is itself in history: an identical probe turn (`user: what was the first thing I said to you?`) answered by the fake-voice fallback (`[fake-llm:9f34b622] Deterministic response.`). The graded re-ask will therefore be the **second identical ask** in the same conversation — expected and harmless (grading targets the first-utterance markers, and the durable recall path already proved out on the 12:12:43 turn: `wm={strategy: v4-arm-a, chars: 753, synced: true}`); noted here so the 00:15Z wake run does not mistake it for a fresh anomaly.
 - z.ai day bucket at block: `2026-09-03: 200205/200000` (this work's own replay/battery traffic). Resets 00:00 UTC Sep 4; monitor `hu2470-crosssession-graded-rereask` fires 00:15Z.
 
+## Graded re-ask result (2026-09-04T00:15Z) — PASS, issue closed
+
+- Command: `python3 scripts/e0_turn34_recall.py --label hu2470-w4-rereask-0015z --reask-conversation e0w4-2eabe0dc3e` (fired by issue monitor `hu2470-crosssession-graded-rereask` at 00:15Z, right after the 00:00 UTC z.ai ceiling reset).
+- Resumed conversation `e0w4-2eabe0dc3e`, probe turn 15: `what was the first thing I said to you?` → HTTP 200, 3501 ms.
+- Reply verbatim: `"hey who r u?" — still a literary landmark, Pat.` — both expected markers hit (`hey who r u`, `who r u`).
+- Working-memory trace on the answering turn: `wm={strategy: v4-arm-a, chars: 551, synced: true}`.
+- Raw output: `hu2470_w4_crosssession_rereask_20260904.json`. Cross-session first-utterance recall across a redeploy (`830fc42a4519` → `8d9ff446b666`) and a day boundary is verified. All four HU-2470 acceptance criteria met; G-stack safety invariant clean per the 879-passed battery above and the 17:00Z standing round.
+
 ## Remaining
 
-- Graded cross-session re-ask (scripted; ceiling-blocked attempt in `hu2470_w4_crosssession_ceilingblock.json`) reruns after the 00:00 UTC Sep 4 z.ai ceiling reset — issue monitor `hu2470-crosssession-graded-rereask` wakes the assignee 00:15Z; on PASS the issue closes.
 - W6 owns the owner blind-judged full replay + the OOD2 encyclopedia residual (existing W3 handoff).
