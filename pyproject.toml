@@ -27,6 +27,15 @@ dev = [
     "ruff>=0.8.0",
     "aiosqlite>=0.20.0",
 ]
+# Vault ingestion pipeline v1 (HU-2699): CPU-only PDF router + media atoms.
+# Heavy measured deps — docling (MIT) covers the marker/MinerU pipeline class
+# (licensing: those two are on file as NOT adoptable); faster-whisper is the
+# measured audio lane. fastembed is already a main dependency.
+ingest = [
+    "pymupdf>=1.26",
+    "docling>=2.126",
+    "faster-whisper>=1.2",
+]
 
 [build-system]
 requires = ["setuptools>=75.0"]
