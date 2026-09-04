@@ -5,7 +5,28 @@ Purpose (HU-2692 plan): formula/chart pages (detected via docling
 only. Formulas come back as LaTeX (vault tier — the "specific"); chart values
 come back flagged ``approximate, chart-derived`` (TencentDB tier).
 
-Production enable is new paid spend and requires Pat's approval:
+Spend status: Pat approved gemini-3.8-flash for this leg on 2026-09-04
+(flash-only ladder, no pro-tier). Measured quality (HU-2692 evidence,
+gemini-3.8-flash vs GLM-4.5V, token F1): chart_table 0.696 vs 0.372,
+scanned_mixed 0.884 vs 0.891, scanned_formula 0.829 vs 0.792, real_mixed_p3
+0.834 vs 0.817 — the VLM lane reads charts, and gemini-3.8-flash is the
+strongest chart reader measured.
+
+Remaining enable gate is NOT spend: it is relay E2E validation. Google's API
+is geo-blocked from the VPS, so production calls route via the home SOCKS5
+relay (pat-w11pc). Ops requirements from the boss note + measurement:
+
+- batchable, resumable jobs (per-page artifacts written immediately; re-run
+  skips completed pages) — reference implementation
+  ``experiments/ingestion-pdf/scripts/run_vlm_gemini.py``;
+- completeness check + one retry per page (measured 2026-09-04: 1/5 gemini
+  calls early-stopped mid-page; the retry produced a complete page, F1
+  0.472 -> 0.884 on the affected sample);
+- relay availability is a live dependency (measured outage 2026-09-04 ~19:40Z:
+  SOCKS greeting OK, every CONNECT closed, ~6 min, all targets — home-side
+  egress).
+
+Config gates (unchanged):
 
 - the lane only activates when ``IngestConfig.vlm_enabled`` is True (env
   ``VAULT_INGEST_VLM_ENABLED``), which defaults to False;
@@ -27,7 +48,10 @@ VLM_BASE_URL_ENV = "VAULT_INGEST_VLM_BASE_URL"
 VLM_API_KEY_ENV = "VAULT_INGEST_VLM_API_KEY"
 VLM_MODEL_ENV = "VAULT_INGEST_VLM_MODEL"
 
-DISABLED_REASON = "tier-2 VLM lane disabled by config (production enable requires spend approval)"
+DISABLED_REASON = (
+    "tier-2 VLM lane disabled by config (spend approval granted 2026-09-04 for "
+    "gemini-3.8-flash; enable awaits home-relay E2E validation)"
+)
 UNCONFIGURED_REASON = "tier-2 VLM lane enabled but credentials not configured in environment"
 
 CHART_VALUE_FLAGS = ["approximate", "chart-derived"]

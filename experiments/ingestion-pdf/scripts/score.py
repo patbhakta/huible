@@ -33,22 +33,28 @@ def gt_pages(name: str) -> list[list[str]]:
 VLM_PAGE = {"scanned_formula": 0, "scanned_mixed": 0, "chart_table": 0, "real_mixed": 3}
 
 results = {}
+VLM_LANES = [
+    ("vlm", "vlm_page"),
+    ("vlm_gemini", "gemini_relay_page"),
+    ("vlm_gemini_or", "gemini_openrouter_page"),
+]
 for name in ["real_mixed", "scanned_formula", "scanned_mixed", "chart_table"]:
     gts = gt_pages(name)
+    gt_all = gts[0] if len(gts) == 1 else [t for page in gts for t in page]
     row = {}
     # pymupdf baseline: full doc
     pm = (BASE / "outputs" / "pymupdf" / f"{name}.txt").read_text()
-    row["pymupdf_full"] = round(f1(norm_tokens(pm), gts[0] if len(gts) == 1 else sum(gts, [])), 3)
+    row["pymupdf_full"] = round(f1(norm_tokens(pm), gt_all), 3)
     # docling: full doc
     dl = (BASE / "outputs" / "docling" / f"{name}.md").read_text()
-    gt_all = gts[0] if len(gts) == 1 else sum(gts, [])
     row["docling_full"] = round(f1(norm_tokens(dl), gt_all), 3)
     row["docling_formula_not_decoded"] = dl.count("formula-not-decoded")
-    # vlm: single page
-    vlm_path = BASE / "outputs" / "vlm" / f"{name}.md"
-    if vlm_path.exists():
-        vlm = vlm_path.read_text()
-        row["vlm_page"] = round(f1(norm_tokens(vlm), gts[VLM_PAGE[name]]), 3)
+    # vlm lanes: single page each (GLM-4.5V = outputs/vlm, Gemini 3.8 flash = vlm_gemini*)
+    for lane_dir, key in VLM_LANES:
+        vlm_path = BASE / "outputs" / lane_dir / f"{name}.md"
+        if vlm_path.exists():
+            vlm = vlm_path.read_text()
+            row[key] = round(f1(norm_tokens(vlm), gts[VLM_PAGE[name]]), 3)
     results[name] = row
 print(json.dumps(results, indent=2))
 (BASE / "outputs" / "scores.json").write_text(json.dumps(results, indent=2))

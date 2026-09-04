@@ -3,24 +3,28 @@
     "pymupdf_full": 1.0,
     "docling_full": 0.915,
     "docling_formula_not_decoded": 6,
-    "vlm_page": 0.817
+    "vlm_page": 0.817,
+    "gemini_openrouter_page": 0.834
   },
   "scanned_formula": {
     "pymupdf_full": 0.0,
     "docling_full": 0.931,
     "docling_formula_not_decoded": 1,
-    "vlm_page": 0.792
+    "vlm_page": 0.792,
+    "gemini_openrouter_page": 0.829
   },
   "scanned_mixed": {
     "pymupdf_full": 0.0,
     "docling_full": 0.978,
     "docling_formula_not_decoded": 1,
-    "vlm_page": 0.891
+    "vlm_page": 0.891,
+    "gemini_openrouter_page": 0.884
   },
   "chart_table": {
     "pymupdf_full": 0.394,
     "docling_full": 0.352,
     "docling_formula_not_decoded": 0,
-    "vlm_page": 0.372
+    "vlm_page": 0.372,
+    "gemini_openrouter_page": 0.696
   }
 }

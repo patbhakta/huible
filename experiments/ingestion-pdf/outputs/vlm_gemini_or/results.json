@@ -1,0 +1,34 @@
+{
+  "chart_table": {
+    "transport": "openrouter",
+    "model": "google/gemini-3.8-flash",
+    "seconds": 14.1,
+    "prompt_tokens": 1138,
+    "completion_tokens": 1839,
+    "cost_usd": 0.00774975
+  },
+  "real_mixed": {
+    "transport": "openrouter",
+    "model": "google/gemini-3.8-flash",
+    "seconds": 5.3,
+    "prompt_tokens": 1141,
+    "completion_tokens": 1570,
+    "cost_usd": 0
+  },
+  "scanned_formula": {
+    "transport": "openrouter",
+    "model": "google/gemini-3.8-flash",
+    "seconds": 12.7,
+    "prompt_tokens": 1141,
+    "completion_tokens": 1502,
+    "cost_usd": 0
+  },
+  "scanned_mixed": {
+    "transport": "openrouter",
+    "model": "google/gemini-3.8-flash",
+    "seconds": 25.6,
+    "prompt_tokens": 1140,
+    "completion_tokens": 1881,
+    "cost_usd": 0.00790875
+  }
+}

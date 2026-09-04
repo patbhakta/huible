@@ -91,3 +91,78 @@ sample set), since my synthetic low-res block is deliberately harsher than real 
 - VLM lane evaluated at 150 DPI rasters; DPI sweep not done yet.
 - Media-to-vault front (audio/video/dialog/images) is the second half of HU-2692 —
   tracked as a follow-up measurement spike (child issue), same measure-first bar.
+
+---
+
+## Update 2026-09-04 evening — boss approvals applied + gemini-3.8-flash measured
+
+Pat's follow-up decisions (issue comment 14bd161d): **vision model approved**
+(gemini-3.8-flash, inside the flash-only ladder, no pro-tier; Google API
+geo-blocked from the VPS → production calls route via the home SOCKS5 relay
+pat-w11pc; design must be batchable + resumable) and a **benchmark shortlist**
+for the ingestion+RAG loop (below).
+
+### gemini-3.8-flash extraction results (measured this run)
+
+Transport note: the home relay was **down** during this run (measured 2026-09-04
+~19:37–19:47Z: TCP + SOCKS5 greeting OK, every CONNECT closed immediately,
+0/16+ attempts, all target domains → home-side egress outage on pat-w11pc, not
+an ACL). Quality was therefore measured through the existing metered OpenRouter
+channel (same model, `google/gemini-3.8-flash`, spend-tracked within the
+existing $50 monthly budget lane; ~$0.002–0.008/page, 4 pages ≈ $0.02). The
+relay-routed Google lane is implemented in the same script and resumable — it
+completes whenever the relay recovers.
+
+Bag-of-tokens F1 vs ground truth (same samples, same prompt as the table above;
+scanned_mixed is the retry — first attempt early-stopped mid-page, see below):
+
+| Sample | pymupdf | docling (CPU) | GLM-4.5V | **gemini-3.8-flash** |
+|---|---|---|---|---|
+| real_mixed p4 | 1.000 | 0.915 | 0.817 | **0.834** |
+| scanned_formula | 0.000 | 0.931 | 0.792 | **0.829** |
+| scanned_mixed | 0.000 | 0.978 | 0.891 | 0.884 |
+| chart_table | 0.394 | 0.352 | 0.372 | **0.696** |
+
+Findings:
+
+- **Chart reading is the decisive win**: 0.696 vs GLM-4.5V's 0.372 on the
+  chart/table page — gemini-3.8-flash reads chart values and table cells far
+  more completely. This strengthens the Tier-2 doctrine: VLM pass on
+  formula/chart pages, chart values flagged approximate → TencentDB tier.
+- **Scanned text stays docling's job** (Tier 1): 0.93–0.98 vs VLM's 0.83–0.88.
+  The router design is confirmed, not changed.
+- **Reliability caveat (measured)**: 1/5 gemini calls early-stopped mid-page
+  (transient; a retry produced a complete page, F1 0.472 → 0.884). Production
+  lane needs a per-page completeness check + one retry. OpenRouter usage/cost
+  metadata was also flaky (0 reported on 2/5 calls) — budget by page count,
+  not by reported cost.
+- Latency 5.3–25.6 s/page (one 25.6 s outlier on retry); comparable to
+  GLM-4.5V's 12–19 s/page.
+
+Artifacts: `experiments/ingestion-pdf/outputs/vlm_gemini_or/` (extracts +
+`results.json`), `scripts/run_vlm_gemini.py` (dual transport: `relay` =
+production Google lane via SOCKS5 with retry/backoff + resume; `openrouter` =
+measurement lane), `outputs/scores.json` (all lanes scored).
+
+### Remaining gate for production enable (unchanged flag, changed reason)
+
+`VAULT_INGEST_VLM_ENABLED` stays default OFF — not for spend (approved), but
+until the relay-routed Google lane passes one end-to-end page once the home
+relay is back. Unblock owner: home-side (pat-w11pc egress); the script resumes
+without rework. After that, flipping the flag is a pure build task (Tech Lead).
+
+### Benchmark shortlist for the ingestion+RAG loop (recorded per boss decision)
+
+- **PRIMARY: FRAMES** (Google, "Fact, Fetch, and Reason"; 800+ multi-hop
+  questions over an included CC BY-SA Wikipedia corpus) — run only after the
+  extraction pipeline produces artifacts worth scoring (boss's own gate).
+  Cheap corpus-ships-with-dataset fit for the gist-index architecture.
+- **SECONDARY when the matching front lands**: RAGTruth (word-level
+  hallucination taxonomy; sharpens abstention/honesty measurement) and
+  MMNeedle (multimodal needle; once media ingestion lands).
+- **SKIPPED as redundant**: NIAH/RULER (BEAM's interactive multi-session eval
+  already exceeds static-needle testing), BeIR (pure general-domain IR —
+  revisit only for isolated retrieval-channel tuning), FEVER (partially
+  covered by BEAM contradiction_resolution, scored 0.856).
+- Doctrine: measure-first on lagging capabilities (ingestion quality is the
+  current gap); never chase categories we already lead.

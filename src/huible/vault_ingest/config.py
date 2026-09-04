@@ -1,10 +1,11 @@
 """Ingestion configuration.
 
 v1 flags:
-- ``vlm_enabled`` gates the Tier-2 VLM lane. It is **OFF by default**; production
-  enable is new paid spend and requires Pat's approval (HU-2692 plan, 2026-09-04
-  revision). Credentials are only ever read from the environment at call time —
-  nothing is hardcoded.
+- ``vlm_enabled`` gates the Tier-2 VLM lane. It is **OFF by default**; spend is
+  approved (gemini-3.8-flash, Pat 2026-09-04) but enable awaits home-relay E2E
+  validation (Google API geo-blocked from the VPS; relay measured down
+  2026-09-04 ~19:40Z). Credentials are only ever read from the environment at
+  call time — nothing is hardcoded.
 """
 
 from __future__ import annotations
