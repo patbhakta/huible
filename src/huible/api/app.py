@@ -57,6 +57,7 @@ import json
 import logging
 import os
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
@@ -140,6 +141,7 @@ from huible.api.schemas import (
     ByokKeyPutRequest,
     ByokKeyView,
     CapabilityGuardView,
+    CaretakerView,
     ChatRequest,
     ChatTrace,
     ConsentAcknowledgeData,
@@ -155,6 +157,7 @@ from huible.api.schemas import (
     HandoffTicketView,
     HealthCheck,
     HealthResponse,
+    InterestToolView,
     PersonaChatRequest,
     PersonaChatResponse,
     RiskEnforcementView,
@@ -187,6 +190,7 @@ from huible.persona.context import (
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.persona.length import reply_budget_tokens, stats_from_metadata
+from huible.persona.tools import caretaker_reply, is_temporal_question, parse_era_boundary
 from huible.persona.working_memory import (
     NullWorkingMemory,
     TencentWorkingMemory,
@@ -682,6 +686,7 @@ def create_app(
     pager: Pager | None = None,
     settings: Settings | None = None,
     start_time: float | None = None,
+    now_fn: Callable[[], datetime] | None = None,
 ) -> FastAPI:
     """Build a FastAPI app with injected dependencies.
 
@@ -918,6 +923,10 @@ def create_app(
     # optional test override for the clock; None → real current time.
     application.state.chat_coverage_window = _coverage_from_settings(resolved_settings)
     application.state.chat_coverage_now = None
+    # W5 persona tools (HU-2309 v1.8 §1.7.2 / M-0R-E): the real clock used by
+    # the in-world era clock line and the caretaker channel. Injectable for
+    # hermetic tests (constructor kwarg wins; None → the system clock).
+    application.state.chat_now: Callable[[], datetime] = now_fn or (lambda: datetime.now(UTC))
     # The gauge wiring target (HU-1446) flips to 1 once the roster is staffed
     # (HANDOFF_AVAILABLE_RESPONDERS>0) — i.e. the §3 Sev-1 alerts are now
     # wired to a real on-call rather than the pre-roster fail-safe. Stays 0
@@ -1591,6 +1600,44 @@ def _register_routes(application: FastAPI) -> None:
                 ),
             )
 
+        # --- W5 caretaker channel (§1.6b minimal spec + CA C2) ---------------
+        # Date/time-class questions are answered OUT-OF-PERSONA by the
+        # caretaker: a clearly-labeled reply from the real clock that never
+        # speaks in-voice and never feeds the persona corpus or conversation
+        # history — no retrieval, no generation, no working-memory capture,
+        # no turn recording. The persona's world stays inside the era
+        # boundary; the real-time fact rides the caretaker (the sanctioned
+        # escape hatch RC-4 found missing at E0).
+        #
+        # CA C2 (out-of-voice ≠ out-of-safety-stack): this branch sits AFTER
+        # the G1 crisis pre-check, the G6 consent gate, and the G8 risk-flag
+        # enforcement above — all three executed on this turn, and every one
+        # of them can still short-circuit it. A crisis disclosure arriving at
+        # the caretaker channel routed to G1 handling above (never to a
+        # date/time non-answer); an un-consented session never reaches here
+        # (409 CONSENT_REQUIRED); a G8 short-circuit (pause / handoff /
+        # refuse_topic) outranks the caretaker. ``risk_enforcement`` stays on
+        # the trace as the audit evidence that G8 evaluated this turn.
+        real_now = application.state.chat_now()
+        if settings.caretaker_channel_enabled and is_temporal_question(body.message):
+            boundary = parse_era_boundary(binding.persona.era_knowledge_boundary)
+            caretaker_text = caretaker_reply(real_now, binding.persona.name)
+            _emit_turn(persona_id, outcome="caretaker")
+            _log_chat_trace(application, body.conversation_id, action="caretaker")
+            return PersonaChatResponse(
+                response=caretaker_text,
+                trace=ChatTrace(
+                    conversation_id=session_id,
+                    provider="caretaker(clock)",
+                    caretaker=CaretakerView(
+                        kind="temporal",
+                        era_boundary=boundary.isoformat() if boundary else "",
+                    ),
+                    risk_enforcement=_risk_enforcement_view(enforcement),
+                    session_meta=_session_meta(application, body.conversation_id),
+                ),
+            )
+
         # --- Default / G3-distress path: retrieve + render + generate --------
         # The shared affect signal grades sub-acute distress; the ContextBuilder
         # branches the prompt (G3 dynamic half) and the affect guard suppresses
@@ -1625,6 +1672,10 @@ def _register_routes(application: FastAPI) -> None:
             conversation_history=_history(application, body.conversation_id),
             deflection_probe_embedding=_get_deflection_probe_embedding(),
             working_memory=wm_recall.context,
+            # W5 era clock: the caller's real clock renders the era-gated
+            # in-world line (disabled → pre-W5 prompt shape).
+            real_now=real_now if settings.era_clock_enabled else None,
+            interest_tool=settings.interest_tool_enabled,
         )
 
         prompt = ctx.render()
@@ -1904,6 +1955,11 @@ def _register_routes(application: FastAPI) -> None:
                         markers=list(capability.fired_markers),
                     )
                     if ctx.competence_wall_fired
+                    else None
+                ),
+                interest_tool=(
+                    InterestToolView(lines=len(ctx.interest_exemplars))
+                    if ctx.interest_tool_fired
                     else None
                 ),
                 risk_enforcement=_risk_enforcement_view(enforcement),

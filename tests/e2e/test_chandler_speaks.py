@@ -467,13 +467,20 @@ class TestChandlerSpeaksEndToEnd:
         assert any("Monica" in c for c in contents)  # monica (HIGH)
         assert any("Joey" in c for c in contents)  # joey (MEDIUM)
 
-        # In-voice: the rendered prompt carries Chandler's voice instructions
-        # and the sitcom-era knowledge boundary.
+        # In-voice: the rendered prompt carries the persona identity + the
+        # sitcom-era knowledge boundary. W3 (description-free prompt): the
+        # hand-written voice sheet is deleted from the render path — voice
+        # comes from the retrieved exemplar lines asserted above, so neither
+        # the sheet's adjectives nor its meta-wall phrasing may appear; the
+        # era contract is carried by the era-boundary line instead.
         prompt = llm.calls[0][0]
         assert "Chandler Bing" in prompt
-        assert "sarcastic" in prompt.lower()
+        assert "sarcastic" not in prompt.lower()  # RC-1 sheet stays deleted
+        assert "walled into the sitcom universe" not in prompt.lower()
         assert CHANDLER_ERA_BOUNDARY in prompt  # era boundary enforced in prompt
-        assert "sitcom universe" in prompt.lower()  # meta-layer wall declared
+        assert (
+            "must not know, remember, or reference anything that happened after" in prompt
+        )  # era-wall contract line
 
     def test_first_grounded_exchange_is_deterministic(self):
         """The first grounded text-in -> text-out exchange is reproducible."""

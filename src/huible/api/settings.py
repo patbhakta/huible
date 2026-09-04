@@ -198,6 +198,25 @@ class Settings(BaseSettings):
     working_memory_service_id: str = "default"
     working_memory_timeout_s: float = 10.0
 
+    # ── W5 persona tools (HU-2309 v1.8 §1.7.2 / M-0R-E) ────────────────────
+    # Era-gated tool lanes. All three are deterministic + local (no network,
+    # no LLM, no spend), so unlike the W4 lane they default ON:
+    #   era_clock — the in-world era clock line in the system prompt (the
+    #     persona's "today" pins to era_knowledge_boundary; fail-closed).
+    #   caretaker — the §1.6b caretaker channel: date/time-class questions
+    #     get a clearly-labeled out-of-persona answer from the real clock.
+    #     CA C2: the caretaker stays INSIDE the G-path — the branch sits
+    #     after the G1 crisis pre-check, the G6 consent gate, and the G8
+    #     risk-flag enforcement in the chat handler, so crisis disclosures
+    #     arriving at the caretaker channel route to G1 handling
+    #     (out-of-voice ≠ out-of-safety-stack).
+    #   interest_tool — the hobby/interest lane: interest-shaped turns are
+    #     grounded in the persona's own era-admissible preference/fact vault
+    #     lines (the vault-derived interest/topic map, W1 retrieval feeds it).
+    era_clock_enabled: bool = True
+    caretaker_channel_enabled: bool = True
+    interest_tool_enabled: bool = True
+
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
 

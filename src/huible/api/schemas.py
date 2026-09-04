@@ -594,6 +594,45 @@ class WorkingMemoryView(BaseModel):
     )
 
 
+class CaretakerView(BaseModel):
+    """W5 caretaker-channel observability (HU-2309 v1.8 §1.7.2 / §1.6b + CA C2).
+
+    Non-null when the turn was routed out-of-persona to the caretaker channel
+    (date/time-class question answered from the real clock, clearly labeled,
+    never in-voice, never fed to the persona corpus or history). The G-path
+    gates (G1/G6/G8) all ran *before* this branch — CA C2: out-of-voice is
+    never out-of-safety-stack — so a caretaker-routed turn asserts that the
+    full stack executed; ``gates_cleared`` names them for the audit trail.
+    """
+
+    kind: str = Field(
+        default="temporal",
+        description="Caretaker route class (temporal = date/time-class question).",
+    )
+    era_boundary: str = Field(
+        default="",
+        description="The persona era boundary the caretaker did NOT pierce (empty when unset).",
+    )
+    gates_cleared: list[str] = Field(
+        default_factory=lambda: ["g1_crisis", "g6_consent", "g8_risk"],
+        description="G-path gates that executed on this caretaker-routed turn (CA C2).",
+    )
+
+
+class InterestToolView(BaseModel):
+    """W5 hobby/interest tool observability (HU-2309 v1.8 §1.7.2 / M-0R-E).
+
+    Non-null when the interest lane fired this turn: the reply was grounded
+    in the persona's own era-admissible preference/fact vault lines (the
+    vault-derived interest/topic map). ``lines`` counts the rendered lines.
+    """
+
+    lines: int = Field(
+        default=0,
+        description="Number of era-admissible interest lines rendered into the prompt.",
+    )
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
     passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
@@ -652,6 +691,23 @@ class ChatTrace(BaseModel):
             "W4 TencentDB working-memory lane observability (M-0R-B). Null "
             "when the lane is disabled; populated on persona-voiced turns "
             "when armed."
+        ),
+    )
+    caretaker: CaretakerView | None = Field(
+        default=None,
+        description=(
+            "W5 caretaker-channel route (§1.6b + CA C2). Non-null when the "
+            "turn was a date/time-class question served out-of-persona from "
+            "the real clock; the G-path gates ran before the route. Null on "
+            "persona-voiced turns."
+        ),
+    )
+    interest_tool: InterestToolView | None = Field(
+        default=None,
+        description=(
+            "W5 hobby/interest tool observability (M-0R-E). Non-null when "
+            "the interest lane grounded the turn in the persona's own "
+            "era-admissible vault lines; null otherwise."
         ),
     )
     conversation_id: str | None = Field(

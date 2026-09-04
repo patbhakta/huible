@@ -34,7 +34,16 @@ the memory-integrity hard rules before any memory reaches the generator:
    measurement/eval layer and condition retrieval/budgets — they are never
    rendered as adjective sheets.
 
-6. **Working memory (W4, HU-2309 v1.8 §1.7.2 / M-0R-B).** The
+6. **In-world era clock + hobby tools (W5, HU-2309 v1.8 §1.7.2 / M-0R-E).**
+   The system prompt carries a deterministic era-gated in-world clock line
+   (the persona's "today" pins to ``era_knowledge_boundary`` once the real
+   date passes it; it can never report a later date), and on an
+   interest/hobby-shaped turn the persona's own era-admissible
+   preference/fact vault lines render as the interest grounding — hobbies
+   are talked from the vault-derived interest/topic map (W1 retrieval feeds
+   it), never from base-model invention.
+
+7. **Working memory (W4, HU-2309 v1.8 §1.7.2 / M-0R-B).** The
    history section is working-memory-shaped instead of a naive eviction
    window: the last ``HISTORY_WINDOW`` turns render verbatim, the pre-window
    turns render as a bounded head (``WORKING_MEMORY_HEAD_CAP`` — together
@@ -58,12 +67,13 @@ import re
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
 from huible.memory.protocol import (
+    ContentType,
     DisclosureScope,
     MemoryBackend,
     MemoryNode,
@@ -82,6 +92,11 @@ from huible.persona.length import (
     TEXTING_CONCISION_DIRECTIVE,
     CorpusLengthStats,
     render_texting_directive,
+)
+from huible.persona.tools import (
+    era_clock_system_line,
+    in_world_now,
+    is_interest_question,
 )
 from huible.safety.crisis import UserAffect
 from huible.safety.framing import get_distress_addendum, get_framing
@@ -202,6 +217,12 @@ def _competence_wall_triggered(message: str) -> bool:
 def _exemplar_line(node: MemoryNode) -> str:
     """Render one exemplar's raw line (atom relation prefix stripped)."""
     return _ATOM_PREFIX_PATTERN.sub("", node.content, count=1)
+
+
+#: W5 interest tool: content types that can carry a hobby/interest/preference
+#: statement. The vault-derived interest/topic map reads these only —
+#: narratives/sensory/relationship atoms stay out of the section.
+_INTEREST_CONTENT_TYPES = frozenset({ContentType.PREFERENCE, ContentType.FACT})
 
 
 def _confidence_from_numeric(value: Any) -> ConfidenceLevel | None:
@@ -392,6 +413,11 @@ class PromptContext:
     # state the HISTORY_WINDOW tail would otherwise have evicted (RC-3).
     # Prompt surface only; never counted as activated vault memory.
     working_memory: str = ""
+    # W5 interest tool (M-0R-E): the persona's own era-admissible
+    # preference/fact lines retrieved on an interest/hobby-shaped turn.
+    # Prompt surface (YOUR INTERESTS section) + evidence, kept separate from
+    # activated memories like the W3 deflection exemplars.
+    interest_exemplars: list[MemoryNode] = field(default_factory=list)
     current_message: str = ""
     framing_version: int = 0
     distress_grounding: bool = False
@@ -400,6 +426,11 @@ class PromptContext:
     def competence_wall_fired(self) -> bool:
         """True when the out-of-domain turn was served deflection exemplars."""
         return bool(self.deflection_exemplars)
+
+    @property
+    def interest_tool_fired(self) -> bool:
+        """True when the W5 interest tool served hobby grounding this turn."""
+        return bool(self.interest_exemplars)
 
     def render(self) -> str:
         """Render the full flat prompt string for a generator.
@@ -413,6 +444,8 @@ class PromptContext:
         parts.append(self.memory_blocks if self.memory_blocks else "(none)")
         if self.deflection_exemplars:
             parts.append(_render_exemplar_block(self.deflection_exemplars))
+        if self.interest_exemplars:
+            parts.append(_render_interest_block(self.interest_exemplars))
         if self.working_memory:
             parts.append(_render_working_memory(self.working_memory))
         parts.append("CONVERSATION HISTORY:")
@@ -522,6 +555,25 @@ def _render_exemplar_block(exemplars: Sequence[MemoryNode]) -> str:
     return "\n".join(lines)
 
 
+#: W5 interest-tool section header. Structural machinery (same category as
+#: the ``ACTIVATED MEMORIES:`` marker): it tells the generator these are the
+#: persona's *own* likes/dislikes/pastimes retrieved from its vault — things
+#: it genuinely cares about — not memories to recite and not adjectives. The
+#: voice comes from the lines below (vault-derived interest/topic map, W1
+#: retrieval feeds it).
+_INTEREST_SECTION_HEADER = (
+    "YOUR INTERESTS — things you actually like, do, and care about, from "
+    "your own life. These are yours; talk about them like you mean it."
+)
+
+
+def _render_interest_block(exemplars: Sequence[MemoryNode]) -> str:
+    """Render the W5 interest-tool section (vault-derived hobby grounding)."""
+    lines = [_INTEREST_SECTION_HEADER]
+    lines.extend(f"[INTEREST] {_exemplar_line(node)}" for node in exemplars)
+    return "\n".join(lines)
+
+
 #: W4 working-memory section header. Structural machinery (same category as
 #: the ``ACTIVATED MEMORIES:`` marker): it tells the generator this block is
 #: the earlier part of *this* conversation, retrieved from memory — not vault
@@ -578,6 +630,7 @@ def _build_system_prompt(
     *,
     user_affect: UserAffect = UserAffect.NEUTRAL,
     competence_wall: bool = False,
+    real_now: datetime | None = None,
 ) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
@@ -587,6 +640,12 @@ def _build_system_prompt(
     (clinically approved placement, HU-1407 §7.1 G2). When ``user_affect`` is
     distress, the G3 dynamic grounding addendum is appended to flatten the
     persona voice for that turn (HU-1407 §7.1 G3).
+
+    ``real_now`` (W5 in-world era clock) is the caller's real clock; when
+    provided and the persona boundary parses, the era-gated in-world clock
+    line is appended (the persona's "today" can never report a date past the
+    boundary — the sanctioned temporal anchor that keeps "what day is it?"
+    from leaking post-era facts in-voice).
 
     Returns ``(system_prompt, constraints, framing_version, distress_grounding)``
     so callers can surface the framing revision + distress flag on the trace.
@@ -607,6 +666,14 @@ def _build_system_prompt(
         "Era knowledge boundary: you must not know, remember, or reference "
         f"anything that happened after {boundary_label}."
     )
+    # W5 in-world era clock: deterministic, era-gated temporal anchor.
+    # Skipped entirely when the boundary is unparseable (fail-closed — no
+    # in-world date claims at all) or the caller passed no clock (legacy /
+    # deterministic test callers keep the exact pre-W5 prompt shape).
+    if real_now is not None:
+        clock_line = era_clock_system_line(in_world_now(real_now, era_boundary))
+        if clock_line:
+            lines.append(clock_line)
     if persona.death_date:
         lines.append(f"You died on {persona.death_date}.")
     lines.append(f"You are speaking with {tier.human_label}.")
@@ -695,6 +762,16 @@ class ContextBuilder:
     #: same doctrine as the HU-2070 grounding-corpus cache.
     DEFLECTION_EXEMPLAR_TTL_SECONDS = 900.0
 
+    #: W5 interest tool: max interest lines rendered on an interest-shaped
+    #: turn. Kept small — the section grounds the hobby talk, it is not a
+    #: context dump.
+    INTEREST_EXEMPLAR_LIMIT = 4
+
+    #: How many message-embedded seeds to inspect before the hard gates thin
+    #: the set to :data:`INTEREST_EXEMPLAR_LIMIT` (non-interest and excluded
+    #: seeds do not count).
+    INTEREST_EXEMPLAR_SEED_K = 20
+
     def __init__(self, retrieval_config: RetrievalConfig | None = None) -> None:
         self._default_retrieval_config = retrieval_config
         # (backend id, persona id, disclosure scope) -> (monotonic, exemplars)
@@ -748,6 +825,47 @@ class ContextBuilder:
         self._deflection_cache[cache_key] = (now, exemplars)
         return exemplars
 
+    async def _interest_exemplars(
+        self,
+        *,
+        backend: MemoryBackend,
+        persona: PersonaConfig,
+        requester_tier: RelationshipTier,
+        query_embedding: list[float],
+        config: RetrievalConfig,
+    ) -> list[MemoryNode]:
+        """Return the persona's hobby/interest lines for this turn (W5 tool).
+
+        One deterministic vector probe with the *message's own* embedding
+        (the interest lane is message-conditioned, unlike the fixed
+        deflection probe), filtered to preference/fact atoms — the
+        vault-derived interest/topic map (W1 retrieval feeds it) — through
+        the *same* hard gates as the prompt firewall (confidence fail-closed,
+        disclosure scope, era boundary) and the retrieval activation floor,
+        capped at :data:`INTEREST_EXEMPLAR_LIMIT`. Not cached: the probe is a
+        property of the turn's message, not a corpus property.
+        """
+        scope = requester_tier.disclosure_scope
+        seeds = await multi_vector_search(
+            backend,
+            persona.id,
+            query_embedding,
+            top_k=self.INTEREST_EXEMPLAR_SEED_K,
+        )
+        era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+        exemplars: list[MemoryNode] = []
+        for sr in seeds:  # similarity-descending seed order
+            if sr.score < config.activation_threshold:
+                break  # seeds are sorted; nothing further clears the floor
+            if sr.node.content_type not in _INTEREST_CONTENT_TYPES:
+                continue
+            ok, _reason = _check_admissible(sr.node, scope, era_boundary)
+            if ok:
+                exemplars.append(sr.node)
+                if len(exemplars) >= self.INTEREST_EXEMPLAR_LIMIT:
+                    break
+        return exemplars
+
     def filter_and_render(
         self,
         activated: Sequence[ActivatedMemory],
@@ -758,7 +876,9 @@ class ContextBuilder:
         *,
         user_affect: UserAffect = UserAffect.NEUTRAL,
         deflection_exemplars: Sequence[MemoryNode] = (),
+        interest_exemplars: Sequence[MemoryNode] = (),
         working_memory: str = "",
+        real_now: datetime | None = None,
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
@@ -775,8 +895,15 @@ class ContextBuilder:
         EXEMPLARS section for an out-of-domain turn. Callers fetch them via
         :meth:`_deflection_exemplars`; an empty sequence renders nothing.
 
+        ``interest_exemplars`` (W5 interest tool) renders the YOUR INTERESTS
+        section on an interest/hobby-shaped turn. Callers fetch them via
+        :meth:`_interest_exemplars`; an empty sequence renders nothing.
+
         ``working_memory`` (W4) is the TencentDB Arm A block fetched by the
         caller; an empty string (lane disabled / degraded) renders nothing.
+
+        ``real_now`` (W5) renders the era-gated in-world clock line; ``None``
+        keeps the pre-W5 prompt shape.
         """
         era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
         admissible, exclusion_counts, excluded_refs = _filter_activated(
@@ -792,12 +919,14 @@ class ContextBuilder:
             self.WORKING_MEMORY_HEAD_CAP,
         )
         wall_exemplars = list(deflection_exemplars)
+        interest = list(interest_exemplars)
         system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(
             persona,
             requester_tier,
             era_boundary,
             user_affect=user_affect,
             competence_wall=bool(wall_exemplars),
+            real_now=real_now,
         )
 
         return PromptContext(
@@ -810,6 +939,7 @@ class ContextBuilder:
             exclusion_counts=exclusion_counts,
             excluded_memory_refs=excluded_refs,
             deflection_exemplars=wall_exemplars,
+            interest_exemplars=interest,
             working_memory=working_memory,
             current_message=current_message,
             framing_version=framing_version,
@@ -832,6 +962,8 @@ class ContextBuilder:
         user_affect: UserAffect = UserAffect.NEUTRAL,
         deflection_probe_embedding: list[float] | None = None,
         working_memory: str = "",
+        real_now: datetime | None = None,
+        interest_tool: bool = True,
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
@@ -859,6 +991,15 @@ class ContextBuilder:
         ``working_memory`` (W4) is the caller-fetched TencentDB Arm A block
         (see :mod:`huible.persona.working_memory`); rendered verbatim in its
         own section ahead of the history window. Empty renders nothing.
+
+        ``real_now`` (W5 in-world era clock) is the caller's real clock;
+        ``None`` keeps the pre-W5 prompt shape. The rendered in-world date is
+        era-gated to ``era_knowledge_boundary`` (fail-closed on an unparseable
+        boundary: no clock line at all).
+
+        ``interest_tool`` (W5 hobby/interest lane) fires the message-
+        conditioned interest probe on interest/hobby-shaped turns; disabled
+        callers (and non-interest turns) keep the pre-W5 sections.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         activated = await retrieve(
@@ -896,6 +1037,21 @@ class ContextBuilder:
                     config=config,
                 )
 
+        # W5 interest tool: on an interest/hobby-shaped turn, ground the
+        # reply in the persona's own era-admissible preference/fact lines
+        # (the vault-derived interest/topic map). Era-gating rides the same
+        # hard gates as the prompt firewall; an empty result renders nothing
+        # (B2 doctrine — the lane never fabricates interests).
+        interests: list[MemoryNode] = []
+        if interest_tool and is_interest_question(current_message):
+            interests = await self._interest_exemplars(
+                backend=backend,
+                persona=persona,
+                requester_tier=requester_tier,
+                query_embedding=query_embedding_content,
+                config=config,
+            )
+
         return self.filter_and_render(
             activated,
             persona=persona,
@@ -904,7 +1060,9 @@ class ContextBuilder:
             current_message=current_message,
             user_affect=user_affect,
             deflection_exemplars=exemplars,
+            interest_exemplars=interests,
             working_memory=working_memory,
+            real_now=real_now,
         )
 
     async def persona_scoped_grounding_refs(
