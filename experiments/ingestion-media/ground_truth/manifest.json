@@ -1,0 +1,237 @@
+{
+  "source": "LibriSpeech test-clean (public domain, CC-BY-4.0 distribution by OpenSLR)",
+  "speakers": [
+    "121",
+    "61",
+    "1089",
+    "1995"
+  ],
+  "n_utterances": 32,
+  "total_audio_sec": 172.26,
+  "entries": [
+    {
+      "id": "121-121726-0000",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0000.flac",
+      "duration_sec": 8.46,
+      "reference_text": "ALSO A POPULAR CONTRIVANCE WHEREBY LOVE MAKING MAY BE SUSPENDED BUT NOT STOPPED DURING THE PICNIC SEASON"
+    },
+    {
+      "id": "121-121726-0001",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0001.flac",
+      "duration_sec": 5.925,
+      "reference_text": "HARANGUE THE TIRESOME PRODUCT OF A TIRELESS TONGUE"
+    },
+    {
+      "id": "121-121726-0002",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0002.flac",
+      "duration_sec": 4.41,
+      "reference_text": "ANGOR PAIN PAINFUL TO HEAR"
+    },
+    {
+      "id": "121-121726-0003",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0003.flac",
+      "duration_sec": 6.755,
+      "reference_text": "HAY FEVER A HEART TROUBLE CAUSED BY FALLING IN LOVE WITH A GRASS WIDOW"
+    },
+    {
+      "id": "121-121726-0004",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0004.flac",
+      "duration_sec": 4.02,
+      "reference_text": "HEAVEN A GOOD PLACE TO BE RAISED TO"
+    },
+    {
+      "id": "121-121726-0005",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0005.flac",
+      "duration_sec": 3.1,
+      "reference_text": "HEDGE A FENCE"
+    },
+    {
+      "id": "121-121726-0006",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0006.flac",
+      "duration_sec": 3.895,
+      "reference_text": "HEREDITY THE CAUSE OF ALL OUR FAULTS"
+    },
+    {
+      "id": "121-121726-0007",
+      "speaker": "121",
+      "audio": "LibriSpeech/test-clean/121/121726/121-121726-0007.flac",
+      "duration_sec": 6.73,
+      "reference_text": "HORSE SENSE A DEGREE OF WISDOM THAT KEEPS ONE FROM BETTING ON THE RACES"
+    },
+    {
+      "id": "61-70968-0000",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0000.flac",
+      "duration_sec": 4.905,
+      "reference_text": "HE BEGAN A CONFUSED COMPLAINT AGAINST THE WIZARD WHO HAD VANISHED BEHIND THE CURTAIN ON THE LEFT"
+    },
+    {
+      "id": "61-70968-0001",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0001.flac",
+      "duration_sec": 3.61,
+      "reference_text": "GIVE NOT SO EARNEST A MIND TO THESE MUMMERIES CHILD"
+    },
+    {
+      "id": "61-70968-0002",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0002.flac",
+      "duration_sec": 2.97,
+      "reference_text": "A GOLDEN FORTUNE AND A HAPPY LIFE"
+    },
+    {
+      "id": "61-70968-0003",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0003.flac",
+      "duration_sec": 4.315,
+      "reference_text": "HE WAS LIKE UNTO MY FATHER IN A WAY AND YET WAS NOT MY FATHER"
+    },
+    {
+      "id": "61-70968-0004",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0004.flac",
+      "duration_sec": 3.885,
+      "reference_text": "ALSO THERE WAS A STRIPLING PAGE WHO TURNED INTO A MAID"
+    },
+    {
+      "id": "61-70968-0005",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0005.flac",
+      "duration_sec": 5.07,
+      "reference_text": "THIS WAS SO SWEET A LADY SIR AND IN SOME MANNER I DO THINK SHE DIED"
+    },
+    {
+      "id": "61-70968-0006",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0006.flac",
+      "duration_sec": 2.935,
+      "reference_text": "BUT THEN THE PICTURE WAS GONE AS QUICKLY AS IT CAME"
+    },
+    {
+      "id": "61-70968-0007",
+      "speaker": "61",
+      "audio": "LibriSpeech/test-clean/61/70968/61-70968-0007.flac",
+      "duration_sec": 3.55,
+      "reference_text": "SISTER NELL DO YOU HEAR THESE MARVELS"
+    },
+    {
+      "id": "1089-134686-0000",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0000.flac",
+      "duration_sec": 10.435,
+      "reference_text": "HE HOPED THERE WOULD BE STEW FOR DINNER TURNIPS AND CARROTS AND BRUISED POTATOES AND FAT MUTTON PIECES TO BE LADLED OUT IN THICK PEPPERED FLOUR FATTENED SAUCE"
+    },
+    {
+      "id": "1089-134686-0001",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0001.flac",
+      "duration_sec": 3.275,
+      "reference_text": "STUFF IT INTO YOU HIS BELLY COUNSELLED HIM"
+    },
+    {
+      "id": "1089-134686-0002",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0002.flac",
+      "duration_sec": 6.625,
+      "reference_text": "AFTER EARLY NIGHTFALL THE YELLOW LAMPS WOULD LIGHT UP HERE AND THERE THE SQUALID QUARTER OF THE BROTHELS"
+    },
+    {
+      "id": "1089-134686-0003",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0003.flac",
+      "duration_sec": 2.68,
+      "reference_text": "HELLO BERTIE ANY GOOD IN YOUR MIND"
+    },
+    {
+      "id": "1089-134686-0004",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0004.flac",
+      "duration_sec": 5.215,
+      "reference_text": "NUMBER TEN FRESH NELLY IS WAITING ON YOU GOOD NIGHT HUSBAND"
+    },
+    {
+      "id": "1089-134686-0005",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0005.flac",
+      "duration_sec": 9.635,
+      "reference_text": "THE MUSIC CAME NEARER AND HE RECALLED THE WORDS THE WORDS OF SHELLEY'S FRAGMENT UPON THE MOON WANDERING COMPANIONLESS PALE FOR WEARINESS"
+    },
+    {
+      "id": "1089-134686-0006",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0006.flac",
+      "duration_sec": 10.555,
+      "reference_text": "THE DULL LIGHT FELL MORE FAINTLY UPON THE PAGE WHEREON ANOTHER EQUATION BEGAN TO UNFOLD ITSELF SLOWLY AND TO SPREAD ABROAD ITS WIDENING TAIL"
+    },
+    {
+      "id": "1089-134686-0007",
+      "speaker": "1089",
+      "audio": "LibriSpeech/test-clean/1089/134686/1089-134686-0007.flac",
+      "duration_sec": 4.275,
+      "reference_text": "A COLD LUCID INDIFFERENCE REIGNED IN HIS SOUL"
+    },
+    {
+      "id": "1995-1826-0000",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0000.flac",
+      "duration_sec": 9.485,
+      "reference_text": "IN THE DEBATE BETWEEN THE SENIOR SOCIETIES HER DEFENCE OF THE FIFTEENTH AMENDMENT HAD BEEN NOT ONLY A NOTABLE BIT OF REASONING BUT DELIVERED WITH REAL ENTHUSIASM"
+    },
+    {
+      "id": "1995-1826-0001",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0001.flac",
+      "duration_sec": 10.17,
+      "reference_text": "THE SOUTH SHE HAD NOT THOUGHT OF SERIOUSLY AND YET KNOWING OF ITS DELIGHTFUL HOSPITALITY AND MILD CLIMATE SHE WAS NOT AVERSE TO CHARLESTON OR NEW ORLEANS"
+    },
+    {
+      "id": "1995-1826-0002",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0002.flac",
+      "duration_sec": 4.605,
+      "reference_text": "JOHN TAYLOR WHO HAD SUPPORTED HER THROUGH COLLEGE WAS INTERESTED IN COTTON"
+    },
+    {
+      "id": "1995-1826-0003",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0003.flac",
+      "duration_sec": 3.09,
+      "reference_text": "BETTER GO HE HAD COUNSELLED SENTENTIOUSLY"
+    },
+    {
+      "id": "1995-1826-0004",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0004.flac",
+      "duration_sec": 3.035,
+      "reference_text": "MIGHT LEARN SOMETHING USEFUL DOWN THERE"
+    },
+    {
+      "id": "1995-1826-0005",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0005.flac",
+      "duration_sec": 5.125,
+      "reference_text": "BUT JOHN THERE'S NO SOCIETY JUST ELEMENTARY WORK"
+    },
+    {
+      "id": "1995-1826-0006",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0006.flac",
+      "duration_sec": 2.455,
+      "reference_text": "BEEN LOOKING UP TOOMS COUNTY"
+    },
+    {
+      "id": "1995-1826-0007",
+      "speaker": "1995",
+      "audio": "LibriSpeech/test-clean/1995/1826/1995-1826-0007.flac",
+      "duration_sec": 7.06,
+      "reference_text": "FIND SOME CRESSWELLS THERE BIG PLANTATIONS RATED AT TWO HUNDRED AND FIFTY THOUSAND DOLLARS"
+    }
+  ]
+}

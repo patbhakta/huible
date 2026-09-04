@@ -1,0 +1,559 @@
+{
+  "model": "small.en",
+  "device": "cpu",
+  "compute_type": "int8",
+  "cpu_threads": 8,
+  "model_load_sec": 0.93,
+  "model_disk_bytes": 972198472,
+  "total_audio_sec": 172.26,
+  "total_wall_sec": 80.18,
+  "audio_per_cpu_sec": 2.15,
+  "results": [
+    {
+      "id": "121-121726-0000",
+      "speaker": "121",
+      "audio_sec": 8.46,
+      "wall_sec": 2.528,
+      "hypothesis_text": "Also, a popular contrivance whereby lovemaking may be suspended but not stopped during the picnic season.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 7.14,
+          "text": "Also, a popular contrivance whereby lovemaking may be suspended but not stopped during the",
+          "avg_logprob": -0.195
+        },
+        {
+          "start": 7.14,
+          "end": 7.96,
+          "text": "picnic season.",
+          "avg_logprob": -0.195
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0001",
+      "speaker": "121",
+      "audio_sec": 5.925,
+      "wall_sec": 2.498,
+      "hypothesis_text": "Hoorang! The tiresome product of a tireless tongue.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": "Hoorang!",
+          "avg_logprob": -0.337
+        },
+        {
+          "start": 2.0,
+          "end": 6.0,
+          "text": "The tiresome product of a tireless tongue.",
+          "avg_logprob": -0.337
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0002",
+      "speaker": "121",
+      "audio_sec": 4.41,
+      "wall_sec": 2.048,
+      "hypothesis_text": "anger, pain, painful to hear.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": "anger, pain, painful to hear.",
+          "avg_logprob": -0.521
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0003",
+      "speaker": "121",
+      "audio_sec": 6.755,
+      "wall_sec": 2.812,
+      "hypothesis_text": "A heart treble caused by falling in love with a grass widow.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 7.0,
+          "text": "A heart treble caused by falling in love with a grass widow.",
+          "avg_logprob": -0.289
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0004",
+      "speaker": "121",
+      "audio_sec": 4.02,
+      "wall_sec": 2.42,
+      "hypothesis_text": "Heaven! A good place to be raised, too.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": "Heaven! A good place to be raised, too.",
+          "avg_logprob": -0.461
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0005",
+      "speaker": "121",
+      "audio_sec": 3.1,
+      "wall_sec": 1.873,
+      "hypothesis_text": "Hedge. Offense.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": "Hedge.",
+          "avg_logprob": -0.614
+        },
+        {
+          "start": 2.0,
+          "end": 4.0,
+          "text": "Offense.",
+          "avg_logprob": -0.614
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0006",
+      "speaker": "121",
+      "audio_sec": 3.895,
+      "wall_sec": 2.118,
+      "hypothesis_text": "Heredity. The cause of all our faults.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": "Heredity. The cause of all our faults.",
+          "avg_logprob": -0.425
+        }
+      ]
+    },
+    {
+      "id": "121-121726-0007",
+      "speaker": "121",
+      "audio_sec": 6.73,
+      "wall_sec": 2.297,
+      "hypothesis_text": "Horse sense. A degree of wisdom that keeps one from betting on the races.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 7.0,
+          "text": "Horse sense. A degree of wisdom that keeps one from betting on the races.",
+          "avg_logprob": -0.295
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0000",
+      "speaker": "61",
+      "audio_sec": 4.905,
+      "wall_sec": 2.41,
+      "hypothesis_text": "He began a confused complaint against the wizard, who had vanished behind the curtain on the left.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.96,
+          "text": "He began a confused complaint against the wizard, who had vanished behind the curtain",
+          "avg_logprob": -0.199
+        },
+        {
+          "start": 3.96,
+          "end": 4.68,
+          "text": "on the left.",
+          "avg_logprob": -0.199
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0001",
+      "speaker": "61",
+      "audio_sec": 3.61,
+      "wall_sec": 2.205,
+      "hypothesis_text": "Give not so earnest a mind to these mummeries, child.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.48,
+          "text": "Give not so earnest a mind to these mummeries, child.",
+          "avg_logprob": -0.357
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0002",
+      "speaker": "61",
+      "audio_sec": 2.97,
+      "wall_sec": 1.874,
+      "hypothesis_text": "A golden fortune and a happy life?",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.72,
+          "text": "A golden fortune and a happy life?",
+          "avg_logprob": -0.478
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0003",
+      "speaker": "61",
+      "audio_sec": 4.315,
+      "wall_sec": 2.356,
+      "hypothesis_text": "He was like unto my father, in a way, and yet was not my father.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": "He was like unto my father, in a way, and yet was not my father.",
+          "avg_logprob": -0.204
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0004",
+      "speaker": "61",
+      "audio_sec": 3.885,
+      "wall_sec": 2.217,
+      "hypothesis_text": "Also, there was a stripling page who turned into a maid.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.68,
+          "text": "Also, there was a stripling page who turned into a maid.",
+          "avg_logprob": -0.211
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0005",
+      "speaker": "61",
+      "audio_sec": 5.07,
+      "wall_sec": 2.335,
+      "hypothesis_text": "This was so sweet a lady, sir, and in some manner I do think she died.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 5.0,
+          "text": "This was so sweet a lady, sir, and in some manner I do think she died.",
+          "avg_logprob": -0.268
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0006",
+      "speaker": "61",
+      "audio_sec": 2.935,
+      "wall_sec": 2.021,
+      "hypothesis_text": "But then the picture was gone as quickly as it came.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.5,
+          "text": "But then the picture was gone as quickly as it came.",
+          "avg_logprob": -0.27
+        }
+      ]
+    },
+    {
+      "id": "61-70968-0007",
+      "speaker": "61",
+      "audio_sec": 3.55,
+      "wall_sec": 2.066,
+      "hypothesis_text": "Sister Nell, do you hear these marvels?",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.44,
+          "text": "Sister Nell, do you hear these marvels?",
+          "avg_logprob": -0.346
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0000",
+      "speaker": "1089",
+      "audio_sec": 10.435,
+      "wall_sec": 4.476,
+      "hypothesis_text": "He hoped there would be stew for dinner, turnips and carrots and bruised potatoes, and fat mutton pieces to be ladled out in thick, peppered, flour-fat and sauce.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 5.56,
+          "text": "He hoped there would be stew for dinner, turnips and carrots and bruised potatoes, and fat",
+          "avg_logprob": -0.166
+        },
+        {
+          "start": 5.56,
+          "end": 10.12,
+          "text": "mutton pieces to be ladled out in thick, peppered, flour-fat and sauce.",
+          "avg_logprob": -0.166
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0001",
+      "speaker": "1089",
+      "audio_sec": 3.275,
+      "wall_sec": 2.332,
+      "hypothesis_text": "Stuff it into you. His belly counseled him.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": "Stuff it into you. His belly counseled him.",
+          "avg_logprob": -0.437
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0002",
+      "speaker": "1089",
+      "audio_sec": 6.625,
+      "wall_sec": 2.774,
+      "hypothesis_text": "After early nightfall the yellow lamps would light up here and there the squalid quarter of the brothels.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 5.16,
+          "text": "After early nightfall the yellow lamps would light up here and there the squalid quarter",
+          "avg_logprob": -0.164
+        },
+        {
+          "start": 5.16,
+          "end": 6.2,
+          "text": "of the brothels.",
+          "avg_logprob": -0.164
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0003",
+      "speaker": "1089",
+      "audio_sec": 2.68,
+      "wall_sec": 2.205,
+      "hypothesis_text": "Hello Bertie, any good in your mind?",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.5,
+          "text": "Hello Bertie, any good in your mind?",
+          "avg_logprob": -0.312
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0004",
+      "speaker": "1089",
+      "audio_sec": 5.215,
+      "wall_sec": 2.576,
+      "hypothesis_text": "Number 10. Fresh Nellie is waiting on you. Goodnight, husband.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": "Number 10. Fresh Nellie is waiting on you.",
+          "avg_logprob": -0.457
+        },
+        {
+          "start": 4.0,
+          "end": 6.0,
+          "text": "Goodnight, husband.",
+          "avg_logprob": -0.457
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0005",
+      "speaker": "1089",
+      "audio_sec": 9.635,
+      "wall_sec": 2.791,
+      "hypothesis_text": "The music came nearer and he recalled the words, the words of Shelley's fragment upon the moon wandering companionless, pale for weariness.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 9.12,
+          "text": "The music came nearer and he recalled the words, the words of Shelley's fragment upon the moon wandering companionless, pale for weariness.",
+          "avg_logprob": -0.175
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0006",
+      "speaker": "1089",
+      "audio_sec": 10.555,
+      "wall_sec": 2.849,
+      "hypothesis_text": "The dull light fell more faintly upon the page whereon another equation began to unfold itself slowly and to spread abroad its widening tale.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 6.48,
+          "text": "The dull light fell more faintly upon the page whereon another equation began to unfold itself",
+          "avg_logprob": -0.163
+        },
+        {
+          "start": 6.48,
+          "end": 10.08,
+          "text": "slowly and to spread abroad its widening tale.",
+          "avg_logprob": -0.163
+        }
+      ]
+    },
+    {
+      "id": "1089-134686-0007",
+      "speaker": "1089",
+      "audio_sec": 4.275,
+      "wall_sec": 2.115,
+      "hypothesis_text": "A cold, lucid indifference reigned in his soul.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.92,
+          "text": "A cold, lucid indifference reigned in his soul.",
+          "avg_logprob": -0.207
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0000",
+      "speaker": "1995",
+      "audio_sec": 9.485,
+      "wall_sec": 3.098,
+      "hypothesis_text": "In the debate between the senior societies, her defense of the 15th amendment had been not only a notable bit of reasoning, but delivered with real enthusiasm.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.64,
+          "text": "In the debate between the senior societies, her defense of the 15th amendment had been",
+          "avg_logprob": -0.234
+        },
+        {
+          "start": 4.64,
+          "end": 9.2,
+          "text": "not only a notable bit of reasoning, but delivered with real enthusiasm.",
+          "avg_logprob": -0.234
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0001",
+      "speaker": "1995",
+      "audio_sec": 10.17,
+      "wall_sec": 3.377,
+      "hypothesis_text": "The South, she had not thought of seriously and yet, knowing of its delightful hospitality and mild climate, she was not averse to Charleston or New Orleans.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 5.68,
+          "text": "The South, she had not thought of seriously and yet, knowing of its delightful hospitality",
+          "avg_logprob": -0.157
+        },
+        {
+          "start": 5.68,
+          "end": 9.84,
+          "text": "and mild climate, she was not averse to Charleston or New Orleans.",
+          "avg_logprob": -0.157
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0002",
+      "speaker": "1995",
+      "audio_sec": 4.605,
+      "wall_sec": 2.383,
+      "hypothesis_text": "John Taylor, who had supported her through college, was interested in cotton.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 5.0,
+          "text": "John Taylor, who had supported her through college, was interested in cotton.",
+          "avg_logprob": -0.245
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0003",
+      "speaker": "1995",
+      "audio_sec": 3.09,
+      "wall_sec": 2.754,
+      "hypothesis_text": "Better go, he had counseled, sententiously.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": "Better go, he had counseled, sententiously.",
+          "avg_logprob": -0.394
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0004",
+      "speaker": "1995",
+      "audio_sec": 3.035,
+      "wall_sec": 2.258,
+      "hypothesis_text": "might learn something useful down there.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.6,
+          "text": "might learn something useful down there.",
+          "avg_logprob": -0.396
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0005",
+      "speaker": "1995",
+      "audio_sec": 5.125,
+      "wall_sec": 2.818,
+      "hypothesis_text": "But John, there's no society, just elementary work.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 5.0,
+          "text": "But John, there's no society, just elementary work.",
+          "avg_logprob": -0.28
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0006",
+      "speaker": "1995",
+      "audio_sec": 2.455,
+      "wall_sec": 2.383,
+      "hypothesis_text": "Been looking up Toomes County",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": "Been looking up Toomes County",
+          "avg_logprob": -0.576
+        }
+      ]
+    },
+    {
+      "id": "1995-1826-0007",
+      "speaker": "1995",
+      "audio_sec": 7.06,
+      "wall_sec": 2.914,
+      "hypothesis_text": "Find some crust wells there. Big plantations, rated at $250,000.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": "Find some crust wells there.",
+          "avg_logprob": -0.447
+        },
+        {
+          "start": 2.4,
+          "end": 6.98,
+          "text": "Big plantations, rated at $250,000.",
+          "avg_logprob": -0.447
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "file": "samples/bbb_720p.mp4",
+  "license": "CC-BY, Blender Foundation (archive.org derivative, 640x360)",
+  "probe": {
+    "container": "mov,mp4,m4a,3gp,3g2,mj2",
+    "duration_sec": 596.48,
+    "size_bytes": 61878609,
+    "streams": {
+      "video": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 360,
+        "avg_frame_rate": "24/1",
+        "duration": "596.458333",
+        "bit_rate": "697070"
+      },
+      "audio": {
+        "codec_name": "aac",
+        "avg_frame_rate": "0/0",
+        "duration": "596.480000",
+        "sample_rate": "44100",
+        "channels": 2,
+        "bit_rate": "128209"
+      }
+    }
+  },
+  "frame_sampling_1fps": {
+    "frames": 596,
+    "bytes": 14784005,
+    "wall_sec": 4.406,
+    "exit_code": 0
+  },
+  "full_decode": {
+    "wall_sec": 5.087,
+    "decode_fps_x": 117.2,
+    "exit_code": 0
+  },
+  "audio_extraction": {
+    "wall_sec": 2.95,
+    "bytes": 19088126,
+    "exit_code": 0
+  },
+  "audio_to_whisper": {
+    "model": "tiny.en",
+    "audio_sec": 596.5,
+    "wall_sec": 189.04,
+    "segments": [
+      {
+        "start": 60.0,
+        "end": 84.0,
+        "text": "Thank you so much for watching and I'll see you in the next one!"
+      },
+      {
+        "start": 450.0,
+        "end": 457.0,
+        "text": "Thank you so much for watching, and I'll see you in the next video."
+      }
+    ],
+    "note": "BBB soundtrack is music/sfx only \u2014 segments show what the audio lane does on non-dialog audio"
+  }
+}

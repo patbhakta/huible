@@ -1,0 +1,150 @@
+{
+  "clip": {
+    "vision": {
+      "model": "Qdrant/clip-ViT-B-32-vision",
+      "dim": 512,
+      "load_sec": 1.37,
+      "ms_per_image": 77.3,
+      "model_disk_bytes": 351688660
+    },
+    "text": {
+      "model": "Qdrant/clip-ViT-B-32-text",
+      "dim": 512,
+      "load_sec": 1.05,
+      "ms_per_query": 6.4,
+      "model_disk_bytes": 256330395
+    },
+    "retrieval": {
+      "top1_hits": 2,
+      "n_queries": 4,
+      "detail": [
+        {
+          "query": "attention mechanism neural network architecture diagrams",
+          "expected": "real_mixed",
+          "top_image": "scanned_formula_p0.png",
+          "expected_rank": 2,
+          "sims": {
+            "scanned_formula_p0.png": 0.3162,
+            "real_mixed_p3.png": 0.3159,
+            "scanned_mixed_p0.png": 0.2484,
+            "chart_table_p0.png": 0.1905
+          }
+        },
+        {
+          "query": "scanned page of a physics paper with formulas",
+          "expected": "scanned_formula",
+          "top_image": "scanned_mixed_p0.png",
+          "expected_rank": 2,
+          "sims": {
+            "scanned_mixed_p0.png": 0.3002,
+            "scanned_formula_p0.png": 0.296,
+            "real_mixed_p3.png": 0.2958,
+            "chart_table_p0.png": 0.2087
+          }
+        },
+        {
+          "query": "scanned page with dense text and figures",
+          "expected": "scanned_mixed",
+          "top_image": "scanned_mixed_p0.png",
+          "expected_rank": 1,
+          "sims": {
+            "scanned_mixed_p0.png": 0.2773,
+            "scanned_formula_p0.png": 0.2719,
+            "real_mixed_p3.png": 0.2707,
+            "chart_table_p0.png": 0.216
+          }
+        },
+        {
+          "query": "bar chart of monthly service log revenue with a data table",
+          "expected": "chart_table",
+          "top_image": "chart_table_p0.png",
+          "expected_rank": 1,
+          "sims": {
+            "chart_table_p0.png": 0.3079,
+            "scanned_mixed_p0.png": 0.2135,
+            "scanned_formula_p0.png": 0.1751,
+            "real_mixed_p3.png": 0.1749
+          }
+        }
+      ]
+    },
+    "image_self_top1": "4/4"
+  },
+  "jina-clip-v1": {
+    "vision": {
+      "model": "jinaai/jina-clip-v1",
+      "dim": 768,
+      "load_sec": 0.92,
+      "ms_per_image": 177.1,
+      "model_disk_bytes": 892130624
+    },
+    "text": {
+      "model": "jinaai/jina-clip-v1",
+      "dim": 768,
+      "load_sec": 1.75,
+      "ms_per_query": 18.5,
+      "model_disk_bytes": 892130624
+    },
+    "retrieval": {
+      "top1_hits": 2,
+      "n_queries": 4,
+      "detail": [
+        {
+          "query": "attention mechanism neural network architecture diagrams",
+          "expected": "real_mixed",
+          "top_image": "real_mixed_p3.png",
+          "expected_rank": 1,
+          "sims": {
+            "real_mixed_p3.png": 0.1765,
+            "scanned_formula_p0.png": 0.1722,
+            "scanned_mixed_p0.png": 0.0891,
+            "chart_table_p0.png": -0.0111
+          }
+        },
+        {
+          "query": "scanned page of a physics paper with formulas",
+          "expected": "scanned_formula",
+          "top_image": "scanned_mixed_p0.png",
+          "expected_rank": 2,
+          "sims": {
+            "scanned_mixed_p0.png": 0.231,
+            "scanned_formula_p0.png": 0.2205,
+            "real_mixed_p3.png": 0.2181,
+            "chart_table_p0.png": 0.0861
+          }
+        },
+        {
+          "query": "scanned page with dense text and figures",
+          "expected": "scanned_mixed",
+          "top_image": "scanned_formula_p0.png",
+          "expected_rank": 3,
+          "sims": {
+            "scanned_formula_p0.png": 0.201,
+            "real_mixed_p3.png": 0.1987,
+            "scanned_mixed_p0.png": 0.197,
+            "chart_table_p0.png": 0.1111
+          }
+        },
+        {
+          "query": "bar chart of monthly service log revenue with a data table",
+          "expected": "chart_table",
+          "top_image": "chart_table_p0.png",
+          "expected_rank": 1,
+          "sims": {
+            "chart_table_p0.png": 0.2251,
+            "scanned_mixed_p0.png": 0.064,
+            "real_mixed_p3.png": 0.0257,
+            "scanned_formula_p0.png": 0.0251
+          }
+        }
+      ]
+    },
+    "image_self_top1": "4/4"
+  },
+  "_images": [
+    "chart_table_p0.png",
+    "real_mixed_p3.png",
+    "scanned_formula_p0.png",
+    "scanned_mixed_p0.png"
+  ]
+}

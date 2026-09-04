@@ -1,0 +1,44 @@
+{
+  "atom_type": "dialog_verbatim",
+  "source": {
+    "sample_id": "121-121726-0000",
+    "file": "LibriSpeech/test-clean/121/121726/121-121726-0000.flac",
+    "speaker_id": "121",
+    "corpus": "LibriSpeech test-clean (public domain, CC-BY-4.0 distribution by OpenSLR)",
+    "sha256_note": "raw flac stored in vault as irreplaceable raw measurement"
+  },
+  "transcription": {
+    "model": "faster-whisper/small.en",
+    "compute": "cpu/int8",
+    "file_wer_vs_reference": 0.1176,
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 7.14,
+        "text": "Also, a popular contrivance whereby lovemaking may be suspended but not stopped during the",
+        "avg_logprob": -0.195
+      },
+      {
+        "start": 7.14,
+        "end": 7.96,
+        "text": "picnic season.",
+        "avg_logprob": -0.195
+      }
+    ],
+    "verbatim_text": "Also, a popular contrivance whereby lovemaking may be suspended but not stopped during the picnic season."
+  },
+  "ground_truth_reference": {
+    "text": "ALSO A POPULAR CONTRIVANCE WHEREBY LOVE MAKING MAY BE SUSPENDED BUT NOT STOPPED DURING THE PICNIC SEASON",
+    "role": "evaluation-only; not stored in production vault"
+  },
+  "vault_doctrine": {
+    "vault_tier": [
+      "source flac",
+      "verbatim text + segment timestamps"
+    ],
+    "regenerable_tier": [
+      "embedding vectors",
+      "normalized/lowercased text"
+    ]
+  }
+}
