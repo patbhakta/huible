@@ -12,24 +12,28 @@ scanned_mixed 0.884 vs 0.891, scanned_formula 0.829 vs 0.792, real_mixed_p3
 0.834 vs 0.817 — the VLM lane reads charts, and gemini-3.8-flash is the
 strongest chart reader measured.
 
-Remaining enable gate is NOT spend: it is relay E2E validation. Google's API
-is geo-blocked from the VPS, so production calls route via the home SOCKS5
-relay (pat-w11pc). Ops requirements from the boss note + measurement:
+Enable status (HU-2701, 2026-09-04): the relay-routed Google lane passed E2E
+(4/4 pages after fixing a missing-hostname SOCKS5 CONNECT bug in the reference
+script; home-relay outage had recovered). Production endpoint is the
+OpenAI-compatible OpenRouter lane — it is the transport the measured numbers
+come from, and the Google-served snapshot showed a reproducible
+chart-table-page transcription gap (0.43–0.45 vs 0.696 token F1). Ops
+requirements from the boss note + measurement:
 
 - batchable, resumable jobs (per-page artifacts written immediately; re-run
   skips completed pages) — reference implementation
   ``experiments/ingestion-pdf/scripts/run_vlm_gemini.py``;
 - completeness check + one retry per page (measured 2026-09-04: 1/5 gemini
   calls early-stopped mid-page; the retry produced a complete page, F1
-  0.472 -> 0.884 on the affected sample);
-- relay availability is a live dependency (measured outage 2026-09-04 ~19:40Z:
-  SOCKS greeting OK, every CONNECT closed, ~6 min, all targets — home-side
-  egress).
+  0.472 -> 0.884);
+- endpoint availability is a live dependency (home-relay Google lane is the
+  documented fallback transport; both measured 2026-09-04).
 
 Config gates (unchanged):
 
 - the lane only activates when ``IngestConfig.vlm_enabled`` is True (env
-  ``VAULT_INGEST_VLM_ENABLED``), which defaults to False;
+  ``VAULT_INGEST_VLM_ENABLED``), which defaults to False in code — the
+  deployment environment sets it ``on``;
 - credentials are read from the environment at call time and never hardcoded:
   ``VAULT_INGEST_VLM_BASE_URL``, ``VAULT_INGEST_VLM_API_KEY``,
   ``VAULT_INGEST_VLM_MODEL`` (any OpenAI-compatible vision endpoint);
@@ -49,8 +53,8 @@ VLM_API_KEY_ENV = "VAULT_INGEST_VLM_API_KEY"
 VLM_MODEL_ENV = "VAULT_INGEST_VLM_MODEL"
 
 DISABLED_REASON = (
-    "tier-2 VLM lane disabled by config (spend approval granted 2026-09-04 for "
-    "gemini-3.8-flash; enable awaits home-relay E2E validation)"
+    "tier-2 VLM lane disabled by config (gemini-3.8-flash approved 2026-09-04; "
+    "production endpoint configured via VAULT_INGEST_VLM_* env, HU-2701)"
 )
 UNCONFIGURED_REASON = "tier-2 VLM lane enabled but credentials not configured in environment"
 

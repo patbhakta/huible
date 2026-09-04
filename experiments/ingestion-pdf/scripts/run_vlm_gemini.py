@@ -3,11 +3,15 @@
 Boss approval 2026-09-04: gemini-3.8-flash for the VLM extraction leg
 (flash-only ladder, no pro-tier). Two transports:
 
-- relay (default, production lane): Google generativelanguage API via the home
-  SOCKS5 relay (pat-w11pc 100.83.231.16:1080 — the proven path, same recipe as
-  scripts/generate_voice.py). Google API is geo-blocked from the VPS. Measured
-  2026-09-04 ~19:40Z: relay accepts SOCKS greeting but closes every CONNECT
-  (0/16 attempts, all targets) — home-side egress outage; lane is resumable.
+- relay (default, production fallback): Google generativelanguage API via the
+  home SOCKS5 relay (pat-w11pc 100.83.231.16:1080 — same recipe as
+  scripts/generate_voice.py). Google API is geo-blocked from the VPS. E2E
+  verified 2026-09-04 ~21Z after the home egress outage recovered AND a
+  missing-hostname SOCKS5 CONNECT bug here was fixed (the domain bytes were
+  never sent; hidden while the relay was down). Caveat: the Google-served
+  snapshot omits secondary text blocks on mixed chart+text pages
+  (chart_table 0.43–0.45 vs 0.696 token F1 via OpenRouter) — production
+  endpoint is the OpenRouter lane; this lane stays the documented fallback.
 - openrouter (measurement lane): existing metered OpenRouter channel
   (OPENROUTER_MONTHLY_BUDGET_USD, spend-state tracked) — direct from the VPS,
   model google/gemini-3.8-flash. Used to measure extraction quality while the
@@ -89,7 +93,7 @@ def connect_via_relay(host, port, attempts=3):
             if s.recv(2) != b"\x05\x00":
                 raise OSError("relay refused SOCKS5 no-auth")
             addr = host.encode()
-            s.sendall(b"\x05\x01\x00\x03" + bytes([len(addr)]) + port.to_bytes(2, "big"))
+            s.sendall(b"\x05\x01\x00\x03" + bytes([len(addr)]) + addr + port.to_bytes(2, "big"))
             resp = b""
             while len(resp) < 4:
                 chunk = s.recv(10 - len(resp))

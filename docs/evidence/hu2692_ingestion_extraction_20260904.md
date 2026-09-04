@@ -166,3 +166,76 @@ without rework. After that, flipping the flag is a pure build task (Tech Lead).
   covered by BEAM contradiction_resolution, scored 0.856).
 - Doctrine: measure-first on lagging capabilities (ingestion quality is the
   current gap); never chase categories we already lead.
+
+---
+
+## Update 2026-09-04 ~21Z — HU-2701: relay recovered, Tier-2 lane E2E-verified and ENABLED
+
+### Relay recovery + a latent bug the outage was hiding
+
+- Home relay egress (pat-w11pc) recovered: fresh probe 3/3 SOCKS5 CONNECT
+  successes to `generativelanguage.googleapis.com:443` (issue recorded the
+  19:37–19:47Z outage; recovery observed ~20:50Z).
+- The relay lane then **still failed 4/4 pages** — root cause was in
+  `scripts/run_vlm_gemini.py` itself: the SOCKS5 CONNECT request sent the
+  domain-length prefix but omitted the hostname bytes (`+ addr` missing,
+  compare the proven recipe in `scripts/generate_voice.py:68`). The bug never
+  fired during HU-2692 because the relay was down for the entire window. Fixed;
+  after the fix the relay lane extracted 4/4 pages (4.0–10.0 s/page, ~1.1k
+  prompt + 0.2–0.9k completion tokens/page).
+
+### Relay-lane scores vs the OpenRouter measurement (token F1, GT page 0)
+
+| Sample | OpenRouter (measured) | relay → Google native |
+|---|---|---|
+| scanned_mixed | 0.884 | 0.885 |
+| scanned_formula | 0.829 | 0.829 |
+| real_mixed p4 | 0.834 | 0.816 |
+| chart_table | **0.696** | **0.425–0.453** |
+
+- 3/4 samples land at/near the OpenRouter numbers. `chart_table`
+  reproducibly does not: the Google-served snapshot omits the secondary
+  service-log text block (chart values and table cells still read correctly).
+  Probes run at identical prompt/image: plain native call 0.444, documented
+  one-retry 0.425, `thinkingBudget=0` 0.453, **OpenAI-compatible shape via the
+  same relay 0.439** — so the gap is not request shape, thinking config, or the
+  relay; it is the model snapshot served behind `gemini-3.8-flash` on
+  Google's endpoint vs OpenRouter's `google/gemini-3.8-flash`.
+- The retry exercise re-confirmed the codified op: incomplete-page detection +
+  one retry is mandatory (here the retry reproduced the omission; in HU-2692
+  it recovered 0.472 → 0.884 — either way it must exist).
+
+### Decision: production endpoint = OpenRouter; relay lane kept as fallback
+
+`vlm.py` speaks OpenAI-compatible chat-completions; Google's native API is not
+that shape, and its served snapshot carries the measured chart_table gap. The
+flag flip therefore points the production env at the **measured** OpenRouter
+lane (exact numbers the approval was based on; reachable direct from the VPS;
+no home-desktop dependency; ~$0.002–0.008/page, budget by page count). The
+relay E2E goal of HU-2701 is met — the home-relay Google path is proven
+working end-to-end and stays the documented fallback transport.
+
+### Flag flip (production, env-gated; code default unchanged OFF)
+
+`repo .env` (source for `docker-compose env_file` and pipeline runs):
+
+```
+VAULT_INGEST_VLM_ENABLED=on
+VAULT_INGEST_VLM_BASE_URL=https://openrouter.ai/api/v1
+VAULT_INGEST_VLM_API_KEY=<OpenRouter key, env only>
+VAULT_INGEST_VLM_MODEL=google/gemini-3.8-flash
+```
+
+Verification of the exact production path (`IngestConfig.from_env()` gate →
+`vlm_page_pass`): real call on `scanned_formula_p0.png` returned parsed JSON
+with 3 formulas as correct LaTeX (attention QK^T block), no parse error.
+`tests/test_vault_ingest.py`: 8 passed, 11 skipped (heavy-dep skips,
+pre-existing). Gating tests (default OFF, env override, disabled raise)
+unchanged and green.
+
+### Remaining note
+
+`vlm_page_pass` calls OpenRouter via raw httpx and bypasses the
+`llm/client.py` monthly budget tracker. Volumes are page-count-budgeted per
+the boss note, but the spend should be wired into the tracked lane — follow-up
+issue created (HU-2701 child), owner Tech Lead.

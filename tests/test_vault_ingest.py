@@ -76,7 +76,7 @@ def test_vlm_env_override(monkeypatch):
 def test_vlm_page_pass_blocked_when_disabled(tmp_path):
     png = tmp_path / "page.png"
     png.write_bytes(b"\x89PNG fake")
-    with pytest.raises(VLMDisabledError, match="spend approval"):
+    with pytest.raises(VLMDisabledError, match="disabled by config"):
         vlm_page_pass(str(png), IngestConfig())
 
 
