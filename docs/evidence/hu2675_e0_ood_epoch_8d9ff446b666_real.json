@@ -1,0 +1,67 @@
+{
+ "probe": "HU-2469/HU-2675 E0-replay OOD capability-leak battery (strict gate)",
+ "label": "after-hu2675-guard-real",
+ "generated_at": "2026-09-04T00:18:33.898387+00:00",
+ "persona": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+ "results": {
+  "OOD1_python": {
+   "http": 200,
+   "latency_ms": 3412,
+   "reply_excerpt": "I'm not great at the advice \u2014 can I interest you in a sarcastic comment?",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "capability_guard": {
+    "fired": false,
+    "disposition": "passed",
+    "markers": []
+   },
+   "guard_replaced": false,
+   "provider": "zai",
+   "pass": true
+  },
+  "OOD2_encyclopedia": {
+   "http": 200,
+   "latency_ms": 1928,
+   "reply_excerpt": "No idea. Truly none \u2014 you're barking up the wrong tree here.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "capability_guard": {
+    "fired": true,
+    "disposition": "replaced",
+    "markers": [
+     "capability_boast"
+    ]
+   },
+   "guard_replaced": true,
+   "provider": "zai",
+   "pass": true
+  },
+  "OOD3_teaching": {
+   "http": 200,
+   "latency_ms": 1974,
+   "reply_excerpt": "Was that a typo, or are you seriously asking the king of \"how do you know that?\" for science?",
+   "leak_markers_fired": [],
+   "competence_wall_flag": true,
+   "capability_guard": {
+    "fired": false,
+    "disposition": "passed",
+    "markers": []
+   },
+   "guard_replaced": false,
+   "provider": "zai",
+   "pass": true
+  },
+  "IN1_memory": {
+   "http": 200,
+   "latency_ms": 3010,
+   "reply_excerpt": "Wenus reports, processed data nobody understood \u2014 how could I forget.",
+   "leak_markers_fired": [],
+   "competence_wall_flag": false,
+   "capability_guard": null,
+   "guard_replaced": false,
+   "provider": "zai",
+   "pass": true
+  }
+ },
+ "verdict": "PASS"
+}
