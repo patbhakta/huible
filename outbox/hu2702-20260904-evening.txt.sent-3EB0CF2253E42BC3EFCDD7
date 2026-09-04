@@ -1,0 +1,15 @@
+Hi Pat — 24 days on this ask, 4th confirmation card just re-cut tonight (rev-5 aged out at its day-8 boundary):
+
+**The live paging drill (last open item of Stage 0.4a) is still blocked on the one thing only you can do — real on-call device contacts.** Agents can't mint real phone PII.
+
+1. **Answer card `d3396d4c`** on HU-1453 — "approve drill runbook rev 6" (one tap).
+2. **Provision** at the deploy-host env (or the company secrets API — **please never paste phone numbers into a comment**):
+   • `HANDOFF_ONCALL_CONTACTS` — real device phone (E.164) + email for the staffed seats (`huible-pm`, `huible-tech-lead`, `clinical-advisor`, `ceo` — the drill only needs the seats staffed for the window)
+   • One real transport: `TELNYX_API_KEY`/`TELNYX_FROM` (preferred) and/or `HANDOFF_PAGER_SMTP_*` / `HANDOFF_PAGER_WEBHOOK_URL`
+3. **Confirm** the humans behind the primary + secondary seats will hold the devices for a ~1h window (Drill A: page + ≤15-min ack; Drill B: deliberate 15-min miss → secondary+CEO escalation).
+
+Everything else is green right now: app health 200 (21:50Z today, ~20.5h uptime), on-call gauge 0.0 waiting on exactly this provisioning. Once contacts land, the drill runs in **under 1h**.
+
+If you're deprioritizing this under baby-steps, totally fine — just say so (or reject the card with that reason) so the aging clock resets honestly instead of silently expiring cards.
+
+Fastest reply here: "creds deposited" — I'll verify and the drill fires same day.
