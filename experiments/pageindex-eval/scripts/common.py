@@ -19,6 +19,12 @@ EVAL_DIR = Path(__file__).resolve().parents[1]  # experiments/pageindex-eval
 
 ZAI_BASE_URL = "https://api.z.ai/api/coding/paas/v4"
 FLASH_MODEL = "openai/glm-5.3-flash"
+# HU-2726: Gemini flash-ladder arm (boss-approved flash-only ladder, same
+# model id the vault VLM lane uses). Direct egress to generativelanguage
+# .googleapis.com verified from this box 2026-09-05 (403 identity error =
+# reachable); SOCKS5 relay (pat-w11pc:1080) available as fallback but not
+# required for the text-only tree-gen lane.
+GEMINI_FLASH_MODEL = "gemini/gemini-3.8-flash"
 
 
 def load_repo_env() -> None:
@@ -41,6 +47,20 @@ def set_zai_lane() -> None:
     os.environ["OPENAI_BASE_URL"] = os.environ.get("ZAI_BASE_URL", ZAI_BASE_URL)
 
 
+def set_gemini_lane() -> str:
+    """HU-2726: point litellm's native gemini provider at the flash ladder.
+
+    Requires GEMINI_API_KEY in the repo .env (litellm reads it at call
+    time). Leaves OPENAI_* untouched so the gemini/ prefix routes to
+    Google, not the z.ai lane. Returns the resolved model id.
+    """
+    load_repo_env()
+    if not os.environ.get("GEMINI_API_KEY"):
+        sys.exit("GEMINI_API_KEY not set; cannot use the Gemini lane "
+                 "(request provisioning via the blocker issue on HU-2726)")
+    return GEMINI_FLASH_MODEL
+
+
 class UsageLedger:
     """Deterministic per-call usage capture for the SDK's LLM lane.
 
@@ -51,11 +71,12 @@ class UsageLedger:
     consistent $/page and $/query comparisons.
     """
 
-    def __init__(self):
+    def __init__(self, model: str | None = None):
         self.calls = 0
         self.prompt_tokens = 0
         self.completion_tokens = 0
         self.t_first = time.time()
+        self.model = model or FLASH_MODEL
         self.records: list[dict] = []
 
     def record(self, model: str, prompt: str, reply: str, latency_s: float):
@@ -73,7 +94,7 @@ class UsageLedger:
 
     def summary(self) -> dict:
         return {
-            "model": FLASH_MODEL,
+            "model": self.model,
             "llm_calls": self.calls,
             "prompt_tokens": self.prompt_tokens,
             "completion_tokens": self.completion_tokens,
