@@ -160,7 +160,14 @@ def request(method: str, path: str, api_key: str, body: dict | None = None) -> t
     req = urllib.request.Request(
         BASE_URL.rstrip("/") + path,
         method=method,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        # Internal synthetic replay traffic (verify_voice_dogfood.py
+        # convention): under the HU-1462 kill-switch posture an unmarked
+        # client is classified real-user and refused with 503.
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "X-Huible-Traffic-Class": "internal",
+        },
         data=json.dumps(body).encode() if body is not None else None,
     )
     try:
