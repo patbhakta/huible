@@ -1,0 +1,162 @@
+{
+ "run": "r20260905b",
+ "method": "zero-spend local artifact analysis (no LLM calls); phrase-level presence of distinctive gold n-grams against (a) the full ingested corpus and (b) each question's own wikipedia_link source-article window",
+ "conclusion": "7 of 8 misses (incl. all 3 abstains) have the gold evidence inside the question's own source-article window: the corpus contains it, the retrieval stage failed to surface it into stage3 context. q330 gold (10101110) is a derived binary encoding of an arithmetic result and is non-retrievable by construction - it was misattributed as retrieval_miss by the n-gram method and is a computation-stage miss.",
+ "ablation_ceiling": "Fixing ranking on the 7 in-window misses bounds retrieval-side recovery at +0.35 on the 20-question sample (0.60 -> 0.95 theoretical ceiling). The pending vector-only ablation tests how much a single embedding lane recovers of the 4 clean in-window retrieval misses; it cannot recover q330 by construction.",
+ "rows": [
+  {
+   "question_idx": 129,
+   "prior_stage": "retrieval_miss",
+   "phrases_in_own_window": "2/2",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "love yourself in seoul",
+     "in_own_window": true,
+     "window_articles": [
+      "BTS"
+     ]
+    },
+    {
+     "phrase": "bring the soul",
+     "in_own_window": true,
+     "window_articles": [
+      "BTS"
+     ]
+    }
+   ]
+  },
+  {
+   "question_idx": 330,
+   "prior_stage": "retrieval_miss",
+   "phrases_in_own_window": "0/1",
+   "classification": "derived_answer_non_retrievable",
+   "detail": [
+    {
+     "phrase": "10101110",
+     "in_own_window": false,
+     "window_articles": []
+    }
+   ]
+  },
+  {
+   "question_idx": 444,
+   "prior_stage": "abstain_ok",
+   "phrases_in_own_window": "1/1",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "five",
+     "in_own_window": true,
+     "window_articles": [
+      "The Streak (professional wrestling)",
+      "WrestleMania XII",
+      "WrestleMania XIV",
+      "WrestleMania VII",
+      "WrestleMania XV",
+      "WrestleMania XI",
+      "WrestleMania 13",
+      "The Undertaker"
+     ]
+    }
+   ]
+  },
+  {
+   "question_idx": 624,
+   "prior_stage": "retrieval_miss",
+   "phrases_in_own_window": "2/2",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "si river",
+     "in_own_window": true,
+     "window_articles": [
+      "Qufu"
+     ]
+    },
+    {
+     "phrase": "yi river",
+     "in_own_window": true,
+     "window_articles": [
+      "Qufu"
+     ]
+    }
+   ]
+  },
+  {
+   "question_idx": 663,
+   "prior_stage": "abstain_ok",
+   "phrases_in_own_window": "1/1",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "2,851",
+     "in_own_window": true,
+     "window_articles": [
+      "Hirosaki Station"
+     ]
+    }
+   ]
+  },
+  {
+   "question_idx": 672,
+   "prior_stage": "abstain_ok",
+   "phrases_in_own_window": "2/2",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "egan bernal",
+     "in_own_window": true,
+     "window_articles": [
+      "January 13"
+     ]
+    },
+    {
+     "phrase": "bernal",
+     "in_own_window": true,
+     "window_articles": [
+      "January 13"
+     ]
+    }
+   ]
+  },
+  {
+   "question_idx": 716,
+   "prior_stage": "retrieval_miss",
+   "phrases_in_own_window": "2/2",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "bowens",
+     "in_own_window": true,
+     "window_articles": [
+      "Miami Dolphins"
+     ]
+    },
+    {
+     "phrase": "madison",
+     "in_own_window": true,
+     "window_articles": [
+      "Miami Dolphins",
+      "2000 Miami Dolphins season"
+     ]
+    }
+   ]
+  },
+  {
+   "question_idx": 729,
+   "prior_stage": "retrieval_miss",
+   "phrases_in_own_window": "1/1",
+   "classification": "in_window_ranking_failure",
+   "detail": [
+    {
+     "phrase": "gamsonite",
+     "in_own_window": true,
+     "window_articles": [
+      "A. G. Cook"
+     ]
+    }
+   ]
+  }
+ ]
+}
