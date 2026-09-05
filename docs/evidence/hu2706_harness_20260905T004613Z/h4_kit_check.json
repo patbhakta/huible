@@ -1,0 +1,11 @@
+{
+ "probe": "H4 \u2014 Five-Friends blind kit wiring check",
+ "kit_dir": "docs/evidence/hu2706_h4_five_friends_kit",
+ "required_files_present": true,
+ "missing": [],
+ "slots_provisioned": 1,
+ "slots_total": 5,
+ "packaged": true,
+ "self_graded_verdict": null,
+ "note": "Packaging artifact only. NEVER self-graded; runs only when the boss chooses."
+}

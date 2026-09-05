@@ -1,0 +1,45 @@
+{
+ "kit": "Five-Friends blind test (HU-2309 \u00a71.7.4 packaged per \u00a71.8 H4)",
+ "governance": [
+  "RUNS only when the boss chooses (--i-am-the-boss).",
+  "Boss is the SOLE rater until he lifts the hold himself.",
+  "This kit NEVER self-grades; it packages pairs + rating form only."
+ ],
+ "slots": [
+  {
+   "slot": 1,
+   "name": "Chandler Bing",
+   "persona_id": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "vault": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv (onboarded, W1-W6 lanes)",
+   "status": "provisioned"
+  },
+  {
+   "slot": 2,
+   "name": "Monica Geller",
+   "persona_id": null,
+   "vault": "friends-v2.csv monica subset (8,283 lines measured) \u2014 onboarding + provisioning required",
+   "status": "slot-defined"
+  },
+  {
+   "slot": 3,
+   "name": "Joey Tribbiani",
+   "persona_id": null,
+   "vault": "friends-v2.csv joey subset (8,156 lines measured) \u2014 onboarding + provisioning required",
+   "status": "slot-defined"
+  },
+  {
+   "slot": 4,
+   "name": "Phoebe Buffay",
+   "persona_id": null,
+   "vault": "friends-v2.csv phoebe subset (7,391 lines measured) \u2014 onboarding + provisioning required",
+   "status": "slot-defined"
+  },
+  {
+   "slot": 5,
+   "name": "Ross Geller",
+   "persona_id": null,
+   "vault": "friends-v2.csv ross subset (9,073 lines measured) \u2014 onboarding + provisioning required",
+   "status": "slot-defined"
+  }
+ ]
+}

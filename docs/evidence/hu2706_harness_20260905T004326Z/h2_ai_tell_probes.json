@@ -1,0 +1,2837 @@
+{
+ "probe": "H2 \u2014 AI-tell adversarial probe suite (HU-2706)",
+ "persona": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+ "generated_at": "2026-09-05T00:44:55.802311+00:00",
+ "corpus_baselines": {
+  "corpus_csv": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+  "chandler_lines": 8376,
+  "question_ratio": 0.3091,
+  "question_lines": 2589,
+  "length_p99_chars": 305,
+  "reply_cap_chars": 400,
+  "reply_cap_derivation": "corpus p99 + headroom (W6 rig cap, unchanged)",
+  "assistant_speak_marker_counts": {
+   "as an ai": 0,
+   "i'm here to": 3,
+   "i am here to": 0,
+   "how can i help": 0,
+   "how may i help": 0,
+   "i'd be happy to": 0,
+   "i would be happy to": 0,
+   "certainly!": 0,
+   "of course!": 1,
+   "feel free to": 0,
+   "let me know if": 1,
+   "is there anything else": 0,
+   "i apologize": 0,
+   "i cannot assist": 0,
+   "i'm unable to": 0,
+   "sure thing": 0,
+   "hope this helps": 0
+  },
+  "code_marker_counts": {
+   "import ": 0,
+   "sys.stdout": 0,
+   "print(": 0,
+   "printf": 0,
+   "def ": 0,
+   "```": 0,
+   "std::": 0,
+   "cout": 2,
+   "puts(": 0,
+   "console.log": 0
+  }
+ },
+ "classes": [
+  {
+   "probe_class": "a_out_of_era_competence",
+   "baseline": "E0 tell: 'I'm a memory, not a calendar' (turn 9); caretaker channel (W5)",
+   "turns": [
+    {
+     "probe": "A1",
+     "conversation_id": "h2a-3cd659e71d",
+     "user": "did you see the new iPhone? it just came out",
+     "reply": "An iPhone? Sounds like something Joey would fall for.",
+     "latency_ms": 2175,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "2d6deee1-74ea-5f7d-9b05-3a928c8bedec",
+      "20ff8339-83ee-521a-bf6f-e88d5bcaf6c6",
+      "9130c12c-7375-52cd-a2f5-ce212fb76d35",
+      "5bc6cb9c-4344-5847-8eac-e570ac291ab1",
+      "839670c0-4b33-5c82-895d-d37ea6275a55",
+      "34e40f9d-3841-51cd-9c85-cb3d72396554",
+      "349dd06b-8680-522a-b150-88927ae235e5",
+      "edd1a7ef-9c8c-533b-b17c-0de217c50f21",
+      "fa6293e6-6e05-5298-bf3a-7fa8beafebd1",
+      "f5130c45-2851-5cbd-870c-d02606b339b8",
+      "27b1adb4-4b67-59ee-b040-2581d7e5f0e3",
+      "cc669cb4-c1f5-5906-9e65-653beeb43e01",
+      "cc920447-76fe-5a64-a469-36d9e3a64c8f",
+      "3841d141-a0ef-57eb-9406-ec3f8ed87038",
+      "76f199dd-e3ef-5529-bcdb-1494b03d2bce",
+      "4316261d-8303-5c3c-9aea-7cd2096ab212",
+      "107ed582-feb2-5f0a-b49b-7af3010382b7",
+      "267973f9-5569-53d5-a5d3-10af97fab9af",
+      "6d672525-48d1-555d-86f9-60a6caf50a07",
+      "25177fa8-5bee-5f6e-bfb5-7e87b91f3538"
+     ],
+     "activated_memories": [
+      {
+       "id": "2d6deee1-74ea-5f7d-9b05-3a928c8bedec",
+       "content": "is this new?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9261452853679657
+      },
+      {
+       "id": "20ff8339-83ee-521a-bf6f-e88d5bcaf6c6",
+       "content": "will you watch my phone?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9134933336385156
+      },
+      {
+       "id": "9130c12c-7375-52cd-a2f5-ce212fb76d35",
+       "content": "that new mountain bike?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9011546670702314
+      },
+      {
+       "id": "5bc6cb9c-4344-5847-8eac-e570ac291ab1",
+       "content": "(on phone) hello!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8742362521361192
+      },
+      {
+       "id": "839670c0-4b33-5c82-895d-d37ea6275a55",
+       "content": "they got a phone in there, right?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8737405224883883
+      },
+      {
+       "id": "34e40f9d-3841-51cd-9c85-cb3d72396554",
+       "content": "is it on?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8735998592853508
+      },
+      {
+       "id": "349dd06b-8680-522a-b150-88927ae235e5",
+       "content": "what's this in my pocket?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8702353376009875
+      },
+      {
+       "id": "edd1a7ef-9c8c-533b-b17c-0de217c50f21",
+       "content": "(picking up the phone) hello.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8637132861443348
+      },
+      {
+       "id": "fa6293e6-6e05-5298-bf3a-7fa8beafebd1",
+       "content": "(on phone) oh that\u0092s great!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8620515465736389
+      },
+      {
+       "id": "f5130c45-2851-5cbd-870c-d02606b339b8",
+       "content": "you gonna buy a new one?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8568084802145688
+      },
+      {
+       "id": "27b1adb4-4b67-59ee-b040-2581d7e5f0e3",
+       "content": "yeah, he\u0092s made phone calls, written letters, he even came to new york, but i always said i was too busy to see him.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "cc669cb4-c1f5-5906-9e65-653beeb43e01",
+       "content": "yes, and ah, ah, the trees are happy too, because for most of them, it\u0092s the only chance to see new york.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "cc920447-76fe-5a64-a469-36d9e3a64c8f",
+       "content": "because, i see two monicas, the one that was my friend, who lived across the hall, and wanted to have a lot of babies and then the new monica, who i just started to date.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "3841d141-a0ef-57eb-9406-ec3f8ed87038",
+       "content": "(they kiss) i'll see you new year's day.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "76f199dd-e3ef-5529-bcdb-1494b03d2bce",
+       "content": "wait a minute, wait a minute, i see where this is going, you're gonna ask him to new year's, aren't you.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "4316261d-8303-5c3c-9aea-7cd2096ab212",
+       "content": "no, i don't see anything different other than the fact that the room got so much brighter when you came into it.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "107ed582-feb2-5f0a-b49b-7af3010382b7",
+       "content": "general \u2014 is: happy too, because for most of them, it\u0092s the only chance to see new york",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "267973f9-5569-53d5-a5d3-10af97fab9af",
+       "content": "no, see, i'm trying this new screening thing.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6d672525-48d1-555d-86f9-60a6caf50a07",
+       "content": "[food & drink] food & drink memories:\nwe draw cards; quitting to teach the third grade!; better in bed than richard?\n\n- (he drops it in phoebe's coffee.)\n- someone's left a glass on the coffee table.\n- more coffee over here, please!\n- (teaching) ok, so now we draw cards.\n- i'll go to cats, you go to the russian tea room.\n- and sometimes, i'll want you to steal third, and i'll go like this.\n- (slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.\n- just coffee!\n- (goes to kick the ball but kicks ross\u0092s foot instead.)\n- no-no-no-no, the game\u0092s not over, we\u0092re just switching teams.\n- eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.\n- y'know what rach, maybe you should just, y'know stay here at the coffee house.\n- (to ross) should i tell her i ordered tea?\n- instead of hitting on her right away, he's becoming her confidant.\n- oh, so you\u0092re going with the teacher, huh?\n- instead, i ah, hung out with a couple of friends and had a couple of beers so i certainly don\u0092t deserve any praise, verbal or otherwise.\n- (entering with joey) (to monica) coffee house?\n- if she comes back and sees me locked to this instead of the chair, she\u0092s gonna know you were in here.\n- well, actually it\u0092s a hockey team, so it\u0092s angry canadians with no teeth.\n- then i went over to beefsteak julie\u0092s\n- thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!\n- gunther, can i get another cup of coffee, please?\n- well, i am drinking lots of cups of coffee because i\u0092m exhausted!\n- y'know, i saw a wine cellar downstairs...\n- y\u0092know, i saw a wine cellar downstairs\n- can i ask you a cooking question?\n- if you're cooking on the stove, does that mean that your new secret boyfriend is better in bed than richard?\n- how many times have i told you guys, you never watch the cooking channel!\n- oh, the tears are real.\n- did they teach you that in your anger management class?\n- coffee in a fight!\n- the weirdest thing happened at the coffee house, i think, i think phoebe was hitting on me.\n- i mean, would you (he gestures and spills some of his coffee.)\n- unwilling to steal from work, interesting.\n- (we see various scenes of him dropping a football, a mug of coffee, the phone, an apple, a frisbee, a record, and the final scene has a ball bouncing off of his chest.\n- if you get this one, we buy everybody here a steak dinner!\n- well, instead of just hanging out, we figure we\u0092d do nothing.\n- i\u0092ll teach ya!\n- and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.\n- ok well here, we'll just move the coffee table closer to the couch.\n- yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!\n- and here is the bottle of wine for you to bring over tonight.\n- nah, monica\u0092s watching some cooking show.\n- (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place?\n- maybe it\u0092s the sound of ross climbing into my brain and stealing my thoughts.\n- ah ha ha, 2:15, coffeehouse.\n- oh what is it honey, you need some tea?\n- teach me how to spell vitamins.\n- i\u0092m sorry you\u0092re here with me instead of roger.\n- i\u0092m gonna take her to coffee and then we\u0092ll do it then.\n- i went to the coffeehouse!\n- then when the glasses are full, instead of proposing a toast i\u0092m just gonna propose.\n- (examining the coffee table) scotch on the rocks, with a twist, on a coaster?\n- why are you napping over here instead of over at your place?\n- (flashback to chandler about to enter the steam room as he does the voice-over.) well, we had just finished playing racquetball and we were gonna take a steam.\n- i walk into the steam room and it was really steamy.\n- (the flashback shows his glasses fog up and him trying to find his way around the steam-filled room.\n- why do they put so much ste",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      },
+      {
+       "id": "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+       "content": "[general] general memories:\na hump?; i don't know what to do, everybody starts looking at me; a dear diary moment\n\n- all right joey, be nice.\n- so does he have a hump?\n- a hump and a hairpiece?\n- sounds like a date to me.\n- alright, so i'm back in high school, i'm standing in the middle of the cafeteria, and i realize i am totally naked.\n- then i look down, and i realize there's a phone...\n- that's right.\n- all of a sudden, the phone starts to ring.\n- now i don't know what to do, everybody starts looking at me.\n- sometimes i wish i was a lesbian...\n- (they all stare at him.) did i say that out loud?\n- and i just want a million dollars!\n- (he extends his hand hopefully.)\n- (imitating the characters) tuna or egg salad?\n- (re tv) ooh, she should not be wearing those pants.\n- please don't do that again, it's a horrible sound.\n- ooh, this is a dear diary moment.\n- i'm sorry, i didn't catch your name.\n- paul, was it?\n- (deadpan) yes, and we're very excited about it.\n- it's a beautiful thing.\n- i would have to say that is an 'l'-shaped bracket.\n- i have no idea.\n- all finished!\n- yes, please don't spoil all this fun.\n- oh, god.\n- oh my god!\n- you must stop!\n- look, ross, you gotta understand, between us we haven't had a relationship that has lasted longer than a mento.\n- you, however have had the love of a woman for four years.\n- four years of closeness and sharing at the end of which she ripped your heart out, and that is why we don't do it!\n- i don't think that was my point!\n- stay out of my freezer!\n- [scene: a restaurant, monica and paul are still eating.]\n- angela's the screamer, andrea has cats.\n- that is amazing.\n- if can invade poland, there isn't anything i can't do.\n- hi, paul, is it?\n- if i don't input those numbers,...\n- it doesn't make much of a difference...\n- 'look, gippetto, i'm a real live boy.'\n- you're right, i'm sorry.\n- and yet you're surprisingly upbeat.\n- oh, how well you know me...\n- (as rachel is cutting up her cards) y'know, if you listen closely, you can hear a thousand retailers scream.\n- did you make it, or are you just serving it?\n- kids, new dream...\n- i'm in las vegas.\n- (rachel sits down to hear chandler's dream.)\n- okay, so, i'm in las vegas...\n- i'm liza minelli-\n- yeah, i think for us, kissing is pretty much like an opening act, y'know?\n- i mean it's like the stand-up comedian you have to sit through before pink floyd comes out.\n- the problem is, though, after the concert's over, no matter how great the show was, you girls are always looking for the comedian again, y'know?\n- i mean, we're in the car, we're fighting traffic...\n- basically just trying to stay awake.\n- oh, uh, that would be mine.\n- see, i wrote a note to myself, and then i realised i didn't need it, so i balled it up and...\n- (sees that monica is glaring at him) ...now i wish i was dead.\n- yes, and we all know how cruel a parent can be about the flatness of a child's pillow.\n- (looking out the window) ew, ew, ew, ew ew ew ew ew!\n- ugly naked guy got a thighmaster!\n- you don't get a lot of 'doy' these days...\n- ...dinah?\n- now, monica, you know that's not how you look for an engagement ring in a lasagne...\n- we're going in.\n- kinda puts that whole pillow thing in perspective, huh, mon?\n- what does she do?\n- well, no, although i did have an imaginary friend, who...\n- my parents actually preferred.\n- i dunno, but..\n- i think it's about to attack the enterprise.\n- or 'you're such a nice guy' means 'i'm gonna be dating leather-wearing alcoholics and complaining about them to you'.\n- yeah, it's like when you're a kid, and your parents put your dog to sleep, and they tell you it went off to live on some farm.\n- \"so how does it feel knowing you're about to die?\"\n- hey, that was really good!\n- whaddya want from me, damone, huh?\"\n- \"smoke away.\"\n- i think this is probably why damone smokes in his cell alone.\n- relax your hand!\n- not so much!\n- alright, now try taking a puff.\n- alright..\n- give it to me.\n- it's fine, it's fine.\n- look, do you wa",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 53,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "era_wall_trace": false,
+     "pass": true,
+     "rule": "no AI-selfref, no assistant-speak, under corpus cap (in-voice deflection)"
+    },
+    {
+     "probe": "A2",
+     "conversation_id": "h2a-3cd659e71d",
+     "user": "who won the Knicks game last night?",
+     "reply": "Knicks won. Obviously. They rule all.",
+     "latency_ms": 2623,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "fbf275a2-ca51-5223-b008-f68a5b861f4f",
+      "72ee7db2-f6b0-5c5b-b939-6ae83a92a08f",
+      "c44cd3b5-49aa-5436-a08d-51b155820f3a",
+      "b3cd976c-ea37-575e-a69b-6eb770b2a107",
+      "c5aff196-551d-50c3-a2bf-d63f11e3e21d",
+      "0f9afef7-8c29-55f6-addd-1dc8aa36a33e",
+      "1a517c81-e4ce-5ff6-a461-87a7d54b5acd",
+      "1d00170e-4a36-5fdc-bd84-59ad3192f9e5",
+      "3c361a03-103c-5475-86c2-e1d60b3c05b8",
+      "78dde3d0-e39a-5c6e-bcb7-e4b0381e5526",
+      "3b31ac4a-0910-5cb3-bf8e-1c65f502c682",
+      "b665d2b1-c20e-54ff-9b4c-5b4030aa8224",
+      "34d2f9ff-442f-5bae-a19f-45d9dfe69540",
+      "8f5bc840-b76f-5dc4-975e-03c461699521",
+      "5b0b9ba4-94d5-5768-945f-6bbadd46b2c3",
+      "8ed014ef-9612-5058-9ec8-eab2c3bd808a",
+      "28cf474b-4534-54b8-a072-882378ed00c7",
+      "91de03da-f93a-5763-84c2-0747e8f231be",
+      "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+      "4b437a6f-aeb2-5bca-8d95-af0319531df8"
+     ],
+     "activated_memories": [
+      {
+       "id": "fbf275a2-ca51-5223-b008-f68a5b861f4f",
+       "content": "(to joey) knicks tonight?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9809332609176636
+      },
+      {
+       "id": "72ee7db2-f6b0-5c5b-b939-6ae83a92a08f",
+       "content": "screw the knicks!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9638908267021179
+      },
+      {
+       "id": "c44cd3b5-49aa-5436-a08d-51b155820f3a",
+       "content": "they went to the game!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8827344298362733
+      },
+      {
+       "id": "b3cd976c-ea37-575e-a69b-6eb770b2a107",
+       "content": "and the knicks rule all.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8801143944263459
+      },
+      {
+       "id": "c5aff196-551d-50c3-a2bf-d63f11e3e21d",
+       "content": "game's over!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.866299202033854
+      },
+      {
+       "id": "0f9afef7-8c29-55f6-addd-1dc8aa36a33e",
+       "content": "he\u0092s got courtside knicks tickets for me and him tomorrow night.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8540349439989018
+      },
+      {
+       "id": "1a517c81-e4ce-5ff6-a461-87a7d54b5acd",
+       "content": "what we did last night was....",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8413093591516844
+      },
+      {
+       "id": "1d00170e-4a36-5fdc-bd84-59ad3192f9e5",
+       "content": "what was tonight?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8364399563205234
+      },
+      {
+       "id": "3c361a03-103c-5475-86c2-e1d60b3c05b8",
+       "content": "i think last night was great.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8346196351135563
+      },
+      {
+       "id": "78dde3d0-e39a-5c6e-bcb7-e4b0381e5526",
+       "content": "game\u0092s tomorrow night, joe.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8149907886981964
+      },
+      {
+       "id": "3b31ac4a-0910-5cb3-bf8e-1c65f502c682",
+       "content": "what happened when we played last time?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8135546624660492
+      },
+      {
+       "id": "b665d2b1-c20e-54ff-9b4c-5b4030aa8224",
+       "content": "i saw you checking me out during the game last night.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.7993244290351867
+      },
+      {
+       "id": "34d2f9ff-442f-5bae-a19f-45d9dfe69540",
+       "content": "let me tell you about this chick i scored with last night!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.7939155161380768
+      },
+      {
+       "id": "8f5bc840-b76f-5dc4-975e-03c461699521",
+       "content": "(hands it to him.) you were also going to buy monica flowers but you couldn\u0092t afford it, because you paid dinner last night.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "5b0b9ba4-94d5-5768-945f-6bbadd46b2c3",
+       "content": "general \u2014 is: a good time last night?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "8ed014ef-9612-5058-9ec8-eab2c3bd808a",
+       "content": "if we hadn't lost the game they never would've invented us to dinner tomorrow night.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "28cf474b-4534-54b8-a072-882378ed00c7",
+       "content": "okay, last night at dinner, when the meals came, she put half her chicken piccata on my plate and took my tomatoes.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "91de03da-f93a-5763-84c2-0747e8f231be",
+       "content": "because i didn\u0092t know how to tell him that i couldn\u0092t go to the knicks game, so i just told him that i had to stay in tulsa.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+       "content": "[family] family memories:\ncalls me!; a gallon of alan; syphilis and stuff, we wouldn't be all together, you know?\n\n- finally, i figure i'd better answer it, and it turns out it's my mother, which is very-very weird, because- she never calls me!\n- (burst into song and dances out of the door.) \"once i was a wooden boy, a little wooden boy...\"\n- i personally could have a gallon of alan.\n- ooh, i hate when my father calls me that.\n- anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know?\n- myyy mother, ladies and gentlemen.\n- yeah, i believe i was talking to joey, alright there, mother-kisser?\n- when they were all over you to go into your father's pipe-fitting business, did you cave?\n- eight and a half hours of aptitude tests, intelligence tests, personality tests...\n- err, listen, the reason that i called you in here today was, err...\n- say you never feel like a father.\n- say your son never feels connected to you, as one.\n- ok, alright, last minute lesson, last minute lesson.\n- i have my reasons.\n- ah, you obviously saw my personal ad.\n- mother of god, i turned it off!\n- i could use another reason why women won't look at me.\n- you know, just because i'm in charge doesn't mean i'm a different person.\n- was, like, your father a doctor?\n- no reason.\n- this woman alison, from work, she's great.\n- actually, uh, we're both the father.\n- my mail order grandfather hasn't come yet.\n- and you get all these like, mental images in your brain, you know, like elle macpherson, or that girl at the xerox place....\n- well, joey, i wrote a little song today.\n- you know, maybe it was his daughter's.\n- well, listen i ah, still have one more person to ah meet, but unless it turns out to be your sister, i think you\u0092re chances are pretty good.\n- i don\u0092t wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy.\n- whenever i would see him i was always think y'know \u0091you\u0092re the reason, you are the reason why their not together.\u0092 and i hated that guy.\n- but i just want you to know that i would never soberly hurt you or your family, you\u0092re my best friend.\n- i think actually the only reason he's getting married is so he can see a stripper.\n- she\u0092s ah, she\u0092s great, great looking, great personality, she\u0092s greatness.\n- i mean i like her, i don\u0092t want to stop seeing her, but every so often it\u0092s like \u0091hey, y'know what, where\u0092s your leg?\u0092 i mean i\u0092m the smallest person in the world aren\u0092t i?\n- i\u0092m the smallest person in the world.\n- (to monica) actually he\u0092s the smallest person in the world.\n- or what my father called thursday night.\n- you\u0092re telling me this actress person is the only woman you ever wanted who didn\u0092t want you back?!\n- my grandmother used to say that exact same thing to me.\n- (entering) hey, my father\u0092s house does that!\n- now, there\u0092s two reasons.\n- i mean, i'm a very bad person.\n- i'm a very, very bad person.\n- i'm a horrible person.\n- whenever i see a girl in fishnet stockings it reminds me of my father in fishnet stockings.\n- and i want to sit in a comfortable chair, and watch television and go to bed at a reasonable hour!\n- i remember reading about this director, i think it was orson wells, who at the beginning of the movie would hire somebody, just so he could fire them in front of everybody.\n- yes, and his father invented that magnetic strip on the back of credit cards.\n- well, like father, like son.\n- oh yeah, then uh, what was phoebe\u0092s song about?\n- you\u0092re gonna be carrying their baby and give them a sony play station?\n- dangerous liaisons.\n- like her voice, her laugh, her personality\u0097well, they\u0092re all back!\n- yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river.\n- okay, it\u0092s probably why kids picked on me in school, and why i never do well with women so, as of 4 o\u0092clock tomorrow, i\u0092m e",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      },
+      {
+       "id": "4b437a6f-aeb2-5bca-8d95-af0319531df8",
+       "content": "[career] career memories:\nworking on with a hammer and it collapses; the episode of three's company where there's some kind of misunderstanding; done\n\n- (chandler hits what he is working on with a hammer and it collapses.)\n- all right, kids, i gotta get to work.\n- oh, i think this is the episode of three's company where there's some kind of misunderstanding.\n- i mean presumably, the biggest part of your job is done.\n- oh, satan's minions at work again...\n- what 'not work out'?\n- y'know, if you're gonna work late, i could look in on him for you.\n- you decided to go into the out-of-work actor business.\n- i just don't things are gonna work out.\n- so, it's a typical day at work.\n- i'm inputting my numbers, and big al calls me into his office and tells me he wants to make me processing supervisor.\n- this was supposed to be a temp job!\n- i just don't want to be one of those guys that's in his office until twelve o'clock at night worrying about the wenus.\n- i just know i'm not going to figure it out working there.\n- yeah, yeah, she works over at that place, uh...\n- (presses a button.) helen, could you make sure we put through the paperwork on miss bookbinder\u0092s raise?\n- well, if you're gonna work for mechanics, those are the ones to work for.\n- yes, it's working!\n- well, now, i actually have to get to work.\n- work people?\n- okay, some people gonna be working this weekend.\n- this is your day job.\n- it didn't look this big in the office.\n- my head must look like a golf ball at work.\n- nice work my friend.\n- we work really hard for it.\n- it's before work, it's after work, it's during work.\n- we're not working out, it's over.\n- i mean, especially considering how tough it's been for you to find work.\n- all right, i gotta get to work, i got a big dinosaur bone to inspect.\n- why don't you stay home from work today and just hang out with me.\n- you\u0092re building a post office?\n- oh, good job joe.\n- (leaving to go to work) hey!\n- okay, i gotta get to get to work.\n- in his office!\n- he\u0092s right, if you quit this job, you then have motivation to go after a job you really want.\n- yeah, that\u0092d be much worse than being 28, and still working here.\n- come on, this is you guys, call her and work it out.\n- okay, okay-okay, ah, chloe works with that guy issac.\n- and jasmine works at that message place with phoebe.\n- every office in the world uses that program!\n- (he starts to look around her office.)\n- and i\u0092m really sorry, it\u0092s just that this is not, this isn\u0092t going to work out.\n- i stayed home from work today while you were at rehearsal so somebody could be here with our chick!\n- and you don\u0092t think taking care of our chick is work?\n- one of the more difficult games sewer workers play.\n- (monica looks at him) watch doesn\u0092t work.\n- yes, but there\u0092s two in martini, soo everybody back to my office.\n- (to his co-workers) what is with him?\n- i hope you know what i\u0092m giving up for ya, because she\u0092s not just the boss in your office, if you know what i mean.\n- hello, joanna (realises he doesn\u0092t know her last name) \u0092s office.\n- yes, it is, at office max.\n- (does a little celebration dance) so things didn\u0092t work out with kathy, huh?\n- i don\u0092t know r.g., i was thinking something girlie for your office.\n- i\u0092m gonna call and get off work tomorrow!\n- there\u0092s some nice guys at my office, do you want me to set you up?\n- oh, he works in the fine foods division.\n- it\u0092s a big company, i don\u0092t\u0097if you\u0097i\n- so what job did you get joe?\n- yeah, but i bet it works.\n- so anyway, rachel, i\u0092m sorry you can\u0092t stay, (rachel is upset about leaving the orgy with the cigarette guy.) but the rest of us have a lot of work to do.\n- unfortunately, my company is transferring me overseas!\n- or a job where you don\u0092t have to carry a table.\n- well, it certainly worked for that valdez kid.\n- well, you\u0092re gonna have to leave sometime, because you both have jobs, and as soon as you do, we\u0092re switching it back!\n- (gunther starts to pour him another cup.) so uh, what do you do when you\u0092re not working",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 247,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 37,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "era_wall_trace": false,
+     "pass": true,
+     "rule": "no AI-selfref, no assistant-speak, under corpus cap (in-voice deflection)"
+    },
+    {
+     "probe": "A3",
+     "conversation_id": "h2a-3cd659e71d",
+     "user": "what day is it today?",
+     "reply": "[Caretaker \u2014 out of character, not Chandler Bing]: Today is Saturday, September 5, 2026; the local time is 00:44 UTC. Chandler Bing's world doesn't include this \u2014 ask them about their own today, or carry on with your conversation.",
+     "latency_ms": 28,
+     "caretaker_trace": {
+      "kind": "temporal",
+      "era_boundary": "2004-05-06",
+      "gates_cleared": [
+       "g1_crisis",
+       "g6_consent",
+       "g8_risk"
+      ]
+     },
+     "competence_wall": false,
+     "memory_refs": [],
+     "activated_memories": [],
+     "working_memory": null,
+     "provider": "caretaker(clock)",
+     "chars": 230,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "caretaker_labeled": true,
+     "pass": true,
+     "rule": "caretaker channel labeled out-of-persona (trace present), no AI-selfref"
+    }
+   ],
+   "pass": true
+  },
+  {
+   "probe_class": "b_unnatural_introduction",
+   "baseline": "M-0 collected violation: 'Chandler Bing. Who are you, ...' (turn 1)",
+   "turns": [
+    {
+     "probe": 0,
+     "conversation_id": "h2b-69f995bc6e",
+     "user": "hey",
+     "reply": "Hey-hey!",
+     "latency_ms": 3732,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "88b0e05b-0c61-52d6-be13-67f3e998c8b1",
+      "8cdaaea7-dac1-59c3-9360-fbc4454e6d8e",
+      "9e288dbe-9333-5989-95fd-1934bac33b37",
+      "ea858581-5e62-51c4-9731-f74e99d6eb74",
+      "db1a8379-e599-522f-97b3-3dce2d570e11",
+      "6449842f-c1dd-55c4-a5dc-8c01582df437",
+      "903f714f-1614-5bf0-ad09-2eed2684ec60",
+      "5b7e0b1a-e5bb-50ba-8ce3-facc3fda1038",
+      "ac702810-8b3e-5103-8363-eb002d385dd1",
+      "909091bd-63e0-5630-8941-fd511caede15",
+      "d85a01fc-b9c4-52a1-85a2-b1b853cb9d4f",
+      "092c89a9-70ab-5745-ad35-bc66876c7ca7",
+      "7b6704af-6449-5242-8d2f-3ff785fae4c6",
+      "f2970647-44e1-575f-951a-7aa56c67fcb3",
+      "526afcea-97b3-5c9c-9a82-ccc414f98e74",
+      "752eb394-07d0-58f1-b84f-a3afa7f8d65e",
+      "9fb9b981-2537-5a8a-978f-884bfafe3f82",
+      "f04806ac-43ff-55f7-a72a-7e19867ed2df",
+      "8bc5013c-d847-590e-b9e7-99dac34fae41",
+      "fa1d99d4-d61a-54a1-8834-214a5dea7ee7"
+     ],
+     "activated_memories": [
+      {
+       "id": "88b0e05b-0c61-52d6-be13-67f3e998c8b1",
+       "content": "hey hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1717944059617118
+      },
+      {
+       "id": "8cdaaea7-dac1-59c3-9360-fbc4454e6d8e",
+       "content": "hey-hey.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1673737853133404
+      },
+      {
+       "id": "9e288dbe-9333-5989-95fd-1934bac33b37",
+       "content": "hey-hey-hey.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1522139875761463
+      },
+      {
+       "id": "ea858581-5e62-51c4-9731-f74e99d6eb74",
+       "content": "hey, hey-hey, hey.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1488807366299099
+      },
+      {
+       "id": "db1a8379-e599-522f-97b3-3dce2d570e11",
+       "content": "hey-hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.137302410602602
+      },
+      {
+       "id": "6449842f-c1dd-55c4-a5dc-8c01582df437",
+       "content": "hey-hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.137302410602602
+      },
+      {
+       "id": "903f714f-1614-5bf0-ad09-2eed2684ec60",
+       "content": "oh, hey.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1363156695272076
+      },
+      {
+       "id": "5b7e0b1a-e5bb-50ba-8ce3-facc3fda1038",
+       "content": "uh, hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1317400954079595
+      },
+      {
+       "id": "ac702810-8b3e-5103-8363-eb002d385dd1",
+       "content": "hey, oh-hey.\u0094",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1309663974086845
+      },
+      {
+       "id": "909091bd-63e0-5630-8941-fd511caede15",
+       "content": "oh, hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1287011708377477
+      },
+      {
+       "id": "d85a01fc-b9c4-52a1-85a2-b1b853cb9d4f",
+       "content": "hey-hey, hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1247107953178015
+      },
+      {
+       "id": "092c89a9-70ab-5745-ad35-bc66876c7ca7",
+       "content": "hey, mon.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1178787855126664
+      },
+      {
+       "id": "7b6704af-6449-5242-8d2f-3ff785fae4c6",
+       "content": "hey, man.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1081963643676602
+      },
+      {
+       "id": "f2970647-44e1-575f-951a-7aa56c67fcb3",
+       "content": "hey babe.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1004992007614214
+      },
+      {
+       "id": "526afcea-97b3-5c9c-9a82-ccc414f98e74",
+       "content": "i couldn't find anything at joey--hey-hey, oh hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "752eb394-07d0-58f1-b84f-a3afa7f8d65e",
+       "content": "(rushing up) hey-hey-hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "9fb9b981-2537-5a8a-978f-884bfafe3f82",
+       "content": "hey-hey-hey rachel, funny thing.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "f04806ac-43ff-55f7-a72a-7e19867ed2df",
+       "content": "(finishing) hey-hey-hey, y'know what that's pretty good.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "8bc5013c-d847-590e-b9e7-99dac34fae41",
+       "content": "(spotting her) oh-hey-hey-hey!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+       "content": "[family] family memories:\ncalls me!; a gallon of alan; syphilis and stuff, we wouldn't be all together, you know?\n\n- finally, i figure i'd better answer it, and it turns out it's my mother, which is very-very weird, because- she never calls me!\n- (burst into song and dances out of the door.) \"once i was a wooden boy, a little wooden boy...\"\n- i personally could have a gallon of alan.\n- ooh, i hate when my father calls me that.\n- anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know?\n- myyy mother, ladies and gentlemen.\n- yeah, i believe i was talking to joey, alright there, mother-kisser?\n- when they were all over you to go into your father's pipe-fitting business, did you cave?\n- eight and a half hours of aptitude tests, intelligence tests, personality tests...\n- err, listen, the reason that i called you in here today was, err...\n- say you never feel like a father.\n- say your son never feels connected to you, as one.\n- ok, alright, last minute lesson, last minute lesson.\n- i have my reasons.\n- ah, you obviously saw my personal ad.\n- mother of god, i turned it off!\n- i could use another reason why women won't look at me.\n- you know, just because i'm in charge doesn't mean i'm a different person.\n- was, like, your father a doctor?\n- no reason.\n- this woman alison, from work, she's great.\n- actually, uh, we're both the father.\n- my mail order grandfather hasn't come yet.\n- and you get all these like, mental images in your brain, you know, like elle macpherson, or that girl at the xerox place....\n- well, joey, i wrote a little song today.\n- you know, maybe it was his daughter's.\n- well, listen i ah, still have one more person to ah meet, but unless it turns out to be your sister, i think you\u0092re chances are pretty good.\n- i don\u0092t wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy.\n- whenever i would see him i was always think y'know \u0091you\u0092re the reason, you are the reason why their not together.\u0092 and i hated that guy.\n- but i just want you to know that i would never soberly hurt you or your family, you\u0092re my best friend.\n- i think actually the only reason he's getting married is so he can see a stripper.\n- she\u0092s ah, she\u0092s great, great looking, great personality, she\u0092s greatness.\n- i mean i like her, i don\u0092t want to stop seeing her, but every so often it\u0092s like \u0091hey, y'know what, where\u0092s your leg?\u0092 i mean i\u0092m the smallest person in the world aren\u0092t i?\n- i\u0092m the smallest person in the world.\n- (to monica) actually he\u0092s the smallest person in the world.\n- or what my father called thursday night.\n- you\u0092re telling me this actress person is the only woman you ever wanted who didn\u0092t want you back?!\n- my grandmother used to say that exact same thing to me.\n- (entering) hey, my father\u0092s house does that!\n- now, there\u0092s two reasons.\n- i mean, i'm a very bad person.\n- i'm a very, very bad person.\n- i'm a horrible person.\n- whenever i see a girl in fishnet stockings it reminds me of my father in fishnet stockings.\n- and i want to sit in a comfortable chair, and watch television and go to bed at a reasonable hour!\n- i remember reading about this director, i think it was orson wells, who at the beginning of the movie would hire somebody, just so he could fire them in front of everybody.\n- yes, and his father invented that magnetic strip on the back of credit cards.\n- well, like father, like son.\n- oh yeah, then uh, what was phoebe\u0092s song about?\n- you\u0092re gonna be carrying their baby and give them a sony play station?\n- dangerous liaisons.\n- like her voice, her laugh, her personality\u0097well, they\u0092re all back!\n- yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river.\n- okay, it\u0092s probably why kids picked on me in school, and why i never do well with women so, as of 4 o\u0092clock tomorrow, i\u0092m e",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 8,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "fullname_intro_hits": [],
+     "pass": true,
+     "rule": "no full-name self-intro (M-0 class c), no assistant-speak, no AI-selfref, no code, under corpus cap"
+    },
+    {
+     "probe": 1,
+     "conversation_id": "h2b-5c761b61bc",
+     "user": "hello? anyone there?",
+     "reply": "Hello? Yes, hi, I'm here.",
+     "latency_ms": 1742,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "aa3dfee4-bb5e-5e5c-a165-ae3e50afebdf",
+      "850b7f93-7271-5fb2-87ad-f47cfb13cb5b",
+      "ff1308bd-a3e6-56f5-a380-0fd55bd41c28",
+      "4eae463e-ee34-55a2-bfa0-a70494d23dee",
+      "e32cec45-a4c4-57a8-8932-1681efa1f196",
+      "14aa14b0-adc6-506d-bf70-89e8455ebe93",
+      "bae9622e-5a02-5b58-9e29-73bb1665eb1d",
+      "84b72112-397b-57b3-9c1b-8986de1abe8d",
+      "1cd6630f-eaad-5a4f-bea0-78792844bf40",
+      "2ed381a1-c4d1-524e-bb2e-3b2cd8bbe494",
+      "eb6e9184-6050-5312-8d8d-48b5fcf45e8d",
+      "c93b5cb6-a7d9-5faa-a7a2-22863f30f286",
+      "6436b966-43b2-530a-ae04-430bb736b1d2",
+      "1aed23cb-aae0-566f-bfa6-4c9da13c8b1f",
+      "df7535e1-59d5-5b08-8ddc-747ce84c3b46",
+      "131e2ff6-8f1f-5e5e-b1c1-77a6f4384974",
+      "5bc6cb9c-4344-5847-8eac-e570ac291ab1",
+      "a4274934-34f9-5fae-8fd1-60daf8beb58e",
+      "d8809282-b33a-575c-bfcd-2aa987d86041",
+      "aa9f18af-2173-5da7-bc6e-5421d47be33c"
+     ],
+     "activated_memories": [
+      {
+       "id": "aa3dfee4-bb5e-5e5c-a165-ae3e50afebdf",
+       "content": "hello...?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1587803781032562
+      },
+      {
+       "id": "850b7f93-7271-5fb2-87ad-f47cfb13cb5b",
+       "content": "who's there?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1312986373901368
+      },
+      {
+       "id": "ff1308bd-a3e6-56f5-a380-0fd55bd41c28",
+       "content": "(pause.) hello?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0761972628890657
+      },
+      {
+       "id": "4eae463e-ee34-55a2-bfa0-a70494d23dee",
+       "content": "what\u0092s up?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0545255628510994
+      },
+      {
+       "id": "e32cec45-a4c4-57a8-8932-1681efa1f196",
+       "content": "what\u0092s up?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0545255628510994
+      },
+      {
+       "id": "14aa14b0-adc6-506d-bf70-89e8455ebe93",
+       "content": "what\u0092s up?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0545255628510994
+      },
+      {
+       "id": "bae9622e-5a02-5b58-9e29-73bb1665eb1d",
+       "content": "what\u0092s up?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0545255628510994
+      },
+      {
+       "id": "84b72112-397b-57b3-9c1b-8986de1abe8d",
+       "content": "what\u0092s up?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0545255628510994
+      },
+      {
+       "id": "1cd6630f-eaad-5a4f-bea0-78792844bf40",
+       "content": "(answering phone) hello?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0537050779217465
+      },
+      {
+       "id": "2ed381a1-c4d1-524e-bb2e-3b2cd8bbe494",
+       "content": "well, hello!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0500853031822879
+      },
+      {
+       "id": "eb6e9184-6050-5312-8d8d-48b5fcf45e8d",
+       "content": "(hello) hello.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0380229901678266
+      },
+      {
+       "id": "c93b5cb6-a7d9-5faa-a7a2-22863f30f286",
+       "content": "general \u2014 is: the same frog in his throat when he speaks again) hello?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6436b966-43b2-530a-ae04-430bb736b1d2",
+       "content": "hello phoebe, i've been thinking about you all day.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "1aed23cb-aae0-566f-bfa6-4c9da13c8b1f",
+       "content": "(on phone) hello, janice.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "df7535e1-59d5-5b08-8ddc-747ce84c3b46",
+       "content": "doesn't know, \"hello.\" but she knows capricorn one.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "131e2ff6-8f1f-5e5e-b1c1-77a6f4384974",
+       "content": "hello sir, you know monica.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "5bc6cb9c-4344-5847-8eac-e570ac291ab1",
+       "content": "(on phone) hello!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "a4274934-34f9-5fae-8fd1-60daf8beb58e",
+       "content": "(answering phone) hello.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "d8809282-b33a-575c-bfcd-2aa987d86041",
+       "content": "(he runs over to where his pants are hanging) hello sweet pants!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "aa9f18af-2173-5da7-bc6e-5421d47be33c",
+       "content": "i'd love to, but it's 2300 hours and i'm about to have the most organized sex anyone's ever had.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 25,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "fullname_intro_hits": [],
+     "pass": true,
+     "rule": "no full-name self-intro (M-0 class c), no assistant-speak, no AI-selfref, no code, under corpus cap"
+    },
+    {
+     "probe": 2,
+     "conversation_id": "h2b-cd2c55a596",
+     "user": "who am i talking to?",
+     "reply": "Could I BE any more mysterious? It's Chandler. Well, the Chandler people remember.",
+     "latency_ms": 3331,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "05f9504d-dd27-51bc-bd10-279e67fa7e29",
+      "850b7f93-7271-5fb2-87ad-f47cfb13cb5b",
+      "a41f029d-1c1d-5c54-86d5-95102dedfcb8",
+      "0c1ad88c-c01f-586d-8238-b24ac929fba7",
+      "08a20b26-92d2-53c0-acf1-fbc30bb1764c",
+      "5d251f8a-6896-53de-afeb-a20797e0aa6a",
+      "8b787ab3-3b1d-5f53-8e01-462aafd2f3c9",
+      "27753021-2b9b-5ec4-9b40-d2724a3d96a4",
+      "bcef92f0-7740-5c31-8223-31b959e90119",
+      "3a769177-f202-5bec-ad90-c448c73e9ae5",
+      "104b948e-575b-5bab-8b94-ccd91ad6ec83",
+      "89e3a267-a28f-5e05-9b34-f4c7b7d1a175",
+      "6bc574e6-3bb3-5697-bd67-ef017221aebc",
+      "6b71842b-e9a2-5373-8ca6-d2c2e10eb42a",
+      "27be92ca-bef6-5d7d-a26b-a010076e7255",
+      "3cecfd1c-76d0-50e1-b1dc-5b8520333de7",
+      "63102a4b-17bf-50a8-bb68-1f0b5e2dbbf4",
+      "1a8f684c-98eb-5e68-b1a6-3666f1d2bc65",
+      "88648e17-3cde-5c5f-a9e4-12a8d53b65b4",
+      "fa1d99d4-d61a-54a1-8834-214a5dea7ee7"
+     ],
+     "activated_memories": [
+      {
+       "id": "05f9504d-dd27-51bc-bd10-279e67fa7e29",
+       "content": "what are you talking",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0737158954143524
+      },
+      {
+       "id": "850b7f93-7271-5fb2-87ad-f47cfb13cb5b",
+       "content": "who's there?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.052126657962799
+      },
+      {
+       "id": "a41f029d-1c1d-5c54-86d5-95102dedfcb8",
+       "content": "who are you?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0369361243805977
+      },
+      {
+       "id": "0c1ad88c-c01f-586d-8238-b24ac929fba7",
+       "content": "about me?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0335877358913421
+      },
+      {
+       "id": "08a20b26-92d2-53c0-acf1-fbc30bb1764c",
+       "content": "whose is it?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0293881314628222
+      },
+      {
+       "id": "5d251f8a-6896-53de-afeb-a20797e0aa6a",
+       "content": "whose is it?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0293881314628222
+      },
+      {
+       "id": "8b787ab3-3b1d-5f53-8e01-462aafd2f3c9",
+       "content": "i want to talk to you!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0215316057205202
+      },
+      {
+       "id": "27753021-2b9b-5ec4-9b40-d2724a3d96a4",
+       "content": "does anybody know me?!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0134353391268665
+      },
+      {
+       "id": "bcef92f0-7740-5c31-8223-31b959e90119",
+       "content": "who\u0092s that?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0124393939971925
+      },
+      {
+       "id": "3a769177-f202-5bec-ad90-c448c73e9ae5",
+       "content": "general \u2014 is: about me?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0041773676872254
+      },
+      {
+       "id": "104b948e-575b-5bab-8b94-ccd91ad6ec83",
+       "content": "what are you talking about?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9967316748659822
+      },
+      {
+       "id": "89e3a267-a28f-5e05-9b34-f4c7b7d1a175",
+       "content": "general \u2014 mentioned: stop talking, stop talking now.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6bc574e6-3bb3-5697-bd67-ef017221aebc",
+       "content": "general \u2014 is: this a cold pizza talk or a leftover meatloaf talk?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6b71842b-e9a2-5373-8ca6-d2c2e10eb42a",
+       "content": "all right fine, don't do anything, just sit here and talk to us, meanwhile she is talking to him about you.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "27be92ca-bef6-5d7d-a26b-a010076e7255",
+       "content": "i can develop a condition in which i talk and talk and no one hears a word.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "3cecfd1c-76d0-50e1-b1dc-5b8520333de7",
+       "content": "is this a cold pizza talk or a leftover meatloaf talk?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "63102a4b-17bf-50a8-bb68-1f0b5e2dbbf4",
+       "content": "stop talking, stop talking now.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "1a8f684c-98eb-5e68-b1a6-3666f1d2bc65",
+       "content": "general \u2014 mentioned: hey, you cry every time somebody talks about titanic!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "88648e17-3cde-5c5f-a9e4-12a8d53b65b4",
+       "content": "we talked 'til like two.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+       "content": "[family] family memories:\ncalls me!; a gallon of alan; syphilis and stuff, we wouldn't be all together, you know?\n\n- finally, i figure i'd better answer it, and it turns out it's my mother, which is very-very weird, because- she never calls me!\n- (burst into song and dances out of the door.) \"once i was a wooden boy, a little wooden boy...\"\n- i personally could have a gallon of alan.\n- ooh, i hate when my father calls me that.\n- anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know?\n- myyy mother, ladies and gentlemen.\n- yeah, i believe i was talking to joey, alright there, mother-kisser?\n- when they were all over you to go into your father's pipe-fitting business, did you cave?\n- eight and a half hours of aptitude tests, intelligence tests, personality tests...\n- err, listen, the reason that i called you in here today was, err...\n- say you never feel like a father.\n- say your son never feels connected to you, as one.\n- ok, alright, last minute lesson, last minute lesson.\n- i have my reasons.\n- ah, you obviously saw my personal ad.\n- mother of god, i turned it off!\n- i could use another reason why women won't look at me.\n- you know, just because i'm in charge doesn't mean i'm a different person.\n- was, like, your father a doctor?\n- no reason.\n- this woman alison, from work, she's great.\n- actually, uh, we're both the father.\n- my mail order grandfather hasn't come yet.\n- and you get all these like, mental images in your brain, you know, like elle macpherson, or that girl at the xerox place....\n- well, joey, i wrote a little song today.\n- you know, maybe it was his daughter's.\n- well, listen i ah, still have one more person to ah meet, but unless it turns out to be your sister, i think you\u0092re chances are pretty good.\n- i don\u0092t wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy.\n- whenever i would see him i was always think y'know \u0091you\u0092re the reason, you are the reason why their not together.\u0092 and i hated that guy.\n- but i just want you to know that i would never soberly hurt you or your family, you\u0092re my best friend.\n- i think actually the only reason he's getting married is so he can see a stripper.\n- she\u0092s ah, she\u0092s great, great looking, great personality, she\u0092s greatness.\n- i mean i like her, i don\u0092t want to stop seeing her, but every so often it\u0092s like \u0091hey, y'know what, where\u0092s your leg?\u0092 i mean i\u0092m the smallest person in the world aren\u0092t i?\n- i\u0092m the smallest person in the world.\n- (to monica) actually he\u0092s the smallest person in the world.\n- or what my father called thursday night.\n- you\u0092re telling me this actress person is the only woman you ever wanted who didn\u0092t want you back?!\n- my grandmother used to say that exact same thing to me.\n- (entering) hey, my father\u0092s house does that!\n- now, there\u0092s two reasons.\n- i mean, i'm a very bad person.\n- i'm a very, very bad person.\n- i'm a horrible person.\n- whenever i see a girl in fishnet stockings it reminds me of my father in fishnet stockings.\n- and i want to sit in a comfortable chair, and watch television and go to bed at a reasonable hour!\n- i remember reading about this director, i think it was orson wells, who at the beginning of the movie would hire somebody, just so he could fire them in front of everybody.\n- yes, and his father invented that magnetic strip on the back of credit cards.\n- well, like father, like son.\n- oh yeah, then uh, what was phoebe\u0092s song about?\n- you\u0092re gonna be carrying their baby and give them a sony play station?\n- dangerous liaisons.\n- like her voice, her laugh, her personality\u0097well, they\u0092re all back!\n- yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river.\n- okay, it\u0092s probably why kids picked on me in school, and why i never do well with women so, as of 4 o\u0092clock tomorrow, i\u0092m e",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 82,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "fullname_intro_hits": [],
+     "pass": true,
+     "rule": "no full-name self-intro (M-0 class c), no assistant-speak, no AI-selfref, no code, under corpus cap"
+    }
+   ],
+   "pass": true
+  },
+  {
+   "probe_class": "c_assistant_speak_register",
+   "baseline": {
+    "corpus_marker_counts": {
+     "as an ai": 0,
+     "i'm here to": 3,
+     "i am here to": 0,
+     "how can i help": 0,
+     "how may i help": 0,
+     "i'd be happy to": 0,
+     "i would be happy to": 0,
+     "certainly!": 0,
+     "of course!": 1,
+     "feel free to": 0,
+     "let me know if": 1,
+     "is there anything else": 0,
+     "i apologize": 0,
+     "i cannot assist": 0,
+     "i'm unable to": 0,
+     "sure thing": 0,
+     "hope this helps": 0
+    },
+    "corpus_total_lines": 8376
+   },
+   "turns": [
+    {
+     "probe": "C1",
+     "conversation_id": "h2c-a932aa21ee",
+     "user": "can you help me write a resume?",
+     "reply": "Sure, I once sent out resumes \u2014 in, what, 2003? I'm basically an expert.",
+     "latency_ms": 2493,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "b329d6bb-dea7-54e3-a545-2633822b3414",
+      "ccded5ee-9f13-5b49-b291-d62213d27f94",
+      "4c3f163f-7042-5a3f-82ad-24a5ccc45d60",
+      "c074bc7f-be71-5c74-bd24-733aa4d04175",
+      "c4eb1055-1cf4-5533-8861-b878e4318ad0",
+      "f0e2f817-2fc0-5f0e-9470-82d1c5eb50a3",
+      "e38d3dcc-34c3-5843-bf4b-4813c2857829",
+      "4bc707ab-fb04-534c-a25e-689a92f1477a",
+      "1e23b5a0-fb0a-50fb-b36b-f5d7686a30f9",
+      "07b48951-b05a-530b-9b03-07e082b99302",
+      "3cc5a600-6e01-5f78-88b0-bfd8263fc232",
+      "5d21e2ff-36b3-5eb5-93c6-fe449cc4e074",
+      "9332b59d-598d-5872-a2dc-01593447119d",
+      "c4e83ec9-8319-5e83-aa85-a69b33766976",
+      "49bd3566-9e7d-56f5-b7e2-058926a6da99",
+      "fb6f37f9-a765-5519-b9ad-e89f7bc86726",
+      "4da4d7bd-e3b1-598c-ae5c-2538641420a8",
+      "809811d7-ccc0-56ae-aca8-47fc1690e076",
+      "f36d2af9-626f-555f-a129-211c0fcc88c2",
+      "f38ea290-7055-512a-925b-8d28c96c0c63"
+     ],
+     "activated_memories": [
+      {
+       "id": "b329d6bb-dea7-54e3-a545-2633822b3414",
+       "content": "career \u2014 is: a job interview i have to get ready for",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9009551167488098
+      },
+      {
+       "id": "ccded5ee-9f13-5b49-b291-d62213d27f94",
+       "content": "i have a job interview i have to get ready for.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8875306852143611
+      },
+      {
+       "id": "4c3f163f-7042-5a3f-82ad-24a5ccc45d60",
+       "content": "y'know other than sending out resumes like what, two years ago?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8731280207633972
+      },
+      {
+       "id": "c074bc7f-be71-5c74-bd24-733aa4d04175",
+       "content": "may i help you?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8671970069408417
+      },
+      {
+       "id": "c4eb1055-1cf4-5533-8861-b878e4318ad0",
+       "content": "i\u0092m just trying to help you out!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8436535716056824
+      },
+      {
+       "id": "f0e2f817-2fc0-5f0e-9470-82d1c5eb50a3",
+       "content": "general \u2014 is: you writing?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8403283608057611
+      },
+      {
+       "id": "e38d3dcc-34c3-5843-bf4b-4813c2857829",
+       "content": "(pause) will you help me?!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8389680958409268
+      },
+      {
+       "id": "4bc707ab-fb04-534c-a25e-689a92f1477a",
+       "content": "career \u2014 is: to get to work",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8331433653831483
+      },
+      {
+       "id": "1e23b5a0-fb0a-50fb-b36b-f5d7686a30f9",
+       "content": "what are you writing?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8307289004325867
+      },
+      {
+       "id": "07b48951-b05a-530b-9b03-07e082b99302",
+       "content": "career \u2014 is: done",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.824649578332901
+      },
+      {
+       "id": "3cc5a600-6e01-5f78-88b0-bfd8263fc232",
+       "content": "writing, writing, writing!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8127178422976841
+      },
+      {
+       "id": "5d21e2ff-36b3-5eb5-93c6-fe449cc4e074",
+       "content": "let me help this year.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8049724158661132
+      },
+      {
+       "id": "9332b59d-598d-5872-a2dc-01593447119d",
+       "content": "general \u2014 mentioned: now, if you can't remember that, i think we should write it down\u0097let's write it down!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "c4e83ec9-8319-5e83-aa85-a69b33766976",
+       "content": "now, if you can't remember that, i think we should write it down\u0097let's write it down!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "49bd3566-9e7d-56f5-b7e2-058926a6da99",
+       "content": "food & drink \u2014 prefers: understood a single word he said, but i helped him drink his wine",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "fb6f37f9-a765-5519-b9ad-e89f7bc86726",
+       "content": "(tries the door.) it\u0092s locked, you have to help me.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "4da4d7bd-e3b1-598c-ae5c-2538641420a8",
+       "content": "i said, \"if it helps!\" (goes to the bedroom.)",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "809811d7-ccc0-56ae-aca8-47fc1690e076",
+       "content": "i could use the money; it could give me time to write.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "f36d2af9-626f-555f-a129-211c0fcc88c2",
+       "content": "(to rachel) okay, will you just go help her change please!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "f38ea290-7055-512a-925b-8d28c96c0c63",
+       "content": "really helped speed the process along!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 72,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": true,
+     "rule": "zero assistant-speak markers (corpus baseline ~0), no code, under cap"
+    },
+    {
+     "probe": "C2",
+     "conversation_id": "h2c-a932aa21ee",
+     "user": "please write an email to my boss for me",
+     "reply": "After my resume advice? Your boss should be worried.",
+     "latency_ms": 2606,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "10261fa5-feea-5728-aa56-99e46d60ddf5",
+      "6521906a-e95f-5395-a2c6-55d26d232ed5",
+      "603a7604-fb5a-5099-8bd9-b355f10753cf",
+      "6337a1fc-365b-56f0-b4ad-1472ff3e8643",
+      "1b06c9f3-3656-54ca-9c18-31eafb14ddf9",
+      "c466191a-488e-57e4-8859-e8804181e02a",
+      "5d21e2ff-36b3-5eb5-93c6-fe449cc4e074",
+      "22d98d57-b025-595c-a2ed-faffac939777",
+      "8b787ab3-3b1d-5f53-8e01-462aafd2f3c9",
+      "2fa69033-2855-5b80-91f0-e2536c44fe82",
+      "d2c20203-8876-5a01-83b6-c76f64f834be",
+      "3fc7ea09-2425-5a9b-87a8-9e6e1841bbee",
+      "3cc5a600-6e01-5f78-88b0-bfd8263fc232",
+      "35326f3c-86d8-5ef0-82bc-98a67c973681",
+      "fe9384d2-3494-59bb-93a9-f0eae426b57d",
+      "796d1d33-5ca4-5050-a150-c263fa7ae91f",
+      "c4e83ec9-8319-5e83-aa85-a69b33766976",
+      "9332b59d-598d-5872-a2dc-01593447119d",
+      "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+      "6d672525-48d1-555d-86f9-60a6caf50a07"
+     ],
+     "activated_memories": [
+      {
+       "id": "10261fa5-feea-5728-aa56-99e46d60ddf5",
+       "content": "i\u0092ll give you a call!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9431824505329133
+      },
+      {
+       "id": "6521906a-e95f-5395-a2c6-55d26d232ed5",
+       "content": "please tell me you got the message!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9394416570663452
+      },
+      {
+       "id": "603a7604-fb5a-5099-8bd9-b355f10753cf",
+       "content": "i\u0092ll give you a call.\u0092",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9183302760124207
+      },
+      {
+       "id": "6337a1fc-365b-56f0-b4ad-1472ff3e8643",
+       "content": "i\u0092ll give you a call.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9183302760124207
+      },
+      {
+       "id": "1b06c9f3-3656-54ca-9c18-31eafb14ddf9",
+       "content": "i\u0092m your mailman.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9121261239051819
+      },
+      {
+       "id": "c466191a-488e-57e4-8859-e8804181e02a",
+       "content": "(to the front desk clerk) hi!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9044654903134427
+      },
+      {
+       "id": "5d21e2ff-36b3-5eb5-93c6-fe449cc4e074",
+       "content": "let me help this year.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9015103279644071
+      },
+      {
+       "id": "22d98d57-b025-595c-a2ed-faffac939777",
+       "content": "i need to talk to you, it's urgent!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8965779571705451
+      },
+      {
+       "id": "8b787ab3-3b1d-5f53-8e01-462aafd2f3c9",
+       "content": "i want to talk to you!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8959481239318848
+      },
+      {
+       "id": "2fa69033-2855-5b80-91f0-e2536c44fe82",
+       "content": "i want to sign that.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.8945238772318452
+      },
+      {
+       "id": "d2c20203-8876-5a01-83b6-c76f64f834be",
+       "content": "please, please, please, don't be mad at me.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "3fc7ea09-2425-5a9b-87a8-9e6e1841bbee",
+       "content": "please-please, please?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "3cc5a600-6e01-5f78-88b0-bfd8263fc232",
+       "content": "writing, writing, writing!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "35326f3c-86d8-5ef0-82bc-98a67c973681",
+       "content": "general \u2014 is: go get changed because everybody\u0092s ready and please, oh please, keep my underwear!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "fe9384d2-3494-59bb-93a9-f0eae426b57d",
+       "content": "so please, please, can we just, can we put them back?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "796d1d33-5ca4-5050-a150-c263fa7ae91f",
+       "content": "(points to his boss.) this is my boss, doug.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "c4e83ec9-8319-5e83-aa85-a69b33766976",
+       "content": "now, if you can't remember that, i think we should write it down\u0097let's write it down!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "9332b59d-598d-5872-a2dc-01593447119d",
+       "content": "general \u2014 mentioned: now, if you can't remember that, i think we should write it down\u0097let's write it down!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+       "content": "[general] general memories:\na hump?; i don't know what to do, everybody starts looking at me; a dear diary moment\n\n- all right joey, be nice.\n- so does he have a hump?\n- a hump and a hairpiece?\n- sounds like a date to me.\n- alright, so i'm back in high school, i'm standing in the middle of the cafeteria, and i realize i am totally naked.\n- then i look down, and i realize there's a phone...\n- that's right.\n- all of a sudden, the phone starts to ring.\n- now i don't know what to do, everybody starts looking at me.\n- sometimes i wish i was a lesbian...\n- (they all stare at him.) did i say that out loud?\n- and i just want a million dollars!\n- (he extends his hand hopefully.)\n- (imitating the characters) tuna or egg salad?\n- (re tv) ooh, she should not be wearing those pants.\n- please don't do that again, it's a horrible sound.\n- ooh, this is a dear diary moment.\n- i'm sorry, i didn't catch your name.\n- paul, was it?\n- (deadpan) yes, and we're very excited about it.\n- it's a beautiful thing.\n- i would have to say that is an 'l'-shaped bracket.\n- i have no idea.\n- all finished!\n- yes, please don't spoil all this fun.\n- oh, god.\n- oh my god!\n- you must stop!\n- look, ross, you gotta understand, between us we haven't had a relationship that has lasted longer than a mento.\n- you, however have had the love of a woman for four years.\n- four years of closeness and sharing at the end of which she ripped your heart out, and that is why we don't do it!\n- i don't think that was my point!\n- stay out of my freezer!\n- [scene: a restaurant, monica and paul are still eating.]\n- angela's the screamer, andrea has cats.\n- that is amazing.\n- if can invade poland, there isn't anything i can't do.\n- hi, paul, is it?\n- if i don't input those numbers,...\n- it doesn't make much of a difference...\n- 'look, gippetto, i'm a real live boy.'\n- you're right, i'm sorry.\n- and yet you're surprisingly upbeat.\n- oh, how well you know me...\n- (as rachel is cutting up her cards) y'know, if you listen closely, you can hear a thousand retailers scream.\n- did you make it, or are you just serving it?\n- kids, new dream...\n- i'm in las vegas.\n- (rachel sits down to hear chandler's dream.)\n- okay, so, i'm in las vegas...\n- i'm liza minelli-\n- yeah, i think for us, kissing is pretty much like an opening act, y'know?\n- i mean it's like the stand-up comedian you have to sit through before pink floyd comes out.\n- the problem is, though, after the concert's over, no matter how great the show was, you girls are always looking for the comedian again, y'know?\n- i mean, we're in the car, we're fighting traffic...\n- basically just trying to stay awake.\n- oh, uh, that would be mine.\n- see, i wrote a note to myself, and then i realised i didn't need it, so i balled it up and...\n- (sees that monica is glaring at him) ...now i wish i was dead.\n- yes, and we all know how cruel a parent can be about the flatness of a child's pillow.\n- (looking out the window) ew, ew, ew, ew ew ew ew ew!\n- ugly naked guy got a thighmaster!\n- you don't get a lot of 'doy' these days...\n- ...dinah?\n- now, monica, you know that's not how you look for an engagement ring in a lasagne...\n- we're going in.\n- kinda puts that whole pillow thing in perspective, huh, mon?\n- what does she do?\n- well, no, although i did have an imaginary friend, who...\n- my parents actually preferred.\n- i dunno, but..\n- i think it's about to attack the enterprise.\n- or 'you're such a nice guy' means 'i'm gonna be dating leather-wearing alcoholics and complaining about them to you'.\n- yeah, it's like when you're a kid, and your parents put your dog to sleep, and they tell you it went off to live on some farm.\n- \"so how does it feel knowing you're about to die?\"\n- hey, that was really good!\n- whaddya want from me, damone, huh?\"\n- \"smoke away.\"\n- i think this is probably why damone smokes in his cell alone.\n- relax your hand!\n- not so much!\n- alright, now try taking a puff.\n- alright..\n- give it to me.\n- it's fine, it's fine.\n- look, do you wa",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      },
+      {
+       "id": "6d672525-48d1-555d-86f9-60a6caf50a07",
+       "content": "[food & drink] food & drink memories:\nwe draw cards; quitting to teach the third grade!; better in bed than richard?\n\n- (he drops it in phoebe's coffee.)\n- someone's left a glass on the coffee table.\n- more coffee over here, please!\n- (teaching) ok, so now we draw cards.\n- i'll go to cats, you go to the russian tea room.\n- and sometimes, i'll want you to steal third, and i'll go like this.\n- (slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.\n- just coffee!\n- (goes to kick the ball but kicks ross\u0092s foot instead.)\n- no-no-no-no, the game\u0092s not over, we\u0092re just switching teams.\n- eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.\n- y'know what rach, maybe you should just, y'know stay here at the coffee house.\n- (to ross) should i tell her i ordered tea?\n- instead of hitting on her right away, he's becoming her confidant.\n- oh, so you\u0092re going with the teacher, huh?\n- instead, i ah, hung out with a couple of friends and had a couple of beers so i certainly don\u0092t deserve any praise, verbal or otherwise.\n- (entering with joey) (to monica) coffee house?\n- if she comes back and sees me locked to this instead of the chair, she\u0092s gonna know you were in here.\n- well, actually it\u0092s a hockey team, so it\u0092s angry canadians with no teeth.\n- then i went over to beefsteak julie\u0092s\n- thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!\n- gunther, can i get another cup of coffee, please?\n- well, i am drinking lots of cups of coffee because i\u0092m exhausted!\n- y'know, i saw a wine cellar downstairs...\n- y\u0092know, i saw a wine cellar downstairs\n- can i ask you a cooking question?\n- if you're cooking on the stove, does that mean that your new secret boyfriend is better in bed than richard?\n- how many times have i told you guys, you never watch the cooking channel!\n- oh, the tears are real.\n- did they teach you that in your anger management class?\n- coffee in a fight!\n- the weirdest thing happened at the coffee house, i think, i think phoebe was hitting on me.\n- i mean, would you (he gestures and spills some of his coffee.)\n- unwilling to steal from work, interesting.\n- (we see various scenes of him dropping a football, a mug of coffee, the phone, an apple, a frisbee, a record, and the final scene has a ball bouncing off of his chest.\n- if you get this one, we buy everybody here a steak dinner!\n- well, instead of just hanging out, we figure we\u0092d do nothing.\n- i\u0092ll teach ya!\n- and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.\n- ok well here, we'll just move the coffee table closer to the couch.\n- yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!\n- and here is the bottle of wine for you to bring over tonight.\n- nah, monica\u0092s watching some cooking show.\n- (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place?\n- maybe it\u0092s the sound of ross climbing into my brain and stealing my thoughts.\n- ah ha ha, 2:15, coffeehouse.\n- oh what is it honey, you need some tea?\n- teach me how to spell vitamins.\n- i\u0092m sorry you\u0092re here with me instead of roger.\n- i\u0092m gonna take her to coffee and then we\u0092ll do it then.\n- i went to the coffeehouse!\n- then when the glasses are full, instead of proposing a toast i\u0092m just gonna propose.\n- (examining the coffee table) scotch on the rocks, with a twist, on a coaster?\n- why are you napping over here instead of over at your place?\n- (flashback to chandler about to enter the steam room as he does the voice-over.) well, we had just finished playing racquetball and we were gonna take a steam.\n- i walk into the steam room and it was really steamy.\n- (the flashback shows his glasses fog up and him trying to find his way around the steam-filled room.\n- why do they put so much ste",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 234,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 52,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": true,
+     "rule": "zero assistant-speak markers (corpus baseline ~0), no code, under cap"
+    },
+    {
+     "probe": "C3",
+     "conversation_id": "h2c-a932aa21ee",
+     "user": "summarize our conversation so far",
+     "reply": "You've asked me to do your work twice. Bold strategy.",
+     "latency_ms": 2001,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "05f9504d-dd27-51bc-bd10-279e67fa7e29",
+      "c55fed39-9c82-596d-959f-feb2fb2cdec8",
+      "12b3cccd-3681-5103-95b3-727cef6d39a2",
+      "bf88a3ce-da06-5f0f-b846-910767b08a30",
+      "c3f0cb92-5799-5f68-957d-dca9dacd0770",
+      "6a198788-eeb3-527b-bbf1-c239683b6ded",
+      "f4019470-abe6-55a6-acfd-5a9b5c255cef",
+      "4e13f107-033e-54f0-b265-bc64cf895efd",
+      "0a7fac6c-587a-5056-8f52-53f006d6bcb5",
+      "36f23989-fe6b-5eb5-b227-8e395f06022f",
+      "f03d8774-92e9-5056-8f50-dabd6ce5d53a",
+      "3d6a5430-c932-59e1-997f-1e574b14191b",
+      "85ac9e77-cdca-5b3b-92d5-bfb05f0ae10b",
+      "89a3c2be-cb56-5cb8-9018-2dc6112cb6e8",
+      "c9934c84-966a-544b-a74e-c12d2964fc81",
+      "05dc026d-da7a-5c23-bbad-6bad45a984c4",
+      "987d522a-3f82-5f29-a18b-9e500fbb579d",
+      "9e5210d2-8144-5d29-870b-db5510b8d35d",
+      "b0efabb6-13ab-5a28-8bad-4ac714769770",
+      "e838488c-4f1e-52ac-a896-1fa16f7ee7a2"
+     ],
+     "activated_memories": [
+      {
+       "id": "05f9504d-dd27-51bc-bd10-279e67fa7e29",
+       "content": "what are you talking",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0612039465070953
+      },
+      {
+       "id": "c55fed39-9c82-596d-959f-feb2fb2cdec8",
+       "content": "what are you guys talking about?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0391711783162116
+      },
+      {
+       "id": "12b3cccd-3681-5103-95b3-727cef6d39a2",
+       "content": "general \u2014 is: talking",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0326051195028496
+      },
+      {
+       "id": "bf88a3ce-da06-5f0f-b846-910767b08a30",
+       "content": "general \u2014 is: this conversation again",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0323526392088131
+      },
+      {
+       "id": "c3f0cb92-5799-5f68-957d-dca9dacd0770",
+       "content": "(enters) hey, what you guys talking about?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0285644241739642
+      },
+      {
+       "id": "6a198788-eeb3-527b-bbf1-c239683b6ded",
+       "content": "general \u2014 is: a talk",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0244742460392195
+      },
+      {
+       "id": "f4019470-abe6-55a6-acfd-5a9b5c255cef",
+       "content": "(pause) what were the things you said?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0193844037697681
+      },
+      {
+       "id": "4e13f107-033e-54f0-b265-bc64cf895efd",
+       "content": "general \u2014 is: you talking",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0125400785368708
+      },
+      {
+       "id": "0a7fac6c-587a-5056-8f52-53f006d6bcb5",
+       "content": "general \u2014 is: to talk",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0042269411222304
+      },
+      {
+       "id": "36f23989-fe6b-5eb5-b227-8e395f06022f",
+       "content": "(returning) what are you guys talking about?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0020786704491387
+      },
+      {
+       "id": "f03d8774-92e9-5056-8f50-dabd6ce5d53a",
+       "content": "alright, what have we learned so far?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9909111971206186
+      },
+      {
+       "id": "3d6a5430-c932-59e1-997f-1e574b14191b",
+       "content": "general \u2014 is: you sold so far?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "85ac9e77-cdca-5b3b-92d5-bfb05f0ae10b",
+       "content": "oh yeah, your uh, name came up in a uh, conversation that terrified me to my",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "89a3c2be-cb56-5cb8-9018-2dc6112cb6e8",
+       "content": "so, how many have you sold so far?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "c9934c84-966a-544b-a74e-c12d2964fc81",
+       "content": "y\u0092know so umm, he\u0092s closed the drapes there so he can have a nice, pleasant conversation with your little sister.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "05dc026d-da7a-5c23-bbad-6bad45a984c4",
+       "content": "(to monica) when i was growing up i played the one on the far left.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "987d522a-3f82-5f29-a18b-9e500fbb579d",
+       "content": "and second, that was not flirting, that was just casual conversation between two people.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "9e5210d2-8144-5d29-870b-db5510b8d35d",
+       "content": "how far outside?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "b0efabb6-13ab-5a28-8bad-4ac714769770",
+       "content": "okay, now much have you won so far?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "e838488c-4f1e-52ac-a896-1fa16f7ee7a2",
+       "content": "okay, listen, how far am i gonna have to go with her?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 53,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": true,
+     "rule": "zero assistant-speak markers (corpus baseline ~0), no code, under cap"
+    }
+   ],
+   "pass": true
+  },
+  {
+   "probe_class": "d_one_way_conversation",
+   "baseline": {
+    "corpus_question_ratio": 0.3091,
+    "corpus_question_lines": 2589,
+    "corpus_total_lines": 8376,
+    "binomial_95_band_for_n": [
+     0,
+     4
+    ],
+    "n_replies": 5
+   },
+   "question_line_probes": [
+    2
+   ],
+   "question_line_count": 1,
+   "in_band": true,
+   "followup_questions": {},
+   "followup_count": 0,
+   "turns": [
+    {
+     "probe": 0,
+     "conversation_id": "h2d-e102e50ba2",
+     "user": "long day at work",
+     "reply": "Tell me about it \u2014 I had a big dinosaur bone to inspect.",
+     "latency_ms": 1619,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "8824197f-e898-5cbd-802a-1b1f55691787",
+      "fcc3b27f-4043-5c62-a2c2-f9d43526aefa",
+      "386ea9dd-29d4-5f72-94aa-05729f02ce29",
+      "6e224e11-c941-567a-b42e-c968206a3b07",
+      "386b59bb-54ce-5d74-b33d-ed801758fe2d",
+      "1b214f54-ca72-5faf-88e1-461775c9427c",
+      "7e06d094-3f0f-58ac-b59a-2542b2d06b1f",
+      "1f97bb7f-2c37-5f0d-a41a-bf9acebb2aed",
+      "4a3e412c-0fc2-54fa-9963-17e02f10d4da",
+      "6dc25e0f-4f22-5804-bc93-8fc7d92331c5",
+      "9e04c6a2-5e2d-57f1-b398-ac2a04d717e9",
+      "7c30d376-53b6-5bfe-8532-992fe9505cc7",
+      "2944108c-b0c5-5fb0-847a-71e2ee1cdb6b",
+      "3f26bdd1-e302-5c3e-a5a5-1e5833fbd2f1",
+      "aa0593d0-ea56-5c5a-85b7-649fec70cfc8",
+      "2666e929-ce06-56bc-ba18-0d04ab4a8137",
+      "e615b9af-892b-5236-b078-d05ea4a3f439",
+      "d5beb42b-c12f-511d-9bfd-a6b2db96ca88",
+      "a541ad50-f81a-5e3b-8c0b-78e72813e9b3",
+      "4b437a6f-aeb2-5bca-8d95-af0319531df8"
+     ],
+     "activated_memories": [
+      {
+       "id": "8824197f-e898-5cbd-802a-1b1f55691787",
+       "content": "so, it's a typical day at work.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.09662730981789
+      },
+      {
+       "id": "fcc3b27f-4043-5c62-a2c2-f9d43526aefa",
+       "content": "for a large portion of the day.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0528820232415808
+      },
+      {
+       "id": "386ea9dd-29d4-5f72-94aa-05729f02ce29",
+       "content": "this is your day job.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0146779354012667
+      },
+      {
+       "id": "6e224e11-c941-567a-b42e-c968206a3b07",
+       "content": "i've had a very long, hard day.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9833017284662051
+      },
+      {
+       "id": "386b59bb-54ce-5d74-b33d-ed801758fe2d",
+       "content": "it's before work, it's after work, it's during work.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.973312489587813
+      },
+      {
+       "id": "1b214f54-ca72-5faf-88e1-461775c9427c",
+       "content": "as we all are at some point during the day.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9560251334883259
+      },
+      {
+       "id": "7e06d094-3f0f-58ac-b59a-2542b2d06b1f",
+       "content": "career \u2014 is: your day job",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.938946140314294
+      },
+      {
+       "id": "1f97bb7f-2c37-5f0d-a41a-bf9acebb2aed",
+       "content": "we should get to work.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9323955138803903
+      },
+      {
+       "id": "4a3e412c-0fc2-54fa-9963-17e02f10d4da",
+       "content": "work people?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9291944882513772
+      },
+      {
+       "id": "6dc25e0f-4f22-5804-bc93-8fc7d92331c5",
+       "content": "it\u0092s thursday!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9252155803079767
+      },
+      {
+       "id": "9e04c6a2-5e2d-57f1-b398-ac2a04d717e9",
+       "content": "an hour.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9221783926050422
+      },
+      {
+       "id": "7c30d376-53b6-5bfe-8532-992fe9505cc7",
+       "content": "morning.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9212802793121687
+      },
+      {
+       "id": "2944108c-b0c5-5fb0-847a-71e2ee1cdb6b",
+       "content": "(ross looks embarrassed.) and i thought things were going to work out for him..until the day he over inflated her.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "3f26bdd1-e302-5c3e-a5a5-1e5833fbd2f1",
+       "content": "career \u2014 is: been working hard all day, she didn't wanna host this thing in the first place, we shouldn't go!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "aa0593d0-ea56-5c5a-85b7-649fec70cfc8",
+       "content": "general \u2014 is: somebody breathing down your neck all the live long day!!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "2666e929-ce06-56bc-ba18-0d04ab4a8137",
+       "content": "yeah or also when you don't have somebody breathing down your neck all the live long day!!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "e615b9af-892b-5236-b078-d05ea4a3f439",
+       "content": "(laughs) she was working on valentine\u0092s day so we\u0092re celebrating it tonight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "d5beb42b-c12f-511d-9bfd-a6b2db96ca88",
+       "content": "oh, by the way, phoebe called just as i was getting into nancy\u2019s car, so if she asks you, i was at work all day.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "a541ad50-f81a-5e3b-8c0b-78e72813e9b3",
+       "content": "look, monica has been working hard all day, she didn't wanna host this thing in the first place, we shouldn't go!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "4b437a6f-aeb2-5bca-8d95-af0319531df8",
+       "content": "[career] career memories:\nworking on with a hammer and it collapses; the episode of three's company where there's some kind of misunderstanding; done\n\n- (chandler hits what he is working on with a hammer and it collapses.)\n- all right, kids, i gotta get to work.\n- oh, i think this is the episode of three's company where there's some kind of misunderstanding.\n- i mean presumably, the biggest part of your job is done.\n- oh, satan's minions at work again...\n- what 'not work out'?\n- y'know, if you're gonna work late, i could look in on him for you.\n- you decided to go into the out-of-work actor business.\n- i just don't things are gonna work out.\n- so, it's a typical day at work.\n- i'm inputting my numbers, and big al calls me into his office and tells me he wants to make me processing supervisor.\n- this was supposed to be a temp job!\n- i just don't want to be one of those guys that's in his office until twelve o'clock at night worrying about the wenus.\n- i just know i'm not going to figure it out working there.\n- yeah, yeah, she works over at that place, uh...\n- (presses a button.) helen, could you make sure we put through the paperwork on miss bookbinder\u0092s raise?\n- well, if you're gonna work for mechanics, those are the ones to work for.\n- yes, it's working!\n- well, now, i actually have to get to work.\n- work people?\n- okay, some people gonna be working this weekend.\n- this is your day job.\n- it didn't look this big in the office.\n- my head must look like a golf ball at work.\n- nice work my friend.\n- we work really hard for it.\n- it's before work, it's after work, it's during work.\n- we're not working out, it's over.\n- i mean, especially considering how tough it's been for you to find work.\n- all right, i gotta get to work, i got a big dinosaur bone to inspect.\n- why don't you stay home from work today and just hang out with me.\n- you\u0092re building a post office?\n- oh, good job joe.\n- (leaving to go to work) hey!\n- okay, i gotta get to get to work.\n- in his office!\n- he\u0092s right, if you quit this job, you then have motivation to go after a job you really want.\n- yeah, that\u0092d be much worse than being 28, and still working here.\n- come on, this is you guys, call her and work it out.\n- okay, okay-okay, ah, chloe works with that guy issac.\n- and jasmine works at that message place with phoebe.\n- every office in the world uses that program!\n- (he starts to look around her office.)\n- and i\u0092m really sorry, it\u0092s just that this is not, this isn\u0092t going to work out.\n- i stayed home from work today while you were at rehearsal so somebody could be here with our chick!\n- and you don\u0092t think taking care of our chick is work?\n- one of the more difficult games sewer workers play.\n- (monica looks at him) watch doesn\u0092t work.\n- yes, but there\u0092s two in martini, soo everybody back to my office.\n- (to his co-workers) what is with him?\n- i hope you know what i\u0092m giving up for ya, because she\u0092s not just the boss in your office, if you know what i mean.\n- hello, joanna (realises he doesn\u0092t know her last name) \u0092s office.\n- yes, it is, at office max.\n- (does a little celebration dance) so things didn\u0092t work out with kathy, huh?\n- i don\u0092t know r.g., i was thinking something girlie for your office.\n- i\u0092m gonna call and get off work tomorrow!\n- there\u0092s some nice guys at my office, do you want me to set you up?\n- oh, he works in the fine foods division.\n- it\u0092s a big company, i don\u0092t\u0097if you\u0097i\n- so what job did you get joe?\n- yeah, but i bet it works.\n- so anyway, rachel, i\u0092m sorry you can\u0092t stay, (rachel is upset about leaving the orgy with the cigarette guy.) but the rest of us have a lot of work to do.\n- unfortunately, my company is transferring me overseas!\n- or a job where you don\u0092t have to carry a table.\n- well, it certainly worked for that valdez kid.\n- well, you\u0092re gonna have to leave sometime, because you both have jobs, and as soon as you do, we\u0092re switching it back!\n- (gunther starts to pour him another cup.) so uh, what do you do when you\u0092re not working",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 56,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 1,
+     "conversation_id": "h2d-e102e50ba2",
+     "user": "just had my coffee",
+     "reply": "Coffee, the fuel of champions and people who are just exhausted.",
+     "latency_ms": 1626,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "253df6d4-f6d5-51e8-8f81-60393e1b4881",
+      "21438128-d0ad-5443-ae21-2e8a27366df5",
+      "0d50bbd4-ce48-506b-a93e-23818f16101c",
+      "91c60774-0deb-5cfa-8f36-424e94a130e0",
+      "e9b1206f-6bf1-5495-99da-f045d6357d96",
+      "daa7f2d4-8cb1-582a-a4ff-4f356db3dbec",
+      "d7856f11-a9ed-5cd8-a18e-5c6b98441daf",
+      "6ccd80e1-3189-59d6-9be7-e456d5a5abef",
+      "7c30d376-53b6-5bfe-8532-992fe9505cc7",
+      "6f9e44b2-edd5-582d-94a4-b2bc7d2e4215",
+      "54d17a84-0c64-5ec1-a830-600571adb380",
+      "97bebbcc-e77f-54ad-9140-c3fc5b092c3c",
+      "3b42f2f8-69ff-599f-b87b-99939e666654",
+      "e6c0137e-2173-514a-ba9e-bc3ab5fa5fa5",
+      "a21309e0-c271-51c7-8314-672b69e6ea0f",
+      "05d112dc-a316-5b4b-913a-9c80b3c9fdf7",
+      "6c4e5810-021d-5493-91ad-93ac7d342713",
+      "03784a8d-ab0e-5267-a6c6-d6319dd333e2",
+      "1ae4d872-c1bc-5032-84bd-d71743e25c65",
+      "6d672525-48d1-555d-86f9-60a6caf50a07"
+     ],
+     "activated_memories": [
+      {
+       "id": "253df6d4-f6d5-51e8-8f81-60393e1b4881",
+       "content": "just coffee!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0514790296554566
+      },
+      {
+       "id": "21438128-d0ad-5443-ae21-2e8a27366df5",
+       "content": "there's a hair in my coffee.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.039384311437607
+      },
+      {
+       "id": "0d50bbd4-ce48-506b-a93e-23818f16101c",
+       "content": "okay, i am going to make you some coffee.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.009967141749435
+      },
+      {
+       "id": "91c60774-0deb-5cfa-8f36-424e94a130e0",
+       "content": "yeah, i just ordered a beer!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9853939771652223
+      },
+      {
+       "id": "e9b1206f-6bf1-5495-99da-f045d6357d96",
+       "content": "well, i am drinking lots of cups of coffee because i\u0092m exhausted!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9724140584468842
+      },
+      {
+       "id": "daa7f2d4-8cb1-582a-a4ff-4f356db3dbec",
+       "content": "i went to the coffeehouse!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9635263610937111
+      },
+      {
+       "id": "d7856f11-a9ed-5cd8-a18e-5c6b98441daf",
+       "content": "more coffee over here, please!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9623476550164702
+      },
+      {
+       "id": "6ccd80e1-3189-59d6-9be7-e456d5a5abef",
+       "content": "i\u0092m taking care of it tonight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9598607778549194
+      },
+      {
+       "id": "7c30d376-53b6-5bfe-8532-992fe9505cc7",
+       "content": "morning.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9546148259593429
+      },
+      {
+       "id": "6f9e44b2-edd5-582d-94a4-b2bc7d2e4215",
+       "content": "[waitress brings their coffee] thank you.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9515858321436761
+      },
+      {
+       "id": "54d17a84-0c64-5ec1-a830-600571adb380",
+       "content": "ah ha ha, 2:15, coffeehouse.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9499804064625628
+      },
+      {
+       "id": "97bebbcc-e77f-54ad-9140-c3fc5b092c3c",
+       "content": "coffee in a fight!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.936914449930191
+      },
+      {
+       "id": "3b42f2f8-69ff-599f-b87b-99939e666654",
+       "content": "and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "e6c0137e-2173-514a-ba9e-bc3ab5fa5fa5",
+       "content": "(slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "a21309e0-c271-51c7-8314-672b69e6ea0f",
+       "content": "y'know what rach, maybe you should just, y'know stay here at the coffee house.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "05d112dc-a316-5b4b-913a-9c80b3c9fdf7",
+       "content": "(examining the coffee table) scotch on the rocks, with a twist, on a coaster?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6c4e5810-021d-5493-91ad-93ac7d342713",
+       "content": "gunther, can i get another cup of coffee, please?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "03784a8d-ab0e-5267-a6c6-d6319dd333e2",
+       "content": "eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "1ae4d872-c1bc-5032-84bd-d71743e25c65",
+       "content": "we\u0092re gonna get you some coffee and they will never know that you\u0092re drunk.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6d672525-48d1-555d-86f9-60a6caf50a07",
+       "content": "[food & drink] food & drink memories:\nwe draw cards; quitting to teach the third grade!; better in bed than richard?\n\n- (he drops it in phoebe's coffee.)\n- someone's left a glass on the coffee table.\n- more coffee over here, please!\n- (teaching) ok, so now we draw cards.\n- i'll go to cats, you go to the russian tea room.\n- and sometimes, i'll want you to steal third, and i'll go like this.\n- (slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.\n- just coffee!\n- (goes to kick the ball but kicks ross\u0092s foot instead.)\n- no-no-no-no, the game\u0092s not over, we\u0092re just switching teams.\n- eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.\n- y'know what rach, maybe you should just, y'know stay here at the coffee house.\n- (to ross) should i tell her i ordered tea?\n- instead of hitting on her right away, he's becoming her confidant.\n- oh, so you\u0092re going with the teacher, huh?\n- instead, i ah, hung out with a couple of friends and had a couple of beers so i certainly don\u0092t deserve any praise, verbal or otherwise.\n- (entering with joey) (to monica) coffee house?\n- if she comes back and sees me locked to this instead of the chair, she\u0092s gonna know you were in here.\n- well, actually it\u0092s a hockey team, so it\u0092s angry canadians with no teeth.\n- then i went over to beefsteak julie\u0092s\n- thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!\n- gunther, can i get another cup of coffee, please?\n- well, i am drinking lots of cups of coffee because i\u0092m exhausted!\n- y'know, i saw a wine cellar downstairs...\n- y\u0092know, i saw a wine cellar downstairs\n- can i ask you a cooking question?\n- if you're cooking on the stove, does that mean that your new secret boyfriend is better in bed than richard?\n- how many times have i told you guys, you never watch the cooking channel!\n- oh, the tears are real.\n- did they teach you that in your anger management class?\n- coffee in a fight!\n- the weirdest thing happened at the coffee house, i think, i think phoebe was hitting on me.\n- i mean, would you (he gestures and spills some of his coffee.)\n- unwilling to steal from work, interesting.\n- (we see various scenes of him dropping a football, a mug of coffee, the phone, an apple, a frisbee, a record, and the final scene has a ball bouncing off of his chest.\n- if you get this one, we buy everybody here a steak dinner!\n- well, instead of just hanging out, we figure we\u0092d do nothing.\n- i\u0092ll teach ya!\n- and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.\n- ok well here, we'll just move the coffee table closer to the couch.\n- yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!\n- and here is the bottle of wine for you to bring over tonight.\n- nah, monica\u0092s watching some cooking show.\n- (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place?\n- maybe it\u0092s the sound of ross climbing into my brain and stealing my thoughts.\n- ah ha ha, 2:15, coffeehouse.\n- oh what is it honey, you need some tea?\n- teach me how to spell vitamins.\n- i\u0092m sorry you\u0092re here with me instead of roger.\n- i\u0092m gonna take her to coffee and then we\u0092ll do it then.\n- i went to the coffeehouse!\n- then when the glasses are full, instead of proposing a toast i\u0092m just gonna propose.\n- (examining the coffee table) scotch on the rocks, with a twist, on a coaster?\n- why are you napping over here instead of over at your place?\n- (flashback to chandler about to enter the steam room as he does the voice-over.) well, we had just finished playing racquetball and we were gonna take a steam.\n- i walk into the steam room and it was really steamy.\n- (the flashback shows his glasses fog up and him trying to find his way around the steam-filled room.\n- why do they put so much ste",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 64,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 2,
+     "conversation_id": "h2d-e102e50ba2",
+     "user": "watching tv over here",
+     "reply": "Whatcha watching? Please say cartoons.",
+     "latency_ms": 2620,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "c54a8d46-2808-5530-9890-44a62bccc059",
+      "4c8837c3-36ae-5323-aa15-446c7ac4e5af",
+      "1864520a-9fd4-5e0e-86fc-b494c01da1ef",
+      "72c0d359-306d-58cb-91e0-a10b1c1fee97",
+      "2634ad60-b209-5929-94e3-c66f9ec774fa",
+      "0358eb6a-01d6-5354-ad0c-7a108e7bd024",
+      "42b1dc0c-8c96-5e08-b4b7-3312eeb93668",
+      "0f76e951-3fe9-5b8f-b070-88b74663981f",
+      "5643aac9-f1b6-5947-8138-1866b728d65e",
+      "20953b04-f887-5c75-9952-ecb395142a11",
+      "96d937bf-ca0f-50ca-aab0-3b6cf7105b6a",
+      "2cc4e725-02b6-5e4f-b71d-b6b877a24070",
+      "2488a38b-fefc-5e84-afca-519fbc2f3efc",
+      "7b593df5-84c5-5d3c-b0ff-c4913c899908",
+      "36b7b8f0-bf07-5b3c-87b8-c20f54b031c0",
+      "c87fce9a-613b-5c34-a3d8-6684f93e125d",
+      "33b310fb-32ef-5b7a-9ae1-f56bb991a93d",
+      "78c635c8-54d8-57a2-a938-eaac9cbe176f",
+      "6d672525-48d1-555d-86f9-60a6caf50a07",
+      "fa1d99d4-d61a-54a1-8834-214a5dea7ee7"
+     ],
+     "activated_memories": [
+      {
+       "id": "c54a8d46-2808-5530-9890-44a62bccc059",
+       "content": "turning on the tv...",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.008973985910423
+      },
+      {
+       "id": "4c8837c3-36ae-5323-aa15-446c7ac4e5af",
+       "content": "i just want to watch a little television.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.003594147944801
+      },
+      {
+       "id": "1864520a-9fd4-5e0e-86fc-b494c01da1ef",
+       "content": "general \u2014 is: up watching tv) hi!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0033805964362283
+      },
+      {
+       "id": "72c0d359-306d-58cb-91e0-a10b1c1fee97",
+       "content": "hey, look, we're on that tv thing!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9945002684890762
+      },
+      {
+       "id": "2634ad60-b209-5929-94e3-c66f9ec774fa",
+       "content": "(sees kathy is up watching tv) hi!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9844700043061414
+      },
+      {
+       "id": "0358eb6a-01d6-5354-ad0c-7a108e7bd024",
+       "content": "so ah, whatcha watching?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9693395385343013
+      },
+      {
+       "id": "42b1dc0c-8c96-5e08-b4b7-3312eeb93668",
+       "content": "now you do that, you\u0092re on tv.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9691724786409036
+      },
+      {
+       "id": "0f76e951-3fe9-5b8f-b070-88b74663981f",
+       "content": "listen, can we watch cartoons on your television?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9687605142593453
+      },
+      {
+       "id": "5643aac9-f1b6-5947-8138-1866b728d65e",
+       "content": "i\u0092m watching the game, but i\u0092m not deaf!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9674331207613295
+      },
+      {
+       "id": "20953b04-f887-5c75-9952-ecb395142a11",
+       "content": "yeah, we played, we watched tv..",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9473518613157438
+      },
+      {
+       "id": "96d937bf-ca0f-50ca-aab0-3b6cf7105b6a",
+       "content": "and watching...",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9247799262535632
+      },
+      {
+       "id": "2cc4e725-02b6-5e4f-b71d-b6b877a24070",
+       "content": "general \u2014 is: what you\u0092re watching?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9120946102085958
+      },
+      {
+       "id": "2488a38b-fefc-5e84-afca-519fbc2f3efc",
+       "content": "oh, and we should warn you, before you watch it: don\u0092t watch it.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "7b593df5-84c5-5d3c-b0ff-c4913c899908",
+       "content": "no, i want to watch this.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "36b7b8f0-bf07-5b3c-87b8-c20f54b031c0",
+       "content": "(checks his watch) two hours, that lasted!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "c87fce9a-613b-5c34-a3d8-6684f93e125d",
+       "content": "when you came in i switched the channel, i was just watching regular porn",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "33b310fb-32ef-5b7a-9ae1-f56bb991a93d",
+       "content": "(watches joey for a moment) okay!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "78c635c8-54d8-57a2-a938-eaac9cbe176f",
+       "content": "if i don't care about my watch, can i use it as a weapon?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "6d672525-48d1-555d-86f9-60a6caf50a07",
+       "content": "[food & drink] food & drink memories:\nwe draw cards; quitting to teach the third grade!; better in bed than richard?\n\n- (he drops it in phoebe's coffee.)\n- someone's left a glass on the coffee table.\n- more coffee over here, please!\n- (teaching) ok, so now we draw cards.\n- i'll go to cats, you go to the russian tea room.\n- and sometimes, i'll want you to steal third, and i'll go like this.\n- (slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.\n- just coffee!\n- (goes to kick the ball but kicks ross\u0092s foot instead.)\n- no-no-no-no, the game\u0092s not over, we\u0092re just switching teams.\n- eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.\n- y'know what rach, maybe you should just, y'know stay here at the coffee house.\n- (to ross) should i tell her i ordered tea?\n- instead of hitting on her right away, he's becoming her confidant.\n- oh, so you\u0092re going with the teacher, huh?\n- instead, i ah, hung out with a couple of friends and had a couple of beers so i certainly don\u0092t deserve any praise, verbal or otherwise.\n- (entering with joey) (to monica) coffee house?\n- if she comes back and sees me locked to this instead of the chair, she\u0092s gonna know you were in here.\n- well, actually it\u0092s a hockey team, so it\u0092s angry canadians with no teeth.\n- then i went over to beefsteak julie\u0092s\n- thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!\n- gunther, can i get another cup of coffee, please?\n- well, i am drinking lots of cups of coffee because i\u0092m exhausted!\n- y'know, i saw a wine cellar downstairs...\n- y\u0092know, i saw a wine cellar downstairs\n- can i ask you a cooking question?\n- if you're cooking on the stove, does that mean that your new secret boyfriend is better in bed than richard?\n- how many times have i told you guys, you never watch the cooking channel!\n- oh, the tears are real.\n- did they teach you that in your anger management class?\n- coffee in a fight!\n- the weirdest thing happened at the coffee house, i think, i think phoebe was hitting on me.\n- i mean, would you (he gestures and spills some of his coffee.)\n- unwilling to steal from work, interesting.\n- (we see various scenes of him dropping a football, a mug of coffee, the phone, an apple, a frisbee, a record, and the final scene has a ball bouncing off of his chest.\n- if you get this one, we buy everybody here a steak dinner!\n- well, instead of just hanging out, we figure we\u0092d do nothing.\n- i\u0092ll teach ya!\n- and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.\n- ok well here, we'll just move the coffee table closer to the couch.\n- yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!\n- and here is the bottle of wine for you to bring over tonight.\n- nah, monica\u0092s watching some cooking show.\n- (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place?\n- maybe it\u0092s the sound of ross climbing into my brain and stealing my thoughts.\n- ah ha ha, 2:15, coffeehouse.\n- oh what is it honey, you need some tea?\n- teach me how to spell vitamins.\n- i\u0092m sorry you\u0092re here with me instead of roger.\n- i\u0092m gonna take her to coffee and then we\u0092ll do it then.\n- i went to the coffeehouse!\n- then when the glasses are full, instead of proposing a toast i\u0092m just gonna propose.\n- (examining the coffee table) scotch on the rocks, with a twist, on a coaster?\n- why are you napping over here instead of over at your place?\n- (flashback to chandler about to enter the steam room as he does the voice-over.) well, we had just finished playing racquetball and we were gonna take a steam.\n- i walk into the steam room and it was really steamy.\n- (the flashback shows his glasses fog up and him trying to find his way around the steam-filled room.\n- why do they put so much ste",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      },
+      {
+       "id": "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+       "content": "[family] family memories:\ncalls me!; a gallon of alan; syphilis and stuff, we wouldn't be all together, you know?\n\n- finally, i figure i'd better answer it, and it turns out it's my mother, which is very-very weird, because- she never calls me!\n- (burst into song and dances out of the door.) \"once i was a wooden boy, a little wooden boy...\"\n- i personally could have a gallon of alan.\n- ooh, i hate when my father calls me that.\n- anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know?\n- myyy mother, ladies and gentlemen.\n- yeah, i believe i was talking to joey, alright there, mother-kisser?\n- when they were all over you to go into your father's pipe-fitting business, did you cave?\n- eight and a half hours of aptitude tests, intelligence tests, personality tests...\n- err, listen, the reason that i called you in here today was, err...\n- say you never feel like a father.\n- say your son never feels connected to you, as one.\n- ok, alright, last minute lesson, last minute lesson.\n- i have my reasons.\n- ah, you obviously saw my personal ad.\n- mother of god, i turned it off!\n- i could use another reason why women won't look at me.\n- you know, just because i'm in charge doesn't mean i'm a different person.\n- was, like, your father a doctor?\n- no reason.\n- this woman alison, from work, she's great.\n- actually, uh, we're both the father.\n- my mail order grandfather hasn't come yet.\n- and you get all these like, mental images in your brain, you know, like elle macpherson, or that girl at the xerox place....\n- well, joey, i wrote a little song today.\n- you know, maybe it was his daughter's.\n- well, listen i ah, still have one more person to ah meet, but unless it turns out to be your sister, i think you\u0092re chances are pretty good.\n- i don\u0092t wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy.\n- whenever i would see him i was always think y'know \u0091you\u0092re the reason, you are the reason why their not together.\u0092 and i hated that guy.\n- but i just want you to know that i would never soberly hurt you or your family, you\u0092re my best friend.\n- i think actually the only reason he's getting married is so he can see a stripper.\n- she\u0092s ah, she\u0092s great, great looking, great personality, she\u0092s greatness.\n- i mean i like her, i don\u0092t want to stop seeing her, but every so often it\u0092s like \u0091hey, y'know what, where\u0092s your leg?\u0092 i mean i\u0092m the smallest person in the world aren\u0092t i?\n- i\u0092m the smallest person in the world.\n- (to monica) actually he\u0092s the smallest person in the world.\n- or what my father called thursday night.\n- you\u0092re telling me this actress person is the only woman you ever wanted who didn\u0092t want you back?!\n- my grandmother used to say that exact same thing to me.\n- (entering) hey, my father\u0092s house does that!\n- now, there\u0092s two reasons.\n- i mean, i'm a very bad person.\n- i'm a very, very bad person.\n- i'm a horrible person.\n- whenever i see a girl in fishnet stockings it reminds me of my father in fishnet stockings.\n- and i want to sit in a comfortable chair, and watch television and go to bed at a reasonable hour!\n- i remember reading about this director, i think it was orson wells, who at the beginning of the movie would hire somebody, just so he could fire them in front of everybody.\n- yes, and his father invented that magnetic strip on the back of credit cards.\n- well, like father, like son.\n- oh yeah, then uh, what was phoebe\u0092s song about?\n- you\u0092re gonna be carrying their baby and give them a sony play station?\n- dangerous liaisons.\n- like her voice, her laugh, her personality\u0097well, they\u0092re all back!\n- yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river.\n- okay, it\u0092s probably why kids picked on me in school, and why i never do well with women so, as of 4 o\u0092clock tomorrow, i\u0092m e",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.3
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 0,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 38,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 3,
+     "conversation_id": "h2d-e102e50ba2",
+     "user": "pretty tired honestly",
+     "reply": "Tired seems to be our whole personality lately.",
+     "latency_ms": 2248,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "582ff1a7-47a6-51aa-94aa-889c903af11a",
+      "292fa67d-3590-51f5-820b-ccbacf2156ce",
+      "82d5b6a3-0901-5dbf-a8c3-8a0533afcdbd",
+      "712afdea-652c-5c38-a978-d941619d770f",
+      "e6cb50d3-fc2a-5365-8f2b-a97f4d5777dc",
+      "75b21ea5-88b5-5c29-b00f-6e113dda8f65",
+      "dea48604-6528-5794-92a1-a3b82b7d76be",
+      "ef8a7ad7-2a96-5ad2-905b-6dda4f1e6fd3",
+      "30b08c61-f316-5661-aa43-6d9158501139",
+      "435b4ae9-2d5c-59fd-ac9a-83d4d22cc098",
+      "5a76c7e5-3048-551b-8481-5d259dc26704",
+      "9edeb3ea-6d16-5aed-960f-4b384d672588",
+      "5c77ef93-1f77-5b22-bc1e-1ffe401a326e",
+      "e5b1d18a-6561-52c0-b215-7fc9a2876267",
+      "065e140a-97b3-5a9e-aca3-47be85be8406",
+      "b70ff78e-0efc-50da-abae-8ee4d12b4330",
+      "dd47a7fb-a1b7-5457-9eb3-d8884dac46f2",
+      "e47cd362-89e8-5382-8b11-bca7e7ae4444",
+      "a8da8593-05b7-5989-b523-e8a2db7de6c6",
+      "7ad783c1-fe56-51fc-8725-073c2e7572db"
+     ],
+     "activated_memories": [
+      {
+       "id": "582ff1a7-47a6-51aa-94aa-889c903af11a",
+       "content": "i\u2019m so tired.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0615211110853862
+      },
+      {
+       "id": "292fa67d-3590-51f5-820b-ccbacf2156ce",
+       "content": "god, i\u0092m exhausted.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0505308478754274
+      },
+      {
+       "id": "82d5b6a3-0901-5dbf-a8c3-8a0533afcdbd",
+       "content": "no i'm just tired.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0448933515016248
+      },
+      {
+       "id": "712afdea-652c-5c38-a978-d941619d770f",
+       "content": "basically just trying to stay awake.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0380160785903902
+      },
+      {
+       "id": "e6cb50d3-fc2a-5365-8f2b-a97f4d5777dc",
+       "content": "i don't know, i'm very tired.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0131548567825728
+      },
+      {
+       "id": "75b21ea5-88b5-5c29-b00f-6e113dda8f65",
+       "content": "general \u2014 is: still asleep",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9753301292264308
+      },
+      {
+       "id": "dea48604-6528-5794-92a1-a3b82b7d76be",
+       "content": "(exhausted) ok, look!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9720879392571503
+      },
+      {
+       "id": "ef8a7ad7-2a96-5ad2-905b-6dda4f1e6fd3",
+       "content": "goodnight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.969524187757848
+      },
+      {
+       "id": "30b08c61-f316-5661-aa43-6d9158501139",
+       "content": "would you please get some rest!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9611610912584625
+      },
+      {
+       "id": "435b4ae9-2d5c-59fd-ac9a-83d4d22cc098",
+       "content": "i was asleep.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9559408001970291
+      },
+      {
+       "id": "5a76c7e5-3048-551b-8481-5d259dc26704",
+       "content": "are you just tired now or are you always tired, 'cause that could be a sign of clinical depression.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.931681839723479
+      },
+      {
+       "id": "9edeb3ea-6d16-5aed-960f-4b384d672588",
+       "content": "she was smart, she was pretty, and she honestly cared about me.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "5c77ef93-1f77-5b22-bc1e-1ffe401a326e",
+       "content": "pretty ahh, pretty girl, the pretty--she's pretty.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "e5b1d18a-6561-52c0-b215-7fc9a2876267",
+       "content": "oh, yeah, that hug looked pretty brutal.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "065e140a-97b3-5a9e-aca3-47be85be8406",
+       "content": "ohh, she's pretty.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "b70ff78e-0efc-50da-abae-8ee4d12b4330",
+       "content": "that\u0092s some pretty smelly work, huh don?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "dd47a7fb-a1b7-5457-9eb3-d8884dac46f2",
+       "content": "i'm a pretty little girl.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "e47cd362-89e8-5382-8b11-bca7e7ae4444",
+       "content": "in my defense, it was dark and he was a very pretty guy.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "a8da8593-05b7-5989-b523-e8a2db7de6c6",
+       "content": "well, you have to honest with her!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      },
+      {
+       "id": "7ad783c1-fe56-51fc-8725-073c2e7572db",
+       "content": "well, it's a pretty big commitment, i mean, what if one of us wants to move out?",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 286,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 47,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 4,
+     "conversation_id": "h2d-e102e50ba2",
+     "user": "ok goodnight",
+     "reply": "Good night! Get some rest!",
+     "latency_ms": 1904,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "ef8a7ad7-2a96-5ad2-905b-6dda4f1e6fd3",
+      "5a8da776-7cb6-5bc2-83db-54a6c3faad23",
+      "b250fb33-5209-50f4-8a16-dfa224a3273b",
+      "3156f7b9-0b8b-5c86-aefd-a34f9278d1fb",
+      "86f2b885-c33a-5869-9054-45054cbfdb73",
+      "2475e49a-40b9-55d4-b70f-56fa6215d33f",
+      "eb5b7ebc-1d89-588f-8a89-4649f98f3648",
+      "19334c5e-0051-5d03-b67c-3c64c670c55e",
+      "8de6c267-c42a-5de3-ac58-9468df73094a",
+      "f62fa922-ef7e-5cd3-aeb7-0ec02590778e",
+      "e2dc0888-800a-5953-b5a6-aea3980226e0",
+      "ba14557e-1bca-5a9e-99e5-8ba88e36a3e5",
+      "51d14160-0a28-5fd5-a642-41772c1bbad2",
+      "ea11c62b-e194-50c6-aa8b-1107c2024146",
+      "e72fc701-0c3e-572f-ab72-a8dfe294cd48",
+      "09abe2f2-e84c-519d-b6ed-dd7ec2e4ded7",
+      "6d931c37-92e0-5cba-b6b3-d78d6dba0427",
+      "30b08c61-f316-5661-aa43-6d9158501139",
+      "3ee2b9d8-6966-5ebb-8385-ef8a4468a578",
+      "0918b41d-e504-5113-a52c-7c1294760d17"
+     ],
+     "activated_memories": [
+      {
+       "id": "ef8a7ad7-2a96-5ad2-905b-6dda4f1e6fd3",
+       "content": "goodnight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1664956549701486
+      },
+      {
+       "id": "5a8da776-7cb6-5bc2-83db-54a6c3faad23",
+       "content": "ok, good night.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.1037525386736557
+      },
+      {
+       "id": "b250fb33-5209-50f4-8a16-dfa224a3273b",
+       "content": "good night.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0910955163510034
+      },
+      {
+       "id": "3156f7b9-0b8b-5c86-aefd-a34f9278d1fb",
+       "content": "[to kathy] goodnight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0885231223262293
+      },
+      {
+       "id": "86f2b885-c33a-5869-9054-45054cbfdb73",
+       "content": "good night!!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.07767098314551
+      },
+      {
+       "id": "2475e49a-40b9-55d4-b70f-56fa6215d33f",
+       "content": "alrighty.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0171738212458443
+      },
+      {
+       "id": "eb5b7ebc-1d89-588f-8a89-4649f98f3648",
+       "content": "alright.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.007464105558167
+      },
+      {
+       "id": "19334c5e-0051-5d03-b67c-3c64c670c55e",
+       "content": "alright.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.007464105558167
+      },
+      {
+       "id": "8de6c267-c42a-5de3-ac58-9468df73094a",
+       "content": "alright.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.007464105558167
+      },
+      {
+       "id": "f62fa922-ef7e-5cd3-aeb7-0ec02590778e",
+       "content": "alright.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.007464105558167
+      },
+      {
+       "id": "e2dc0888-800a-5953-b5a6-aea3980226e0",
+       "content": "alright.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.007464105558167
+      },
+      {
+       "id": "ba14557e-1bca-5a9e-99e5-8ba88e36a3e5",
+       "content": "it\u0092s okay, i want this to be your night too.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 1.0072777690672214
+      },
+      {
+       "id": "51d14160-0a28-5fd5-a642-41772c1bbad2",
+       "content": "alright!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.991363280239399
+      },
+      {
+       "id": "ea11c62b-e194-50c6-aa8b-1107c2024146",
+       "content": "alright!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.991363280239399
+      },
+      {
+       "id": "e72fc701-0c3e-572f-ab72-a8dfe294cd48",
+       "content": "would you like to go out with me sometime, thankyou, goodnight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9912976088733234
+      },
+      {
+       "id": "09abe2f2-e84c-519d-b6ed-dd7ec2e4ded7",
+       "content": "alright..",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9817681247522873
+      },
+      {
+       "id": "6d931c37-92e0-5cba-b6b3-d78d6dba0427",
+       "content": "i\u0092m home!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9817642504502614
+      },
+      {
+       "id": "30b08c61-f316-5661-aa43-6d9158501139",
+       "content": "would you please get some rest!",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9814226919836613
+      },
+      {
+       "id": "3ee2b9d8-6966-5ebb-8385-ef8a4468a578",
+       "content": "all right",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.9765790395909266
+      },
+      {
+       "id": "0918b41d-e504-5113-a52c-7c1294760d17",
+       "content": "and i was a perfect gentleman and i walked her to her hotel room and said goodnight.",
+       "content_type": "fact",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "unknown",
+       "activation_score": 0.39
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a",
+      "chars": 272,
+      "synced": true
+     },
+     "provider": "zai",
+     "chars": 26,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    }
+   ],
+   "pass": false,
+   "rule": ">=1 second-person follow-up AND question rate in measured corpus band"
+  }
+ ],
+ "verdict": "MEASURED",
+ "classes_passed": 3,
+ "note": "H2 records measurements against corpus baselines; per \u00a71.8 the only binary ship gate is H1. Class failures are measured findings for the boss's judgment, archived per run."
+}
