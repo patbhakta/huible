@@ -4,6 +4,7 @@
     "docling_full": 0.915,
     "docling_formula_not_decoded": 6,
     "vlm_page": 0.817,
+    "gemini_relay_page": 0.816,
     "gemini_openrouter_page": 0.834
   },
   "scanned_formula": {
@@ -11,6 +12,7 @@
     "docling_full": 0.931,
     "docling_formula_not_decoded": 1,
     "vlm_page": 0.792,
+    "gemini_relay_page": 0.829,
     "gemini_openrouter_page": 0.829
   },
   "scanned_mixed": {
@@ -18,6 +20,7 @@
     "docling_full": 0.978,
     "docling_formula_not_decoded": 1,
     "vlm_page": 0.891,
+    "gemini_relay_page": 0.885,
     "gemini_openrouter_page": 0.884
   },
   "chart_table": {
@@ -25,6 +28,7 @@
     "docling_full": 0.352,
     "docling_formula_not_decoded": 0,
     "vlm_page": 0.372,
+    "gemini_relay_page": 0.425,
     "gemini_openrouter_page": 0.696
   }
 }

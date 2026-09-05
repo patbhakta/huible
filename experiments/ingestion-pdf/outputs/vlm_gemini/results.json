@@ -1,0 +1,30 @@
+{
+  "chart_table": {
+    "transport": "relay",
+    "model": "gemini-3.8-flash",
+    "seconds": 4.0,
+    "prompt_tokens": 1138,
+    "completion_tokens": 230
+  },
+  "real_mixed": {
+    "transport": "relay",
+    "model": "gemini-3.8-flash",
+    "seconds": 6.3,
+    "prompt_tokens": 1140,
+    "completion_tokens": 740
+  },
+  "scanned_formula": {
+    "transport": "relay",
+    "model": "gemini-3.8-flash",
+    "seconds": 5.4,
+    "prompt_tokens": 1140,
+    "completion_tokens": 726
+  },
+  "scanned_mixed": {
+    "transport": "relay",
+    "model": "gemini-3.8-flash",
+    "seconds": 10.0,
+    "prompt_tokens": 1140,
+    "completion_tokens": 901
+  }
+}
