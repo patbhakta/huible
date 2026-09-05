@@ -63,10 +63,11 @@ Design constraints:
 
 from __future__ import annotations
 
+import logging
 import re
 import time
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
@@ -101,9 +102,14 @@ from huible.persona.tools import (
 from huible.safety.crisis import UserAffect
 from huible.safety.framing import get_distress_addendum, get_framing
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
+    "ACTIVATION_FLOOR_MAX",
+    "ACTIVATION_FLOOR_MIN",
     "CONFIDENCE_LEVEL_METADATA_KEY",
     "DEFLECTION_PROBE_TEXT",
+    "RETRIEVAL_ACTIVATION_FLOOR_KEY",
     "TEXTING_CONCISION_DIRECTIVE",
     "ConfidenceLevel",
     "ContextBuilder",
@@ -114,6 +120,8 @@ __all__ = [
     "PromptContext",
     "RelationshipTier",
     "get_confidence_level",
+    "is_valid_activation_floor",
+    "resolve_activation_floor",
 ]
 
 # --- Confidence / provenance tag contract -----------------------------------
@@ -360,6 +368,75 @@ class PersonaConfig:
     #: corpus / fail-closed parse) keeps the safe default budget: the
     #: fallback directive + the global ``persona_chat_max_tokens`` cap.
     length_stats: CorpusLengthStats | None = None
+    #: Free-form persona metadata block (mirrors ``PersonaRow.metadata``),
+    #: hydrated at boot. Carries the per-persona retrieval activation floor
+    #: override (``retrieval_activation_floor`` — the Class B corpus-derived
+    #: value, HU-2673 C3 / HU-2707); absent/invalid falls back to the
+    #: settings default.
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+# --- Retrieval activation floor (HU-2673 C3 / HU-2707) ----------------------
+
+
+#: Per-persona override key inside ``PersonaConfig.metadata``. Class B
+#: (small, intimate) corpora must carry their own corpus-derived floor here
+#: before retrieval is enabled; derivation procedure:
+#: ``docs/evidence/hu2673_c3_activation_floor_derivation_20260905.md``.
+RETRIEVAL_ACTIVATION_FLOOR_KEY = "retrieval_activation_floor"
+
+#: Sanity band for any *explicit* activation floor (the settings default and
+#: the per-persona override alike). Below it the inclusion gate is a no-op
+#: against bge-small score noise; above it even motif-boosted lexical entry
+#: (floor × 1.3) cannot clear — the lane would be silently dead. Values
+#: outside the band are rejected, never clamped.
+ACTIVATION_FLOOR_MIN = 0.05
+ACTIVATION_FLOOR_MAX = 0.95
+
+#: Legacy ``RetrievalConfig`` dataclass default (pre-W1 token-hash era). Kept
+#: as the dataclass fallback for non-server callers; the server path threads
+#: the class-A derived value (0.50) via ``Settings.retrieval_activation_floor``.
+LEGACY_ACTIVATION_FLOOR = 0.3
+
+
+def is_valid_activation_floor(value: float) -> bool:
+    """Whether ``value`` is an admissible explicit activation floor."""
+    return ACTIVATION_FLOOR_MIN <= value <= ACTIVATION_FLOOR_MAX
+
+
+def resolve_activation_floor(persona: PersonaConfig, default: float) -> float:
+    """Effective retrieval activation floor for ``persona``.
+
+    Precedence: the persona's ``metadata[RETRIEVAL_ACTIVATION_FLOOR_KEY]``
+    override (Class B corpus-derived value) wins; otherwise ``default`` (the
+    settings-threaded class-A floor) applies. A present-but-invalid override
+    is *rejected* — logged and ignored, never clamped — so a misconfigured
+    Class B persona falls back to the safe class-A default rather than
+    disarming the anti-filler gate.
+    """
+    raw = persona.metadata.get(RETRIEVAL_ACTIVATION_FLOOR_KEY)
+    if raw is None:
+        return default
+    try:
+        override = float(raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        logger.warning(
+            "Ignoring persona %s retrieval_activation_floor override %r: not a number",
+            persona.id,
+            raw,
+        )
+        return default
+    if not is_valid_activation_floor(override):
+        logger.warning(
+            "Ignoring persona %s retrieval_activation_floor override %s: "
+            "outside [%s, %s]",
+            persona.id,
+            override,
+            ACTIVATION_FLOOR_MIN,
+            ACTIVATION_FLOOR_MAX,
+        )
+        return default
+    return override
 
 
 @dataclass(slots=True)
@@ -1013,6 +1090,14 @@ class ContextBuilder:
         callers (and non-interest turns) keep the pre-W5 sections.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
+        # Class B floor override (HU-2673 C3 / HU-2707): the persona's own
+        # corpus-derived floor wins over the config default. ``replace`` keeps
+        # the shared default config instance untouched. The lexical lane rides
+        # ``activation_threshold`` as its entry floor (``lexical_floor``), so
+        # the override lifts the whole seed path consistently.
+        floor = resolve_activation_floor(persona, config.activation_threshold)
+        if floor != config.activation_threshold:
+            config = replace(config, activation_threshold=floor)
         activated = await retrieve(
             backend=backend,
             persona_id=persona.id,

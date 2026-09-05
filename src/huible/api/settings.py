@@ -198,6 +198,18 @@ class Settings(BaseSettings):
     working_memory_service_id: str = "default"
     working_memory_timeout_s: float = 10.0
 
+    # ── Retrieval activation floor (HU-2673 C3 / HU-2707) ──────────────────
+    # Class-A (Chandler pilot) corpus-derived default: 0.50 sits inside the
+    # widest structural gap between the lexical-at-floor filler band (≤0.390)
+    # and the weakest genuine vector inclusion (0.577) on the 384-dim
+    # bge-small corpus — above the embedder's irrelevance baseline (~0.51)
+    # where the legacy 0.3 default sat. Threaded into the ContextBuilder's
+    # default RetrievalConfig at create_app; per-persona overrides live in
+    # persona metadata (``retrieval_activation_floor``, Class B gate, same
+    # [0.05, 0.95] band). Derivation:
+    # docs/evidence/hu2673_c3_activation_floor_derivation_20260905.md
+    retrieval_activation_floor: float = 0.50
+
     # ── W5 persona tools (HU-2309 v1.8 §1.7.2 / M-0R-E) ────────────────────
     # Era-gated tool lanes. All three are deterministic + local (no network,
     # no LLM, no spend), so unlike the W4 lane they default ON:
@@ -407,6 +419,21 @@ class Settings(BaseSettings):
         # default ``fake`` applies rather than an explicit empty string.
         if isinstance(v, str) and not v.strip():
             return "fake"
+        return v
+
+    @field_validator("retrieval_activation_floor", mode="after")
+    @classmethod
+    def _validate_activation_floor(cls, v: float) -> float:
+        # One band for every explicit floor (HU-2707): the settings default
+        # and the per-persona override share the [0.05, 0.95] admissible
+        # range. Out-of-band is a config error and fails loudly at startup —
+        # silently clamping would mask a mis-derived Class B floor.
+        from huible.persona.context import is_valid_activation_floor
+
+        if not is_valid_activation_floor(v):
+            raise ValueError(
+                f"retrieval_activation_floor must be within [0.05, 0.95], got {v}"
+            )
         return v
 
     # --- derived views -------------------------------------------------------

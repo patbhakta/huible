@@ -179,6 +179,7 @@ from huible.llm.client import (
     build_llm_client,
 )
 from huible.memory.protocol import MemoryBackend, MemoryNode
+from huible.memory.retrieval import RetrievalConfig
 from huible.memory.store import PostgresMemoryBackend
 from huible.persona.context import (
     CONFIDENCE_LEVEL_METADATA_KEY,
@@ -547,6 +548,11 @@ async def _hydrate_persona_registry(application: FastAPI) -> int:
                 age_at_death=row["age_at_death"],
                 death_date=str(death) if death else None,
                 length_stats=stats_from_metadata(raw_metadata),
+                # Full metadata block rides along so per-persona overrides
+                # (retrieval_activation_floor — HU-2673 C3 / HU-2707) resolve
+                # at chat time. Non-dict (garbage cell) keeps the safe empty
+                # block, same fail-closed shape as the length register.
+                metadata=raw_metadata if isinstance(raw_metadata, dict) else {},
             ),
             backend,
         )
@@ -749,7 +755,15 @@ def create_app(
     # model) — raw provider keys are never stored, logged, or persisted; the
     # digest exists only to reuse the constructed client across turns.
     application.state.byok_clients: dict[str, LLMClient] = {}
-    application.state.context_builder = context_builder or ContextBuilder()
+    # Retrieval activation floor (HU-2673 C3 / HU-2707): thread the
+    # settings-derived class-A floor (0.50, corpus-derived) into the default
+    # RetrievalConfig — until this wiring the dataclass fallback (0.3) was the
+    # de-facto live value, below the bge-small irrelevance baseline. An
+    # explicitly injected context_builder (tests, harnesses) is untouched;
+    # per-persona Class B overrides resolve per turn inside ContextBuilder.build.
+    application.state.context_builder = context_builder or ContextBuilder(
+        RetrievalConfig(activation_threshold=resolved_settings.retrieval_activation_floor)
+    )
     # W4 working memory (HU-2309 v1.8 §1.7.2 / M-0R-B): the TencentDB Arm A
     # client when armed, a no-op lane otherwise. Every call degrades to
     # "no working memory" on failure — the lane never breaks a turn.
