@@ -1,0 +1,28 @@
+{
+  "chart_table.pdf": {
+    "pages": 1,
+    "text_chars": 252,
+    "structure_nodes": 0,
+    "toc_source": "detected",
+    "wall_s": 0.1,
+    "verdict": "structure extracted"
+  },
+  "real_mixed.pdf": {
+    "pages": 15,
+    "text_chars": 40407,
+    "structure_nodes": 14,
+    "toc_source": "bookmarks",
+    "wall_s": 2.8,
+    "verdict": "structure extracted"
+  },
+  "scanned_formula.pdf": {
+    "pages": 1,
+    "text_chars": 0,
+    "verdict": "no text layer -> flash LLM-free path skipped"
+  },
+  "scanned_mixed.pdf": {
+    "pages": 1,
+    "text_chars": 0,
+    "verdict": "no text layer -> flash LLM-free path skipped"
+  }
+}

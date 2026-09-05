@@ -22,3 +22,7 @@ docker/runtime/app-state/.cache/
 experiments/frames-eval/outputs/*/stage0_corpus/test.tsv
 experiments/frames-eval/outputs/*/stage0_corpus/articles.json
 
+
+# HU-2723 PageIndex eval: venv + local SDK stores (regenerable)
+experiments/pageindex-eval/.venv/
+experiments/pageindex-eval/outputs/*/.pageindex/

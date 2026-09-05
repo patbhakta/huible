@@ -1,0 +1,26 @@
+{
+  "chart_table.md": {
+    "nodes": 0,
+    "doc_title": null,
+    "wall_s": 0.0,
+    "llm_free": true
+  },
+  "real_mixed.md": {
+    "nodes": 28,
+    "doc_title": null,
+    "wall_s": 0.0,
+    "llm_free": true
+  },
+  "scanned_formula.md": {
+    "nodes": 3,
+    "doc_title": null,
+    "wall_s": 0.0,
+    "llm_free": true
+  },
+  "scanned_mixed.md": {
+    "nodes": 2,
+    "doc_title": null,
+    "wall_s": 0.0,
+    "llm_free": true
+  }
+}
