@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "VERDICT: CORRECT\nThe candidate matches the gold figures $(90) million vs. $(240) million and correctly attributes the decrease to the prior-year accretion of NBC Universal's interest in Hulu.",
+  "correct": true
+}

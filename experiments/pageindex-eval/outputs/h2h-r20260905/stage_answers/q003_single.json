@@ -1,0 +1,24 @@
+{
+  "idx": 3,
+  "span": "single",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "For the quarter ended December 28, 2024 (Q1 FY2025), average monthly revenue per paid subscriber for Hulu Live TV + SVOD was **$99.22**, up from **$95.82** in the prior sequential quarter (ended September 28, 2024) \u2014 an increase of **$3.40, or 4%**.\n\nAccording to the report, the increase was primarily due to increases in pricing. For context, Hulu Live TV + SVOD subscriber count was flat sequentially at 4.6 million.",
+      "wall_s": 20.1
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "$99.22, up 4% from $95.82 primarily due to pricing increases",
+      "raw": "For the quarter ended December 28, 2024, Hulu Live TV + SVOD average monthly revenue per paid subscriber was **$99.22**, up from **$95.82** in the prior sequential quarter (September 28, 2024) \u2014 an increase of **4%**, driven primarily by increases in pricing.\n\nFinal answer: $99.22, up 4% from $95.82 primarily due to pricing increases",
+      "retrieved_pages": [
+        3,
+        6,
+        7,
+        8,
+        16
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

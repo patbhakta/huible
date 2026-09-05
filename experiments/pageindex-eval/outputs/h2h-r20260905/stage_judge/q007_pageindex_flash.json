@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "Let me compare the candidate answer to the gold answer.\n\nGold answer: 125 million Disney+ subscribers, a decrease of 0.7 million versus Q4 fiscal 2024 (56.8 million domestic + 67.8 million international per the key metrics table)\n\nCandidate answer: Disney reported 124.6 million total Disney+ subscribers (rounded to 125 million in the press release headline) as of December 28, 2024 \u2014 a decrease of about 0.7 million (\u20131%) versus Q4 fiscal 2024 (125.3 million as of September 28, 2024).\n\nBreakdown: Domestic 56.8M (matches gold), International 67.8M (matches gold), Total 124.6M vs 125.3M, change -0.7M (matches gold).\n\nWait, let me check the math: 56.8 + 67.8 = 124.6. And 125.3 - 124.6 = 0.7. So the candidate's numbers are internally consistent and match the gold's numbers (125 million rounded, decrease of 0.7 million).\n\nThe gold says \"125 million\" and \"0.7 million decrease\" \u2014 the candidate",
+  "correct": false
+}

@@ -1,0 +1,24 @@
+{
+  "idx": 9,
+  "span": "multi",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "Here's how Disney expects its India business (Star India / Disney+ Hotstar) to contribute to segment operating income in fiscal 2025, per the guidance in the release:\n\n**Fiscal 2025 expected contributions vs. prior year (fiscal 2024)**\n\n| Segment | FY2025 contribution | FY2024 (prior year) | Change |\n|---|---|---|---|\n| Entertainment | $73 million income | $254 million income | Down $181 million (roughly -71%) |\n| Sports | $9 million income | $636 million loss | Improvement of $645 million (swing from loss to income) |\n\n**Key context behind these figures:**\n\n- **Deconsolidation timing:** The Star India Transaction with Reliance Industries closed on November 14, 2024, forming an India joint venture (RIL 56%, Disney 37%, third party 7%). Fiscal 2025 includes only about one and a half months of Star India's consolidated operating results (through November 14), whereas fiscal 2024 included a full year. After the transaction, Disney recognizes its 37% share through \"Equity in the income of investees\" rather than segment operating income.\n- **Sports swing:** The dramatic Sports improvement is largely a comparison effect \u2014 the prior year's $636 million loss was driven by the ICC Cricket World Cup costs, which do not recur in the consolidated results this year.\n- **Equity method impact:** In Q1, Disney recorded a $33 million equity loss from the India JV, primarily due to purchase accounting; for the full year it expects an equity loss of roughly $300 million, also driven mainly by purchase accounting. This sits below segment operating income.\n\nSo in fiscal 2025, India becomes a much smaller direct contributor to Entertainment operating income, while its drag on Sports essentially disappears.",
+      "wall_s": 25.3
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "India business contributes $73M to Entertainment (vs. $254M prior year) and $9M to Sports (vs. a $636M loss prior year) in fiscal 2025.",
+      "raw": "According to the guidance, the India business is expected to contribute **$73 million** to Entertainment segment operating income in fiscal 2025, compared to **$254 million** in the prior year, and **$9 million** to Sports segment operating income, compared to a **$636 million loss** in the prior year.\n\nFinal answer: India business contributes $73M to Entertainment (vs. $254M prior year) and $9M to Sports (vs. a $636M loss prior year) in fiscal 2025.",
+      "retrieved_pages": [
+        1,
+        2,
+        3,
+        4,
+        8
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

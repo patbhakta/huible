@@ -1,0 +1,24 @@
+{
+  "idx": 8,
+  "span": "multi",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "## Experiences Segment: Q1 Fiscal 2025 Performance\n\n**Headline results (quarter ended December 28, 2024):**\n- **Revenues:** $9,415 million, up 3% from $9,132 million\n- **Segment operating income:** $3,110 million \u2014 essentially flat vs. $3,105 million in Q1 fiscal 2024\n\n**By sub-segment:**\n\n| Line item | Revenue | Operating income |\n|---|---|---|\n| Domestic Parks & Experiences | $6,432M (+2%) | $1,982M (\u22125%) |\n| International Parks & Experiences | $1,646M (+12%) | $420M (+28%) |\n| Consumer Products | $1,337M (\u22122%) | $708M (+1%) |\n\n## One-Time Factors Affecting Results\n\nThe flat operating income masked significant one-time headwinds \u2014 Disney quantified a **6 percentage-point adverse impact** on year-over-year growth from two items:\n\n1. **Hurricanes Milton and Helene (~$120 million impact):** Hurricane Milton forced Walt Disney World Resort to close for a full day and the cancellation of a cruise itinerary; Helene had a smaller effect. The storms also depressed attendance, which lowered volumes.\n\n2. **Disney Treasure pre-opening expenses (~$75 million):** Costs tied to the launch of the new Disney Treasure cruise ship.\n\nTogether, these items created a **9 percentage-point adverse impact** on Domestic Parks & Experiences, which is why that business's operating income declined 5% despite underlying demand.\n\n**Underlying dynamics beyond the one-timers:**\n- **Domestic:** Higher costs from Disney Cruise Line fleet expansion and inflation, plus hurricane-driven attendance declines, were partially offset by increased guest spending.\n- **International:** Operating income jumped 28% on growth in guest spending and higher attendance, partly offset by costs of new guest offerings.\n\nIn short, excluding the roughly $195 million of hurricane and cruise pre-opening impacts, Experiences would have grown meaningfully rather than landing flat.",
+      "wall_s": 24.7
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "Experiences posted $3.1B operating income (flat YoY, revenue +3%), with results dampened by ~$120M in hurricane impacts and ~$75M in Disney Treasure pre-opening expenses.",
+      "raw": "In Q1 fiscal 2025, the Experiences segment reported operating income of $3.1 billion, essentially flat compared to Q1 fiscal 2024, on revenue of $9.4 billion (up 3%). Domestic Parks & Experiences operating income declined 5%, while International Parks & Experiences operating income increased 28% year-over-year.\n\nThe segment's results were adversely affected by two significant one-time factors totaling approximately $195 million:\n- **Hurricanes Milton and Helene**: approximately $120 million impact\n- **Pre-opening expenses**: approximately $75 million impact driven by the launch of the Disney Treasure\n\nThese factors represented a 6 percentage-point drag on year-over-year growth for the overall segment, and a 9 percentage-point adverse impact on domestic Parks & Experiences growth.\n\nFinal answer: Experiences posted $3.1B operating income (flat YoY, revenue +3%), with results dampened by ~$120M in hurricane impacts and ~$75M in Disney Treasure pre-opening expenses.",
+      "retrieved_pages": [
+        1,
+        2,
+        3,
+        8,
+        19
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "VERDICT: CORRECT\nThe candidate matches the gold figures exactly ($73M vs $254M for Entertainment; $9M vs $636M loss for Sports) and correctly attributes the shift to the Star India deconsolidation into the Reliance JV, with added context that is consistent.",
+  "correct": true
+}

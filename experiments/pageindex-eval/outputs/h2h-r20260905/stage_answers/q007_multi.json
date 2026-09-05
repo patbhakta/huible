@@ -1,0 +1,24 @@
+{
+  "idx": 7,
+  "span": "multi",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "Disney reported **124.6 million total Disney+ subscribers** (rounded to 125 million in the press release headline) as of December 28, 2024 \u2014 a **decrease of about 0.7 million (\u20131%) versus Q4 fiscal 2024** (125.3 million as of September 28, 2024).\n\nBreakdown of the sequential change (per page 6):\n\n| Disney+ | Dec 28, 2024 | Sep 28, 2024 | Change |\n|---|---|---|---|\n| Domestic (U.S. & Canada) | 56.8M | 56.0M | +1% |\n| International | 67.8M | 69.3M | \u20132% |\n| **Total Disney+** | **124.6M** | **125.3M** | **\u20131%** |\n\nTwo contextual notes from the report:\n- The domestic gain was more than offset by the international decline, with the drop driven largely by the Star India Transaction (Disney+ Hotstar was deconsolidated into the Reliance joint venture and is no longer reported separately).\n- The prior-quarter (Q4 FY24) figures were adjusted to include Disney+ subscribers in Southeast Asia, which were previously reported under Disney+ Hotstar.\n\nFor reference, combined Disney+ and Hulu subscriptions were 178 million, up 0.9 million sequentially.",
+      "wall_s": 21.3
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "125 million Disney+ subscribers, down 0.7 million from Q4 fiscal 2024.",
+      "raw": "Disney reported **125 million Disney+ subscribers**, which was a **decrease of 0.7 million** versus Q4 fiscal 2024. (The detailed table on page 6 shows this as 124.6 million, down from 125.3 million in the prior quarter \u2014 a 1% decline, driven by a 2% drop in international subscribers while domestic subscribers grew 1%.)\n\nFinal answer: 125 million Disney+ subscribers, down 0.7 million from Q4 fiscal 2024.",
+      "retrieved_pages": [
+        1,
+        2,
+        3,
+        6,
+        8
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

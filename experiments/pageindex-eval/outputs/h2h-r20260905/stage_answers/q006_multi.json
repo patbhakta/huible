@@ -1,0 +1,24 @@
+{
+  "idx": 6,
+  "span": "multi",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "Disney's Direct-to-Consumer advertising revenue declined modestly in Q1 fiscal 2025, but the underlying trend was strong once the Star India exit is excluded:\n\n**Headline performance (vs. Q1 fiscal 2024)**\n- Total DTC advertising revenue: **down 2%**\n- Excluding Disney+ Hotstar in India: **up 16%**\n\n**Why the decline \u2014 the Hotstar effect**\n- The Star India Transaction (closed November 14, 2024) moved Disney+ Hotstar out of consolidation. Disney+ Hotstar advertising revenue was only ~$15 million in Q1 FY25 versus $165 million in Q1 FY24, a year-over-year comparison tied to the ICC Cricket World Cup carried on Hotstar in the prior-year quarter.\n\n**Underlying growth drivers (Disney+ Core and Hulu)**\n- Advertising revenue grew at both Disney+ Core and Hulu, driven by **more ad impressions**, partially offset by **lower rates**.\n\n**Related revenue effects**\n- Higher advertising revenue contributed to the increase in International Disney+ average monthly revenue per subscriber (up from $6.78 to $7.19 sequentially).\n- Conversely, lower advertising revenue was a drag on Hulu SVOD Only ARPU (flat at $12.52), though it was offset by pricing increases.\n\nFor context, this ad performance sat within a broader DTC turnaround: DTC revenue rose 9% to $6.07 billion and operating income swung $431 million to a $293 million profit (from a $138 million loss a year earlier).",
+      "wall_s": 20.0
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "Declined 2% overall, but up 16% excluding Disney+ Hotstar in India",
+      "raw": "Based on the reference material, Disney's Direct-to-Consumer advertising revenue **declined 2%** in Q1 fiscal 2025. However, **excluding the Disney+ Hotstar service in India**, Direct-to-Consumer advertising revenue was **up 16%** vs. Q1 fiscal 2024. The decline was largely due to the comparison against ICC Cricket World Cup programming in the prior-year quarter on Disney+ Hotstar, which had advertising revenue of approximately $165 million in Q1 fiscal 2024 versus only about $15 million in Q1 fiscal 2025.\n\nFinal answer: Declined 2% overall, but up 16% excluding Disney+ Hotstar in India",
+      "retrieved_pages": [
+        1,
+        2,
+        4,
+        6,
+        8
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

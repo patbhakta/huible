@@ -1,0 +1,148 @@
+{
+  "run_id": "h2h-r20260905",
+  "corpus": {
+    "pdf": "q1-fy25-earnings.pdf",
+    "pages": 22,
+    "doc_id": "pi-89de906d08274831a52ae113ff47c6e9",
+    "index_run": "smoke-flash-q1fy25"
+  },
+  "arms": {
+    "pageindex_flash": {
+      "n": 10,
+      "correct": 8,
+      "accuracy": 0.9,
+      "single_accuracy": 1.0,
+      "multi_accuracy": 0.8,
+      "usage": {
+        "llm_calls": 30,
+        "prompt_tokens": 200982,
+        "completion_tokens": 2804,
+        "latency_s": 214.59069681167603,
+        "tokens": 203786
+      }
+    },
+    "flat_bm25": {
+      "n": 10,
+      "correct": 7,
+      "accuracy": 0.9,
+      "single_accuracy": 0.8,
+      "multi_accuracy": 1.0,
+      "usage": {
+        "llm_calls": 10,
+        "prompt_tokens": 55852,
+        "completion_tokens": 871,
+        "latency_s": 71.65797257423401,
+        "tokens": 56723
+      }
+    }
+  },
+  "flat_config": {
+    "chunking": "page-level (no cross-page merging)",
+    "retriever": "bm25 (k1=1.5 b=0.75), top-5",
+    "answer_model": "openai/glm-5.3-flash",
+    "answer_temperature": 0.2
+  },
+  "pageindex_config": {
+    "chat_model": "openai/glm-5.3-flash",
+    "max_turns": 8,
+    "retrieval": "SDK agent tree navigation"
+  },
+  "judge": {
+    "model": "openai/glm-5.3",
+    "temperature": 0.0,
+    "prompt": "FRAMES harness parity"
+  },
+  "gold_set": {
+    "n": 10,
+    "single": 5,
+    "multi": 5,
+    "authored_by": "hand, from PDF text (no LLM)"
+  },
+  "total_usage": {
+    "llm_calls": 67,
+    "prompt_tokens": 276529,
+    "completion_tokens": 4886
+  },
+  "rows": [
+    {
+      "idx": 1,
+      "span": "single",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 2,
+      "span": "single",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 3,
+      "span": "single",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 4,
+      "span": "single",
+      "pi_correct": true,
+      "flat_correct": false
+    },
+    {
+      "idx": 5,
+      "span": "single",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 6,
+      "span": "multi",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 7,
+      "span": "multi",
+      "pi_correct": false,
+      "flat_correct": true
+    },
+    {
+      "idx": 8,
+      "span": "multi",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 9,
+      "span": "multi",
+      "pi_correct": true,
+      "flat_correct": true
+    },
+    {
+      "idx": 10,
+      "span": "multi",
+      "pi_correct": true,
+      "flat_correct": true
+    }
+  ],
+  "repair": {
+    "reason": "empty message.content (reasoning tokens consumed cap); chat_once now falls back to reasoning_content + 4x retry",
+    "reanswered": [
+      "q004_single",
+      "q010_multi"
+    ],
+    "rejudged": [
+      "q004_single/flat_bm25",
+      "q010_multi/flat_bm25",
+      "q006_multi/pageindex_flash",
+      "q007_multi/pageindex_flash",
+      "q008_multi/flat_bm25"
+    ],
+    "repair_usage": {
+      "llm_calls": 7,
+      "prompt_tokens": 13522,
+      "completion_tokens": 382
+    },
+    "note": "repair pass 1 (first 2 re-answers + 3 re-judges, 5 calls) crashed before its usage merge; those 5 calls' tokens are not in total_usage \u2014 pass 2 re-ran all 5 repairs and its usage IS included"
+  }
+}

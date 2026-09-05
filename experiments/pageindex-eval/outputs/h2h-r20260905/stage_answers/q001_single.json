@@ -1,0 +1,24 @@
+{
+  "idx": 1,
+  "span": "single",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "The Walt Disney Company's total revenues in Q1 fiscal 2025 (quarter ended December 28, 2024) were **$24,690 million (~$24.7 billion)**, an increase of **5%** year-over-year from $23,549 million in the prior-year quarter (ended December 30, 2023).\n\nBy segment, the revenue breakdown was:\n\n| Segment | Q1 FY2025 | Q1 FY2024 | Change |\n|---|---|---|---|\n| Entertainment | $10,872M | $9,981M | +9% |\n| Sports | $4,850M | $4,835M | ~flat |\n| Experiences | $9,415M | $9,132M | +3% |\n| Eliminations | $(447)M | $(399)M | (12)% |\n| **Total revenues** | **$24,690M** | **$23,549M** | **+5%** |",
+      "wall_s": 21.8
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "$24.7 billion, up 5% year-over-year.",
+      "raw": "According to the reference material, The Walt Disney Company's total revenues in Q1 fiscal 2025 were $24.7 billion, which increased 5% year-over-year from $23.5 billion in Q1 fiscal 2024.\n\nFinal answer: $24.7 billion, up 5% year-over-year.",
+      "retrieved_pages": [
+        1,
+        2,
+        3,
+        6,
+        8
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

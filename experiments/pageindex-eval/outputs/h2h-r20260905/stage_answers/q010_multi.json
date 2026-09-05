@@ -1,0 +1,24 @@
+{
+  "idx": 10,
+  "span": "multi",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "Disney's free cash flow in Q1 fiscal 2025 (quarter ended December 28, 2024) was **$739 million, down $147 million, or 17%, from $886 million** in Q1 fiscal 2024.\n\n**How the decline happened** (free cash flow = cash provided by operations less investments in parks, resorts and other property):\n\n| ($ in millions) | Q1 FY25 | Q1 FY24 | Change |\n|---|---|---|---|\n| Cash provided by operations | $3,205 | $2,185 | +$1,020 |\n| Investments in parks, resorts and other property | $(2,466) | $(1,299) | $(1,167) |\n| **Free cash flow** | **$739** | **$886** | **$(147)** |\n\n**Why:** Operating cash flow actually improved by $1.0 billion (up 47%), driven by:\n- Lower tax payments than the prior-year quarter, which had included fiscal 2023 U.S. federal and California income taxes that were deferred under IRS and California Board of Equalization relief following the 2023 winter storms in California\n- Higher operating income at Entertainment (streaming profitability gains and Content Sales/Licensing improvement, e.g., Moana 2)\n- Higher film and television production spending and the timing of payments for sports rights\n\nHowever, this was more than offset by capital expenditures nearly doubling to **$2.5 billion from $1.3 billion** (+$1.2 billion), which Disney attributed to higher spending on the **Disney Cruise Line fleet expansion** at the Experiences segment. The capex surge outpaced the operating cash flow gains, resulting in the 17% decline in free cash flow.",
+      "wall_s": 23.5
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "Free cash flow was $739 million, down $147 million (\u201317%) from $886 million, because a ~$1.2 billion increase in investments in parks, resorts and other property more than offset the $1.0 billion rise in cash from operations.",
+      "raw": "**Free cash flow:** $739 million in Q1 fiscal 2025.\n\n**Year-over-year change:** Down $147 million (\u201317%) from $886 million in Q1 fiscal 2024.\n\n**Why:** Although cash provided by operations increased $1.0 billion (to $3.2 billion) \u2014 driven by lower tax payments (prior-year quarter had deferred fiscal 2023 U.S. federal and California income taxes paid after the 2023 California winter storms), higher operating income at Entertainment, and higher film/TV production spending and the timing of sports rights payments \u2014 this was more than offset by a $1.167 billion increase in investments in parks, resorts and other property (rising to $2.466 billion from $1.299 million... i.e., $1.299 billion), which caused free cash flow to decline.\n\nFinal answer: Free cash flow was $739 million, down $147 million (\u201317%) from $886 million, because a ~$1.2 billion increase in investments in parks, resorts and other property more than offset the $1.0 billion rise in cash from operations.",
+      "retrieved_pages": [
+        1,
+        2,
+        3,
+        11,
+        17
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

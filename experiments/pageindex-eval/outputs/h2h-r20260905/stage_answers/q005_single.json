@@ -1,0 +1,24 @@
+{
+  "idx": 5,
+  "span": "single",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "Net income attributable to noncontrolling and redeemable noncontrolling interests was **$(90) million** in Q1 fiscal 2025 (quarter ended December 28, 2024), down 63% from **$(240) million** in the prior-year quarter.\n\n**What drove the decrease:** Per the earnings release, the decline was due to the comparison against the **accretion of NBC Universal's interest in Hulu** in the prior-year quarter \u2014 a one-time accounting effect in Q1 FY2024 that inflated the prior-year figure, making the year-over-year comparison unfavorable.\n\nFor context, this measure is determined on income after royalties and management fees, financing costs, and income taxes, as applicable. The lower noncontrolling interest allocation is reflected in the condensed consolidated statements of income: net income of $2,644 million less $(90) million attributable to noncontrolling interests yielded net income attributable to Disney of $2,554 million (vs. $1,911 million in the prior-year quarter).",
+      "wall_s": 19.1
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "Net income attributable to noncontrolling interests was $(90) million in Q1 fiscal 2025; the year-over-year decrease was due to the comparison to the accretion of NBC Universal's interest in Hulu in the prior-year quarter.",
+      "raw": "Net income attributable to noncontrolling interests was **$(90) million** in Q1 fiscal 2025 (quarter ended December 28, 2024), compared with $(240) million in the prior-year quarter \u2014 a 63% decrease. The decrease was driven by the comparison to the **accretion of NBC Universal's interest in Hulu** that occurred in the prior-year quarter.\n\nFinal answer: Net income attributable to noncontrolling interests was $(90) million in Q1 fiscal 2025; the year-over-year decrease was due to the comparison to the accretion of NBC Universal's interest in Hulu in the prior-year quarter.",
+      "retrieved_pages": [
+        1,
+        2,
+        8,
+        11,
+        13
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "VERDICT: CORRECT\nThe candidate matches the gold answer: $99.22, up from $95.82, primarily due to increases in pricing, with additional consistent details ($3.40/4% increase, flat 4.6M subscribers).",
+  "correct": true
+}

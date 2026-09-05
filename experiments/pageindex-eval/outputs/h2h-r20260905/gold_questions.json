@@ -1,0 +1,146 @@
+[
+  {
+    "idx": 1,
+    "span": "single",
+    "gold_pages": [
+      1,
+      3
+    ],
+    "question": "What were The Walt Disney Company's total revenues in Q1 fiscal 2025, and by what percentage did they change year-over-year?",
+    "gold": "$24.7 billion ($24,690 million), up 5% from $23.5 billion",
+    "aliases": [
+      "24,690",
+      "5%"
+    ]
+  },
+  {
+    "idx": 2,
+    "span": "single",
+    "gold_pages": [
+      1,
+      3
+    ],
+    "question": "What was Disney's diluted EPS excluding certain items for Q1 fiscal 2025 and its year-over-year change?",
+    "gold": "$1.76, up 44% from $1.22",
+    "aliases": [
+      "1.76",
+      "44"
+    ]
+  },
+  {
+    "idx": 3,
+    "span": "single",
+    "gold_pages": [
+      7
+    ],
+    "question": "What was the average monthly revenue per paid subscriber for Hulu Live TV + SVOD in the quarter ended December 28, 2024, and how did it change from the prior sequential quarter?",
+    "gold": "$99.22, up from $95.82 (primarily due to increases in pricing)",
+    "aliases": [
+      "99.22",
+      "95.82"
+    ]
+  },
+  {
+    "idx": 4,
+    "span": "single",
+    "gold_pages": [
+      12
+    ],
+    "question": "How much did Disney invest in parks, resorts and other property in Q1 fiscal 2025, and what was the main driver of the increase versus the prior-year quarter?",
+    "gold": "$2,466 million (~$2.5 billion, up from $1,299 million), driven by higher spend on cruise ship fleet expansion at the Experiences segment",
+    "aliases": [
+      "2,466",
+      "cruise"
+    ]
+  },
+  {
+    "idx": 5,
+    "span": "single",
+    "gold_pages": [
+      11
+    ],
+    "question": "What was net income attributable to noncontrolling interests in Q1 fiscal 2025, and what drove the year-over-year decrease?",
+    "gold": "$(90) million versus $(240) million in the prior-year quarter; the decrease reflects the comparison to accretion of NBC Universal's interest in Hulu in the prior-year quarter",
+    "aliases": [
+      "(90)",
+      "Hulu",
+      "NBC"
+    ]
+  },
+  {
+    "idx": 6,
+    "span": "multi",
+    "gold_pages": [
+      1,
+      6
+    ],
+    "question": "How did Disney's Direct-to-Consumer advertising revenue perform in Q1 fiscal 2025?",
+    "gold": "Declined 2% year-over-year as reported; excluding the Disney+ Hotstar service in India, Direct-to-Consumer advertising revenue was up 16%",
+    "aliases": [
+      "2%",
+      "16%",
+      "Hotstar"
+    ]
+  },
+  {
+    "idx": 7,
+    "span": "multi",
+    "gold_pages": [
+      1,
+      6
+    ],
+    "question": "How many Disney+ subscribers did Disney report and how did the count change versus the prior quarter (Q4 fiscal 2024)?",
+    "gold": "125 million Disney+ subscribers, a decrease of 0.7 million versus Q4 fiscal 2024 (56.8 million domestic + 67.8 million international per the key metrics table)",
+    "aliases": [
+      "125 million",
+      "0.7 million"
+    ]
+  },
+  {
+    "idx": 8,
+    "span": "multi",
+    "gold_pages": [
+      1,
+      9
+    ],
+    "question": "How did the Experiences segment perform in Q1 fiscal 2025 and what one-time factors affected its results?",
+    "gold": "Segment operating income of $3.1 billion, comparable to the prior year; adversely impacted ~$120 million by Hurricanes Milton and Helene (including a Walt Disney World closure and a canceled cruise itinerary) and ~$75 million of Disney Cruise Line pre-opening expenses",
+    "aliases": [
+      "3.1 billion",
+      "120",
+      "75",
+      "hurricane"
+    ]
+  },
+  {
+    "idx": 9,
+    "span": "multi",
+    "gold_pages": [
+      2,
+      4
+    ],
+    "question": "How will the India business contribute to Entertainment and Sports segment operating income in fiscal 2025, and how do those contributions compare to the prior year?",
+    "gold": "Entertainment: $73 million in fiscal 2025 versus $254 million in the prior year; Sports: $9 million versus a $636 million loss in the prior year, following the Star India deconsolidation into the Reliance joint venture",
+    "aliases": [
+      "73",
+      "254",
+      "9",
+      "636"
+    ]
+  },
+  {
+    "idx": 10,
+    "span": "multi",
+    "gold_pages": [
+      3,
+      11
+    ],
+    "question": "What was Disney's free cash flow in Q1 fiscal 2025, how did it change year-over-year, and why?",
+    "gold": "$739 million, down 17% from $886 million; free cash flow fell because higher investments in parks, resorts and other property ($2,466 million vs $1,299 million) more than offset a $1.0 billion increase in cash provided by operations",
+    "aliases": [
+      "739",
+      "17%",
+      "2,466"
+    ]
+  }
+]

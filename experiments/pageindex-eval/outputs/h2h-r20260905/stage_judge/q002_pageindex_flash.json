@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "VERDICT: CORRECT\nThe candidate matches the gold answer exactly: $1.76 diluted EPS excluding certain items for Q1 FY2025, up 44% from $1.22 in the prior-year quarter, with consistent supporting reconciliation details.",
+  "correct": true
+}

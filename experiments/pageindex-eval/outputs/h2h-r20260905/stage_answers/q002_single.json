@@ -1,0 +1,24 @@
+{
+  "idx": 2,
+  "span": "single",
+  "arms": {
+    "pageindex_flash": {
+      "arm": "pageindex_flash",
+      "final_answer": "For Q1 fiscal 2025 (quarter ended December 28, 2024), Disney's diluted EPS excluding certain items \u2014 its non-GAAP \"adjusted EPS\" \u2014 was **$1.76**, up **44%** from $1.22 in the prior-year quarter (Q1 FY2024, ended December 30, 2023).\n\nContext from the reconciliation (page 18):\n\n| | Q1 FY25 | Q1 FY24 |\n|---|---|---|\n| Diluted EPS, as reported | $1.40 | $1.04 |\n| Excluded: Star India restructuring & impairment charges | +$0.20 | \u2014 |\n| Excluded: TFCF/Hulu intangible amortization & fair value step-up | +$0.16 | +$0.18 |\n| Diluted EPS excluding certain items | **$1.76** | **$1.22** |\n\nThe items excluded in the current quarter were the $143 million pre-tax restructuring/impairment charge related to the Star India Transaction and $397 million pre-tax of TFCF and Hulu intangible asset amortization (including fair value step-up on film and TV costs). For comparison, reported diluted EPS grew 35% year-over-year, so excluding these items the growth was stronger at 44%. Note this is a non-GAAP measure, not directly comparable to GAAP diluted EPS.",
+      "wall_s": 21.8
+    },
+    "flat_bm25": {
+      "arm": "flat_bm25",
+      "final_answer": "$1.76, up 44% from $1.22 in Q1 fiscal 2024.",
+      "raw": "Final answer: $1.76, up 44% from $1.22 in Q1 fiscal 2024.",
+      "retrieved_pages": [
+        1,
+        2,
+        3,
+        17,
+        18
+      ],
+      "hit_gold_pages": true
+    }
+  }
+}
