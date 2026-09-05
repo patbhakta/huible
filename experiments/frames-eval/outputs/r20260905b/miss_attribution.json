@@ -1,0 +1,180 @@
+{
+  "run": "r20260905b",
+  "method": "zero-spend local artifact analysis (no LLM calls); phrase-level presence of distinctive gold n-grams in stored stage3 context",
+  "n_misses": 8,
+  "stage_counts": {
+    "retrieval_miss": 5,
+    "abstain_ok": 3
+  },
+  "conclusion": "All misses are retrieval-stage (recall breadth/coverage). No answer-stage failure on present evidence; no judge-strictness failures. Abstention behavior is inconsistent: correct abstention when evidence absent on some misses, prior-injection on others.",
+  "rows": [
+    {
+      "question_idx": 129,
+      "stage": "retrieval_miss",
+      "gold_parts_present": "0/2",
+      "part_detail": [
+        {
+          "phrases": [
+            "love yourself in seoul"
+          ],
+          "present": false
+        },
+        {
+          "phrases": [
+            "bring the soul"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": false,
+      "memory_count": 21,
+      "context_chars": 4423,
+      "gold": "Love Yourself in Seoul (2019) and Bring the Soul: The Movie (2019)",
+      "answer": "Bring the Soul: The Movie"
+    },
+    {
+      "question_idx": 330,
+      "stage": "retrieval_miss",
+      "gold_parts_present": "0/1",
+      "part_detail": [
+        {
+          "phrases": [
+            "10101110"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": false,
+      "memory_count": 22,
+      "context_chars": 4624,
+      "gold": "10101110",
+      "answer": "10110101"
+    },
+    {
+      "question_idx": 444,
+      "stage": "abstain_ok",
+      "gold_parts_present": "0/1",
+      "part_detail": [
+        {
+          "phrases": [
+            "five"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": true,
+      "memory_count": 44,
+      "context_chars": 16673,
+      "gold": "Five",
+      "answer": "Cannot be determined from the reference material."
+    },
+    {
+      "question_idx": 624,
+      "stage": "retrieval_miss",
+      "gold_parts_present": "0/2",
+      "part_detail": [
+        {
+          "phrases": [
+            "si river"
+          ],
+          "present": false
+        },
+        {
+          "phrases": [
+            "yi river"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": false,
+      "memory_count": 19,
+      "context_chars": 4021,
+      "gold": "The Si River and the Yi River pass through Qufu, Confucius' home town.",
+      "answer": "The Zhu River and the Yi River, in Qufu, Shandong."
+    },
+    {
+      "question_idx": 663,
+      "stage": "abstain_ok",
+      "gold_parts_present": "0/1",
+      "part_detail": [
+        {
+          "phrases": [
+            "2,851"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": true,
+      "memory_count": 3,
+      "context_chars": 805,
+      "gold": "2,851 Passengers",
+      "answer": "Not found in the provided reference material."
+    },
+    {
+      "question_idx": 672,
+      "stage": "abstain_ok",
+      "gold_parts_present": "0/2",
+      "part_detail": [
+        {
+          "phrases": [
+            "egan bernal"
+          ],
+          "present": false
+        },
+        {
+          "phrases": [
+            "bernal"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": true,
+      "memory_count": 19,
+      "context_chars": 4021,
+      "gold": "Egan Bernal",
+      "answer": "Not found in the provided reference material."
+    },
+    {
+      "question_idx": 716,
+      "stage": "retrieval_miss",
+      "gold_parts_present": "0/2",
+      "part_detail": [
+        {
+          "phrases": [
+            "bowens"
+          ],
+          "present": false
+        },
+        {
+          "phrases": [
+            "madison"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": false,
+      "memory_count": 30,
+      "context_chars": 6232,
+      "gold": "Bowens, Thomas, & Madison",
+      "answer": "Armstrong and Izzo"
+    },
+    {
+      "question_idx": 729,
+      "stage": "retrieval_miss",
+      "gold_parts_present": "0/1",
+      "part_detail": [
+        {
+          "phrases": [
+            "gamsonite"
+          ],
+          "present": false
+        }
+      ],
+      "answerer_abstained": false,
+      "memory_count": 7,
+      "context_chars": 1609,
+      "gold": "Gamsonite",
+      "answer": "Dux Kidz"
+    }
+  ]
+}
