@@ -51,6 +51,7 @@ FRAMES_URL = "https://huggingface.co/datasets/google/frames-benchmark/resolve/ma
 WIKI_API = "https://en.wikipedia.org/w/api.php"
 WIKI_UA = "HUible-FRAMES-eval/0.1 (research; contact: rnd@huible.local)"
 GATEWAY = "http://127.0.0.1:8420"
+GATEWAY_BASE = GATEWAY  # overridable at run time (ablation arms point at a 2nd instance)
 GW_CONFIG = Path("/opt/tencentdb-memory/.config/tdai-gateway.yaml")
 TEAM_ID = "frames-eval"
 SEED = 2708
@@ -108,7 +109,7 @@ def gw_post(path: str, body: dict, timeout: float = 60.0) -> dict:
     if key:
         hdrs["Authorization"] = f"Bearer {key}"
     req = urllib.request.Request(
-        GATEWAY + path, data=json.dumps(body).encode(), headers=hdrs, method="POST"
+        GATEWAY_BASE + path, data=json.dumps(body).encode(), headers=hdrs, method="POST"
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -397,12 +398,22 @@ ANSWER_SYSTEM = (
 )
 
 
-def cmd_run(run: str, limit: int) -> None:
-    d = run_dir(run)
+def cmd_run(run: str, limit: int, gateway: str | None = None, out: str | None = None) -> None:
+    """Recall -> answer -> judge.
+
+    Sessions always belong to `run` (they hold the ingested corpus). With
+    `--out` (ablation arms), artifacts land in a separate run dir while
+    stage0/stage1 inputs are still read from the base run — zero re-ingest.
+    """
+    global GATEWAY_BASE
+    if gateway:
+        GATEWAY_BASE = gateway.rstrip("/")
+    base = run_dir(run)
+    d = run_dir(out) if out else base
     raw = {r["_idx"]: r for r in
-           json.loads((d / "stage0_corpus" / "sample.json").read_text())}
+           json.loads((base / "stage0_corpus" / "sample.json").read_text())}
     sample = []
-    for row in json.loads((d / "stage0_corpus" / "sample_articles.json").read_text()):
+    for row in json.loads((base / "stage0_corpus" / "sample_articles.json").read_text()):
         src = raw.get(row["question_idx"], {})
         sample.append({**row,
                        "qw": src.get("Prompt") or src.get("qw") or "",
@@ -427,7 +438,7 @@ def cmd_run(run: str, limit: int) -> None:
         sid = session_id(run, qi)
         titles = {doc["title"] for doc in
                   next(e for e in json.loads(
-                      (d / "stage1_extraction" / "extraction.json").read_text()
+                      (base / "stage1_extraction" / "extraction.json").read_text()
                   ) if e["question_idx"] == qi)["docs"]}
 
         rec = recall(q, sid)
@@ -506,7 +517,8 @@ def cmd_run(run: str, limit: int) -> None:
 
     done = [r for r in rows if "correct" in r]
     summary = {
-        "run": run, "judge_model": JUDGE_MODEL,
+        "run": run, "arm_out": out, "gateway": GATEWAY_BASE,
+        "judge_model": JUDGE_MODEL,
         "answerer_model": cfg.zai_model,
         "n_scored": len(done),
         "judge_correct": sum(r["correct"] for r in done),
@@ -520,7 +532,8 @@ def cmd_run(run: str, limit: int) -> None:
         "rows": rows,
     }
     (d / "scores.json").write_text(json.dumps(summary, indent=1))
-    log(f"SCORE: {summary['judge_correct']}/{summary['n_scored']} = {summary['judge_accuracy']} "
+    log(f"SCORE [{GATEWAY_BASE}]: {summary['judge_correct']}/{summary['n_scored']} = "
+        f"{summary['judge_accuracy']} "
         f"(em_like={summary['em_like']}, provenance_ok={summary['provenance_ok']})")
 
 
@@ -563,11 +576,13 @@ def main() -> int:
     ap.add_argument("--run", required=True)
     ap.add_argument("--sample", type=int, default=20)
     ap.add_argument("--limit", type=int, default=0, help="cap questions in `run` (0 = all)")
+    ap.add_argument("--gateway", help="`run` only: gateway base URL override (ablation arms)")
+    ap.add_argument("--out", help="`run` only: artifact dir suffix; sessions still come from --run")
     args = ap.parse_args()
     {"download": lambda: cmd_download(args.run, args.sample),
      "fetch": lambda: cmd_fetch(args.run),
      "ingest": lambda: cmd_ingest(args.run),
-     "run": lambda: cmd_run(args.run, args.limit),
+     "run": lambda: cmd_run(args.run, args.limit, args.gateway, args.out),
      "teardown": lambda: cmd_teardown(args.run)}[args.cmd]()
     return 0
 
