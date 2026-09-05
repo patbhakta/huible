@@ -1,0 +1,147 @@
+{
+  "run_id": "frames-md-r20260905",
+  "question": "PageIndex Flash agent retrieval vs flat pipeline (r20260905b) on the same 20-question FRAMES sample",
+  "corpus": {
+    "articles": 79,
+    "store": "/root/repos/huible/experiments/pageindex-eval/outputs/frames-md-r20260905/store",
+    "pseudo_pages": 60
+  },
+  "pageindex_frames": {
+    "n": 20,
+    "correct": 16,
+    "accuracy": 0.8,
+    "usage": {
+      "chat_llm_calls": 102,
+      "chat_prompt_tokens": 805441,
+      "chat_completion_tokens": 6064,
+      "chat_latency_s": 2008.7,
+      "tok_per_query_chat": 40272.0,
+      "calls_per_query_chat": 5.1,
+      "s_per_query_chat": 100.4,
+      "note": "run-1 judge branch (~19 calls) not persisted; est ~6k pt / ~1.5k ct total \u2014 excluded from per-query figures to keep them metered-only"
+    },
+    "index_usage": {
+      "llm_calls": 73,
+      "prompt_tokens": 432138,
+      "completion_tokens": 27779,
+      "latency_s": 844.7,
+      "tok_per_article": 5822.0,
+      "note": "summary generation over 79 markdown articles (q716 retry reused the store; no re-index)"
+    }
+  },
+  "baseline_flat_r20260905b": {
+    "judge_correct": 12,
+    "judge_accuracy": 0.6,
+    "provenance_ok": 20,
+    "avg_context_chars": 5103
+  },
+  "judge": {
+    "model": "openai/glm-5.3",
+    "temperature": 0.0,
+    "prompt": "FRAMES harness parity"
+  },
+  "rows": [
+    {
+      "idx": 3,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 56,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 129,
+      "pi_correct": true,
+      "baseline_correct": false
+    },
+    {
+      "idx": 199,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 330,
+      "pi_correct": false,
+      "baseline_correct": false
+    },
+    {
+      "idx": 351,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 383,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 444,
+      "pi_correct": false,
+      "baseline_correct": false
+    },
+    {
+      "idx": 488,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 498,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 538,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 613,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 624,
+      "pi_correct": true,
+      "baseline_correct": false
+    },
+    {
+      "idx": 663,
+      "pi_correct": true,
+      "baseline_correct": false
+    },
+    {
+      "idx": 672,
+      "pi_correct": true,
+      "baseline_correct": false
+    },
+    {
+      "idx": 708,
+      "pi_correct": true,
+      "baseline_correct": true
+    },
+    {
+      "idx": 716,
+      "pi_correct": false,
+      "baseline_correct": false
+    },
+    {
+      "idx": 729,
+      "pi_correct": true,
+      "baseline_correct": false
+    },
+    {
+      "idx": 749,
+      "pi_correct": false,
+      "baseline_correct": true
+    },
+    {
+      "idx": 823,
+      "pi_correct": true,
+      "baseline_correct": true
+    }
+  ],
+  "q716_note": "first pass hit max_turns=8 (agent did not finish); re-run at max_turns=16 -> answered, judged INCORRECT. Harness param, not a system failure; final 20/20 scored.",
+  "usage_method": "deterministic wrapper-side token counting (gpt-4o tokenizer), metered-only blocks; run-2 counters were reset by resume, so per-block figures were merged from the two run logs"
+}

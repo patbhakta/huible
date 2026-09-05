@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "The question asks: In the 1984 Olympics, what sport did the country that got 5 total medals win a gold medal in?\n\nGold answer: Sailing\n\nCandidate answer says Spain won 5 total medals at 1984 Summer Olympics, gold in sailing (470 class). Wait, let me verify: Spain at 1984 Olympics actually won 1 gold, 2 silver, 2 bronze = 5 medals? Let me recall. Spain at 1984 Summer Olympics won 1 gold, 2 silver, 2 bronze \u2014 total 6? Actually, Spain won 1 gold, 2 silver, 2 bronze = 5 medals? Hmm, that's 1+2+2 = 5. Yes, 5 total medals.\n\nThe candidate says the gold was in sailing \u2014 470 class, Luis Doreste and Roberto Molina. Actually Spain's gold at 1984 was in sailing (470 class). Yes, that's correct. Also Jos\u00e9 Manuel Abascal bronze in 1500m, basketball silver, rowing coxless pair silver... The candidate lists only 4 medals (1 gold, 2 silver, 1 bronze), which is 4, but says \"full 1984",
+  "correct": false
+}

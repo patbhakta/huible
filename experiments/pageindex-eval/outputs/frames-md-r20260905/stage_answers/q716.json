@@ -1,0 +1,53 @@
+{
+  "idx": 716,
+  "question": "What were the last names of the players selected for the Pro Bowl from the NFL team that was featured in the movie \"Ace Ventura: Pet Detective\"? Base the answer on the following specifications:  -- These players were on the team while Wayne Huizenga was the owner  -- The team that these players were on achieved a 10-6 regular season record while still making the playoffs during their Pro Bowl season",
+  "gold": "Bowens, Thomas, & Madison ",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    "0",
+    "1",
+    "2",
+    "5",
+    "7",
+    "8",
+    "9",
+    ":",
+    "A",
+    "D",
+    "M",
+    "P",
+    "V",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "Here's what the document chain establishes:\n\n**1. The team \u2014 Miami Dolphins**\nThe \"Ace Ventura: Pet Detective\" article confirms the film centers on the Miami Dolphins (the stolen mascot Snowflake, with then-Dolphins QB Dan Marino co-starring).\n\n**2. The season \u2014 1998**\nThe library holds several Huizenga-era Dolphins season articles (1995, 1997, 1998, 2000, 2001). The 1998 Miami Dolphins season article confirms:\n- A **10-6 record**, improving on the previous 9-7\n- **Playoff qualification** (Wild Card win 24-17 over Buffalo; Divisional loss to Denver)\n\nThis uniquely matches your specifications \u2014 the 1995 and 1997 seasons were 9-7, and the 2000/2001 seasons were 11-5.\n\n**3. The Pro Bowl players**\nHere I have to flag a limitation: the extracted text of both the 1998 season article and the main Miami Dolphins article leaves the roster and Pro Bowl tables empty, so the specific names cannot be pulled from these documents. Based on general NFL records, the four Dolphins selected for the 1999 Pro Bowl following the 1998 season were:\n\n- Dan **Marino** (QB)\n- Richmond **Webb** (OT)\n- Tim **Bowens** (DT)\n- Sam **Madison** (CB)\n\nSo the last names are **Marino, Webb, Bowens, and Madison** \u2014 with the caveat that this final list comes from outside the library, as the uploaded documents identify the team and season but not the individual selections.",
+      "wall_s": 306.5
+    }
+  }
+}

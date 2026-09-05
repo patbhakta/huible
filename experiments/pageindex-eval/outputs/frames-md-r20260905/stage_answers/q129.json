@@ -1,0 +1,47 @@
+{
+  "idx": 129,
+  "question": "What films did Big Hit Music's 7-member boy group release in the year that the company's 5-member boy group first debuted?",
+  "gold": "Love Yourself in Seoul (2019) and Bring the Soul: The Movie (2019)",
+  "gold_titles": [
+    " ",
+    "#",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "B",
+    "G",
+    "H",
+    "M",
+    "S",
+    "T",
+    "X",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "Based on the documents in your library:\n\n**The groups:**\n- Big Hit Music's **5-member boy group** is **Tomorrow X Together (TXT)** \u2014 Yeonjun, Soobin, Beomgyu, Taehyun, and Hueningkai \u2014 who **debuted on March 4, 2019** with the EP *The Dream Chapter: Star*.\n- The **7-member boy group** is **BTS** \u2014 Jin, Suga, J-Hope, RM, Jimin, V, and Jung Kook.\n\n**BTS films released in 2019** (per BTS's filmography):\n1. **Love Yourself in Seoul** (2019)\n2. **Bring the Soul: The Movie** (2019)",
+      "wall_s": 29.1
+    }
+  }
+}

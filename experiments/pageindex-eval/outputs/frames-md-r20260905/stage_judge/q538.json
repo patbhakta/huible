@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "VERDICT: CORRECT\nThe calculation is accurate: 464 years (3150\u20132686 BC) \u00f7 248 years (1776\u20132024) \u2248 1.87, which rounds to 2, matching the gold answer.",
+  "correct": true
+}

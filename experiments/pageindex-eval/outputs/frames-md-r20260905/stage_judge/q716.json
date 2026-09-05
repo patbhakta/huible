@@ -1,0 +1,4 @@
+{
+  "verdict_raw": "The question asks for the last names of players selected for the Pro Bowl from the Miami Dolphins (the team featured in \"Ace Ventura: Pet Detective\"), with specifications:\n- Players were on the team while Wayne Huizenga was the owner\n- The team achieved a 10-6 regular season record while still making the playoffs during their Pro Bowl season\n\nThe gold answer: Bowens, Thomas, & Madison\n\nThe candidate answer identifies: 1998 season (10-6, playoffs) as the season, and lists Marino, Webb, Bowens, and Madison as the Pro Bowl players.\n\nThe gold answer says Bowens, Thomas, & Madison \u2014 which would correspond to the 2000 Miami Dolphins season? Wait, no \u2014 the 2000 season was 11-5. Hmm.\n\nActually, let me think. The Dolphins seasons under Huizenga (owner from 1994/1996 to 2008):\n- 1995: 9-7\n- 1996: 8-8\n- 1997: 9-7\n- 1998: 10-6 \u2713 playoffs\n- 1999: 9-7, playoffs\n- 2000: 11-5, playoffs\n-",
+  "correct": false
+}

@@ -1,0 +1,48 @@
+{
+  "idx": 663,
+  "question": "What was the daily average passenger count in 2011 of the first station on the train line that serves Hiraka Train Station in Japan?",
+  "gold": "2,851 Passengers",
+  "gold_titles": [
+    " ",
+    "%",
+    "'",
+    ",",
+    ".",
+    "/",
+    "5",
+    "8",
+    ":",
+    "C",
+    "D",
+    "H",
+    "K",
+    "L",
+    "R",
+    "S",
+    "[",
+    "]",
+    "a",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "**2,851 passengers daily** (fiscal 2011, boarding passengers only).\n\nHere's the chain of reasoning from your documents:\n\n1. **Hiraka Station** (in Hirakawa, Aomori) is served by the **K\u014dnan Railway K\u014dnan Line**.\n2. The **K\u014dnan Line** runs from **Hirosaki Station** (its northern terminus, i.e., the first station) to Kuroishi Station.\n3. According to the **Hirosaki Station** article, the K\u014dnan Railway portion of Hirosaki Station was used by an average of **2,851 passengers daily in fiscal 2011**.",
+      "wall_s": 35.3
+    }
+  }
+}

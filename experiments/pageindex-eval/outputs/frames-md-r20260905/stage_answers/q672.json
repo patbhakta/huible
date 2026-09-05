@@ -1,0 +1,46 @@
+{
+  "idx": 672,
+  "question": "Which Colombian cyclist was born on the same day as Edmonton Oilers captain Connor McDavid?",
+  "gold": "Egan Bernal",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    "1",
+    "3",
+    ":",
+    "C",
+    "D",
+    "J",
+    "M",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "**Egan Bernal** \u2014 the 2019 Tour de France champion \u2014 was born on January 13, 1997, the exact same birthday as Connor McDavid. Bernal became the first Colombian to win the Tour de France and also won the 2021 Giro d'Italia.",
+      "wall_s": 8.4
+    }
+  }
+}

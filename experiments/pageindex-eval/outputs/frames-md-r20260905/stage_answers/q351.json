@@ -1,0 +1,47 @@
+{
+  "idx": 351,
+  "question": "Which other astronaut flew the same type of aircraft during the Korean War as the first man to step on the moon?",
+  "gold": "John Glenn",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    "9",
+    ":",
+    "A",
+    "F",
+    "G",
+    "J",
+    "M",
+    "N",
+    "P",
+    "[",
+    "]",
+    "a",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "**John Glenn.**\n\nAccording to the documents in your library:\n\n- **Neil Armstrong** (first person to walk on the Moon) flew the **Grumman F9F Panther** during the Korean War, flying 78 combat missions from the aircraft carrier USS Essex with VF-51, including the September 1951 mission in which he lost part of his wing to a cable strung across the hills.\n\n- **John Glenn** was assigned to Marine squadron VMF-311 in South Korea, which was equipped with the F9F Panther jet fighter-bomber. He flew 63 combat missions in the Panther, earning the nickname \"Magnet Ass\" for the flak hits he took \u2014 twice returning to base with over 250 holes in his plane. (He later flew 27 more missions in the F-86 Sabre on an exchange with the U.S. Air Force, during which he shot down three MiG-15s.)\n\nSo Glenn is the other astronaut who flew the same aircraft type as Armstrong during the Korean War.",
+      "wall_s": 68.9
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "idx": 3,
+  "question": "As of August 1, 2024, which country were holders of the FIFA World Cup the last time the UEFA Champions League was won by a club from London?",
+  "gold": "France",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "A",
+    "C",
+    "E",
+    "F",
+    "I",
+    "L",
+    "U",
+    "W",
+    "[",
+    "]",
+    "a",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "**France.**\n\nHere's the reasoning based on the two documents in your library:\n\n1. **Last London club to win the UEFA Champions League (as of August 1, 2024):** Chelsea. The UEFA Champions League article notes that England had three wins in the 2018\u201323 period; the most recent of those won by a London club was Chelsea's 2021 triumph (the only London club ever to win the competition, with titles in 2012 and 2021).\n\n2. **FIFA World Cup holders in 2021:** The FIFA World Cup article confirms France won the 2018 tournament (Didier Deschamps won it \"in 2018, after having won in 1998 as captain\"), and that Argentina were the holders entering the 2026 World Cup \u2014 meaning Argentina took the title in 2022. Therefore, in May 2021, when Chelsea won the Champions League, the reigning FIFA World Cup champions were **France**, who held the title from 2018 until Argentina's victory in 2022.",
+      "wall_s": 88.7
+    }
+  }
+}

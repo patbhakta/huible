@@ -1,0 +1,50 @@
+{
+  "idx": 199,
+  "question": "Which Lord of Montpellier had a child named Tortoseta?",
+  "gold": "William VIII of Montpellier",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "A",
+    "I",
+    "J",
+    "L",
+    "M",
+    "S",
+    "V",
+    "W",
+    "X",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "**William VIII, Lord of Montpellier** had a child named Tortoseta.\n\nAccording to the document, Tortoseta (also called Thomas) was one of the eight children William VIII had with Agnes of Castile, his second wife. William VIII's legitimate marriage to Eudokia Komnene had produced only a daughter, Marie of Montpellier, so he separated from her and married Agnes \u2014 but the Pope ruled this second marriage illegitimate, meaning Tortoseta and his siblings were deemed illegitimate, and Marie eventually inherited the lordship.",
+      "wall_s": 29.1
+    }
+  }
+}

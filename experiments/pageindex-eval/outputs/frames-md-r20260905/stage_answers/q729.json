@@ -1,0 +1,43 @@
+{
+  "idx": 729,
+  "question": "What is the name of the \"pseudo label\" that collected the early collaborations of English architect Sir Peter Cook's son? ",
+  "gold": "Gamsonite",
+  "gold_titles": [
+    " ",
+    "'",
+    "(",
+    ")",
+    ",",
+    ".",
+    "/",
+    ":",
+    "A",
+    "C",
+    "G",
+    "P",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "The pseudo-label was **Gamsonite**. According to the article on A. G. Cook (son of English architect Sir Peter Cook), he created Gamsonite as a \"pseudo-label\" collecting his early collaborations.",
+      "wall_s": 26.8
+    }
+  }
+}

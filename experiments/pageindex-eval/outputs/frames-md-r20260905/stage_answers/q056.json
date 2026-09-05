@@ -1,0 +1,49 @@
+{
+  "idx": 56,
+  "question": "Benjamin Waterhouse Hawkins was commissioned to sculpt a series of life-size dinosaurs between 1852-54.  In this location, one species only had its head and back built with the rest of its body submerged underwater because they didn't know what it looked like then.  Where is this display located in 2024, which dinosaur species was this, and what did the rest of its body look like after all? ",
+  "gold": "Crystal Palace Park.  The dinosaur is Mosasaurus, it had a streamlined body, an elongated tail ending with a downturn supporting a two-lobed fin, and two pairs of flippers. ",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "P",
+    "W",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "All three parts of this question are answered by the documents in your library. Here's what they say:\n\n## Where the display is in 2024\nThe sculptures are the **Crystal Palace Dinosaurs** (the \"Dinosaur Court\" or \"Geological Court\"), located in **Crystal Palace Park, South London**. They're still there today \u2014 Grade I listed since 2007, after major restorations in 2002 and 2021 (including an emergency repair of the Megalosaurus's jaw and a swivel bridge to Dinosaur Island installed in January 2021). The Mosasaurus specifically sits in an odd spot near the secondary island that was originally a waterfall, and much of it isn't even visible from the lakeside path.\n\n## Which species was only built as head and back\n**Mosasaurus** (strictly a giant marine reptile, not a true dinosaur). Only its skulls had been discovered in the Netherlands at the time, so Benjamin Waterhouse Hawkins sculpted just the head and back and submerged the model deep in the lake, leaving the body unseen and undefined. Owen's interpretation made the visible parts look essentially like a **water-going monitor lizard** \u2014 boxy head, nostrils on the side of the skull, monitor-lizard-like lips, and Komodo-dragon-style scales.\n\n## What the rest of its body actually looked like\nBased on later fossil discoveries, *Mosasaurus* was a fully aquatic predator with:\n- A **streamlined body** with a barrel-shaped, deep rib cage (more like an ichthyosaur, marine crocodile, or early whale than a monitor lizard, through convergent evolution)\n- **Four limbs modified into paddle-like flippers** (two pairs) used for steering \u2014 Hermann Schlegel demonstrated this as early as 1854, though his finding was ignored until the 1870s\n- A **long tail ending in a downward bend supporting a two-lobed, paddle-like fluke**, which powered its swimming (a sub-carangiform style, like mackerel)\n\nThe largest species, *M. hoffmanni*, reached up to roughly 12 meters (39 ft) in length.",
+      "wall_s": 75.9
+    }
+  }
+}

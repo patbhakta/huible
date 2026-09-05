@@ -1,0 +1,42 @@
+{
+  "idx": 538,
+  "question": "As of July 4th, 2024, what is the ratio of the number of years in the Early Dynastic Period of Egypt to the number of years since the United States declared independence? Round your answer to the nearest whole number. ",
+  "gold": "2",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "A",
+    "E",
+    "S",
+    "U",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "I have all the information needed from both documents.\n\n**From \"Ancient Egypt\":** The Early Dynastic Period is dated c. 3150\u20132686 BC, a span of 3150 \u2212 2686 = **464 years**.\n\n**From \"United States\":** The Declaration of Independence was adopted on July 4, 1776. As of July 4, 2024, that is 2024 \u2212 1776 = **248 years**.\n\n**Calculation:**\n464 \u00f7 248 \u2248 1.87\n\n**Answer: 2** (rounded to the nearest whole number)",
+      "wall_s": 36.7
+    }
+  }
+}

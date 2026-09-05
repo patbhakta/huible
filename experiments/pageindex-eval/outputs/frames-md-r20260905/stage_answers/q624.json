@@ -1,0 +1,44 @@
+{
+  "idx": 624,
+  "question": "Which two rivers pass through the hometown of a famous Chinese philosopher who was born as Kong Qiu",
+  "gold": "The Si River and the Yi River pass through Qufu, Confucius' home town.",
+  "gold_titles": [
+    " ",
+    "#",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "C",
+    "G",
+    "Q",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "k",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "The two rivers are the **Si River** and the **Yi River**.\n\nKong Qiu is Confucius, and his hometown is Qufu in Shandong province, China. According to the Geography section of the Qufu document: \"The Si River and the Yi River both pass through the city.\" Notably, Confucius's original tomb in the Cemetery of Confucius was erected on the bank of the Sishui (Si) River.",
+      "wall_s": 25.6
+    }
+  }
+}

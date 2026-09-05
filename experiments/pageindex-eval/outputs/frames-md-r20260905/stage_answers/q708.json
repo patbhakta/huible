@@ -1,0 +1,53 @@
+{
+  "idx": 708,
+  "question": "What song did Christina Aguilera release after Britney Spears released \"...Baby One More Time.\"?",
+  "gold": "Genie in a Bottle ",
+  "gold_titles": [
+    " ",
+    "'",
+    "(",
+    ")",
+    ",",
+    ".",
+    "/",
+    ":",
+    "A",
+    "B",
+    "C",
+    "G",
+    "L",
+    "M",
+    "O",
+    "T",
+    "[",
+    "]",
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "Based on your documents, the answer is **\"Genie in a Bottle\"**.\n\nHere's the timeline the documents support:\n\n- Britney Spears released \"...Baby One More Time\" as her debut single on **September 29, 1998** (from the \"...Baby One More Time\" article). That article also notes the song \"changed the market in December\" 1998, \"opening the door\" for the other teen pop performers of the era \u2014 including Christina Aguilera, Jessica Simpson, and Mandy Moore.\n- According to the \"List of songs recorded by Christina Aguilera\" article, Aguilera signed with RCA Records in 1998 and first performed **\"Reflection\"** for the 1998 Disney film *Mulan* soundtrack. She followed this with her debut album ***Christina Aguilera* (1999)**, whose lead single was **\"Genie in a Bottle\"** \u2014 the first of her number-one hits on the US Billboard Hot 100.\n\nSo in the wave that \"...Baby One More Time\" kicked off, Aguilera's breakout release was \"Genie in a Bottle\" in 1999.",
+      "wall_s": 46.4
+    }
+  }
+}

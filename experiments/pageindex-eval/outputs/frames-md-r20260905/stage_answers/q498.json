@@ -1,0 +1,47 @@
+{
+  "idx": 498,
+  "question": "How many more points did Michael Jordan average in his sophomore season (regular season) in the NBA than the first black NBA player averaged during his career (regular season)? Show me a math equation to justify your answer.",
+  "gold": "14.3 PPG  22.7 - 8.4 = 14.3",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "A",
+    "B",
+    "E",
+    "J",
+    "L",
+    "M",
+    "N",
+    "R",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "w",
+    "y"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "I've now searched the entire library (79 documents). Here's what I found:\n\n**From your documents:**\n\n- **Earl Lloyd** (first African American player to play in an NBA game, debuting October 31, 1950): The article states directly: *\"In his NBA career with the Washington Capitols (1950\u20131951), Syracuse Nationals (1952\u20131958) and Detroit Pistons (1958\u20131960), Earl averaged **8.4 points** ... in 560 games over nine seasons.\"* (His career regular-season scoring average: 8.4 PPG.)\n\n- **Michael Jordan**: The article covers his sophomore (second) NBA season, 1985\u201386 \u2014 the year he broke his foot in the third game and missed 64 games \u2014 but does **not** state his scoring average for that season. The regular-season statistics table in the document is image-based and did not extract any numbers. The narrative only gives his rookie year (28.2 PPG) and third season (37.1 PPG).\n\n**One figure must come from outside your library:** Jordan's 1985\u201386 regular-season scoring average was **22.7 PPG** (he played only 18 games that season). This is not in your documents, so treat it as external knowledge.\n\n**The math equation:**\n\n$$22.7 - 8.4 = 14.3$$\n\nMichael Jordan averaged **14.3 more points per game** in his sophomore regular season than Earl Lloyd averaged over his career.\n\n(If instead you meant Jordan's 1986\u201387 season \u2014 his second *full* season, which is in your document at 37.1 PPG \u2014 the answer would be 37.1 \u2212 8.4 = **28.7 points**.)",
+      "wall_s": 93.8
+    }
+  }
+}

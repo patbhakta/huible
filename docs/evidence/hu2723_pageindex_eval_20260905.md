@@ -116,6 +116,58 @@ HU-2701 relay). The FRAMES wiki-corpus comparison (via `md_to_tree`) is the
 follow-up that would test corpus-scale generality before this verdict is
 treated as categorical.
 
+## FRAMES corpus pass (run 3) — `outputs/frames-md-r20260905/`
+
+The "measured FRAMES numbers vs baseline" deliverable: PageIndex Flash
+agent retrieval on the exact r20260905b sample (20 questions, 79-article
+wiki corpus, same glm-5.3 judge).
+
+Harness: `scripts/run_frames_md_h2h.py`. Wiki plaintext has no native
+structure, so each article becomes a markdown doc; `md_to_tree` builds the
+tree with node summaries ON (glm-5.3-flash, Flash product behavior), and
+markdown line ranges map to 60-line pseudo-pages so the SDK's page-based
+agent tools work unmodified. Docs inserted via the public `DocStore`
+API — no fork. Store persists; reruns resume.
+
+| arm | score | tok/query (chat) | calls/query | s/query |
+|---|---|---|---|---|
+| PageIndex agent retrieval | **16/20 = 0.80** | ~40.3k | 5.1 | ~100 |
+| flat pipeline (r20260905b) | **12/20 = 0.60** | ~1.7k context | — | ~4 |
+
+Overlap: both correct 11, **PI-only 5**, baseline-only 1, neither 3.
+Index cost: 5.8k tok/article (73 calls for 79 docs, summaries batched).
+
+Per-question deltas: PI flips q129, q624, q663, q672, q729 to correct
+(multi-hop questions the flat stack missed); it loses q749 (baseline got
+it). q330/q444 stay open for both. q716's first pass hit `max_turns=8`
+(harness param); re-run at 16 turns answered and was judged INCORRECT —
+final 20/20 scored.
+
+### Verdict (revised — supersedes the single-doc verdict above)
+
+The two measurements compose into one answer:
+
+- **Single-document lookups** (earnings PDF, 10q): flat matches PageIndex
+  (0.90 = 0.90) at ~28% of the token cost. Flat stays the default path.
+- **Corpus-wide multi-hop retrieval** (FRAMES, 20q): PageIndex wins
+  decisively, 0.80 vs 0.60, flipping five questions the flat stack missed
+  — at ~24× the per-query tokens (40.3k vs 1.7k).
+
+Per the original adoption gate ("adopt only if it beats or meaningfully
+complements the measured baseline"), this is a **beat** on the hard
+retrieval slice. Recommendation: PageIndex-style tree+reasoning retrieval
+is the **escalation lane for hard multi-hop queries** (router pattern:
+flat first, tree-reasoning on low-confidence), not the default retrieval
+path — the cost asymmetry is 24×, and 3 of 4 flat misses stayed missed for
+PI too (neither=3). No vector store enters the architecture either way.
+
+Scope caveats: FRAMES arm indexes plaintext wiki (no native structure —
+weaker than Flash on structured PDFs); pseudo-page mapping is
+harness-side; judge branch tokens for run 1 not persisted (excluded from
+metered figures); baseline answerer was glm-5.3 vs PI chat glm-5.3-flash
+(lane-consistent, model-different — recorded). Gemini-flash rerun still
+blocked on the HU-2701 relay.
+
 ## Next (retrieval leg — the actual head-to-head)
 
 ~~1. PageIndex reasoning retrieval vs our flat baseline on the same sample~~
@@ -123,7 +175,8 @@ treated as categorical.
 ~~3. $/page indexed + $/query at retrieval~~ **done this block** (token
 units; $ pending rate card).
 
-2. FRAMES wiki-corpus pass via `md_to_tree` (corpus-scale generality check).
+2. FRAMES wiki-corpus pass via `md_to_tree` (corpus-scale generality).
+   **done this block** — see FRAMES section above.
 4. Gemini-flash tree-gen rerun once the HU-2701 relay is back; cost/quality
    comparison across lanes.
 5. Vault record after measurement (measure-first doctrine) — this doc is

@@ -1,0 +1,48 @@
+{
+  "idx": 383,
+  "question": "This town was the original location of the tallest Christmas Tree displayed at the Rockefeller Center. This was also home to the author of a famous children's book series. What is the name of this series?",
+  "gold": "Doctor Dolittle",
+  "gold_titles": [
+    " ",
+    "'",
+    ",",
+    ".",
+    "/",
+    ":",
+    "C",
+    "D",
+    "H",
+    "K",
+    "L",
+    "R",
+    "T",
+    "[",
+    "]",
+    "a",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "r",
+    "s",
+    "t",
+    "u",
+    "w"
+  ],
+  "arms": {
+    "pageindex_frames": {
+      "arm": "pageindex_frames",
+      "final_answer": "**The Doctor Dolittle series.**\n\nThe chain of reasoning, verified against your documents:\n\n1. **The town is Killingworth, Connecticut.** The tallest tree ever displayed at Rockefeller Center \u2014 a 100-foot Norway spruce erected in 1999 \u2014 was cut from a resident's yard in Killingworth.\n\n2. **The author is Hugh Lofting.** The biography in your library confirms Lofting \"emigrated with his family to Killingworth, Connecticut, in 1919\" and lived there until his death; he is buried in Killingworth's Evergreen Cemetery.\n\n3. **The series is Doctor Dolittle.** Per the Doctor Dolittle article, it is \"a series of children's books by Hugh Lofting starting with the 1920 *The Story of Doctor Dolittle*.\" The second book, *The Voyages of Doctor Dolittle* (1922), won the Newbery Medal, and the series grew to fifteen books \u2014 about a physician who can speak with animals.",
+      "wall_s": 137.7
+    }
+  }
+}
