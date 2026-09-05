@@ -1,0 +1,24 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q613"
+  },
+  "provenance": {
+    "question_idx": 613,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 17,
+    "docs": [
+      {
+        "title": "Grover Cleveland",
+        "chars": 66708
+      },
+      {
+        "title": "List of prime ministers of the United Kingdom",
+        "chars": 5610
+      }
+    ]
+  }
+}

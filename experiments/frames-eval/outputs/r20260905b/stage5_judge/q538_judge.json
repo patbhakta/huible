@@ -1,0 +1,13 @@
+{
+ "question_idx": 538,
+ "gold": "2",
+ "candidate": "2",
+ "verdict_raw": "VERDICT: CORRECT\nThe Early Dynastic Period (~464 years) divided by 248 years gives ~1.87, rounding to 2.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 121,
+  "completion_tokens": 71,
+  "total_tokens": 192,
+  "model": "glm-5.3"
+ }
+}

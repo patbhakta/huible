@@ -1,0 +1,17 @@
+{
+ "question_idx": 749,
+ "question": "In the 1984 Olympics, what sport did the country that got 5 total medals win a gold medal in?",
+ "raw": "Spain won 5 total medals at the 1984 Summer Olympics. Their gold medal came in sailing \u2014 specifically in the 470 class event, held in Long Beach, California.\n\nFinal answer: Sailing (the 470 class).",
+ "final_answer": "Sailing (the 470 class).",
+ "context_chars": 1006,
+ "strategy": "v4-arm-a",
+ "memory_count": 4,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 334,
+  "completion_tokens": 147,
+  "total_tokens": 481,
+  "model": "glm-5.3"
+ }
+}

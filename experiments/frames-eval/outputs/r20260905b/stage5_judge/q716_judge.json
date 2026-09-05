@@ -1,0 +1,13 @@
+{
+ "question_idx": 716,
+ "gold": "Bowens, Thomas, & Madison",
+ "candidate": "Armstrong and Izzo",
+ "verdict_raw": "VERDICT: INCORRECT\nThe correct players are Bowens, Thomas, and Madison, not Armstrong and Izzo.",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 161,
+  "completion_tokens": 28,
+  "total_tokens": 189,
+  "model": "glm-5.3"
+ }
+}

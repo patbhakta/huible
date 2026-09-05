@@ -1,0 +1,22 @@
+{
+ "run": "r20260905b",
+ "scope": {
+  "team_id": "frames-eval",
+  "agent_id": "frames-r20260905b"
+ },
+ "sessions": [
+  "frames-r20260905b-q003",
+  "frames-r20260905b-q056",
+  "frames-r20260905b-q129",
+  "frames-r20260905b-q199",
+  "frames-r20260905b-q330",
+  "..."
+ ],
+ "attempted": {
+  "frames-r20260905b-q003": {
+   "path": null,
+   "note": "no delete route \u2014 scope remains namespaced/quarantined"
+  }
+ },
+ "at": "2026-09-05T04:31:36.241055+00:00"
+}

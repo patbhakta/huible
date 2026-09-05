@@ -1,0 +1,13 @@
+{
+ "question_idx": 56,
+ "gold": "Crystal Palace Park.  The dinosaur is Mosasaurus, it had a streamlined body, an elongated tail ending with a downturn supporting a two-lobed fin, and two pairs of flippers.",
+ "candidate": "Crystal Palace Park, South London; the species was Mosasaurus; its full body actually had four paddle-like flippers and a shark-like fluked tail for fully aquatic swimming.",
+ "verdict_raw": "VERDICT: CORRECT\nLocation (Crystal Palace Park) and species (Mosasaurus) match; the body description (two pairs of flippers, fluked tail for swimming) is semantically equivalent to the gold.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 228,
+  "completion_tokens": 100,
+  "total_tokens": 328,
+  "model": "glm-5.3"
+ }
+}

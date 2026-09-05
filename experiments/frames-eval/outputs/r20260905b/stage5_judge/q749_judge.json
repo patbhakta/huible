@@ -1,0 +1,13 @@
+{
+ "question_idx": 749,
+ "gold": "Sailing",
+ "candidate": "Sailing (the 470 class).",
+ "verdict_raw": "VERDICT: CORRECT\nThe candidate answer \"Sailing (the 470 class)\" matches the gold answer \"Sailing,\" with additional specificity about the event class.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 101,
+  "completion_tokens": 38,
+  "total_tokens": 139,
+  "model": "glm-5.3"
+ }
+}

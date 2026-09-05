@@ -1,0 +1,13 @@
+{
+ "question_idx": 351,
+ "gold": "John Glenn",
+ "candidate": "John Glenn",
+ "verdict_raw": "VERDICT: CORRECT\n\nThe candidate answer \"John Glenn\" is identical to the gold answer \"John Glenn\" and refers to the same individual who flew the same type of aircraft (Grumman F9F Panther) as Neil Armstrong during the Korean War",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 94,
+  "completion_tokens": 256,
+  "total_tokens": 350,
+  "model": "glm-5.3"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "question_idx": 199,
+ "gold": "William VIII of Montpellier",
+ "candidate": "William VIII of Montpellier",
+ "verdict_raw": "VERDICT: CORRECT\nThe candidate matches the gold answer exactly.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 90,
+  "completion_tokens": 17,
+  "total_tokens": 107,
+  "model": "glm-5.3"
+ }
+}

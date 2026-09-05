@@ -1,0 +1,17 @@
+{
+ "question_idx": 129,
+ "question": "What films did Big Hit Music's 7-member boy group release in the year that the company's 5-member boy group first debuted?",
+ "raw": "Based on the reference material, Tomorrow X Together is Big Hit's 5-member group, which debuted in 2019. In that year, BTS (Big Hit's 7-member group) released the film \"Bring the Soul: The Movie.\"\n\nFinal answer: Bring the Soul: The Movie",
+ "final_answer": "Bring the Soul: The Movie",
+ "context_chars": 4423,
+ "strategy": "v4-arm-a",
+ "memory_count": 21,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1310,
+  "completion_tokens": 116,
+  "total_tokens": 1426,
+  "model": "glm-5.3"
+ }
+}

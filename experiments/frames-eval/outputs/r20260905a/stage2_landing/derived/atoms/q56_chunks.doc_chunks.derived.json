@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q56"
+  },
+  "provenance": {
+    "question_idx": 56,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 24,
+    "docs": [
+      {
+        "title": "Benjamin Waterhouse Hawkins",
+        "chars": 11029
+      },
+      {
+        "title": "Crystal Palace Dinosaurs",
+        "chars": 18920
+      },
+      {
+        "title": "Mosasaurus",
+        "chars": 67958
+      }
+    ]
+  }
+}

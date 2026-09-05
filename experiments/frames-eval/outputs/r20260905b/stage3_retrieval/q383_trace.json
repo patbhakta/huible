@@ -1,0 +1,19 @@
+{
+ "question_idx": 383,
+ "session_id": "frames-r20260905b-q383",
+ "query": "This town was the original location of the tallest Christmas Tree displayed at the Rockefeller Center. This was also home to the author of a famous children's book series. What is the name of this series?",
+ "strategy": "v4-arm-a",
+ "memory_count": 8,
+ "context_chars": 1810,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n[[Rockefeller Center Christmas Tree | q383 doc4/4 chunk1]]\nIn 1955, artist Valerie Clarebout's towering wire herald angels were added to the Channel Gardens in front of the tree near Fifth Avenue. Cla\n[[Rockefeller Center Christmas Tree | q383 doc4/4 chunk0]]\nThe Rockefeller Center Christmas Tree is a large Christmas tree placed annually at Rockefeller Center, in Midtown Manhattan, New York City, U\n[[Hugh Lofting | q383 doc2/4 chunk0]]\nHugh John Lofting (14 January 1886 \u2013 26 September 1947) was an English-American writer, trained as a civil engineer, who created the classic children's literature\n[[Killingworth, Connecticut | q383 doc3/4 chunk1]]\n== Notable people ==\nJeff Bagwell, Hall of Fame Major League Baseball player for the Houston Astros\nCarleton Beals, journalist, author, historian, an\n[[Doctor Dolittle | q383 doc1/4 chunk0]]\nDoctor John Dolittle is the central character of a series of children's books by Hugh Lofting starting with the 1920 The Story of Doctor Dolittle. He is a phys\n[[Doctor Dolittle | q383 doc1/4 chunk2]]\n1928: Doktor Dolittle und seine Tiere (Doctor Dolittle and his Animals), a silent animated short in German by Lotte Reiniger\n1970\u20131972: Doctor Dolittle animate\n[[Doctor Dolittle | q383 doc1/4 chunk1]]\n== Chronology ==\nThe main events of The Story of Doctor Dolittle take place in 1819 or 1820, although the events of the early chapters seem to be spread over s\n[[Killingworth, Connecticut | q383 doc3/4 chunk0]]\nKillingworth is a town in Middlesex County, Connecticut, United States. The town is part of the Lower Connecticut River Valley Planning Region. The p\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ]
+}

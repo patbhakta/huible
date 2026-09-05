@@ -1,0 +1,17 @@
+{
+ "question_idx": 56,
+ "question": "Benjamin Waterhouse Hawkins was commissioned to sculpt a series of life-size dinosaurs between 1852-54.  In this location, one species only had its head and back built with the rest of its body submerged underwater because they didn't know what it looked like then.  Where is this display located in 2024, which dinosaur species was this, and what did the rest of its body look like after all? ",
+ "raw": "The display is the Crystal Palace Dinosaurs in Crystal Palace Park, South London (Grade II listed since 1973). The species was the Mosasaurus \u2014 Hawkins built only its head and part of its back, leaving the rest of the body \"submerged\" in the lake because the complete anatomy wasn't known at the time. In reality, the rest of Mosasaurus had a fully aquatic body: paddle-like flippers for all four limbs and a shark-like (downward-bent) tail fin, making it a streamlined swimming marine reptile \u2014 not the partially submerged, crocodile-like creature Hawkins envisioned.\n\nFinal answer: Crystal Palace Park, South London; the species was Mosasaurus; its full body actually had four paddle-like flippers and a shark-like fluked tail for fully aquatic swimming.",
+ "final_answer": "Crystal Palace Park, South London; the species was Mosasaurus; its full body actually had four paddle-like flippers and a shark-like fluked tail for fully aquatic swimming.",
+ "context_chars": 5227,
+ "strategy": "v4-arm-a",
+ "memory_count": 25,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1496,
+  "completion_tokens": 238,
+  "total_tokens": 1734,
+  "model": "glm-5.3"
+ }
+}

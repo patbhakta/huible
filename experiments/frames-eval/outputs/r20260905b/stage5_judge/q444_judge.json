@@ -1,0 +1,13 @@
+{
+ "question_idx": 444,
+ "gold": "Five",
+ "candidate": "Cannot be determined from the reference material.",
+ "verdict_raw": "VERDICT: INCORRECT\nThe candidate states it cannot be determined, but the gold answer asserts a specific count of five, so they are not semantically equivalent.",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 117,
+  "completion_tokens": 55,
+  "total_tokens": 172,
+  "model": "glm-5.3"
+ }
+}

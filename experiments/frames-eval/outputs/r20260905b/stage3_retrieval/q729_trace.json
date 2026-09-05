@@ -1,0 +1,19 @@
+{
+ "question_idx": 729,
+ "session_id": "frames-r20260905b-q729",
+ "query": "What is the name of the \"pseudo label\" that collected the early collaborations of English architect Sir Peter Cook's son? ",
+ "strategy": "v4-arm-a",
+ "memory_count": 7,
+ "context_chars": 1609,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n[[Peter Cook (architect) | q729 doc2/2 chunk0]]\nSir Peter Cook (born 22 October 1936) is an English architect, lecturer and writer on architectural subjects. He was a founder of Archigram, and was kni\n[[A. G. Cook | q729 doc1/2 chunk0]]\nAlexander Guy Cook (born 23 August 1990) is an English record producer. He first became known as founder of the influential record label PC Music in 2013; its signe\n[[Peter Cook (architect) | q729 doc2/2 chunk1]]\n== Publications ==\n1967 \u2013 Architecture: Action and Plan. London: Studio Vista.\n1970 \u2013 Experimental Architecture. London/New York: Studio Vista/Universal\n[[A. G. Cook | q729 doc1/2 chunk1]]\nCook worked with Sophie to produce a song for QT, a pop singer portrayed by American performance artist Hayden Dunham. She found Cook through his work online and wa\n[[A. G. Cook | q729 doc1/2 chunk3]]\nCook co-produced another song with Utada in 2022, called \"Kimi ni Much\u016b\", and remixed Utada's song \"Face My Fears\" for her album Bad Mode. In 2022, he co-wrote and \n[[A. G. Cook | q729 doc1/2 chunk2]]\n=== 2017\u20132020: Charli XCX, J\u00f3nsi, 7G and Apple ===\nIn March 2017, Charli XCX's mixtape Number 1 Angel was released, prominently featuring production by Cook and oth\n[[A. G. Cook | q729 doc1/2 chunk4]]\n== Personal life ==\nCook moved to Los Angeles in 2019. He is in a relationship with fellow musician and collaborator Alaska Reid.\n\n== Discography ==\n\n7G (2020)\nAppl\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ]
+}

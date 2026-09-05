@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q3"
+  },
+  "provenance": {
+    "question_idx": 3,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 28,
+    "docs": [
+      {
+        "title": "FIFA World Cup",
+        "chars": 38762
+      },
+      {
+        "title": "London",
+        "chars": 59874
+      },
+      {
+        "title": "UEFA Champions League",
+        "chars": 32040
+      }
+    ]
+  }
+}

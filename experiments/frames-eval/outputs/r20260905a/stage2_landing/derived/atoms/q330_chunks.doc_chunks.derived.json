@@ -1,0 +1,32 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q330"
+  },
+  "provenance": {
+    "question_idx": 330,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 21,
+    "docs": [
+      {
+        "title": "2019 European Parliament election in Lombardy",
+        "chars": 463
+      },
+      {
+        "title": "City of London",
+        "chars": 56436
+      },
+      {
+        "title": "City of London Police",
+        "chars": 14169
+      },
+      {
+        "title": "Forza Italia (2013)",
+        "chars": 22575
+      }
+    ]
+  }
+}

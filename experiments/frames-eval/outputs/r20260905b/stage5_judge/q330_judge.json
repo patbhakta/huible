@@ -1,0 +1,13 @@
+{
+ "question_idx": 330,
+ "gold": "10101110",
+ "candidate": "10110101",
+ "verdict_raw": "VERDICT: INCORRECT\nThe candidate binary 10110101 equals 181, while the gold answer 10101110 equals 174; the values differ.",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 120,
+  "completion_tokens": 154,
+  "total_tokens": 274,
+  "model": "glm-5.3"
+ }
+}

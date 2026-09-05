@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q498"
+  },
+  "provenance": {
+    "question_idx": 498,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 22,
+    "docs": [
+      {
+        "title": "Earl Lloyd",
+        "chars": 9786
+      },
+      {
+        "title": "Michael Jordan",
+        "chars": 68927
+      },
+      {
+        "title": "Race and ethnicity in the NBA",
+        "chars": 7811
+      }
+    ]
+  }
+}

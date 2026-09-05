@@ -1,0 +1,24 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q538"
+  },
+  "provenance": {
+    "question_idx": 538,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 39,
+    "docs": [
+      {
+        "title": "Ancient Egypt",
+        "chars": 84123
+      },
+      {
+        "title": "United States",
+        "chars": 93378
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+ "question_idx": 663,
+ "question": "What was the daily average passenger count in 2011 of the first station on the train line that serves Hiraka Train Station in Japan?",
+ "raw": "The reference material does not include passenger count data for 2011 or a station list for the K\u014dnan Line.\n\nFinal answer: Not found in the provided reference material.",
+ "final_answer": "Not found in the provided reference material.",
+ "context_chars": 805,
+ "strategy": "v4-arm-a",
+ "memory_count": 3,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 308,
+  "completion_tokens": 104,
+  "total_tokens": 412,
+  "model": "glm-5.3"
+ }
+}

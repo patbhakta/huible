@@ -1,0 +1,17 @@
+{
+ "question_idx": 498,
+ "question": "How many more points did Michael Jordan average in his sophomore season (regular season) in the NBA than the first black NBA player averaged during his career (regular season)? Show me a math equation to justify your answer.",
+ "raw": "Michael Jordan's sophomore NBA season (1985\u201386, limited by injury) saw him average 22.7 points per game, while Earl Lloyd \u2014 the first African American player in the NBA \u2014 averaged 8.4 points per game over his career.\n\nEquation: 22.7 \u2212 8.4 = 14.3\n\nFinal answer: 14.3 more points per game",
+ "final_answer": "14.3 more points per game",
+ "context_chars": 4624,
+ "strategy": "v4-arm-a",
+ "memory_count": 22,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1275,
+  "completion_tokens": 163,
+  "total_tokens": 1438,
+  "model": "glm-5.3"
+ }
+}

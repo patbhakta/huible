@@ -1,0 +1,13 @@
+{
+ "question_idx": 708,
+ "gold": "Genie in a Bottle",
+ "candidate": "\"Genie in a Bottle\"",
+ "verdict_raw": "VERDICT: CORRECT\n\"Genie in a Bottle\" matches the gold answer.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 98,
+  "completion_tokens": 21,
+  "total_tokens": 119,
+  "model": "glm-5.3"
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "question_idx": 199,
+ "session_id": "frames-r20260905b-q199",
+ "query": "Which Lord of Montpellier had a child named Tortoseta?",
+ "strategy": "v4-arm-a",
+ "memory_count": 13,
+ "context_chars": 2741,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n[[William VIII, Lord of Montpellier | q199 doc11/11 chunk0]]\nWilliam VIII (in Occitan: Guilhem; died 1202) was Lord of Montpellier, the son of William VII and Matilda of Burgundy.\nWilliam VIII married\n[[William II of Montpellier | q199 doc4/11 chunk0]]\nWilliam II (or in Occitan: Guilhem II) was the second Lord of Montpellier.\n[[Lords of Montpellier | q199 doc2/11 chunk0]]\nThe Lordship of Montpellier was a feudal jurisdiction in Languedoc with its centre in the city of Montpellier, that existed between 986 and 1344.\n\n== For\n[[William I of Montpellier | q199 doc3/11 chunk0]]\nWilliam I (or in Occitan: Guilhem I) was the founder of a dynasty which bears his name, the Guilhems, Lords of Montpellier. He received his fief (a m\n[[William III, Lord of Montpellier | q199 doc5/11 chunk0]]\nWilliam III (or in Occitan: Guilhem III) was the Lord of Montpellier from 1025 until his death in 1058. He was the son of William II and husb\n[[William IX of Montpellier | q199 doc7/11 chunk0]]\nWilliam IX (Occitan Guilhem or Guillem) was the lord of Montpellier from 1202 until 1204. He was the last lord of the Guilhem lineage.\nWilliam IX wa\n[[William VII, Lord of Montpellier | q199 doc10/11 chunk0]]\nWilliam VII of Montpellier (c.\u20091131 \u2014 c.\u20091172), the eldest son of William VI and of his wife Sibylle, was as 12th century Lord of Montpellie\n[[William IV, Lord of Montpellier | q199 doc6/11 chunk0]]\nWilliam IV (or Guillem IV) was the Lord of Montpellier from 1058 until his death in 1068. He was the son of William III and Beliardis. He was \n[[William V, Lord of Montpellier | q199 doc8/11 chunk0]]\nWilliam V (or Guilhem V; died 1121) was the Lord of Montpellier from 1068 until his death. He was the son of William IV.\nSoon after his father'\n[[William VI, Lord of Montpellier | q199 doc9/11 chunk1]]\nIn the year one thousand, one hundred and forty-one, the men of Montpellier ejected lord William of Montpellier from the city, and the lord we\n[[William VI, Lord of Montpellier | q199 doc9/11 chunk2]]\n== Marriage and alliance with Aragon ==\nWilliam VI's wife was named Sibylla, of Catalan origin. (According to documents adduced at the annulme\n[[William VI, Lord of Montpellier | q199 doc9/11 chunk0]]\nWilliam VI or Guillem VI (died 1161) was the eldest son of William V and his wife Ermessende, daughter of Count Peter I of Melgueil. William s\n[[James III of Majorca | q199 doc1/11 chunk0]]\nJames III ((1315-04-05)5 April 1315 \u2013 (1349-10-25)25 October 1349), known as James the Rash (or the Unfortunate), was King of Majorca from 1324 to 1344. \n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ]
+}

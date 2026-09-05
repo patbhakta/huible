@@ -1,0 +1,17 @@
+{
+ "question_idx": 444,
+ "question": "How many of Mark Calaway's consecutive Wrestlemania wins occurred in matches that were longer than the final match result in the same year's competition, not including years where Calaway was part of the final result?",
+ "raw": "The question asks for a count that requires match durations and a comparison logic that isn't defined or supported by the reference material. The provided documents about The Streak and The Undertaker list his WrestleMania victories and opponents, but nowhere do they give match lengths/durations, so it's impossible to determine which of his wins occurred in matches \"longer than the final match\" of those events. Additionally, the comparison criterion (final match result vs. his matches, excluding years he was in the main event/final result) is not something the reference material addresses at all.\n\nFinal answer: Cannot be determined from the reference material.",
+ "final_answer": "Cannot be determined from the reference material.",
+ "context_chars": 16673,
+ "strategy": "v4-arm-a",
+ "memory_count": 44,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 4425,
+  "completion_tokens": 161,
+  "total_tokens": 4586,
+  "model": "glm-5.3"
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "question_idx": 823,
+ "question": "Diago Costa played for which club when he was awarded the first FIFA World Cup Goal based on a VAR Decision?",
+ "raw": "Diego Costa scored for Spain at the 2018 FIFA World Cup (against Portugal), and at the time of that tournament he was playing for Atl\u00e9tico Madrid (he had rejoined the club from Chelsea in 2017).\n\nFinal answer: Atl\u00e9tico Madrid",
+ "final_answer": "Atl\u00e9tico Madrid",
+ "context_chars": 5830,
+ "strategy": "v4-arm-a",
+ "memory_count": 28,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1579,
+  "completion_tokens": 111,
+  "total_tokens": 1690,
+  "model": "glm-5.3"
+ }
+}

@@ -1,0 +1,32 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q383"
+  },
+  "provenance": {
+    "question_idx": 383,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 8,
+    "docs": [
+      {
+        "title": "Doctor Dolittle",
+        "chars": 10913
+      },
+      {
+        "title": "Hugh Lofting",
+        "chars": 4301
+      },
+      {
+        "title": "Killingworth, Connecticut",
+        "chars": 5874
+      },
+      {
+        "title": "Rockefeller Center Christmas Tree",
+        "chars": 10102
+      }
+    ]
+  }
+}

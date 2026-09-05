@@ -1,0 +1,60 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q444"
+  },
+  "provenance": {
+    "question_idx": 444,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 81,
+    "docs": [
+      {
+        "title": "The Streak (professional wrestling)",
+        "chars": 28738
+      },
+      {
+        "title": "The Undertaker",
+        "chars": 95824
+      },
+      {
+        "title": "WrestleMania 13",
+        "chars": 17924
+      },
+      {
+        "title": "WrestleMania 29",
+        "chars": 29862
+      },
+      {
+        "title": "WrestleMania IX",
+        "chars": 24866
+      },
+      {
+        "title": "WrestleMania VII",
+        "chars": 20949
+      },
+      {
+        "title": "WrestleMania VIII",
+        "chars": 9062
+      },
+      {
+        "title": "WrestleMania XI",
+        "chars": 18386
+      },
+      {
+        "title": "WrestleMania XII",
+        "chars": 11322
+      },
+      {
+        "title": "WrestleMania XIV",
+        "chars": 31134
+      },
+      {
+        "title": "WrestleMania XV",
+        "chars": 38735
+      }
+    ]
+  }
+}

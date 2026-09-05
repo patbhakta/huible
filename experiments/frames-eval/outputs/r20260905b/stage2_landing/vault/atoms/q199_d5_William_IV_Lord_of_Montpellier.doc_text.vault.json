@@ -1,0 +1,16 @@
+{
+  "atom_type": "doc_text",
+  "tier": "vault",
+  "source": {
+    "file": "frames_q199",
+    "title": "William IV, Lord of Montpellier"
+  },
+  "provenance": {
+    "question_idx": 199,
+    "doc_index": 5,
+    "tier_rule": "verbatim corpus text = canon (HU-1839)"
+  },
+  "content": {
+    "text": "William IV (or Guillem IV) was the Lord of Montpellier from 1058 until his death in 1068. He was the son of William III and Beliardis. He was married to Ermengarde, daughter of Raymond I, Count of Melgueil. He is the first of his dynasty with charters preserved in the family cartulary, the Liber instrumentorum memorialium. They record agreements concerning some local castles in 1059. He was succeeded by his son, William V.\n\n== Notes =="
+  }
+}

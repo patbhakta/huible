@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q708"
+  },
+  "provenance": {
+    "question_idx": 708,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 17,
+    "docs": [
+      {
+        "title": "...Baby One More Time",
+        "chars": 34360
+      },
+      {
+        "title": "Genie in a Bottle",
+        "chars": 28830
+      },
+      {
+        "title": "List of songs recorded by Christina Aguilera",
+        "chars": 1913
+      }
+    ]
+  }
+}

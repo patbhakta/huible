@@ -1,0 +1,17 @@
+{
+ "question_idx": 613,
+ "question": "How many different Prime Ministers of the United Kingdom were there during the first term of Grover Cleveland's presidency, and who were they?",
+ "raw": "During Cleveland's first term (March 1885 \u2013 March 1889), two different individuals served as UK Prime Minister: William Gladstone (until June 1885, and again February\u2013August 1886) and Lord Salisbury (June 1885\u2013February 1886, and from August 1886).\n\nFinal answer: 2 \u2014 William Gladstone and Lord Salisbury",
+ "final_answer": "2 \u2014 William Gladstone and Lord Salisbury",
+ "context_chars": 3619,
+ "strategy": "v4-arm-a",
+ "memory_count": 17,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 936,
+  "completion_tokens": 154,
+  "total_tokens": 1090,
+  "model": "glm-5.3"
+ }
+}

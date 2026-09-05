@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q129"
+  },
+  "provenance": {
+    "question_idx": 129,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 20,
+    "docs": [
+      {
+        "title": "BTS",
+        "chars": 59420
+      },
+      {
+        "title": "BigHit Music",
+        "chars": 4348
+      },
+      {
+        "title": "Tomorrow X Together",
+        "chars": 20596
+      }
+    ]
+  }
+}

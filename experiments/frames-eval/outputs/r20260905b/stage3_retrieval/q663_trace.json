@@ -1,0 +1,19 @@
+{
+ "question_idx": 663,
+ "session_id": "frames-r20260905b-q663",
+ "query": "What was the daily average passenger count in 2011 of the first station on the train line that serves Hiraka Train Station in Japan?",
+ "strategy": "v4-arm-a",
+ "memory_count": 3,
+ "context_chars": 805,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n[[Hiraka Station | q663 doc1/3 chunk0]]\nHiraka Station (\u5e73\u8cc0\u99c5, Hiraka-eki) is a railway station in Hirakawa, Aomori, Japan, operated by the private railway operator K\u014dnan Railway Company.\n\n== Lines ==\nH\n[[Hirosaki Station | q663 doc2/3 chunk0]]\nHirosaki Station (\u5f18\u524d\u99c5, Hirosaki-eki) is a railway station in the city of Hirosaki, Aomori Prefecture, Japan, jointly operated by East Japan Railway Company (J\n[[K\u014dnan Railway K\u014dnan Line | q663 doc3/3 chunk0]]\nThe K\u014dnan Line (\u5f18\u5357\u7dda, K\u014dnan-sen) is a railway route operated by the Japanese private railway operator K\u014dnan Railway in Aomori Prefecture, from Hirosaki\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ]
+}

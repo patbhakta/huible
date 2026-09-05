@@ -1,0 +1,19 @@
+{
+ "question_idx": 749,
+ "session_id": "frames-r20260905b-q749",
+ "query": "In the 1984 Olympics, what sport did the country that got 5 total medals win a gold medal in?",
+ "strategy": "v4-arm-a",
+ "memory_count": 4,
+ "context_chars": 1006,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n[[1984 Summer Olympics medal table | q749 doc1/3 chunk0]]\nThe 1984 Summer Olympics, officially known as the Games of the XXIII Olympiad, were a summer multi-sport event held in Los Angeles, California\n[[Sailing at the 1984 Summer Olympics \u2013 470 | q749 doc2/3 chunk0]]\nThe 470 was a sailing event on the Sailing at the 1984 Summer Olympics program in Long Beach, Los Angeles County, California . Seven \n[[Spain at the 1984 Summer Olympics | q749 doc3/3 chunk0]]\nSpain competed at the 1984 Summer Olympics in Los Angeles, United States. 179 competitors, 163 men and 16 women, took part in 104 events in 2\n[[Spain at the 1984 Summer Olympics | q749 doc3/3 chunk1]]\nThere were eight competitions for men and Spain qualified four boats, but had no women competing in 1984. Although he had competed at the 198\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ]
+}

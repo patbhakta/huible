@@ -1,0 +1,13 @@
+{
+ "question_idx": 129,
+ "gold": "Love Yourself in Seoul (2019) and Bring the Soul: The Movie (2019)",
+ "candidate": "Bring the Soul: The Movie",
+ "verdict_raw": "VERDICT: INCORRECT\nThe gold answer lists two films (Love Yourself in Seoul and Bring the Soul: The Movie), while the candidate includes only one, so it is incomplete.",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 119,
+  "completion_tokens": 58,
+  "total_tokens": 177,
+  "model": "glm-5.3"
+ }
+}

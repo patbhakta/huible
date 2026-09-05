@@ -1,0 +1,24 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q488"
+  },
+  "provenance": {
+    "question_idx": 488,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 2,
+    "docs": [
+      {
+        "title": "Jonathan Tremblay",
+        "chars": 604
+      },
+      {
+        "title": "List of prime ministers of Canada",
+        "chars": 4348
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+ "question_idx": 716,
+ "question": "What were the last names of the players selected for the Pro Bowl from the NFL team that was featured in the movie \"Ace Ventura: Pet Detective\"? Base the answer on the following specifications:  -- These players were on the team while Wayne Huizenga was the owner  -- The team that these players were on achieved a 10-6 regular season record while still making the playoffs during their Pro Bowl season",
+ "raw": "Final answer: Armstrong and Izzo",
+ "final_answer": "Armstrong and Izzo",
+ "context_chars": 6232,
+ "strategy": "v4-arm-a",
+ "memory_count": 30,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1716,
+  "completion_tokens": 266,
+  "total_tokens": 1982,
+  "model": "glm-5.3"
+ }
+}

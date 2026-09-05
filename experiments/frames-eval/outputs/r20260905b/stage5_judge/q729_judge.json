@@ -1,0 +1,13 @@
+{
+ "question_idx": 729,
+ "gold": "Gamsonite",
+ "candidate": "Dux Kidz",
+ "verdict_raw": "VERDICT: INCORRECT\n\"Dux Kidz\" is not the same as the gold answer \"Gamsonite.\"",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 99,
+  "completion_tokens": 49,
+  "total_tokens": 148,
+  "model": "glm-5.3"
+ }
+}

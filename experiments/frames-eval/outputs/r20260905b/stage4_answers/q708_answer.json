@@ -1,0 +1,17 @@
+{
+ "question_idx": 708,
+ "question": "What song did Christina Aguilera release after Britney Spears released \"...Baby One More Time.\"?",
+ "raw": "Based on the reference material, Britney Spears released \"...Baby One More Time\" in 1998 (sent to radio September 29, 1998, from her 1999 debut album), and Christina Aguilera then released \"Genie in a Bottle,\" which entered the Billboard Hot 100 in July 1999 from her self-titled debut album.\n\nFinal answer: \"Genie in a Bottle\"",
+ "final_answer": "\"Genie in a Bottle\"",
+ "context_chars": 3619,
+ "strategy": "v4-arm-a",
+ "memory_count": 17,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1064,
+  "completion_tokens": 86,
+  "total_tokens": 1150,
+  "model": "glm-5.3"
+ }
+}

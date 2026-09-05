@@ -1,0 +1,13 @@
+{
+ "question_idx": 613,
+ "gold": "There were two different Prime Ministers of the United Kingdom during Grover Cleveland's first term as president, and they were William Ewart Gladstone and Robert Gascoyne-Cecil.",
+ "candidate": "2 \u2014 William Gladstone and Lord Salisbury",
+ "verdict_raw": "VERDICT: CORRECT\nThe count (2) matches, and \"William Gladstone\" and \"Lord Salisbury\" correctly refer to William Ewart Gladstone and Robert Gascoyne-Cecil.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 139,
+  "completion_tokens": 44,
+  "total_tokens": 183,
+  "model": "glm-5.3"
+ }
+}

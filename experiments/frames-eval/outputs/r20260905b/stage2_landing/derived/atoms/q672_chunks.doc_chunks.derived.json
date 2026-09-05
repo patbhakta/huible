@@ -1,0 +1,24 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q672"
+  },
+  "provenance": {
+    "question_idx": 672,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 18,
+    "docs": [
+      {
+        "title": "Connor McDavid",
+        "chars": 51295
+      },
+      {
+        "title": "January 13",
+        "chars": 30998
+      }
+    ]
+  }
+}

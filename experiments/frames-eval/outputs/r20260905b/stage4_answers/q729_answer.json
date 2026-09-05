@@ -1,0 +1,17 @@
+{
+ "question_idx": 729,
+ "question": "What is the name of the \"pseudo label\" that collected the early collaborations of English architect Sir Peter Cook's son? ",
+ "raw": "Final answer: Dux Kidz",
+ "final_answer": "Dux Kidz",
+ "context_chars": 1609,
+ "strategy": "v4-arm-a",
+ "memory_count": 7,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 528,
+  "completion_tokens": 151,
+  "total_tokens": 679,
+  "model": "glm-5.3"
+ }
+}

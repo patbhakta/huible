@@ -1,0 +1,60 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q199"
+  },
+  "provenance": {
+    "question_idx": 199,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 13,
+    "docs": [
+      {
+        "title": "James III of Majorca",
+        "chars": 2881
+      },
+      {
+        "title": "Lords of Montpellier",
+        "chars": 2315
+      },
+      {
+        "title": "William I of Montpellier",
+        "chars": 397
+      },
+      {
+        "title": "William II of Montpellier",
+        "chars": 74
+      },
+      {
+        "title": "William III, Lord of Montpellier",
+        "chars": 363
+      },
+      {
+        "title": "William IV, Lord of Montpellier",
+        "chars": 439
+      },
+      {
+        "title": "William IX of Montpellier",
+        "chars": 1716
+      },
+      {
+        "title": "William V, Lord of Montpellier",
+        "chars": 2242
+      },
+      {
+        "title": "William VI, Lord of Montpellier",
+        "chars": 10995
+      },
+      {
+        "title": "William VII, Lord of Montpellier",
+        "chars": 1515
+      },
+      {
+        "title": "William VIII, Lord of Montpellier",
+        "chars": 994
+      }
+    ]
+  }
+}

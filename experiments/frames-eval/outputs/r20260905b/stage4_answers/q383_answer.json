@@ -1,0 +1,17 @@
+{
+ "question_idx": 383,
+ "question": "This town was the original location of the tallest Christmas Tree displayed at the Rockefeller Center. This was also home to the author of a famous children's book series. What is the name of this series?",
+ "raw": "Hugh Lofting, creator of the Doctor Dolittle series, lived in Killingworth, Connecticut \u2014 the town associated with the original Rockefeller Center tree.\n\nFinal answer: Doctor Dolittle",
+ "final_answer": "Doctor Dolittle",
+ "context_chars": 1810,
+ "strategy": "v4-arm-a",
+ "memory_count": 8,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 544,
+  "completion_tokens": 81,
+  "total_tokens": 625,
+  "model": "glm-5.3"
+ }
+}

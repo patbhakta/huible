@@ -1,0 +1,13 @@
+{
+ "question_idx": 624,
+ "gold": "The Si River and the Yi River pass through Qufu, Confucius' home town.",
+ "candidate": "The Zhu River and the Yi River, in Qufu, Shandong.",
+ "verdict_raw": "VERDICT: INCORRECT\nThe Zhu River is wrong; the gold answer names the Si River and the Yi River.",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 122,
+  "completion_tokens": 28,
+  "total_tokens": 150,
+  "model": "glm-5.3"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "question_idx": 663,
+ "gold": "2,851 Passengers",
+ "candidate": "Not found in the provided reference material.",
+ "verdict_raw": "VERDICT: INCORRECT\nThe gold answer gives a specific figure (2,851 passengers), while the candidate says the information was not found, so it does not match.",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 109,
+  "completion_tokens": 40,
+  "total_tokens": 149,
+  "model": "glm-5.3"
+ }
+}

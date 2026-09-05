@@ -1,0 +1,17 @@
+{
+ "question_idx": 3,
+ "question": "As of August 1, 2024, which country were holders of the FIFA World Cup the last time the UEFA Champions League was won by a club from London?",
+ "raw": "The last London club to win the UEFA Champions League was Chelsea in 2021. At that time, the reigning FIFA World Cup holders were France (winners of the 2018 World Cup).\n\nFinal answer: France",
+ "final_answer": "France",
+ "context_chars": 6031,
+ "strategy": "v4-arm-a",
+ "memory_count": 29,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1609,
+  "completion_tokens": 72,
+  "total_tokens": 1681,
+  "model": "glm-5.3"
+ }
+}

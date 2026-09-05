@@ -1,0 +1,17 @@
+{
+ "question_idx": 199,
+ "question": "Which Lord of Montpellier had a child named Tortoseta?",
+ "raw": "The reference material doesn't explicitly mention Tortoseta, but historically Tortoseta was a daughter of William VIII, Lord of Montpellier.\n\nFinal answer: William VIII of Montpellier",
+ "final_answer": "William VIII of Montpellier",
+ "context_chars": 2741,
+ "strategy": "v4-arm-a",
+ "memory_count": 13,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 840,
+  "completion_tokens": 126,
+  "total_tokens": 966,
+  "model": "glm-5.3"
+ }
+}

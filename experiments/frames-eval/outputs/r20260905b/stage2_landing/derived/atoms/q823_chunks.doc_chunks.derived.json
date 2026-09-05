@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q823"
+  },
+  "provenance": {
+    "question_idx": 823,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 26,
+    "docs": [
+      {
+        "title": "2018 FIFA World Cup",
+        "chars": 39545
+      },
+      {
+        "title": "Diego Costa",
+        "chars": 43462
+      },
+      {
+        "title": "Video assistant referee",
+        "chars": 29756
+      }
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q716"
+  },
+  "provenance": {
+    "question_idx": 716,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 30,
+    "docs": [
+      {
+        "title": "1995 Miami Dolphins season",
+        "chars": 1394
+      },
+      {
+        "title": "1997 Miami Dolphins season",
+        "chars": 1677
+      },
+      {
+        "title": "1998 Miami Dolphins season",
+        "chars": 1533
+      },
+      {
+        "title": "1999 Miami Dolphins season",
+        "chars": 8527
+      },
+      {
+        "title": "2000 Miami Dolphins season",
+        "chars": 19560
+      },
+      {
+        "title": "2001 Miami Dolphins season",
+        "chars": 3893
+      },
+      {
+        "title": "2008 Miami Dolphins season",
+        "chars": 34112
+      },
+      {
+        "title": "Ace Ventura: Pet Detective",
+        "chars": 16166
+      },
+      {
+        "title": "Miami Dolphins",
+        "chars": 38311
+      }
+    ]
+  }
+}

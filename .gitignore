@@ -17,3 +17,8 @@ docker/runtime/app-state/*.json
 # W1 durable fastembed model cache (mounted at /var/lib/huible, 9ae81ea)
 docker/runtime/app-state/.cache/
 
+# HU-2708 FRAMES eval: raw upstream corpus (re-fetchable; manifests + landed
+# vault atoms are committed)
+experiments/frames-eval/outputs/*/stage0_corpus/test.tsv
+experiments/frames-eval/outputs/*/stage0_corpus/articles.json
+

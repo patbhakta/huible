@@ -1,0 +1,16 @@
+{
+  "atom_type": "doc_text",
+  "tier": "vault",
+  "source": {
+    "file": "frames_q199",
+    "title": "William II of Montpellier"
+  },
+  "provenance": {
+    "question_idx": 199,
+    "doc_index": 3,
+    "tier_rule": "verbatim corpus text = canon (HU-1839)"
+  },
+  "content": {
+    "text": "William II (or in Occitan: Guilhem II) was the second Lord of Montpellier."
+  }
+}

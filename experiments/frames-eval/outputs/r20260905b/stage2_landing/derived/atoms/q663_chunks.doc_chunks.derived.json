@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q663"
+  },
+  "provenance": {
+    "question_idx": 663,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 3,
+    "docs": [
+      {
+        "title": "Hiraka Station",
+        "chars": 1229
+      },
+      {
+        "title": "Hirosaki Station",
+        "chars": 2759
+      },
+      {
+        "title": "K\u014dnan Railway K\u014dnan Line",
+        "chars": 1575
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q351"
+  },
+  "provenance": {
+    "question_idx": 351,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 49,
+    "docs": [
+      {
+        "title": "Grumman F9F Panther",
+        "chars": 24226
+      },
+      {
+        "title": "John Glenn",
+        "chars": 61913
+      },
+      {
+        "title": "Moon landing",
+        "chars": 57198
+      },
+      {
+        "title": "Neil Armstrong",
+        "chars": 68348
+      }
+    ]
+  }
+}

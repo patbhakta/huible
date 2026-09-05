@@ -1,0 +1,17 @@
+{
+ "question_idx": 351,
+ "question": "Which other astronaut flew the same type of aircraft during the Korean War as the first man to step on the moon?",
+ "raw": "Neil Armstrong flew the F9F Panther in Korea; John Glenn also flew the Grumman F9F Panther during the Korean War.\n\nFinal answer: John Glenn",
+ "final_answer": "John Glenn",
+ "context_chars": 16711,
+ "strategy": "v4-arm-a",
+ "memory_count": 41,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 4607,
+  "completion_tokens": 53,
+  "total_tokens": 4660,
+  "model": "glm-5.3"
+ }
+}

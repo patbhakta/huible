@@ -1,0 +1,13 @@
+{
+ "question_idx": 3,
+ "gold": "France",
+ "candidate": "France",
+ "verdict_raw": "VERDICT: CORRECT\nChelsea (London) won the 2021 UCL, and France held the World Cup at that time (2018 winners).",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 103,
+  "completion_tokens": 60,
+  "total_tokens": 163,
+  "model": "glm-5.3"
+ }
+}

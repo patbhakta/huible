@@ -1,0 +1,17 @@
+{
+ "question_idx": 624,
+ "question": "Which two rivers pass through the hometown of a famous Chinese philosopher who was born as Kong Qiu",
+ "raw": "The hometown is Qufu (in Shandong), Confucius's birthplace. The two rivers flowing through Qufu are the Zhu River (Zhuoshui) and the Yi River.\n\nFinal answer: The Zhu River and the Yi River, in Qufu, Shandong.",
+ "final_answer": "The Zhu River and the Yi River, in Qufu, Shandong.",
+ "context_chars": 4021,
+ "strategy": "v4-arm-a",
+ "memory_count": 19,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1137,
+  "completion_tokens": 133,
+  "total_tokens": 1270,
+  "model": "glm-5.3"
+ }
+}

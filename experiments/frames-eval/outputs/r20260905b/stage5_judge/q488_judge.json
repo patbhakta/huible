@@ -1,0 +1,13 @@
+{
+ "question_idx": 488,
+ "gold": "Justin Trudeau",
+ "candidate": "Justin Trudeau",
+ "verdict_raw": "VERDICT: CORRECT\nTremblay was defeated in 2015, the year Justin Trudeau became prime minister.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 117,
+  "completion_tokens": 28,
+  "total_tokens": 145,
+  "model": "glm-5.3"
+ }
+}

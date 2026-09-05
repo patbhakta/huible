@@ -1,0 +1,559 @@
+[
+ {
+  "question_idx": 3,
+  "session_id": "frames-r20260905b-q003",
+  "docs": [
+   {
+    "title": "FIFA World Cup",
+    "chars": 38762
+   },
+   {
+    "title": "London",
+    "chars": 59874
+   },
+   {
+    "title": "UEFA Champions League",
+    "chars": 32040
+   }
+  ],
+  "messages_pushed": 28,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 56,
+  "session_id": "frames-r20260905b-q056",
+  "docs": [
+   {
+    "title": "Benjamin Waterhouse Hawkins",
+    "chars": 11029
+   },
+   {
+    "title": "Crystal Palace Dinosaurs",
+    "chars": 18920
+   },
+   {
+    "title": "Mosasaurus",
+    "chars": 67958
+   }
+  ],
+  "messages_pushed": 24,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 129,
+  "session_id": "frames-r20260905b-q129",
+  "docs": [
+   {
+    "title": "BTS",
+    "chars": 59420
+   },
+   {
+    "title": "BigHit Music",
+    "chars": 4348
+   },
+   {
+    "title": "Tomorrow X Together",
+    "chars": 20596
+   }
+  ],
+  "messages_pushed": 20,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 199,
+  "session_id": "frames-r20260905b-q199",
+  "docs": [
+   {
+    "title": "James III of Majorca",
+    "chars": 2881
+   },
+   {
+    "title": "Lords of Montpellier",
+    "chars": 2315
+   },
+   {
+    "title": "William I of Montpellier",
+    "chars": 397
+   },
+   {
+    "title": "William II of Montpellier",
+    "chars": 74
+   },
+   {
+    "title": "William III, Lord of Montpellier",
+    "chars": 363
+   },
+   {
+    "title": "William IV, Lord of Montpellier",
+    "chars": 439
+   },
+   {
+    "title": "William IX of Montpellier",
+    "chars": 1716
+   },
+   {
+    "title": "William V, Lord of Montpellier",
+    "chars": 2242
+   },
+   {
+    "title": "William VI, Lord of Montpellier",
+    "chars": 10995
+   },
+   {
+    "title": "William VII, Lord of Montpellier",
+    "chars": 1515
+   },
+   {
+    "title": "William VIII, Lord of Montpellier",
+    "chars": 994
+   }
+  ],
+  "messages_pushed": 13,
+  "add_batches": 1,
+  "gateway_codes": [
+   0
+  ]
+ },
+ {
+  "question_idx": 330,
+  "session_id": "frames-r20260905b-q330",
+  "docs": [
+   {
+    "title": "2019 European Parliament election in Lombardy",
+    "chars": 463
+   },
+   {
+    "title": "City of London",
+    "chars": 56436
+   },
+   {
+    "title": "City of London Police",
+    "chars": 14169
+   },
+   {
+    "title": "Forza Italia (2013)",
+    "chars": 22575
+   }
+  ],
+  "messages_pushed": 21,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 351,
+  "session_id": "frames-r20260905b-q351",
+  "docs": [
+   {
+    "title": "Grumman F9F Panther",
+    "chars": 24226
+   },
+   {
+    "title": "John Glenn",
+    "chars": 61913
+   },
+   {
+    "title": "Moon landing",
+    "chars": 57198
+   },
+   {
+    "title": "Neil Armstrong",
+    "chars": 68348
+   }
+  ],
+  "messages_pushed": 49,
+  "add_batches": 4,
+  "gateway_codes": [
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 383,
+  "session_id": "frames-r20260905b-q383",
+  "docs": [
+   {
+    "title": "Doctor Dolittle",
+    "chars": 10913
+   },
+   {
+    "title": "Hugh Lofting",
+    "chars": 4301
+   },
+   {
+    "title": "Killingworth, Connecticut",
+    "chars": 5874
+   },
+   {
+    "title": "Rockefeller Center Christmas Tree",
+    "chars": 10102
+   }
+  ],
+  "messages_pushed": 8,
+  "add_batches": 1,
+  "gateway_codes": [
+   0
+  ]
+ },
+ {
+  "question_idx": 444,
+  "session_id": "frames-r20260905b-q444",
+  "docs": [
+   {
+    "title": "The Streak (professional wrestling)",
+    "chars": 28738
+   },
+   {
+    "title": "The Undertaker",
+    "chars": 95824
+   },
+   {
+    "title": "WrestleMania 13",
+    "chars": 17924
+   },
+   {
+    "title": "WrestleMania 29",
+    "chars": 29862
+   },
+   {
+    "title": "WrestleMania IX",
+    "chars": 24866
+   },
+   {
+    "title": "WrestleMania VII",
+    "chars": 20949
+   },
+   {
+    "title": "WrestleMania VIII",
+    "chars": 9062
+   },
+   {
+    "title": "WrestleMania XI",
+    "chars": 18386
+   },
+   {
+    "title": "WrestleMania XII",
+    "chars": 11322
+   },
+   {
+    "title": "WrestleMania XIV",
+    "chars": 31134
+   },
+   {
+    "title": "WrestleMania XV",
+    "chars": 38735
+   }
+  ],
+  "messages_pushed": 81,
+  "add_batches": 6,
+  "gateway_codes": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 488,
+  "session_id": "frames-r20260905b-q488",
+  "docs": [
+   {
+    "title": "Jonathan Tremblay",
+    "chars": 604
+   },
+   {
+    "title": "List of prime ministers of Canada",
+    "chars": 4348
+   }
+  ],
+  "messages_pushed": 2,
+  "add_batches": 1,
+  "gateway_codes": [
+   0
+  ]
+ },
+ {
+  "question_idx": 498,
+  "session_id": "frames-r20260905b-q498",
+  "docs": [
+   {
+    "title": "Earl Lloyd",
+    "chars": 9786
+   },
+   {
+    "title": "Michael Jordan",
+    "chars": 68927
+   },
+   {
+    "title": "Race and ethnicity in the NBA",
+    "chars": 7811
+   }
+  ],
+  "messages_pushed": 22,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 538,
+  "session_id": "frames-r20260905b-q538",
+  "docs": [
+   {
+    "title": "Ancient Egypt",
+    "chars": 84123
+   },
+   {
+    "title": "United States",
+    "chars": 93378
+   }
+  ],
+  "messages_pushed": 39,
+  "add_batches": 3,
+  "gateway_codes": [
+   0,
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 613,
+  "session_id": "frames-r20260905b-q613",
+  "docs": [
+   {
+    "title": "Grover Cleveland",
+    "chars": 66708
+   },
+   {
+    "title": "List of prime ministers of the United Kingdom",
+    "chars": 5610
+   }
+  ],
+  "messages_pushed": 17,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 624,
+  "session_id": "frames-r20260905b-q624",
+  "docs": [
+   {
+    "title": "Confucius",
+    "chars": 47008
+   },
+   {
+    "title": "Qufu",
+    "chars": 24625
+   }
+  ],
+  "messages_pushed": 18,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 663,
+  "session_id": "frames-r20260905b-q663",
+  "docs": [
+   {
+    "title": "Hiraka Station",
+    "chars": 1229
+   },
+   {
+    "title": "Hirosaki Station",
+    "chars": 2759
+   },
+   {
+    "title": "K\u014dnan Railway K\u014dnan Line",
+    "chars": 1575
+   }
+  ],
+  "messages_pushed": 3,
+  "add_batches": 1,
+  "gateway_codes": [
+   0
+  ]
+ },
+ {
+  "question_idx": 672,
+  "session_id": "frames-r20260905b-q672",
+  "docs": [
+   {
+    "title": "Connor McDavid",
+    "chars": 51295
+   },
+   {
+    "title": "January 13",
+    "chars": 30998
+   }
+  ],
+  "messages_pushed": 18,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 708,
+  "session_id": "frames-r20260905b-q708",
+  "docs": [
+   {
+    "title": "...Baby One More Time",
+    "chars": 34360
+   },
+   {
+    "title": "Genie in a Bottle",
+    "chars": 28830
+   },
+   {
+    "title": "List of songs recorded by Christina Aguilera",
+    "chars": 1913
+   }
+  ],
+  "messages_pushed": 17,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 716,
+  "session_id": "frames-r20260905b-q716",
+  "docs": [
+   {
+    "title": "1995 Miami Dolphins season",
+    "chars": 1394
+   },
+   {
+    "title": "1997 Miami Dolphins season",
+    "chars": 1677
+   },
+   {
+    "title": "1998 Miami Dolphins season",
+    "chars": 1533
+   },
+   {
+    "title": "1999 Miami Dolphins season",
+    "chars": 8527
+   },
+   {
+    "title": "2000 Miami Dolphins season",
+    "chars": 19560
+   },
+   {
+    "title": "2001 Miami Dolphins season",
+    "chars": 3893
+   },
+   {
+    "title": "2008 Miami Dolphins season",
+    "chars": 34112
+   },
+   {
+    "title": "Ace Ventura: Pet Detective",
+    "chars": 16166
+   },
+   {
+    "title": "Miami Dolphins",
+    "chars": 38311
+   }
+  ],
+  "messages_pushed": 30,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ },
+ {
+  "question_idx": 729,
+  "session_id": "frames-r20260905b-q729",
+  "docs": [
+   {
+    "title": "A. G. Cook",
+    "chars": 17691
+   },
+   {
+    "title": "Peter Cook (architect)",
+    "chars": 8130
+   }
+  ],
+  "messages_pushed": 7,
+  "add_batches": 1,
+  "gateway_codes": [
+   0
+  ]
+ },
+ {
+  "question_idx": 749,
+  "session_id": "frames-r20260905b-q749",
+  "docs": [
+   {
+    "title": "1984 Summer Olympics medal table",
+    "chars": 2992
+   },
+   {
+    "title": "Sailing at the 1984 Summer Olympics \u2013 470",
+    "chars": 1255
+   },
+   {
+    "title": "Spain at the 1984 Summer Olympics",
+    "chars": 7664
+   }
+  ],
+  "messages_pushed": 4,
+  "add_batches": 1,
+  "gateway_codes": [
+   0
+  ]
+ },
+ {
+  "question_idx": 823,
+  "session_id": "frames-r20260905b-q823",
+  "docs": [
+   {
+    "title": "2018 FIFA World Cup",
+    "chars": 39545
+   },
+   {
+    "title": "Diego Costa",
+    "chars": 43462
+   },
+   {
+    "title": "Video assistant referee",
+    "chars": 29756
+   }
+  ],
+  "messages_pushed": 26,
+  "add_batches": 2,
+  "gateway_codes": [
+   0,
+   0
+  ]
+ }
+]

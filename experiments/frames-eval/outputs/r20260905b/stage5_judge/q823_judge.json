@@ -1,0 +1,13 @@
+{
+ "question_idx": 823,
+ "gold": "Atl\u00e9tico Madrid",
+ "candidate": "Atl\u00e9tico Madrid",
+ "verdict_raw": "VERDICT: CORRECT\nThe candidate \"Atl\u00e9tico Madrid\" exactly matches the gold answer; Diego Costa played for Atl\u00e9tico Madrid when his goal against Iran became the first World Cup goal awarded via VAR.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 96,
+  "completion_tokens": 44,
+  "total_tokens": 140,
+  "model": "glm-5.3"
+ }
+}

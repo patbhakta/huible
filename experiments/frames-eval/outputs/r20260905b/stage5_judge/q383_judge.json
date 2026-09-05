@@ -1,0 +1,13 @@
+{
+ "question_idx": 383,
+ "gold": "Doctor Dolittle",
+ "candidate": "Doctor Dolittle",
+ "verdict_raw": "VERDICT: CORRECT\nThe candidate \"Doctor Dolittle\" exactly matches the gold answer.",
+ "correct": true,
+ "usage": {
+  "prompt_tokens": 113,
+  "completion_tokens": 22,
+  "total_tokens": 135,
+  "model": "glm-5.3"
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "question_idx": 538,
+ "question": "As of July 4th, 2024, what is the ratio of the number of years in the Early Dynastic Period of Egypt to the number of years since the United States declared independence? Round your answer to the nearest whole number. ",
+ "raw": "The Early Dynastic Period of Egypt (c. 3150\u20132686 BC) lasted about 464 years. The United States declared independence in 1776, so as of July 4, 2024, it had been 248 years. The ratio is 464 \u00f7 248 \u2248 1.87, which rounds to 2.\n\nFinal answer: 2",
+ "final_answer": "2",
+ "context_chars": 7837,
+ "strategy": "v4-arm-a",
+ "memory_count": 38,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1982,
+  "completion_tokens": 173,
+  "total_tokens": 2155,
+  "model": "glm-5.3"
+ }
+}

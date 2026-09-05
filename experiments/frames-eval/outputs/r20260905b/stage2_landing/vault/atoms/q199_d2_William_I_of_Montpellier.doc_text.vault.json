@@ -1,0 +1,16 @@
+{
+  "atom_type": "doc_text",
+  "tier": "vault",
+  "source": {
+    "file": "frames_q199",
+    "title": "William I of Montpellier"
+  },
+  "provenance": {
+    "question_idx": 199,
+    "doc_index": 2,
+    "tier_rule": "verbatim corpus text = canon (HU-1839)"
+  },
+  "content": {
+    "text": "William I (or in Occitan: Guilhem I) was the founder of a dynasty which bears his name, the Guilhems, Lords of Montpellier. He received his fief (a manor) of Monspestularius (Montpellier) on 26 November 985 from Bernard, Count of Mauguio, with the permission of Ricuin, Bishop of Maguelone.\nWithout descendants after his death, his nephew Guilhem II of Montpellier succeeded him.\n\n== References =="
+  }
+}

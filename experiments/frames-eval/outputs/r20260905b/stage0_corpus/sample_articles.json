@@ -1,0 +1,419 @@
+[
+ {
+  "question_idx": 3,
+  "links": [
+   "https://en.wikipedia.org/wiki/FIFA_World_Cup",
+   "https://en.wikipedia.org/wiki/London",
+   "https://en.wikipedia.org/wiki/UEFA_Champions_League"
+  ],
+  "titles": [
+   "FIFA World Cup",
+   "London",
+   "UEFA Champions League"
+  ],
+  "resolved": [
+   "FIFA World Cup",
+   "London",
+   "UEFA Champions League"
+  ]
+ },
+ {
+  "question_idx": 56,
+  "links": [
+   "https://en.wikipedia.org/wiki/Benjamin_Waterhouse_Hawkins",
+   "https://en.wikipedia.org/wiki/Crystal_Palace_Dinosaurs",
+   "https://en.wikipedia.org/wiki/Mosasaurus"
+  ],
+  "titles": [
+   "Benjamin Waterhouse Hawkins",
+   "Crystal Palace Dinosaurs",
+   "Mosasaurus"
+  ],
+  "resolved": [
+   "Benjamin Waterhouse Hawkins",
+   "Crystal Palace Dinosaurs",
+   "Mosasaurus"
+  ]
+ },
+ {
+  "question_idx": 129,
+  "links": [
+   "https://en.wikipedia.org/wiki/Big_Hit_Music#Groups",
+   "https://en.wikipedia.org/wiki/BTS#",
+   "https://en.wikipedia.org/wiki/Tomorrow_X_Together"
+  ],
+  "titles": [
+   "Big Hit Music#Groups",
+   "BTS#",
+   "Tomorrow X Together"
+  ],
+  "resolved": [
+   "BTS",
+   "BigHit Music",
+   "Tomorrow X Together"
+  ]
+ },
+ {
+  "question_idx": 199,
+  "links": [
+   "https://en.wikipedia.org/wiki/Lords_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_I_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_II_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_III_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_V_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_IV_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_VI_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_VII_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_VIII_of_Montpellier",
+   "https://en.wikipedia.org/wiki/William_IX_of_Montpellier",
+   "https://en.wikipedia.org/wiki/Marie_of_Montpellier, https://en.wikipedia.org/wiki/James_I_of_Aragon, https://en.wikipedia.org/wiki/James_II_of_Majorca, https://en.wikipedia.org/wiki/Sancho_of_Majorca, https://en.wikipedia.org/wiki/James_III_of_Majorca"
+  ],
+  "titles": [
+   "Lords of Montpellier",
+   "William I of Montpellier",
+   "William II of Montpellier",
+   "William III of Montpellier",
+   "William V of Montpellier",
+   "William IV of Montpellier",
+   "William VI of Montpellier",
+   "William VII of Montpellier",
+   "William VIII of Montpellier",
+   "William IX of Montpellier",
+   "James III of Majorca"
+  ],
+  "resolved": [
+   "James III of Majorca",
+   "Lords of Montpellier",
+   "William I of Montpellier",
+   "William II of Montpellier",
+   "William III, Lord of Montpellier",
+   "William IV, Lord of Montpellier",
+   "William IX of Montpellier",
+   "William V, Lord of Montpellier",
+   "William VI, Lord of Montpellier",
+   "William VII, Lord of Montpellier",
+   "William VIII, Lord of Montpellier"
+  ]
+ },
+ {
+  "question_idx": 330,
+  "links": [
+   "https://en.wikipedia.org/wiki/City_of_London",
+   "https://en.wikipedia.org/wiki/City_of_London_Police",
+   "https://en.wikipedia.org/wiki/2019_European_Parliament_election_in_Lombardy",
+   "https://en.wikipedia.org/wiki/Forza_Italia_(2013)"
+  ],
+  "titles": [
+   "City of London",
+   "City of London Police",
+   "2019 European Parliament election in Lombardy",
+   "Forza Italia (2013)"
+  ],
+  "resolved": [
+   "2019 European Parliament election in Lombardy",
+   "City of London",
+   "City of London Police",
+   "Forza Italia (2013)"
+  ]
+ },
+ {
+  "question_idx": 351,
+  "links": [
+   "https://en.wikipedia.org/wiki/Moon_landing",
+   "https://en.wikipedia.org/wiki/Neil_Armstrong",
+   "https://en.wikipedia.org/wiki/Grumman_F9F_Panther",
+   "https://en.wikipedia.org/wiki/John_Glenn"
+  ],
+  "titles": [
+   "Moon landing",
+   "Neil Armstrong",
+   "Grumman F9F Panther",
+   "John Glenn"
+  ],
+  "resolved": [
+   "Grumman F9F Panther",
+   "John Glenn",
+   "Moon landing",
+   "Neil Armstrong"
+  ]
+ },
+ {
+  "question_idx": 383,
+  "links": [
+   "https://en.wikipedia.org/wiki/Rockefeller_Center_Christmas_Tree",
+   "https://en.wikipedia.org/wiki/Killingworth,_Connecticut",
+   "https://en.wikipedia.org/wiki/Hugh_Lofting",
+   "https://en.wikipedia.org/wiki/Doctor_Dolittle"
+  ],
+  "titles": [
+   "Rockefeller Center Christmas Tree",
+   "Killingworth, Connecticut",
+   "Hugh Lofting",
+   "Doctor Dolittle"
+  ],
+  "resolved": [
+   "Doctor Dolittle",
+   "Hugh Lofting",
+   "Killingworth, Connecticut",
+   "Rockefeller Center Christmas Tree"
+  ]
+ },
+ {
+  "question_idx": 444,
+  "links": [
+   "https://en.wikipedia.org/wiki/The_Undertaker",
+   "https://en.wikipedia.org/wiki/The_Streak_(professional_wrestling)",
+   "https://en.wikipedia.org/wiki/WrestleMania_VII#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_VIII#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_IX#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_XI#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_XII#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_13#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_XIV#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_XV#Results",
+   "https://en.wikipedia.org/wiki/WrestleMania_X-Seven#Results, https://en.wikipedia.org/wiki/WrestleMania_X8#Results, https://en.wikipedia.org/wiki/WrestleMania_XIX#Results, https://en.wikipedia.org/wiki/WrestleMania_XX#Results, https://en.wikipedia.org/wiki/WrestleMania_21#Results, https://en.wikipedia.org/wiki/WrestleMania_22#Results, https://en.wikipedia.org/wiki/WrestleMania_23#Results, https://en.wikipedia.org/wiki/WrestleMania_XXIV#Results, https://en.wikipedia.org/wiki/WrestleMania_25#Results, https://en.wikipedia.org/wiki/WrestleMania_XXVI#Results, https://en.wikipedia.org/wiki/WrestleMania_XXVII#Results, https://en.wikipedia.org/wiki/WrestleMania_XXVIII#Results, https://en.wikipedia.org/wiki/WrestleMania_29#Results"
+  ],
+  "titles": [
+   "The Undertaker",
+   "The Streak (professional wrestling)",
+   "WrestleMania VII#Results",
+   "WrestleMania VIII#Results",
+   "WrestleMania IX#Results",
+   "WrestleMania XI#Results",
+   "WrestleMania XII#Results",
+   "WrestleMania 13#Results",
+   "WrestleMania XIV#Results",
+   "WrestleMania XV#Results",
+   "WrestleMania 29#Results"
+  ],
+  "resolved": [
+   "The Streak (professional wrestling)",
+   "The Undertaker",
+   "WrestleMania 13",
+   "WrestleMania 29",
+   "WrestleMania IX",
+   "WrestleMania VII",
+   "WrestleMania VIII",
+   "WrestleMania XI",
+   "WrestleMania XII",
+   "WrestleMania XIV",
+   "WrestleMania XV"
+  ]
+ },
+ {
+  "question_idx": 488,
+  "links": [
+   "https://en.wikipedia.org/wiki/Jonathan_Tremblay",
+   "https://en.wikipedia.org/wiki/List_of_prime_ministers_of_Canada"
+  ],
+  "titles": [
+   "Jonathan Tremblay",
+   "List of prime ministers of Canada"
+  ],
+  "resolved": [
+   "Jonathan Tremblay",
+   "List of prime ministers of Canada"
+  ]
+ },
+ {
+  "question_idx": 498,
+  "links": [
+   "https://en.wikipedia.org/wiki/Michael_Jordan",
+   "https://en.wikipedia.org/wiki/Race_and_ethnicity_in_the_NBA",
+   "https://en.wikipedia.org/wiki/Earl_Lloyd"
+  ],
+  "titles": [
+   "Michael Jordan",
+   "Race and ethnicity in the NBA",
+   "Earl Lloyd"
+  ],
+  "resolved": [
+   "Earl Lloyd",
+   "Michael Jordan",
+   "Race and ethnicity in the NBA"
+  ]
+ },
+ {
+  "question_idx": 538,
+  "links": [
+   "https://en.wikipedia.org/wiki/Ancient_Egypt",
+   "https://en.wikipedia.org/wiki/United_States"
+  ],
+  "titles": [
+   "Ancient Egypt",
+   "United States"
+  ],
+  "resolved": [
+   "Ancient Egypt",
+   "United States"
+  ]
+ },
+ {
+  "question_idx": 613,
+  "links": [
+   "https://en.wikipedia.org/wiki/List_of_prime_ministers_of_the_United_Kingdom",
+   "https://en.wikipedia.org/wiki/Grover_Cleveland#:~:text=Stephen%20Grover%20Cleveland%20(March%2018,serve%20non%2Dconsecutive%20presidential%20terms."
+  ],
+  "titles": [
+   "List of prime ministers of the United Kingdom",
+   "Grover Cleveland#:~:text=Stephen Grover Cleveland (March 18,serve non-consecutive presidential terms."
+  ],
+  "resolved": [
+   "Grover Cleveland",
+   "List of prime ministers of the United Kingdom"
+  ]
+ },
+ {
+  "question_idx": 624,
+  "links": [
+   "https://en.wikipedia.org/wiki/Confucius#",
+   "https://en.wikipedia.org/wiki/Qufu#Geography"
+  ],
+  "titles": [
+   "Confucius#",
+   "Qufu#Geography"
+  ],
+  "resolved": [
+   "Confucius",
+   "Qufu"
+  ]
+ },
+ {
+  "question_idx": 663,
+  "links": [
+   "https://en.wikipedia.org/wiki/Hiraka_Station",
+   "https://en.wikipedia.org/wiki/K%C5%8Dnan_Railway_K%C5%8Dnan_Line",
+   "https://en.wikipedia.org/wiki/Hirosaki_Station"
+  ],
+  "titles": [
+   "Hiraka Station",
+   "K\u014dnan Railway K\u014dnan Line",
+   "Hirosaki Station"
+  ],
+  "resolved": [
+   "Hiraka Station",
+   "Hirosaki Station",
+   "K\u014dnan Railway K\u014dnan Line"
+  ]
+ },
+ {
+  "question_idx": 672,
+  "links": [
+   "https://en.wikipedia.org/wiki/Connor_McDavid",
+   "https://en.wikipedia.org/wiki/January_13"
+  ],
+  "titles": [
+   "Connor McDavid",
+   "January 13"
+  ],
+  "resolved": [
+   "Connor McDavid",
+   "January 13"
+  ]
+ },
+ {
+  "question_idx": 708,
+  "links": [
+   "https://en.wikipedia.org/wiki/...Baby_One_More_Time_(song)",
+   "https://en.wikipedia.org/wiki/List_of_songs_recorded_by_Christina_Aguilera",
+   "https://en.wikipedia.org/wiki/Genie_in_a_Bottle"
+  ],
+  "titles": [
+   "...Baby One More Time (song)",
+   "List of songs recorded by Christina Aguilera",
+   "Genie in a Bottle"
+  ],
+  "resolved": [
+   "...Baby One More Time",
+   "Genie in a Bottle",
+   "List of songs recorded by Christina Aguilera"
+  ]
+ },
+ {
+  "question_idx": 716,
+  "links": [
+   "https://en.wikipedia.org/wiki/Ace_Ventura:_Pet_Detective",
+   "https://en.wikipedia.org/wiki/Miami_Dolphins",
+   "https://en.wikipedia.org/wiki/1995_Miami_Dolphins_season",
+   "https://en.wikipedia.org/wiki/1997_Miami_Dolphins_season",
+   "https://en.wikipedia.org/wiki/1998_Miami_Dolphins_season",
+   "https://en.wikipedia.org/wiki/1999_Miami_Dolphins_season",
+   "https://en.wikipedia.org/wiki/2000_Miami_Dolphins_season",
+   "https://en.wikipedia.org/wiki/2001_Miami_Dolphins_season",
+   "https://en.wikipedia.org/wiki/2008_Miami_Dolphins_season"
+  ],
+  "titles": [
+   "Ace Ventura: Pet Detective",
+   "Miami Dolphins",
+   "1995 Miami Dolphins season",
+   "1997 Miami Dolphins season",
+   "1998 Miami Dolphins season",
+   "1999 Miami Dolphins season",
+   "2000 Miami Dolphins season",
+   "2001 Miami Dolphins season",
+   "2008 Miami Dolphins season"
+  ],
+  "resolved": [
+   "1995 Miami Dolphins season",
+   "1997 Miami Dolphins season",
+   "1998 Miami Dolphins season",
+   "1999 Miami Dolphins season",
+   "2000 Miami Dolphins season",
+   "2001 Miami Dolphins season",
+   "2008 Miami Dolphins season",
+   "Ace Ventura: Pet Detective",
+   "Miami Dolphins"
+  ]
+ },
+ {
+  "question_idx": 729,
+  "links": [
+   "https://en.wikipedia.org/wiki/Peter_Cook_(architect)",
+   "https://en.wikipedia.org/wiki/A._G._Cook"
+  ],
+  "titles": [
+   "Peter Cook (architect)",
+   "A. G. Cook"
+  ],
+  "resolved": [
+   "A. G. Cook",
+   "Peter Cook (architect)"
+  ]
+ },
+ {
+  "question_idx": 749,
+  "links": [
+   "https://en.wikipedia.org/wiki/1984_Summer_Olympics_medal_table",
+   "https://en.wikipedia.org/wiki/Spain_at_the_1984_Summer_Olympics",
+   "https://en.wikipedia.org/wiki/Sailing_at_the_1984_Summer_Olympics_%E2%80%93_470"
+  ],
+  "titles": [
+   "1984 Summer Olympics medal table",
+   "Spain at the 1984 Summer Olympics",
+   "Sailing at the 1984 Summer Olympics \u2013 470"
+  ],
+  "resolved": [
+   "1984 Summer Olympics medal table",
+   "Sailing at the 1984 Summer Olympics \u2013 470",
+   "Spain at the 1984 Summer Olympics"
+  ]
+ },
+ {
+  "question_idx": 823,
+  "links": [
+   "https://simple.wikipedia.org/wiki/Video_assistant_referee",
+   "https://en.wikipedia.org/wiki/2018_FIFA_World_Cup#Officiating",
+   "https://en.wikipedia.org/wiki/Diego_Costa#Spain"
+  ],
+  "titles": [
+   "Video assistant referee",
+   "2018 FIFA World Cup#Officiating",
+   "Diego Costa#Spain"
+  ],
+  "resolved": [
+   "2018 FIFA World Cup",
+   "Diego Costa",
+   "Video assistant referee"
+  ]
+ }
+]

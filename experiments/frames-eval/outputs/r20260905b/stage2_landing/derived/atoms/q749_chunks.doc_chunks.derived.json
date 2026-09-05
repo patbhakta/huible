@@ -1,0 +1,28 @@
+{
+  "atom_type": "doc_chunks",
+  "tier": "derived",
+  "source": {
+    "file": "frames_q749"
+  },
+  "provenance": {
+    "question_idx": 749,
+    "tier_rule": "derived chunks -> TencentDB tier"
+  },
+  "content": {
+    "messages": 4,
+    "docs": [
+      {
+        "title": "1984 Summer Olympics medal table",
+        "chars": 2992
+      },
+      {
+        "title": "Sailing at the 1984 Summer Olympics \u2013 470",
+        "chars": 1255
+      },
+      {
+        "title": "Spain at the 1984 Summer Olympics",
+        "chars": 7664
+      }
+    ]
+  }
+}

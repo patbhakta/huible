@@ -1,0 +1,17 @@
+{
+ "question_idx": 672,
+ "question": "Which Colombian cyclist was born on the same day as Edmonton Oilers captain Connor McDavid?",
+ "raw": "The reference material doesn't include any information about Colombian cyclists; it only notes Connor McDavid's birth date (January 13, 1997).\n\nFinal answer: Not found in the provided reference material.",
+ "final_answer": "Not found in the provided reference material.",
+ "context_chars": 4021,
+ "strategy": "v4-arm-a",
+ "memory_count": 19,
+ "provenance_ok": true,
+ "provenance_bad_titles": [],
+ "usage": {
+  "prompt_tokens": 1243,
+  "completion_tokens": 62,
+  "total_tokens": 1305,
+  "model": "glm-5.3"
+ }
+}

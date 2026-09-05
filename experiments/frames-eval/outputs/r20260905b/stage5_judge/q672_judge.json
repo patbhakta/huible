@@ -1,0 +1,13 @@
+{
+ "question_idx": 672,
+ "gold": "Egan Bernal",
+ "candidate": "Not found in the provided reference material.",
+ "verdict_raw": "VERDICT: INCORRECT\nThe candidate states the answer is not found, but the correct answer is Egan Bernal (both born January 13, 1997).",
+ "correct": false,
+ "usage": {
+  "prompt_tokens": 95,
+  "completion_tokens": 39,
+  "total_tokens": 134,
+  "model": "glm-5.3"
+ }
+}
