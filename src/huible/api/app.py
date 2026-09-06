@@ -63,7 +63,7 @@ from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
 from logging.handlers import RotatingFileHandler
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -1894,6 +1894,10 @@ def _register_routes(application: FastAPI) -> None:
             if enforcement.forces_reframe
             else "persona"
         )
+        # M1.1 (HU-2732): one trace id per generated turn — returned in the
+        # response trace and logged on the chat.trace telemetry line so
+        # transcripts, telemetry, and harness archives join unambiguously.
+        turn_trace_id = str(uuid4())
         _log_chat_trace(
             application,
             body.conversation_id,
@@ -1902,6 +1906,7 @@ def _register_routes(application: FastAPI) -> None:
             ungrounded=alignment.ungrounded_count,
             claim_count=alignment.claim_count,
             disposition=alignment.disposition,
+            trace_id=turn_trace_id,
         )
 
         # §3 Sev-1 (C) — consent-bypass defensive check (HU-1451 trigger #4).
@@ -1928,6 +1933,7 @@ def _register_routes(application: FastAPI) -> None:
         return PersonaChatResponse(
             response=response_text,
             trace=ChatTrace(
+                trace_id=turn_trace_id,
                 memory_refs=[str(node.id) for node in ctx.included_memories],
                 provenance_tiers=sorted({node.tier.value for node in ctx.included_memories}),
                 excluded_memory_refs=[
@@ -2911,6 +2917,7 @@ def _log_chat_trace(
     ungrounded: int | None = None,
     claim_count: int | None = None,
     disposition: str | None = None,
+    trace_id: str | None = None,
 ) -> None:
     """Emit one ``chat.trace`` stdout line per chat turn (HU-1442).
 
@@ -2919,6 +2926,9 @@ def _log_chat_trace(
     (rollout-plan flagged concern #3). This folds them into the same stdout
     stream as ``consent.record`` (via :class:`_JsonLineFormatter`) so the
     daily review can ``grep chat.trace`` across all five telemetry surfaces.
+
+    ``trace_id`` (M1.1, HU-2732) joins the telemetry line to the per-turn id
+    returned in the response ``trace`` when the caller generated one.
     """
     turn_count = _session_meta(application, conversation_id).turn_count
     flags = ",".join(fired_flags) if fired_flags else "-"
@@ -2928,13 +2938,15 @@ def _log_chat_trace(
         else "-/-"
     )
     logger.info(
-        "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s disposition=%s turn_count=%s",
+        "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s "
+        "disposition=%s turn_count=%s trace_id=%s",
         conversation_id or "-",
         action,
         flags,
         ungrounded_field,
         disposition or "n/a",
         turn_count,
+        trace_id or "-",
     )
 
 

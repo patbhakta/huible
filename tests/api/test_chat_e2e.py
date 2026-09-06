@@ -247,6 +247,28 @@ class TestPersonaChatEndToEnd:
         # The LLM was invoked exactly once with a rendered prompt.
         assert len(llm.calls) == 1
 
+    def test_trace_carries_unique_per_turn_trace_id(self):
+        """M1.1 (HU-2732): every generated turn gets its own trace id.
+
+        The id is opaque, non-empty, and two turns in the same conversation
+        never share one — transcripts and telemetry join on it per turn.
+        """
+        client, _llm, _memories = _make_app()
+        conv = _consent(client)
+
+        ids = []
+        for message in ("tell me about fishing on the lake", "so where were the rods"):
+            r = client.post(
+                f"/api/v1/chat/{PERSONA_ID}",
+                json={"message": message, "conversation_id": conv},
+                headers={"Authorization": f"Bearer {API_KEY}"},
+            )
+            assert r.status_code == 200, r.text
+            trace = r.json()["trace"]
+            assert trace["trace_id"]
+            ids.append(trace["trace_id"])
+        assert ids[0] != ids[1]
+
     def test_trace_contains_only_canonical_and_derived_tiers(self):
         """The trace must report only canonical/derived provenance tiers.
 

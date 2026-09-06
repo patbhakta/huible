@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
@@ -668,6 +668,13 @@ class ChatTrace(BaseModel):
     """
 
     memory_refs: list[str] = Field(default_factory=list)
+    # M1.1 per-turn trace ID (HU-2732): one opaque id per generated turn, so a
+    # response, its ``chat.trace`` telemetry line, and any archived harness
+    # transcript join unambiguously. Generated server-side per turn.
+    trace_id: str = Field(
+        default_factory=lambda: uuid4().hex,
+        description="Per-turn trace id joining response, telemetry, and archives.",
+    )
     provenance_tiers: list[str] = Field(default_factory=list)
     excluded_memory_refs: list[ExcludedMemoryRefView] = Field(default_factory=list)
     # HU-1926 chat-surface consolidation: the persona-scoped path is the single
