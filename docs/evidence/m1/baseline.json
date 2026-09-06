@@ -1,16 +1,16 @@
 {
  "artifact": "M1.1 baseline capture (HU-2732)",
- "generated_at": "2026-09-06T21:20:17.340030+00:00",
+ "generated_at": "2026-09-06T21:21:54.509745+00:00",
  "convention": "Measured in place on the live deployment; no invented values. Config observations are not product-behavior proof (M1.2+ owns that).",
  "git": {
   "repo": "/root/repos/huible",
-  "head": "44b456e237d0458ed8034775a2ad3163c53abe89",
+  "head": "168345de3ad000e608f61586fd604000caff9014",
   "branch": "w1-local-onnx-embeddings",
   "pushed": true,
-  "remote_branch_sha": "44b456e237d0458ed8034775a2ad3163c53abe89",
+  "remote_branch_sha": "168345de3ad000e608f61586fd604000caff9014",
   "behind_origin_main": 0,
-  "ahead_of_origin_main": 68,
-  "tracked_dirty_files": 3,
+  "ahead_of_origin_main": 70,
+  "tracked_dirty_files": 0,
   "origin_main_head": "0f2fe93f005fe5d5a6c1f1a97e0e799f0244c266"
  },
  "deployment": {
@@ -20,7 +20,7 @@
   "app_container_started": "2026-09-05T02:12:38.946733729Z",
   "app_health": {
    "http": 200,
-   "body": "{\"data\":{\"status\":\"ok\",\"version\":\"0.1.0\",\"checks\":{\"database\":\"ok\",\"pgvector\":\"ok\",\"generator\":\"ready\",\"telemetry_sink\":\"active (/var/lib/huible/logs/telemetry.log)\"},\"uptime_seconds\":155255.21322274208}}"
+   "body": "{\"data\":{\"status\":\"ok\",\"version\":\"0.1.0\",\"checks\":{\"database\":\"ok\",\"pgvector\":\"ok\",\"generator\":\"ready\",\"telemetry_sink\":\"active (/var/lib/huible/logs/telemetry.log)\"},\"uptime_seconds\":155352.40270090103}}"
   },
   "config_observed": {
    "EMBEDDING_PROVIDER": "local_onnx",
