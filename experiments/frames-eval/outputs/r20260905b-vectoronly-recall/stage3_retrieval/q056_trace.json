@@ -1,0 +1,21 @@
+{
+ "question_idx": 56,
+ "session_id": "frames-r20260905b-q056",
+ "query": "Benjamin Waterhouse Hawkins was commissioned to sculpt a series of life-size dinosaurs between 1852-54.  In this location, one species only had its head and back built with the rest of its body submerged underwater because they didn't know what it looked like then.  Where is this display located in 2024, which dinosaur species was this, and what did the rest of its body look like after all? ",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2695,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am ingesting the user's reference documents about Benjamin Waterhouse Hawkins, the Crystal Palace Dinosaurs, and Mosasaurus] On 2026-09-05, the user ingested three reference documents (tagged query q56) into the AI covering Benjamin Waterhouse Hawkins, the Crystal Palace Dinosaurs sculptures, and the Mosasaurus genus for the AI to process and reference. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting the user's chunked Ancient Egypt knowledge document into the knowledge base] The user finished ingesting the Ancient Egypt encyclopedia document (q538 doc1/2) into the knowledge base on September 5, 2026; the final chunks covered daily life, cuisine, architecture, art, religious beliefs, burial customs, the military, technology, medicine, mathematics, population genetics, and the civilization's legacy. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting the user's chunked United States knowledge document into the knowledge base] The user ingested the second half (doc 2/2, q538) of a United States knowledge document into the knowledge base on September 5, 2026, covering U.S. history from early Indigenous migration to the contemporary era, as well as geography, climate, biodiversity, government structure, foreign relations, military, law enforcement, and economy. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting a United States encyclopedia document from the user] The user began submitting a second encyclopedia document about the United States (doc 2 of 2, chunk 0) to the AI on 2026-09-05, covering the country's overview, etymology, and the beginning of its history section. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting an Ancient Egypt encyclopedia document from the user] On 2026-09-05, the user ingested an encyclopedia document about Ancient Egypt (doc 1/2, query q538) into the system across chunks 1\u201318, covering history from the Predynastic period through the Early Dynastic, Old/Middle/New Kingdoms, Intermediate Periods, Ptolemaic and Roman periods, as well as government and economy, social status, the legal system, agriculture, animals, natural resources, trade, the Egyptian language and writing, and (from chunks 10\u201318) daily life, cuisine, architecture, art, religious beliefs, burial customs, the military, technology, medicine, mathematics, population and archaeogenetics, race and ethnicity, and the civilization's legacy. (activity time: 2026-09-05 ~ 2026-09-05)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

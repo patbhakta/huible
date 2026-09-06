@@ -1,0 +1,21 @@
+{
+ "question_idx": 729,
+ "session_id": "frames-r20260905b-q729",
+ "query": "What is the name of the \"pseudo label\" that collected the early collaborations of English architect Sir Peter Cook's son? ",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2370,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [persona|I am discussing HUible's product architecture and company vision with Pat] Pat sees himself as the visionary behind HUible's direction and architecture, likening his role to Tony Stark \u2014 the person who decides what to build \u2014 while viewing the AI assistant as JARVIS, the execution engine. (activity time: 2026-08-10 11:49)\n- [persona|Planning RAG ingestion pipeline and mixed-content PDF extraction with the user (boss)] The user (Pat) is the boss and decision-making lead of the AI's memory-system project, setting architecture direction (e.g., backing the v4 gist middle layer over a competing graph-based proposal) and approving production rollouts. He holds a core design philosophy that the vaults they build should differentiate on highly specific, personal knowledge \u2014 like 'a mechanic who knows his daughter's specific car' \u2014 rather than generic knowledge that any LLM or SLM can already provide. (activity time: 2026-09-04 14:12)\n- [episodic|I am ingesting and processing the user's uploaded encyclopedia document chunks about the City of London and the 2019 Lombardy European Parliament election] The user uploaded a batch of encyclopedia document chunks to the AI for ingestion and processing, covering the City of London (residential development, landmarks, transport, education), the City of London Police, and the Forza Italia (2013) political party. (activity time: 2026-09-05 ~ 2026-09-05)\n- [persona|I am restructuring Paperclip workspace and defining HUible priorities with Pat] The user (Pat) prefers 2-letter project prefix designations (e.g., HU, IN, AB, FT) for issue tracking, as it allows approximately 100 project combinations and 100,000 issues per prefix before running into letters. (activity time: 2026-08-10 21:23)\n- [episodic|I am ingesting the user's reference documents about Benjamin Waterhouse Hawkins, the Crystal Palace Dinosaurs, and Mosasaurus] On 2026-09-05, the user ingested three reference documents (tagged query q56) into the AI covering Benjamin Waterhouse Hawkins, the Crystal Palace Dinosaurs sculptures, and the Mosasaurus genus for the AI to process and reference. (activity time: 2026-09-05 ~ 2026-09-05)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

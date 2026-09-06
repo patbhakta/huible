@@ -1,0 +1,21 @@
+{
+ "question_idx": 488,
+ "session_id": "frames-r20260905b-q488",
+ "query": "Who became the prime minister of Canada in the same year that Jonathan Tremblay's re-election bid as representative for the electoral district of Montmorency\u2014Charlevoix\u2014Haute-C\u00f4te-Nord ended in defeat?",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2325,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am ingesting a Connor McDavid knowledge document with the user] The user uploaded a ten-part biographical document about ice hockey player Connor McDavid (covering his early life, junior OHL career, NHL career with the Edmonton Oilers, international play, personal life, and records) into the AI's knowledge base on 2026-09-05. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am overseeing the HUible project for Pat while Pat works on another project] The user (Pat) on 2026-08-29 delegated ongoing oversight of the HUible project to the AI while focusing on another project of their own. (activity time: from 2026-08-29 05:39)\n- [episodic|I am ingesting NBA player biography documents with the user] On September 5, 2026, the user ingested chunks 7\u201316 of the Michael Jordan biography document (q498 doc2/3) into the AI, covering Jordan's U.S. national team career (gold at the 1983 Pan American Games and the 1984 and 1992 Olympics), playing profile and records, legacy and awards, post-retirement ownership of the Charlotte Bobcats/Hornets and 23XI Racing, personal life, endorsements and business ventures (including Jordan Brand and his billionaire status), and philanthropy. (activity time: 2026-09-05 ~ 2026-09-05)\n- [persona|I am running memory system trust verification tests with Pat] The user (Pat) is NOT the President of LettuceAI. He was exploring/looking into Lettuce R&D, but the claim that he is president of LettuceAI was a fabricated hallucination that entered the memory system through synthetic test data and propagated as truth. (activity time: 2026-08-11 08:20)\n- [episodic|I am storing the user's John Glenn reference documents] The user uploaded the latter portion (chunks 5-13) of a John Glenn biographical reference document for the AI to process and store on 2026-09-05, covering Glenn's post-Friendship 7 fame and awards, his Senate campaigns from 1964 to 1992 and Senate career from 1974 to 1999, the Keating Five scandal, his 1998 return to space aboard STS-95 at age 77, his death on December 8, 2016, and his honors and legacy. (activity time: 2026-09-05 ~ 2026-09-05)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

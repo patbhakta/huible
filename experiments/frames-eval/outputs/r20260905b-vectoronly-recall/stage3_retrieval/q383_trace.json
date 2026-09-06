@@ -1,0 +1,21 @@
+{
+ "question_idx": 383,
+ "session_id": "frames-r20260905b-q383",
+ "query": "This town was the original location of the tallest Christmas Tree displayed at the Rockefeller Center. This was also home to the author of a famous children's book series. What is the name of this series?",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 1954,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am telling the grieving user about lake fishing] The user and their now-deceased loved one shared experiences of fishing on the lake together, and his memory is closely tied to fishing on Lake Travis. On the afternoon of September 3, 2026, the user went fishing on Lake Travis \u2014 an activity now intertwined with memories of him. (activity time: 2026-09-03 11:42)\n- [episodic|I am ingesting NBA player biography documents with the user] On September 5, 2026, the user ingested chunks 7\u201316 of the Michael Jordan biography document (q498 doc2/3) into the AI, covering Jordan's U.S. national team career (gold at the 1983 Pan American Games and the 1984 and 1992 Olympics), playing profile and records, legacy and awards, post-retirement ownership of the Charlotte Bobcats/Hornets and 23XI Racing, personal life, endorsements and business ventures (including Jordan Brand and his billionaire status), and philanthropy. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am sharing lake fishing memories with the user] The user and their now-deceased loved one shared experiences of fishing on the lake together, and his memory is closely tied to fishing on Lake Travis. On the afternoon of September 3, 2026, the user went fishing on Lake Travis \u2014 an activity now intertwined with memories of him. While reminiscing, the user asked the AI to recall that shared fishing experience. (activity time: 2026-09-03 11:42)\n- [episodic|Chatting with the user about their lake fishing activity] The user was fishing on the lake on September 3, 2026. (activity time: from 2026-09-03 11:41)\n- [episodic|I am chatting with the user about fishing on the lake] The user was fishing on a lake on September 5, 2026. (activity time: from 2026-09-05 02:01)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

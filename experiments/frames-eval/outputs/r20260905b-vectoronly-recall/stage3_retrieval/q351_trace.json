@@ -1,0 +1,21 @@
+{
+ "question_idx": 351,
+ "session_id": "frames-r20260905b-q351",
+ "query": "Which other astronaut flew the same type of aircraft during the Korean War as the first man to step on the moon?",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 3093,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am storing the user's Moon landing reference documents] The user uploaded an English Moon landing reference document (q351 doc 3/4, chunks 1-10) for the AI to process and store on 2026-09-05, covering the scientific and political background of lunar exploration, early uncrewed missions (Pioneer, Ranger, Luna 2 in 1959, Surveyor, Zond), the crewed Apollo Moon landings (Apollo 11, 1969), and 21st-century landing attempts by China, India, Japan, Israel, Russia, and private companies such as Intuitive Machines' Odysseus and Firefly's Blue Ghost. (activity time: 2026-09-05 ~ 2026-09-05)\n- [persona|I am storing the user's Moon landing reference documents] The user has an ongoing interest in aviation and space exploration history and is building a related knowledge base with the AI by uploading reference documents (e.g., on John Glenn and Moon landings). (activity time: 2026-09-05 04:13)\n- [episodic|AI is ingesting Moon landing reference document chunks provided by the user] On September 5, 2026, the user provided the AI with successive reference document chunks in order to build the AI's reference knowledge: chunks from a Wikipedia article about John Glenn (covering his fame after Friendship 7, Senate campaigns and career from 1974 to 1999, the Keating Five scandal, his 1984 presidential run, his 1998 return to space on STS-95, personal life, death in 2016, and legacy), as well as chunks from the 'Moon landing' Wikipedia article (labeled 'q351 doc3/4'), including the opening chunk and ten chunks covering the scientific and political background of lunar landings, early uncrewed Soviet/U.S. missions (1958\u20131976), the Apollo crewed landings (1969\u20131972), and 21st-century landing attempts through early 2024. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am storing the user's John Glenn reference documents] The user uploaded the latter portion (chunks 5-13) of a John Glenn biographical reference document for the AI to process and store on 2026-09-05, covering Glenn's post-Friendship 7 fame and awards, his Senate campaigns from 1964 to 1992 and Senate career from 1974 to 1999, the Keating Five scandal, his 1998 return to space aboard STS-95 at age 77, his death on December 8, 2016, and his honors and legacy. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting NBA player biography documents with the user] On September 5, 2026, the user ingested chunks 7\u201316 of the Michael Jordan biography document (q498 doc2/3) into the AI, covering Jordan's U.S. national team career (gold at the 1983 Pan American Games and the 1984 and 1992 Olympics), playing profile and records, legacy and awards, post-retirement ownership of the Charlotte Bobcats/Hornets and 23XI Racing, personal life, endorsements and business ventures (including Jordan Brand and his billionaire status), and philanthropy. (activity time: 2026-09-05 ~ 2026-09-05)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

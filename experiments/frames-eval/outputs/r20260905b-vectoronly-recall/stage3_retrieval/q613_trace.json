@@ -1,0 +1,21 @@
+{
+ "question_idx": 613,
+ "session_id": "frames-r20260905b-q613",
+ "query": "How many different Prime Ministers of the United Kingdom were there during the first term of Grover Cleveland's presidency, and who were they?",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2185,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am ingesting and processing the user's uploaded encyclopedia document chunks about the City of London and the 2019 Lombardy European Parliament election] The user uploaded a batch of encyclopedia document chunks to the AI for ingestion and processing, covering the City of London (residential development, landmarks, transport, education), the City of London Police, and the Forza Italia (2013) political party. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am tracking medication adherence with the user] The user took their two prescription pills as directed on the morning of September 4, 2026. (activity time: 2026-09-04 06:00 ~ 2026-09-04 06:42)\n- [episodic|Acting as CEO to handle HUible PM escalations and enforce the Chandler-first hold with the user (boss)] On 2026-09-04 around 23:57 UTC, the user responded to the HUible PM on the four items they had been waiting on, delivering harsh criticism and reasserting that Chandler must be fixed first. (activity time: 2026-09-04 23:57 ~ 2026-09-04 23:57)\n- [episodic|I am ingesting FIFA World Cup and London reference documents with the user] The user ingested encyclopedia-style reference documents into the AI conversation on 2026-09-05, consisting of a complete FIFA World Cup article (9 chunks covering history, format, hosts, broadcasting, results, records and awards) followed by the beginning of a London article (1 chunk covering overview, etymology and early history). (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am helping the user manage their blood pressure medication pickup] The user picked up their blood pressure pills from the pharmacy shortly before messaging: first reported on September 3, 2026 (around 12:40 UTC and again around 13:01 UTC), and referenced again in the early morning of September 4, 2026, when the user described picking up the pills that morning; they also took their two prescription pills as directed that morning. (activity time: from 2026-09-04 06:42)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

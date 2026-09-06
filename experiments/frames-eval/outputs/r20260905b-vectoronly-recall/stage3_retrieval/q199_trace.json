@@ -1,0 +1,21 @@
+{
+ "question_idx": 199,
+ "session_id": "frames-r20260905b-q199",
+ "query": "Which Lord of Montpellier had a child named Tortoseta?",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2062,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am telling the grieving user about lake fishing] The user and their now-deceased loved one shared experiences of fishing on the lake together, and his memory is closely tied to fishing on Lake Travis. On the afternoon of September 3, 2026, the user went fishing on Lake Travis \u2014 an activity now intertwined with memories of him. (activity time: 2026-09-03 11:42)\n- [persona|I am running memory system trust verification tests with Pat] The user (Pat) is NOT the President of LettuceAI. He was exploring/looking into Lettuce R&D, but the claim that he is president of LettuceAI was a fabricated hallucination that entered the memory system through synthetic test data and propagated as truth. (activity time: 2026-08-11 08:20)\n- [persona|I am finalizing memory-contamination cleanup and planning BEAM benchmark testing with user Pat (CEO of HUible)] The user (Pat, GitHub org: patbhakta) is the CEO of HUible; LettuceAI is only a competitor platform he researched when evaluating other platforms, and he has no affiliation with LettuceAI. (activity time: 2026-08-16 00:14)\n- [persona|I (AI) am greeting and introducing myself to a first-time visitor] The user's name is Pat, a first-time visitor who met the AI (Chandler) for the first time during their initial greeting and introduction, introducing themselves by name at the start of the conversation. (activity time: 2026-09-03 11:33)\n- [episodic|I am sharing lake fishing memories with the user] The user and their now-deceased loved one shared experiences of fishing on the lake together, and his memory is closely tied to fishing on Lake Travis. On the afternoon of September 3, 2026, the user went fishing on Lake Travis \u2014 an activity now intertwined with memories of him. While reminiscing, the user asked the AI to recall that shared fishing experience. (activity time: 2026-09-03 11:42)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

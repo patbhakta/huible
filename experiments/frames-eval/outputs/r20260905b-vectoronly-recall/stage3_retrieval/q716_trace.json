@@ -1,0 +1,21 @@
+{
+ "question_idx": 716,
+ "session_id": "frames-r20260905b-q716",
+ "query": "What were the last names of the players selected for the Pro Bowl from the NFL team that was featured in the movie \"Ace Ventura: Pet Detective\"? Base the answer on the following specifications:  -- These players were on the team while Wayne Huizenga was the owner  -- The team that these players were on achieved a 10-6 regular season record while still making the playoffs during their Pro Bowl season",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2885,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am ingesting a Connor McDavid knowledge document with the user] The user uploaded a ten-part biographical document about ice hockey player Connor McDavid (covering his early life, junior OHL career, NHL career with the Edmonton Oilers, international play, personal life, and records) into the AI's knowledge base on 2026-09-05. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting NBA player biography documents with the user] On September 5, 2026, the user ingested chunks 7\u201316 of the Michael Jordan biography document (q498 doc2/3) into the AI, covering Jordan's U.S. national team career (gold at the 1983 Pan American Games and the 1984 and 1992 Olympics), playing profile and records, legacy and awards, post-retirement ownership of the Charlotte Bobcats/Hornets and 23XI Racing, personal life, endorsements and business ventures (including Jordan Brand and his billionaire status), and philanthropy. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am discussing system status and infrastructure planning with Pat] Pat's AI agent team completed major project milestones by 2026-08-11: the Onboarding Agent built \"The Caretaker's Playbook\" (a grief-support onboarding protocol featuring Carrie as a named character), the Clinical Advisor delivered grief-aware therapeutic techniques including the \"never ask why\" rule and \"permission to stay or go\" frame, all three Chandler persona variants were completed, and a multimodal audio ingestion module was built with 433 passing tests. (activity time: 2026-08-11 00:49)\n- [episodic|I am ingesting knowledge documents about the 2018 FIFA World Cup and Diego Costa with the user] The user ingested a comprehensive knowledge document about footballer Diego Costa on 2026-09-05, covering his early career at Braga and loan spells (Celta Vigo, Albacete, Valladolid), his two spells at Atl\u00e9tico Madrid, his time at Chelsea (including two Premier League titles), later moves to Atl\u00e9tico Mineiro, Wolverhampton Wanderers, Botafogo and Gr\u00eamio, his February 2026 retirement, his international switch from Brazil to Spain, his playing style, disciplinary controversies, and his honours and records. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting knowledge documents about the video assistant referee (VAR) in football with the user] The user ingested a knowledge document about the video assistant referee (VAR) in association football on 2026-09-05, covering the roles of the VAR and the three AVARs, the four reviewable decision categories, the check and on-field review (OFR) procedures, and related offences codified in the Laws of the Game. (activity time: 2026-09-05 ~ 2026-09-05)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}

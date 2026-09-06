@@ -1,0 +1,21 @@
+{
+ "question_idx": 823,
+ "session_id": "frames-r20260905b-q823",
+ "query": "Diago Costa played for which club when he was awarded the first FIFA World Cup Goal based on a VAR Decision?",
+ "strategy": "embedding",
+ "memory_count": 5,
+ "context_chars": 2481,
+ "gateway_code": 0,
+ "context": "<relevant-memories>\nThe following relevant memories were recalled for the current conversation. These do not represent the current task progress and are provided as reference only:\n\n- [episodic|I am ingesting knowledge documents about the 2018 FIFA World Cup and Diego Costa with the user] The user ingested a comprehensive knowledge document about footballer Diego Costa on 2026-09-05, covering his early career at Braga and loan spells (Celta Vigo, Albacete, Valladolid), his two spells at Atl\u00e9tico Madrid, his time at Chelsea (including two Premier League titles), later moves to Atl\u00e9tico Mineiro, Wolverhampton Wanderers, Botafogo and Gr\u00eamio, his February 2026 retirement, his international switch from Brazil to Spain, his playing style, disciplinary controversies, and his honours and records. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting knowledge documents about the video assistant referee (VAR) in football with the user] The user ingested a knowledge document about the video assistant referee (VAR) in association football on 2026-09-05, covering the roles of the VAR and the three AVARs, the four reviewable decision categories, the check and on-field review (OFR) procedures, and related offences codified in the Laws of the Game. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting FIFA World Cup and London reference documents with the user] The user ingested encyclopedia-style reference documents into the AI conversation on 2026-09-05, consisting of a complete FIFA World Cup article (9 chunks covering history, format, hosts, broadcasting, results, records and awards) followed by the beginning of a London article (1 chunk covering overview, etymology and early history). (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am ingesting a Connor McDavid knowledge document with the user] The user uploaded a ten-part biographical document about ice hockey player Connor McDavid (covering his early life, junior OHL career, NHL career with the Edmonton Oilers, international play, personal life, and records) into the AI's knowledge base on 2026-09-05. (activity time: 2026-09-05 ~ 2026-09-05)\n- [episodic|I am running memory system trust verification tests with Pat] The user (Pat) first interacted with this AI on April 3, 2026, saying \"hi\" and asking what tools were available. They subsequently built a golf tee time booking app together (golf.bhakta.us). (activity time: from 2026-04-03 05:31)\n</relevant-memories>",
+ "full_response_keys": [
+  "code",
+  "context",
+  "memory_count",
+  "message",
+  "prepend_context",
+  "retryable",
+  "strategy"
+ ],
+ "arm": "vectoronly",
+ "gateway": "http://127.0.0.1:8421"
+}
