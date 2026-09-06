@@ -1,0 +1,106 @@
+{
+ "artifact": "M1.1 implementation map — claimed repairs vs verified state (HU-2732)",
+ "generated_at": "2026-09-06T21:20:00+00:00",
+ "purpose": "Resolve the contradiction between /root/repos/brain/HUible/governance/chandler-first-hold.md ('W1/W4/W5 done, W6 in review') and the M-0 broken baseline (sandbox BRIEF.md, 2026-08-31). Every claimed repair is mapped to a commit + an actual path check executed this heartbeat, or marked unverified.",
+ "contradiction_resolution": "Both documents were point-in-time correct. The M-0 verdict (2026-08-31, session demo-722a2ea810df, comment e2971bc9) predates every v2 W-lane commit (2026-09-03..09-06). The hold doc's 'done' claims describe merged code and live infra, NOT production-scale live-path proof; per the roadmap acceptance convention that proof lands in M1.2+ traces. No rebuild of what already works; nothing is accepted as a milestone on narrative.",
+ "repo": "/root/repos/huible",
+ "branch_at_capture": {
+  "head": "44b456e237d0458ed8034775a2ad3163c53abe89",
+  "branch": "w1-local-onnx-embeddings",
+  "pushed": true,
+  "note": "Branch is 68 commits ahead of origin/main (0 behind); M1.1 deliverables land here. Main-merge + redeploy is a PM-owned follow-up so the evidence bar ('remote main must contain the commit') can be met at M1.2 close.",
+  "deployed_image_created": "2026-09-05T02:12:12Z — deployed revision lags repo HEAD; live-path checks below ran against the deployed build unless marked repo-only."
+ },
+ "claims": [
+  {
+   "claim_id": "W1-real-embeddings",
+   "claimed_by": "/root/repos/brain/HUible/governance/chandler-first-hold.md (v2 rebuild state, 'W1 real embeddings done')",
+   "hu_issue": "HU-2467",
+   "commits": [{"sha": "1176683", "date": "2026-09-03", "subject": "feat(embeddings): W1 real embeddings end-to-end — local ONNX bge-small-en-v1.5 (384-dim)"}],
+   "implementation_paths": ["src/huible/embeddings.py", "scripts/migrate_embeddings_384.py", "src/huible/api/settings.py (embedding_provider)"],
+   "live_check_executed": {
+    "what": "Container env + pgvector schema + embedding coverage measured via replay runner",
+    "observed": {"EMBEDDING_PROVIDER": "local_onnx", "vector_columns": "384-dim content/sensory (pgvector)", "coverage": "15341/15341 memories embedded, 0 missing"},
+    "evidence": "docs/evidence/m1/baseline.json (deployment.config_observed, database)"
+   },
+   "verification_level": "verified_code_and_config; live-path retrieval proof NOT yet established (deferred to M1.2 index-manifest.json + production traces)"
+  },
+  {
+   "claim_id": "W4-working-memory-arm-a-port",
+   "claimed_by": "/root/repos/brain/HUible/governance/chandler-first-hold.md ('W4 working-memory port done'; 'Arm A gist read path ported into the chat lane')",
+   "hu_issue": "HU-2470",
+   "commits": [
+    {"sha": "c779645", "date": "2026-09-03", "subject": "feat(persona): W4 TencentDB working memory wired into the chat path (BEAM Arm A port)"},
+    {"sha": "3579fdd", "date": "2026-09-03", "subject": "fix(persona): W4 bounded verbatim head"}
+   ],
+   "implementation_paths": ["src/huible/persona/working_memory.py (TencentWorkingMemory /recall /capture)", "src/huible/api/app.py (W4 capture at turn commit)", "docs/runbooks/working-memory-relay.md"],
+   "live_check_executed": {
+    "what": "Runbook health checks executed live",
+    "observed": {"systemd_huible-tdai-relay": "active", "bind": "172.19.0.1:8420 bridge-only", "relay_health_from_container": "HTTP 200", "WORKING_MEMORY_ENABLED": "on"},
+    "evidence": "docs/evidence/m1/baseline.json (deployment.working_memory_relay)"
+   },
+   "verification_level": "verified_code_and_infra; Arm-A-reads-reaching-generation NOT yet proven in production traces (deferred to M1.2 acceptance)"
+  },
+  {
+   "claim_id": "W5-era-gated-tools",
+   "claimed_by": "/root/repos/brain/HUible/governance/chandler-first-hold.md ('W5 era-gated tools done')",
+   "hu_issue": "HU-2471",
+   "commits": [{"sha": "4fe3e46", "date": "2026-09-04", "subject": "W5 (HU-2471): era-gated tool calling — in-world era clock, caretaker channel (CA C2), hobby/interest tool"}],
+   "implementation_paths": ["src/huible/persona/tools.py", "src/huible/persona/context.py"],
+   "live_check_executed": {
+    "what": "Code paths present at named paths (repo HEAD); no live tool-call replay run this heartbeat",
+    "observed": {"code_present": true, "live_tool_call_evidence": null},
+    "evidence": "commit 4fe3e46 diff; repo paths above"
+   },
+   "verification_level": "verified_code; live tool execution unproven (deferred to M1.4 context-tool-replay.json)"
+  },
+  {
+   "claim_id": "W6-E0-replay",
+   "claimed_by": "/root/repos/brain/HUible/governance/chandler-first-hold.md ('W6 in review with one known defect W6-F1')",
+   "hu_issue": "HU-2472 (defect HU-2687)",
+   "commits": [
+    {"sha": "f228050", "date": "2026-09-04", "subject": "W6 (HU-2472): prompt-probe wall class + E0 replay rig"},
+    {"sha": "40b915d", "date": "2026-09-06", "subject": "HU-2707: C4 gates on floor-0.50 epoch, E0 replay pending zai budget window"},
+    {"sha": "79b85f6", "date": "2026-09-06", "subject": "HU-2707 C4: real-voice W6 E0 replay run 2 PASS 9/9 gates; verdict sampling variance"}
+   ],
+   "implementation_paths": ["scripts/e0_replay_w6.py"],
+   "live_check_executed": {
+    "what": "Commit-archived run evidence reviewed (not re-run this heartbeat; spend-gated)",
+    "observed": {"latest_recorded_run": "79b85f6 run 2 PASS 9/9 gates, conv e0w6-e0d5a5e826; run 1 FAIL archived as sampling variance"},
+    "evidence": "git log 79b85f6 commit message (run evidence)"
+   },
+   "verification_level": "in_review — matches hold-doc claim; sampling-variance question remains open per HU-2707"
+  },
+  {
+   "claim_id": "harness-H1-H4",
+   "claimed_by": "/root/repos/brain/HUible/governance/chandler-first-hold.md ('harness build done as its own child task'; ship rule H1 green + H2/H3 + H4)",
+   "hu_issue": "HU-2706",
+   "commits": [{"sha": "f01c30d", "date": "2026-09-05", "subject": "feat: HU-2706 v2 internal validation harness H1-H4 — live H1: 1 GREEN/1 RED, fullname-intro recurrence archived"}],
+   "implementation_paths": ["scripts/v2_harness/run_harness.py", "scripts/v2_harness/h1_m0_calibration.py", "scripts/v2_harness/h2_ai_tell_probes.py", "scripts/v2_harness/h3_grounding_ledger.py", "scripts/v2_harness/h4_five_friends_kit.py"],
+   "live_check_executed": {
+    "what": "Harness files verified present; frozen M-0 violation fixtures reused as m0-cases.jsonl source links",
+    "observed": {"files_present": true, "h1_gate_state": "RED per f01c30d (fullname-intro recurrence 1/3 archived) — ship gate NOT green"},
+    "evidence": "scripts/v2_harness/*; commit f01c30d; docs/evidence/m1/m0-cases.jsonl"
+   },
+   "verification_level": "verified_files; H1 gate RED — consistent with hold doc ship rule (v2 does not ship)"
+  },
+  {
+   "claim_id": "W2-RRF-fusion",
+   "claimed_by": "v1.8 plan W2 row (supporting state, not a hold-doc claim)",
+   "hu_issue": "HU-2309 (W2)",
+   "commits": [{"sha": "1d47a37", "date": "2026-09-03", "subject": "feat(memory): W2 lexical retrieval lane + RRF fusion with vector lane"}],
+   "implementation_paths": ["src/huible/memory/fusion.py"],
+   "live_check_executed": {"what": "Code present at named path", "observed": {"code_present": true}, "evidence": "src/huible/memory/fusion.py"},
+   "verification_level": "verified_code; retrieval-quality proof deferred to M1.2"
+  }
+ ],
+ "m0_verdict_claims_resolved": [
+  {"claim": "character-sheet prompting (banned) was the persona mechanism", "status": "removed_at_code_level", "evidence": "grep -rn 'character_sheet' src/huible/ → zero refs (baseline.json code probe); definitive live-path proof = M1.2 traces"},
+  {"claim": "fake embeddings in prod, vault never actually read", "status": "fixed_config_level_not_yet_proven_live", "evidence": "EMBEDDING_PROVIDER=local_onnx live + 15341/15341 embedded + 384-dim schema (baseline.json); production retrieval proof = M1.2"},
+  {"claim": "BEAM Arm A retrieval never ported", "status": "contradicted_by_later_work", "evidence": "Arm A port commits c779645/3579fdd (2026-09-03, after the 2026-08-31 verdict) + live relay HTTP 200; reads-reaching-generation proof = M1.2"},
+  {"claim": "no tool calls", "status": "tools_implemented_not_yet_proven_live", "evidence": "W5 commit 4fe3e46 era-gated tools; live execution proof = M1.4 context-tool-replay.json"}
+ ],
+ "config_drift_filed": [
+  {"observation": "Container env carries EMBEDDING_MODEL=text-embedding-3-small (legacy, unused; engine reads EMBEDDINGS_MODEL → BAAI/bge-small-en-v1.5)", "risk": "cosmetic today, misleading during incident triage", "action": "remove var at next deploy window (M1.2 cutover)"}
+ ]
+}

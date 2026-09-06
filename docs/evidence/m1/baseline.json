@@ -1,0 +1,120 @@
+{
+ "artifact": "M1.1 baseline capture (HU-2732)",
+ "generated_at": "2026-09-06T21:20:17.340030+00:00",
+ "convention": "Measured in place on the live deployment; no invented values. Config observations are not product-behavior proof (M1.2+ owns that).",
+ "git": {
+  "repo": "/root/repos/huible",
+  "head": "44b456e237d0458ed8034775a2ad3163c53abe89",
+  "branch": "w1-local-onnx-embeddings",
+  "pushed": true,
+  "remote_branch_sha": "44b456e237d0458ed8034775a2ad3163c53abe89",
+  "behind_origin_main": 0,
+  "ahead_of_origin_main": 68,
+  "tracked_dirty_files": 3,
+  "origin_main_head": "0f2fe93f005fe5d5a6c1f1a97e0e799f0244c266"
+ },
+ "deployment": {
+  "host": ".245 (this host; .243 off-limits per roadmap)",
+  "app_container": "huible-app",
+  "app_image_created": "2026-09-05T02:12:12.636126072Z",
+  "app_container_started": "2026-09-05T02:12:38.946733729Z",
+  "app_health": {
+   "http": 200,
+   "body": "{\"data\":{\"status\":\"ok\",\"version\":\"0.1.0\",\"checks\":{\"database\":\"ok\",\"pgvector\":\"ok\",\"generator\":\"ready\",\"telemetry_sink\":\"active (/var/lib/huible/logs/telemetry.log)\"},\"uptime_seconds\":155255.21322274208}}"
+  },
+  "config_observed": {
+   "EMBEDDING_PROVIDER": "local_onnx",
+   "EMBEDDING_MODEL_container_env": "text-embedding-3-small",
+   "WORKING_MEMORY_ENABLED": "on",
+   "WORKING_MEMORY_BASE_URL": "http://172.19.0.1:8420",
+   "WORKING_MEMORY_SERVICE_ID": "default",
+   "note": "EMBEDDING_MODEL is a legacy unused var name; the engine reads EMBEDDINGS_MODEL (settings.embeddings_model, default BAAI/bge-small-en-v1.5). Recorded as observed config drift."
+  },
+  "working_memory_relay": {
+   "systemd_unit": "active",
+   "http": 200,
+   "bind_expectation": "172.19.0.1:8420 bridge-only (runbook)",
+   "runbook": "docs/runbooks/working-memory-relay.md"
+  }
+ },
+ "database": {
+  "memories_total": 15341,
+  "memories_with_content_embedding": 15341,
+  "memories_missing_content_embedding": 0,
+  "memories_per_persona": {
+   "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": 14291,
+   "a0000000-0000-0000-0000-000000000001": 1050
+  },
+  "vector_columns": {
+   "embedding_content": "vector",
+   "embedding_sensory": "vector",
+   "embedding_affect": "vector"
+  },
+  "conversation_turns_lifetime": 1468,
+  "conversations_lifetime": 337,
+  "turns_by_day_last_14d": {
+   "2026-08-24": 42,
+   "2026-08-25": 4,
+   "2026-08-27": 24,
+   "2026-08-28": 106,
+   "2026-08-29": 24,
+   "2026-08-30": 70,
+   "2026-08-31": 196,
+   "2026-09-03": 234,
+   "2026-09-04": 278,
+   "2026-09-05": 304,
+   "2026-09-06": 78
+  }
+ },
+ "corpus": {
+  "corpus_csv": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+  "sha256": "6c13149cdddf5a7c808e8f73a405aefed6b1e376b1889381191a77722fc36fb2",
+  "bytes": 4413513,
+  "csv_rows_total": 60817,
+  "measured_baselines": {
+   "corpus_csv": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+   "chandler_lines": 8376,
+   "question_ratio": 0.3091,
+   "question_lines": 2589,
+   "length_p99_chars": 305,
+   "reply_cap_chars": 400,
+   "reply_cap_derivation": "corpus p99 + headroom (W6 rig cap, unchanged)",
+   "assistant_speak_marker_counts": {
+    "as an ai": 0,
+    "i'm here to": 3,
+    "i am here to": 0,
+    "how can i help": 0,
+    "how may i help": 0,
+    "i'd be happy to": 0,
+    "i would be happy to": 0,
+    "certainly!": 0,
+    "of course!": 1,
+    "feel free to": 0,
+    "let me know if": 1,
+    "is there anything else": 0,
+    "i apologize": 0,
+    "i cannot assist": 0,
+    "i'm unable to": 0,
+    "sure thing": 0,
+    "hope this helps": 0
+   },
+   "code_marker_counts": {
+    "import ": 0,
+    "sys.stdout": 0,
+    "print(": 0,
+    "printf": 0,
+    "def ": 0,
+    "```": 0,
+    "std::": 0,
+    "cout": 2,
+    "puts(": 0,
+    "console.log": 0
+   }
+  }
+ },
+ "code": {
+  "character_sheet_refs_in_engine_src": null,
+  "chat_trace_has_trace_id": true,
+  "chat_route": "POST /api/v1/chat/{persona_id} (src/huible/api/app.py)"
+ }
+}

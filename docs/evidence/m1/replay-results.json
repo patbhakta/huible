@@ -1,0 +1,421 @@
+{
+ "artifact": "M1.1 M-0 replay results (HU-2732)",
+ "generated_at": "2026-09-06T21:20:17.340030+00:00",
+ "cases_path": "docs/evidence/m1/m0-cases.jsonl",
+ "case_count": 10,
+ "statuses": [
+  "deferred"
+ ],
+ "gate": "Runner-level success only. Product verdicts stay with H1-H4 (spend-gated) and M1.2+ acceptance; red assertions expected at M1.1.",
+ "cases": [
+  {
+   "case_id": "m0_fullname_self_intro",
+   "defect_class": "identity_leak",
+   "sources": [
+    {
+     "type": "session",
+     "ref": "demo-722a2ea810df turn 1 (2026-08-31, founder's own demo)"
+    },
+    {
+     "type": "paperclip_comment",
+     "ref": "e2971bc9 (M-0 evaluation)"
+    },
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/governance/chandler-first-hold.md (M-0 verdict 2026-09-04)"
+    }
+   ],
+   "expected_at_m1": "scripts/v2_harness/h1_m0_calibration.py",
+   "status": "deferred",
+   "observed": null,
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_python_syntax_answer",
+   "defect_class": "ai_tell_code_leak",
+   "sources": [
+    {
+     "type": "session",
+     "ref": "demo-722a2ea810df turn 11 (2026-08-31)"
+    },
+    {
+     "type": "paperclip_comment",
+     "ref": "e2971bc9 (M-0 evaluation)"
+    },
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/governance/chandler-first-hold.md (M-0 verdict 2026-09-04)"
+    }
+   ],
+   "expected_at_m1": "scripts/v2_harness/h1_m0_calibration.py",
+   "status": "deferred",
+   "observed": null,
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_reply_length_violation",
+   "defect_class": "cadence_length",
+   "sources": [
+    {
+     "type": "paperclip_comment",
+     "ref": "e2971bc9 (M-0 evaluation)"
+    },
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/governance/chandler-first-hold.md (M-0 verdict 2026-09-04)"
+    }
+   ],
+   "expected_at_m1": "scripts/v2_harness/h1_m0_calibration.py",
+   "status": "deferred",
+   "observed": null,
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_assistant_register_drift",
+   "defect_class": "register_drift",
+   "sources": [
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/governance/chandler-first-hold.md (M-0 verdict 2026-09-04)"
+    }
+   ],
+   "expected_at_m1": "scripts/v2_harness/h2_ai_tell_probes.py",
+   "status": "deferred",
+   "observed": null,
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_one_way_conversation",
+   "defect_class": "reciprocity",
+   "sources": [
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/governance/chandler-first-hold.md (M-0 verdict 2026-09-04)"
+    }
+   ],
+   "expected_at_m1": "scripts/v2_harness/h2_ai_tell_probes.py",
+   "status": "deferred",
+   "observed": null,
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_unproven_per_reply_grounding",
+   "defect_class": "grounding",
+   "sources": [
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/governance/chandler-first-hold.md (M-0 verdict 2026-09-04, 'the root failure')"
+    }
+   ],
+   "expected_at_m1": "scripts/v2_harness/h3_grounding_ledger.py",
+   "status": "deferred",
+   "observed": {
+    "config": {
+     "EMBEDDING_PROVIDER": "local_onnx",
+     "EMBEDDING_MODEL_container_env": "text-embedding-3-small",
+     "WORKING_MEMORY_ENABLED": "on",
+     "WORKING_MEMORY_BASE_URL": "http://172.19.0.1:8420",
+     "WORKING_MEMORY_SERVICE_ID": "default",
+     "note": "EMBEDDING_MODEL is a legacy unused var name; the engine reads EMBEDDINGS_MODEL (settings.embeddings_model, default BAAI/bge-small-en-v1.5). Recorded as observed config drift."
+    },
+    "database": {
+     "memories_total": 15341,
+     "memories_with_content_embedding": 15341,
+     "memories_missing_content_embedding": 0,
+     "memories_per_persona": {
+      "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": 14291,
+      "a0000000-0000-0000-0000-000000000001": 1050
+     },
+     "vector_columns": {
+      "embedding_content": "vector",
+      "embedding_sensory": "vector",
+      "embedding_affect": "vector"
+     },
+     "conversation_turns_lifetime": 1468,
+     "conversations_lifetime": 337,
+     "turns_by_day_last_14d": {
+      "2026-08-24": 42,
+      "2026-08-25": 4,
+      "2026-08-27": 24,
+      "2026-08-28": 106,
+      "2026-08-29": 24,
+      "2026-08-30": 70,
+      "2026-08-31": 196,
+      "2026-09-03": 234,
+      "2026-09-04": 278,
+      "2026-09-05": 304,
+      "2026-09-06": 78
+     }
+    },
+    "relay": {
+     "systemd_unit": "active",
+     "http": 200,
+     "bind_expectation": "172.19.0.1:8420 bridge-only (runbook)",
+     "runbook": "docs/runbooks/working-memory-relay.md"
+    },
+    "code": {
+     "character_sheet_refs_in_engine_src": null,
+     "chat_trace_has_trace_id": true,
+     "chat_route": "POST /api/v1/chat/{persona_id} (src/huible/api/app.py)"
+    }
+   },
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_character_sheet_prompting",
+   "defect_class": "architecture",
+   "sources": [
+    {
+     "type": "sandbox_brief",
+     "ref": "/root/repos/sandbox/experiments/2026-09-06-fleet-prompt-rewrite/BRIEF.md (M-0 verdict 2026-08-31)"
+    }
+   ],
+   "expected_at_m1": "M1.2 (traces: vault reads reach generation)",
+   "status": "deferred",
+   "observed": {
+    "config": {
+     "EMBEDDING_PROVIDER": "local_onnx",
+     "EMBEDDING_MODEL_container_env": "text-embedding-3-small",
+     "WORKING_MEMORY_ENABLED": "on",
+     "WORKING_MEMORY_BASE_URL": "http://172.19.0.1:8420",
+     "WORKING_MEMORY_SERVICE_ID": "default",
+     "note": "EMBEDDING_MODEL is a legacy unused var name; the engine reads EMBEDDINGS_MODEL (settings.embeddings_model, default BAAI/bge-small-en-v1.5). Recorded as observed config drift."
+    },
+    "database": {
+     "memories_total": 15341,
+     "memories_with_content_embedding": 15341,
+     "memories_missing_content_embedding": 0,
+     "memories_per_persona": {
+      "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": 14291,
+      "a0000000-0000-0000-0000-000000000001": 1050
+     },
+     "vector_columns": {
+      "embedding_content": "vector",
+      "embedding_sensory": "vector",
+      "embedding_affect": "vector"
+     },
+     "conversation_turns_lifetime": 1468,
+     "conversations_lifetime": 337,
+     "turns_by_day_last_14d": {
+      "2026-08-24": 42,
+      "2026-08-25": 4,
+      "2026-08-27": 24,
+      "2026-08-28": 106,
+      "2026-08-29": 24,
+      "2026-08-30": 70,
+      "2026-08-31": 196,
+      "2026-09-03": 234,
+      "2026-09-04": 278,
+      "2026-09-05": 304,
+      "2026-09-06": 78
+     }
+    },
+    "relay": {
+     "systemd_unit": "active",
+     "http": 200,
+     "bind_expectation": "172.19.0.1:8420 bridge-only (runbook)",
+     "runbook": "docs/runbooks/working-memory-relay.md"
+    },
+    "code": {
+     "character_sheet_refs_in_engine_src": null,
+     "chat_trace_has_trace_id": true,
+     "chat_route": "POST /api/v1/chat/{persona_id} (src/huible/api/app.py)"
+    }
+   },
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_fake_embeddings",
+   "defect_class": "architecture",
+   "sources": [
+    {
+     "type": "sandbox_brief",
+     "ref": "/root/repos/sandbox/experiments/2026-09-06-fleet-prompt-rewrite/BRIEF.md (M-0 verdict 2026-08-31)"
+    }
+   ],
+   "expected_at_m1": "M1.2 (index-manifest.json + retrieval traces)",
+   "status": "deferred",
+   "observed": {
+    "config": {
+     "EMBEDDING_PROVIDER": "local_onnx",
+     "EMBEDDING_MODEL_container_env": "text-embedding-3-small",
+     "WORKING_MEMORY_ENABLED": "on",
+     "WORKING_MEMORY_BASE_URL": "http://172.19.0.1:8420",
+     "WORKING_MEMORY_SERVICE_ID": "default",
+     "note": "EMBEDDING_MODEL is a legacy unused var name; the engine reads EMBEDDINGS_MODEL (settings.embeddings_model, default BAAI/bge-small-en-v1.5). Recorded as observed config drift."
+    },
+    "database": {
+     "memories_total": 15341,
+     "memories_with_content_embedding": 15341,
+     "memories_missing_content_embedding": 0,
+     "memories_per_persona": {
+      "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": 14291,
+      "a0000000-0000-0000-0000-000000000001": 1050
+     },
+     "vector_columns": {
+      "embedding_content": "vector",
+      "embedding_sensory": "vector",
+      "embedding_affect": "vector"
+     },
+     "conversation_turns_lifetime": 1468,
+     "conversations_lifetime": 337,
+     "turns_by_day_last_14d": {
+      "2026-08-24": 42,
+      "2026-08-25": 4,
+      "2026-08-27": 24,
+      "2026-08-28": 106,
+      "2026-08-29": 24,
+      "2026-08-30": 70,
+      "2026-08-31": 196,
+      "2026-09-03": 234,
+      "2026-09-04": 278,
+      "2026-09-05": 304,
+      "2026-09-06": 78
+     }
+    },
+    "relay": {
+     "systemd_unit": "active",
+     "http": 200,
+     "bind_expectation": "172.19.0.1:8420 bridge-only (runbook)",
+     "runbook": "docs/runbooks/working-memory-relay.md"
+    },
+    "code": {
+     "character_sheet_refs_in_engine_src": null,
+     "chat_trace_has_trace_id": true,
+     "chat_route": "POST /api/v1/chat/{persona_id} (src/huible/api/app.py)"
+    }
+   },
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_arm_a_not_ported",
+   "defect_class": "architecture",
+   "sources": [
+    {
+     "type": "sandbox_brief",
+     "ref": "/root/repos/sandbox/experiments/2026-09-06-fleet-prompt-rewrite/BRIEF.md (M-0 verdict 2026-08-31)"
+    },
+    {
+     "type": "vault",
+     "ref": "/root/repos/brain/HUible/beam-benchmark.md (v4 conclusion, HU-1912 port)"
+    }
+   ],
+   "expected_at_m1": "M1.2 (Arm A reads visible in production traces)",
+   "status": "deferred",
+   "observed": {
+    "config": {
+     "EMBEDDING_PROVIDER": "local_onnx",
+     "EMBEDDING_MODEL_container_env": "text-embedding-3-small",
+     "WORKING_MEMORY_ENABLED": "on",
+     "WORKING_MEMORY_BASE_URL": "http://172.19.0.1:8420",
+     "WORKING_MEMORY_SERVICE_ID": "default",
+     "note": "EMBEDDING_MODEL is a legacy unused var name; the engine reads EMBEDDINGS_MODEL (settings.embeddings_model, default BAAI/bge-small-en-v1.5). Recorded as observed config drift."
+    },
+    "database": {
+     "memories_total": 15341,
+     "memories_with_content_embedding": 15341,
+     "memories_missing_content_embedding": 0,
+     "memories_per_persona": {
+      "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": 14291,
+      "a0000000-0000-0000-0000-000000000001": 1050
+     },
+     "vector_columns": {
+      "embedding_content": "vector",
+      "embedding_sensory": "vector",
+      "embedding_affect": "vector"
+     },
+     "conversation_turns_lifetime": 1468,
+     "conversations_lifetime": 337,
+     "turns_by_day_last_14d": {
+      "2026-08-24": 42,
+      "2026-08-25": 4,
+      "2026-08-27": 24,
+      "2026-08-28": 106,
+      "2026-08-29": 24,
+      "2026-08-30": 70,
+      "2026-08-31": 196,
+      "2026-09-03": 234,
+      "2026-09-04": 278,
+      "2026-09-05": 304,
+      "2026-09-06": 78
+     }
+    },
+    "relay": {
+     "systemd_unit": "active",
+     "http": 200,
+     "bind_expectation": "172.19.0.1:8420 bridge-only (runbook)",
+     "runbook": "docs/runbooks/working-memory-relay.md"
+    },
+    "code": {
+     "character_sheet_refs_in_engine_src": null,
+     "chat_trace_has_trace_id": true,
+     "chat_route": "POST /api/v1/chat/{persona_id} (src/huible/api/app.py)"
+    }
+   },
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  },
+  {
+   "case_id": "m0_no_tool_calls",
+   "defect_class": "capability",
+   "sources": [
+    {
+     "type": "sandbox_brief",
+     "ref": "/root/repos/sandbox/experiments/2026-09-06-fleet-prompt-rewrite/BRIEF.md (M-0 verdict 2026-08-31)"
+    }
+   ],
+   "expected_at_m1": "M1.4 (context-tool-replay.json)",
+   "status": "deferred",
+   "observed": {
+    "config": {
+     "EMBEDDING_PROVIDER": "local_onnx",
+     "EMBEDDING_MODEL_container_env": "text-embedding-3-small",
+     "WORKING_MEMORY_ENABLED": "on",
+     "WORKING_MEMORY_BASE_URL": "http://172.19.0.1:8420",
+     "WORKING_MEMORY_SERVICE_ID": "default",
+     "note": "EMBEDDING_MODEL is a legacy unused var name; the engine reads EMBEDDINGS_MODEL (settings.embeddings_model, default BAAI/bge-small-en-v1.5). Recorded as observed config drift."
+    },
+    "database": {
+     "memories_total": 15341,
+     "memories_with_content_embedding": 15341,
+     "memories_missing_content_embedding": 0,
+     "memories_per_persona": {
+      "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": 14291,
+      "a0000000-0000-0000-0000-000000000001": 1050
+     },
+     "vector_columns": {
+      "embedding_content": "vector",
+      "embedding_sensory": "vector",
+      "embedding_affect": "vector"
+     },
+     "conversation_turns_lifetime": 1468,
+     "conversations_lifetime": 337,
+     "turns_by_day_last_14d": {
+      "2026-08-24": 42,
+      "2026-08-25": 4,
+      "2026-08-27": 24,
+      "2026-08-28": 106,
+      "2026-08-29": 24,
+      "2026-08-30": 70,
+      "2026-08-31": 196,
+      "2026-09-03": 234,
+      "2026-09-04": 278,
+      "2026-09-05": 304,
+      "2026-09-06": 78
+     }
+    },
+    "relay": {
+     "systemd_unit": "active",
+     "http": 200,
+     "bind_expectation": "172.19.0.1:8420 bridge-only (runbook)",
+     "runbook": "docs/runbooks/working-memory-relay.md"
+    },
+    "code": {
+     "character_sheet_refs_in_engine_src": null,
+     "chat_trace_has_trace_id": true,
+     "chat_route": "POST /api/v1/chat/{persona_id} (src/huible/api/app.py)"
+    }
+   },
+   "note": "M1.1 records the baseline state only; no product case is reported passing. Live proof is owed by the runner/milestone above."
+  }
+ ]
+}
