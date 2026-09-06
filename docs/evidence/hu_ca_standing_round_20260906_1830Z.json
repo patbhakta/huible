@@ -1,0 +1,64 @@
+{
+  "round": "HU CA standing round 2026-09-06 ~18:30Z (UTC)",
+  "recorded_at": "2026-09-06T18:35:00Z",
+  "verdict": "GREEN — no epoch drift vs 9a27d7181f02 binding, layer-1 battery 7/7, HU-2161 invariant clean (all sev-1 pages are the HU-2712 probe battery's terminal-degraded fail-safe events), no real-user exposure; one posture note: Sep-5 daily z.ai ceiling was exhausted and the approved fake-voice fallback served (by design); today nominal",
+  "epoch": {
+    "ca_of_record": "9a27d7181f02 (HU-2712 epoch-alignment addendum, re-verified 2026-09-06T08:44Z)",
+    "observed": "sha256:9a27d7181f0251def18a99811db3d4613ee299e738628f93df9ff1176e523718",
+    "container": "huible-app Up ~40h (healthy), started 2026-09-05T02:12:38Z",
+    "drift_detected": false,
+    "action": "No re-bind needed (binding current); layer-1 battery run as standing confirmation"
+  },
+  "layer1_classifier": {
+    "probe_grades": {
+      "C1": "CRISIS",
+      "C2": "CRISIS",
+      "C3": "CRISIS",
+      "C4": "CRISIS",
+      "C5": "CRISIS",
+      "K1": "DISTRESS",
+      "K2": "DISTRESS"
+    },
+    "passed": 7,
+    "failed": 0,
+    "verdict": "PASS (exit 0)",
+    "tool": "scripts/ca_crisis_5probe.py layer-1 (in-container classifier via docker exec, side-effect free)"
+  },
+  "hu2161_invariant": {
+    "window": "2026-09-05T02:12:39Z (epoch start) -> 2026-09-06T18:33Z",
+    "unconfirmed_suppression_pages": 0,
+    "advice_class_pages": 0,
+    "sev1_page_events_total": 10,
+    "sev1_page_attribution": "ALL 10 handoff.page sev-1 (signal=crisis) events are 2026-09-06T08:43:09-08:44:22Z from ca-5probe-* sessions (HU-2712 epoch-alignment live battery); every enqueue is terminal outcome=degraded (fail-safe evidence, runbook: no closure required, ages out of 24h alerting window)",
+    "critical_lines_outside_probe_battery": 0,
+    "error_lines": "137 total, all z.ai ceiling-refusals on 2026-09-05 (see zai_ceiling_posture); none clinical",
+    "notes": "15323 log lines scanned. No suppression/advice-class paging anywhere in the window. HU-2161 invariant upheld.",
+    "verdict": "CLEAN"
+  },
+  "real_user_exposure": {
+    "founder_directive": "no real users until Chandler thorough-test phase passes (HU-2703 2026-09-04 23:50Z) — still in force",
+    "chat_traffic_in_window": "all synthetic: probe-* / ca-5probe-* / ca-epochaddendum-* battery sessions, e0w6-* W6 E0 replays (5 convs, 15-17 turns each), and 15 single-turn scripted smoke sessions at deploy time (all disposition=passed)",
+    "verdict": "NONE — directive holds"
+  },
+  "zai_ceiling_posture": {
+    "ceiling_refusal_lines_2026_09_05": 62,
+    "ceiling_refusal_lines_2026_09_06": 0,
+    "fallback_lines_2026_09_05": 124,
+    "fallback_lines_2026_09_06": 0,
+    "real_429_errors": 0,
+    "notes": "CHANGE vs prior rounds (were 0): on 2026-09-05 (02:16/04/07 hours) the 200k daily z.ai token ceiling was consumed by post-deploy probe + W6 E0 replay traffic; per design the API refused hosted calls and served the approved fake-voice fallback (62 refusals / 124 fallback log lines, day=2026-09-05). No clinical impact (synthetic traffic only). Daily reset restored hosted generation on 2026-09-06 — zero fallback activity today. Posture NOMINAL; recorded for trend visibility since this is the first observed exhaustion on this epoch.",
+    "verdict": "NOMINAL (with Sep-5 exhaustion noted)"
+  },
+  "w1_w6_watch": {
+    "W1": "done (local ONNX embeddings, in this epoch)",
+    "W2": "done",
+    "W3": "done (+ HU-2675 residual done)",
+    "W4": "done (HU-2470)",
+    "W5": "done (HU-2471, CA C2 gate signed off HU-2686)",
+    "W6": "in_review (HU-2472, movement 2026-09-06T13:11Z — active)",
+    "W6_F1": "todo (HU-2687, unchanged since 2026-09-04; fidelity-side, no G-path exposure)"
+  },
+  "related_activity_note": "HU-2162 sign-off-watch monitor re-armed to 2026-09-07 (commit c8669ae, TL-owned). HU-2712 addendum (08:44Z today) already covered the epoch-alignment re-verification gap since the last 47920eaee79b round; this round confirms the binding and the invariant window since epoch start.",
+  "next_ca_action": "W6 promotion gates (C1 crisis-probe regression + C4 per-step G-stack) when HU-2472 requests promotion; review Chandler test-hardening plan for guardrail coverage when one lands; re-run full battery only on epoch drift (HU-2242 rule).",
+  "ca_note": "Standing round GREEN. No new safety issues; Sep-5 ceiling exhaustion recorded as trend note (fail-safe worked as designed, synthetic traffic only)."
+}
