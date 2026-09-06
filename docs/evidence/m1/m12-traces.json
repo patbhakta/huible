@@ -1,0 +1,501 @@
+{
+  "artifact": "M1.2 live production traces \u2014 Arm A reads reaching generation (HU-2732)",
+  "generated_at": "2026-09-06T21:52:19.547771+00:00",
+  "deployment": {
+    "host": ".245 (this host)",
+    "base_url": "http://127.0.0.1:8000",
+    "app_container": "huible-app",
+    "image_created": "2026-09-06T21:50:38.622221322Z"
+  },
+  "conversation_id": "m12-trace-855bdab91f9a",
+  "protocol": "2-turn plant/probe, X-Huible-Traffic-Class: internal, consent card v3",
+  "turns": {
+    "plant": {
+      "message": "Okay okay, listen \u2014 one thing you have to remember about me: my umbrella is yellow and I NEVER lend it to anyone.",
+      "trace": {
+        "memory_refs": [
+          "0a0c60fc-acbd-59d7-98b6-b1990961a364",
+          "a1a06c89-d954-5ff3-b5f6-013fce9d5fa1",
+          "f44cc906-1a8d-5e3e-9806-f2dd260c6327",
+          "f76cd8bc-0181-56e7-bace-67944d44c15d",
+          "d9f6f3c8-4cba-57c1-a169-7577083796de",
+          "687ff98d-6168-502f-99b0-44104cf4b8b3",
+          "849bec18-41ab-54e5-8af8-e1ce33299bca",
+          "e8ae7a72-75ba-51a1-b7b7-d408008560bb",
+          "aec54342-b4c7-5482-8146-f0272a9d83ec",
+          "323505a9-e16c-5182-a4dc-0d8f373b08c7",
+          "e115f18b-5e97-5a22-84c3-7df3ac6fc610",
+          "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+          "4b437a6f-aeb2-5bca-8d95-af0319531df8",
+          "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+          "ecddf09a-4259-5fb5-acb2-410b6443059b",
+          "6d672525-48d1-555d-86f9-60a6caf50a07",
+          "46da2cc4-475f-53ed-94ac-f796378d355a",
+          "d804c8af-9271-516c-ab03-5f1a5fe82ae9",
+          "3efa15ff-ff2f-5865-b865-42cc0f61fa49",
+          "81f52707-ec4b-5a66-b7a2-d9cbe92cc334"
+        ],
+        "trace_id": "f3ffbc80-b9ee-4b30-84e9-a3dce18ffbaa",
+        "provenance_tiers": [
+          "accrued",
+          "derived"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "0a0c60fc-acbd-59d7-98b6-b1990961a364",
+            "content": "that\u0092s the one thing i can\u0092t do.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7726566561264827
+          },
+          {
+            "id": "a1a06c89-d954-5ff3-b5f6-013fce9d5fa1",
+            "content": "i'm not letting you or anybody else see, ever.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7669225116418309
+          },
+          {
+            "id": "f44cc906-1a8d-5e3e-9806-f2dd260c6327",
+            "content": "i never have to answer that phone again.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7559215095089981
+          },
+          {
+            "id": "f76cd8bc-0181-56e7-bace-67944d44c15d",
+            "content": "i'm anything but a dropper.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7536676283278908
+          },
+          {
+            "id": "d9f6f3c8-4cba-57c1-a169-7577083796de",
+            "content": "(the duck quacks.) you\u0092re right, i could never lie to you.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7535510567694287
+          },
+          {
+            "id": "687ff98d-6168-502f-99b0-44104cf4b8b3",
+            "content": "no-no, i don\u0092t think you heard me.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7534875406775643
+          },
+          {
+            "id": "849bec18-41ab-54e5-8af8-e1ce33299bca",
+            "content": "here\u0092s a question you never have to ask.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7494548679047981
+          },
+          {
+            "id": "e8ae7a72-75ba-51a1-b7b7-d408008560bb",
+            "content": "i\u0092ve never known you to pay money for any kind of capade.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.747889351844793
+          },
+          {
+            "id": "aec54342-b4c7-5482-8146-f0272a9d83ec",
+            "content": "please, don\u0092t take away my cool thing.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7469481619031347
+          },
+          {
+            "id": "323505a9-e16c-5182-a4dc-0d8f373b08c7",
+            "content": "i\u0092m not going to let you say anything.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7444327327947192
+          },
+          {
+            "id": "e115f18b-5e97-5a22-84c3-7df3ac6fc610",
+            "content": "all right listen, i have one.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.7386655248006878
+          },
+          {
+            "id": "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+            "content": "[family] family memories:\ncalls me!; a gallon of alan; syphilis and stuff, we wouldn't be all together, you know?\n\n- finally, i figure i'd better answer it, and it turns out it's my mother, which is very-very weird, because- she never calls me!\n- (burst into song and dances out of the door.) \"once i was a wooden boy, a little wooden boy...\"\n- i personally could have a gallon of alan.\n- ooh, i hate when my father calls me that.\n- anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know?\n- myyy mother, ladies and gentlemen.\n- yeah, i believe i was talking to joey, alright there, mother-kisser?\n- when they were all over you to go into your father's pipe-fitting business, did you cave?\n- eight and a half hours of aptitude tests, intelligence tests, personality tests...\n- err, listen, the reason that i called you in here today was, err...\n- say you never feel like a father.\n- say your son never feels connected to you, as one.\n- ok, alright, last minute lesson, last minute lesson.\n- i have my reasons.\n- ah, you obviously saw my personal ad.\n- mother of god, i turned it off!\n- i could use another reason why women won't look at me.\n- you know, just because i'm in charge doesn't mean i'm a different person.\n- was, like, your father a doctor?\n- no reason.\n- this woman alison, from work, she's great.\n- actually, uh, we're both the father.\n- my mail order grandfather hasn't come yet.\n- and you get all these like, mental images in your brain, you know, like elle macpherson, or that girl at the xerox place....\n- well, joey, i wrote a little song today.\n- you know, maybe it was his daughter's.\n- well, listen i ah, still have one more person to ah meet, but unless it turns out to be your sister, i think you\u0092re chances are pretty good.\n- i don\u0092t wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy.\n- whenever i would see him i was always think y'know \u0091you\u0092re the reason, you are the reason why their not together.\u0092 and i hated that guy.\n- but i just want you to know that i would never soberly hurt you or your family, you\u0092re my best friend.\n- i think actually the only reason he's getting married is so he can see a stripper.\n- she\u0092s ah, she\u0092s great, great looking, great personality, she\u0092s greatness.\n- i mean i like her, i don\u0092t want to stop seeing her, but every so often it\u0092s like \u0091hey, y'know what, where\u0092s your leg?\u0092 i mean i\u0092m the smallest person in the world aren\u0092t i?\n- i\u0092m the smallest person in the world.\n- (to monica) actually he\u0092s the smallest person in the world.\n- or what my father called thursday night.\n- you\u0092re telling me this actress person is the only woman you ever wanted who didn\u0092t want you back?!\n- my grandmother used to say that exact same thing to me.\n- (entering) hey, my father\u0092s house does that!\n- now, there\u0092s two reasons.\n- i mean, i'm a very bad person.\n- i'm a very, very bad person.\n- i'm a horrible person.\n- whenever i see a girl in fishnet stockings it reminds me of my father in fishnet stockings.\n- and i want to sit in a comfortable chair, and watch television and go to bed at a reasonable hour!\n- i remember reading about this director, i think it was orson wells, who at the beginning of the movie would hire somebody, just so he could fire them in front of everybody.\n- yes, and his father invented that magnetic strip on the back of credit cards.\n- well, like father, like son.\n- oh yeah, then uh, what was phoebe\u0092s song about?\n- you\u0092re gonna be carrying their baby and give them a sony play station?\n- dangerous liaisons.\n- like her voice, her laugh, her personality\u0097well, they\u0092re all back!\n- yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river.\n- okay, it\u0092s probably why kids picked on me in school, and why i never do well with women so, as of 4 o\u0092clock tomorrow, i\u0092m e",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "4b437a6f-aeb2-5bca-8d95-af0319531df8",
+            "content": "[career] career memories:\nworking on with a hammer and it collapses; the episode of three's company where there's some kind of misunderstanding; done\n\n- (chandler hits what he is working on with a hammer and it collapses.)\n- all right, kids, i gotta get to work.\n- oh, i think this is the episode of three's company where there's some kind of misunderstanding.\n- i mean presumably, the biggest part of your job is done.\n- oh, satan's minions at work again...\n- what 'not work out'?\n- y'know, if you're gonna work late, i could look in on him for you.\n- you decided to go into the out-of-work actor business.\n- i just don't things are gonna work out.\n- so, it's a typical day at work.\n- i'm inputting my numbers, and big al calls me into his office and tells me he wants to make me processing supervisor.\n- this was supposed to be a temp job!\n- i just don't want to be one of those guys that's in his office until twelve o'clock at night worrying about the wenus.\n- i just know i'm not going to figure it out working there.\n- yeah, yeah, she works over at that place, uh...\n- (presses a button.) helen, could you make sure we put through the paperwork on miss bookbinder\u0092s raise?\n- well, if you're gonna work for mechanics, those are the ones to work for.\n- yes, it's working!\n- well, now, i actually have to get to work.\n- work people?\n- okay, some people gonna be working this weekend.\n- this is your day job.\n- it didn't look this big in the office.\n- my head must look like a golf ball at work.\n- nice work my friend.\n- we work really hard for it.\n- it's before work, it's after work, it's during work.\n- we're not working out, it's over.\n- i mean, especially considering how tough it's been for you to find work.\n- all right, i gotta get to work, i got a big dinosaur bone to inspect.\n- why don't you stay home from work today and just hang out with me.\n- you\u0092re building a post office?\n- oh, good job joe.\n- (leaving to go to work) hey!\n- okay, i gotta get to get to work.\n- in his office!\n- he\u0092s right, if you quit this job, you then have motivation to go after a job you really want.\n- yeah, that\u0092d be much worse than being 28, and still working here.\n- come on, this is you guys, call her and work it out.\n- okay, okay-okay, ah, chloe works with that guy issac.\n- and jasmine works at that message place with phoebe.\n- every office in the world uses that program!\n- (he starts to look around her office.)\n- and i\u0092m really sorry, it\u0092s just that this is not, this isn\u0092t going to work out.\n- i stayed home from work today while you were at rehearsal so somebody could be here with our chick!\n- and you don\u0092t think taking care of our chick is work?\n- one of the more difficult games sewer workers play.\n- (monica looks at him) watch doesn\u0092t work.\n- yes, but there\u0092s two in martini, soo everybody back to my office.\n- (to his co-workers) what is with him?\n- i hope you know what i\u0092m giving up for ya, because she\u0092s not just the boss in your office, if you know what i mean.\n- hello, joanna (realises he doesn\u0092t know her last name) \u0092s office.\n- yes, it is, at office max.\n- (does a little celebration dance) so things didn\u0092t work out with kathy, huh?\n- i don\u0092t know r.g., i was thinking something girlie for your office.\n- i\u0092m gonna call and get off work tomorrow!\n- there\u0092s some nice guys at my office, do you want me to set you up?\n- oh, he works in the fine foods division.\n- it\u0092s a big company, i don\u0092t\u0097if you\u0097i\n- so what job did you get joe?\n- yeah, but i bet it works.\n- so anyway, rachel, i\u0092m sorry you can\u0092t stay, (rachel is upset about leaving the orgy with the cigarette guy.) but the rest of us have a lot of work to do.\n- unfortunately, my company is transferring me overseas!\n- or a job where you don\u0092t have to carry a table.\n- well, it certainly worked for that valdez kid.\n- well, you\u0092re gonna have to leave sometime, because you both have jobs, and as soon as you do, we\u0092re switching it back!\n- (gunther starts to pour him another cup.) so uh, what do you do when you\u0092re not working",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+            "content": "[general] general memories:\na hump?; i don't know what to do, everybody starts looking at me; a dear diary moment\n\n- all right joey, be nice.\n- so does he have a hump?\n- a hump and a hairpiece?\n- sounds like a date to me.\n- alright, so i'm back in high school, i'm standing in the middle of the cafeteria, and i realize i am totally naked.\n- then i look down, and i realize there's a phone...\n- that's right.\n- all of a sudden, the phone starts to ring.\n- now i don't know what to do, everybody starts looking at me.\n- sometimes i wish i was a lesbian...\n- (they all stare at him.) did i say that out loud?\n- and i just want a million dollars!\n- (he extends his hand hopefully.)\n- (imitating the characters) tuna or egg salad?\n- (re tv) ooh, she should not be wearing those pants.\n- please don't do that again, it's a horrible sound.\n- ooh, this is a dear diary moment.\n- i'm sorry, i didn't catch your name.\n- paul, was it?\n- (deadpan) yes, and we're very excited about it.\n- it's a beautiful thing.\n- i would have to say that is an 'l'-shaped bracket.\n- i have no idea.\n- all finished!\n- yes, please don't spoil all this fun.\n- oh, god.\n- oh my god!\n- you must stop!\n- look, ross, you gotta understand, between us we haven't had a relationship that has lasted longer than a mento.\n- you, however have had the love of a woman for four years.\n- four years of closeness and sharing at the end of which she ripped your heart out, and that is why we don't do it!\n- i don't think that was my point!\n- stay out of my freezer!\n- [scene: a restaurant, monica and paul are still eating.]\n- angela's the screamer, andrea has cats.\n- that is amazing.\n- if can invade poland, there isn't anything i can't do.\n- hi, paul, is it?\n- if i don't input those numbers,...\n- it doesn't make much of a difference...\n- 'look, gippetto, i'm a real live boy.'\n- you're right, i'm sorry.\n- and yet you're surprisingly upbeat.\n- oh, how well you know me...\n- (as rachel is cutting up her cards) y'know, if you listen closely, you can hear a thousand retailers scream.\n- did you make it, or are you just serving it?\n- kids, new dream...\n- i'm in las vegas.\n- (rachel sits down to hear chandler's dream.)\n- okay, so, i'm in las vegas...\n- i'm liza minelli-\n- yeah, i think for us, kissing is pretty much like an opening act, y'know?\n- i mean it's like the stand-up comedian you have to sit through before pink floyd comes out.\n- the problem is, though, after the concert's over, no matter how great the show was, you girls are always looking for the comedian again, y'know?\n- i mean, we're in the car, we're fighting traffic...\n- basically just trying to stay awake.\n- oh, uh, that would be mine.\n- see, i wrote a note to myself, and then i realised i didn't need it, so i balled it up and...\n- (sees that monica is glaring at him) ...now i wish i was dead.\n- yes, and we all know how cruel a parent can be about the flatness of a child's pillow.\n- (looking out the window) ew, ew, ew, ew ew ew ew ew!\n- ugly naked guy got a thighmaster!\n- you don't get a lot of 'doy' these days...\n- ...dinah?\n- now, monica, you know that's not how you look for an engagement ring in a lasagne...\n- we're going in.\n- kinda puts that whole pillow thing in perspective, huh, mon?\n- what does she do?\n- well, no, although i did have an imaginary friend, who...\n- my parents actually preferred.\n- i dunno, but..\n- i think it's about to attack the enterprise.\n- or 'you're such a nice guy' means 'i'm gonna be dating leather-wearing alcoholics and complaining about them to you'.\n- yeah, it's like when you're a kid, and your parents put your dog to sleep, and they tell you it went off to live on some farm.\n- \"so how does it feel knowing you're about to die?\"\n- hey, that was really good!\n- whaddya want from me, damone, huh?\"\n- \"smoke away.\"\n- i think this is probably why damone smokes in his cell alone.\n- relax your hand!\n- not so much!\n- alright, now try taking a puff.\n- alright..\n- give it to me.\n- it's fine, it's fine.\n- look, do you wa",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "ecddf09a-4259-5fb5-acb2-410b6443059b",
+            "content": "okay, well we'll go back in there, but will you do one thing for us?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "6d672525-48d1-555d-86f9-60a6caf50a07",
+            "content": "[food & drink] food & drink memories:\nwe draw cards; quitting to teach the third grade!; better in bed than richard?\n\n- (he drops it in phoebe's coffee.)\n- someone's left a glass on the coffee table.\n- more coffee over here, please!\n- (teaching) ok, so now we draw cards.\n- i'll go to cats, you go to the russian tea room.\n- and sometimes, i'll want you to steal third, and i'll go like this.\n- (slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.\n- just coffee!\n- (goes to kick the ball but kicks ross\u0092s foot instead.)\n- no-no-no-no, the game\u0092s not over, we\u0092re just switching teams.\n- eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.\n- y'know what rach, maybe you should just, y'know stay here at the coffee house.\n- (to ross) should i tell her i ordered tea?\n- instead of hitting on her right away, he's becoming her confidant.\n- oh, so you\u0092re going with the teacher, huh?\n- instead, i ah, hung out with a couple of friends and had a couple of beers so i certainly don\u0092t deserve any praise, verbal or otherwise.\n- (entering with joey) (to monica) coffee house?\n- if she comes back and sees me locked to this instead of the chair, she\u0092s gonna know you were in here.\n- well, actually it\u0092s a hockey team, so it\u0092s angry canadians with no teeth.\n- then i went over to beefsteak julie\u0092s\n- thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!\n- gunther, can i get another cup of coffee, please?\n- well, i am drinking lots of cups of coffee because i\u0092m exhausted!\n- y'know, i saw a wine cellar downstairs...\n- y\u0092know, i saw a wine cellar downstairs\n- can i ask you a cooking question?\n- if you're cooking on the stove, does that mean that your new secret boyfriend is better in bed than richard?\n- how many times have i told you guys, you never watch the cooking channel!\n- oh, the tears are real.\n- did they teach you that in your anger management class?\n- coffee in a fight!\n- the weirdest thing happened at the coffee house, i think, i think phoebe was hitting on me.\n- i mean, would you (he gestures and spills some of his coffee.)\n- unwilling to steal from work, interesting.\n- (we see various scenes of him dropping a football, a mug of coffee, the phone, an apple, a frisbee, a record, and the final scene has a ball bouncing off of his chest.\n- if you get this one, we buy everybody here a steak dinner!\n- well, instead of just hanging out, we figure we\u0092d do nothing.\n- i\u0092ll teach ya!\n- and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.\n- ok well here, we'll just move the coffee table closer to the couch.\n- yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!\n- and here is the bottle of wine for you to bring over tonight.\n- nah, monica\u0092s watching some cooking show.\n- (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place?\n- maybe it\u0092s the sound of ross climbing into my brain and stealing my thoughts.\n- ah ha ha, 2:15, coffeehouse.\n- oh what is it honey, you need some tea?\n- teach me how to spell vitamins.\n- i\u0092m sorry you\u0092re here with me instead of roger.\n- i\u0092m gonna take her to coffee and then we\u0092ll do it then.\n- i went to the coffeehouse!\n- then when the glasses are full, instead of proposing a toast i\u0092m just gonna propose.\n- (examining the coffee table) scotch on the rocks, with a twist, on a coaster?\n- why are you napping over here instead of over at your place?\n- (flashback to chandler about to enter the steam room as he does the voice-over.) well, we had just finished playing racquetball and we were gonna take a steam.\n- i walk into the steam room and it was really steamy.\n- (the flashback shows his glasses fog up and him trying to find his way around the steam-filled room.\n- why do they put so much ste",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "46da2cc4-475f-53ed-94ac-f796378d355a",
+            "content": "okay, one thing at a time.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "d804c8af-9271-516c-ab03-5f1a5fe82ae9",
+            "content": "okay, okay, so we get to take that stupid troll thing home!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "3efa15ff-ff2f-5865-b865-42cc0f61fa49",
+            "content": "listen, the only thing more boring than watching modern dance is having to listen to you talk about it, (imitating her) \"oh chandler, i just lost myself in the moment.\"",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "81f52707-ec4b-5a66-b7a2-d9cbe92cc334",
+            "content": "okay, what do you say we keep one, and then just like have an option on the other one?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          }
+        ],
+        "exclusion_counts": {},
+        "competence_wall": false,
+        "working_memory": {
+          "strategy": "v4-arm-a",
+          "chars": 0,
+          "synced": true
+        },
+        "caretaker": null,
+        "interest_tool": null,
+        "conversation_id": "m12-trace-855bdab91f9a",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 1,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 0,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {},
+          "judge_adjudication": null
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        },
+        "capability_guard": null
+      }
+    },
+    "probe": {
+      "message": "hey, quick one \u2014 what color is my umbrella and would I lend it to you?",
+      "trace": {
+        "memory_refs": [
+          "e3cce912-cdc4-569f-8992-f87052034553",
+          "5bca48db-bfd9-5d6e-b558-428e8ab4da20",
+          "7a9e9aec-7463-50b5-881d-2ac0e47ab11d",
+          "02d0bb83-dd7a-58e4-be8b-7f06f702724d",
+          "08752cca-1684-508b-bcc7-b53f47fc4c5a",
+          "a3eb8631-6928-5291-85f7-af1af1cacb70",
+          "f66dfba4-3301-5308-a017-6cf3b58fc649",
+          "af937195-ed9c-5a57-ba3d-3aacd56b7840",
+          "23bad78c-622d-50e0-8fd7-50e46309a4fb",
+          "10261fa5-feea-5728-aa56-99e46d60ddf5",
+          "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+          "4b437a6f-aeb2-5bca-8d95-af0319531df8",
+          "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+          "5cc9b835-d2d0-5f04-aa72-a1fdfeb53b42",
+          "8150c5f1-7858-5edb-86fb-ff56b50fd03b",
+          "e39a5bfa-9d26-581b-95b5-bc83be069ee0",
+          "08e588b5-7238-5846-9343-769448dc31eb",
+          "89a34644-2dcf-53b5-96b1-207d47865d74",
+          "4367da36-d368-5146-bdde-5c5d1faf3e78",
+          "6d672525-48d1-555d-86f9-60a6caf50a07"
+        ],
+        "trace_id": "f28f9756-cf42-4bf6-87b5-9c48c523457b",
+        "provenance_tiers": [
+          "accrued",
+          "derived"
+        ],
+        "excluded_memory_refs": [],
+        "activated_memories": [
+          {
+            "id": "e3cce912-cdc4-569f-8992-f87052034553",
+            "content": "this is bringing out a lovely color in you!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.928077399730689
+          },
+          {
+            "id": "5bca48db-bfd9-5d6e-b558-428e8ab4da20",
+            "content": "pretty please?!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.9182201455962762
+          },
+          {
+            "id": "7a9e9aec-7463-50b5-881d-2ac0e47ab11d",
+            "content": "hey, will you grab me a cruller?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8993729293346469
+          },
+          {
+            "id": "02d0bb83-dd7a-58e4-be8b-7f06f702724d",
+            "content": "could i borrow it?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8947800460589048
+          },
+          {
+            "id": "08752cca-1684-508b-bcc7-b53f47fc4c5a",
+            "content": "alright?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8934533349816006
+          },
+          {
+            "id": "a3eb8631-6928-5291-85f7-af1af1cacb70",
+            "content": "you got it?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8926628176771059
+          },
+          {
+            "id": "f66dfba4-3301-5308-a017-6cf3b58fc649",
+            "content": "you okay?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8923477883546242
+          },
+          {
+            "id": "af937195-ed9c-5a57-ba3d-3aacd56b7840",
+            "content": "you okay?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8923477883546242
+          },
+          {
+            "id": "23bad78c-622d-50e0-8fd7-50e46309a4fb",
+            "content": "you okay?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8923477883546242
+          },
+          {
+            "id": "10261fa5-feea-5728-aa56-99e46d60ddf5",
+            "content": "i\u0092ll give you a call!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.8892259531751859
+          },
+          {
+            "id": "fa1d99d4-d61a-54a1-8834-214a5dea7ee7",
+            "content": "[family] family memories:\ncalls me!; a gallon of alan; syphilis and stuff, we wouldn't be all together, you know?\n\n- finally, i figure i'd better answer it, and it turns out it's my mother, which is very-very weird, because- she never calls me!\n- (burst into song and dances out of the door.) \"once i was a wooden boy, a little wooden boy...\"\n- i personally could have a gallon of alan.\n- ooh, i hate when my father calls me that.\n- anyway, i was just thinking, i mean, if you'd gone to vail, and if you guys'd been with your family, if you didn't have syphilis and stuff, we wouldn't be all together, you know?\n- myyy mother, ladies and gentlemen.\n- yeah, i believe i was talking to joey, alright there, mother-kisser?\n- when they were all over you to go into your father's pipe-fitting business, did you cave?\n- eight and a half hours of aptitude tests, intelligence tests, personality tests...\n- err, listen, the reason that i called you in here today was, err...\n- say you never feel like a father.\n- say your son never feels connected to you, as one.\n- ok, alright, last minute lesson, last minute lesson.\n- i have my reasons.\n- ah, you obviously saw my personal ad.\n- mother of god, i turned it off!\n- i could use another reason why women won't look at me.\n- you know, just because i'm in charge doesn't mean i'm a different person.\n- was, like, your father a doctor?\n- no reason.\n- this woman alison, from work, she's great.\n- actually, uh, we're both the father.\n- my mail order grandfather hasn't come yet.\n- and you get all these like, mental images in your brain, you know, like elle macpherson, or that girl at the xerox place....\n- well, joey, i wrote a little song today.\n- you know, maybe it was his daughter's.\n- well, listen i ah, still have one more person to ah meet, but unless it turns out to be your sister, i think you\u0092re chances are pretty good.\n- i don\u0092t wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy.\n- whenever i would see him i was always think y'know \u0091you\u0092re the reason, you are the reason why their not together.\u0092 and i hated that guy.\n- but i just want you to know that i would never soberly hurt you or your family, you\u0092re my best friend.\n- i think actually the only reason he's getting married is so he can see a stripper.\n- she\u0092s ah, she\u0092s great, great looking, great personality, she\u0092s greatness.\n- i mean i like her, i don\u0092t want to stop seeing her, but every so often it\u0092s like \u0091hey, y'know what, where\u0092s your leg?\u0092 i mean i\u0092m the smallest person in the world aren\u0092t i?\n- i\u0092m the smallest person in the world.\n- (to monica) actually he\u0092s the smallest person in the world.\n- or what my father called thursday night.\n- you\u0092re telling me this actress person is the only woman you ever wanted who didn\u0092t want you back?!\n- my grandmother used to say that exact same thing to me.\n- (entering) hey, my father\u0092s house does that!\n- now, there\u0092s two reasons.\n- i mean, i'm a very bad person.\n- i'm a very, very bad person.\n- i'm a horrible person.\n- whenever i see a girl in fishnet stockings it reminds me of my father in fishnet stockings.\n- and i want to sit in a comfortable chair, and watch television and go to bed at a reasonable hour!\n- i remember reading about this director, i think it was orson wells, who at the beginning of the movie would hire somebody, just so he could fire them in front of everybody.\n- yes, and his father invented that magnetic strip on the back of credit cards.\n- well, like father, like son.\n- oh yeah, then uh, what was phoebe\u0092s song about?\n- you\u0092re gonna be carrying their baby and give them a sony play station?\n- dangerous liaisons.\n- like her voice, her laugh, her personality\u0097well, they\u0092re all back!\n- yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river.\n- okay, it\u0092s probably why kids picked on me in school, and why i never do well with women so, as of 4 o\u0092clock tomorrow, i\u0092m e",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "4b437a6f-aeb2-5bca-8d95-af0319531df8",
+            "content": "[career] career memories:\nworking on with a hammer and it collapses; the episode of three's company where there's some kind of misunderstanding; done\n\n- (chandler hits what he is working on with a hammer and it collapses.)\n- all right, kids, i gotta get to work.\n- oh, i think this is the episode of three's company where there's some kind of misunderstanding.\n- i mean presumably, the biggest part of your job is done.\n- oh, satan's minions at work again...\n- what 'not work out'?\n- y'know, if you're gonna work late, i could look in on him for you.\n- you decided to go into the out-of-work actor business.\n- i just don't things are gonna work out.\n- so, it's a typical day at work.\n- i'm inputting my numbers, and big al calls me into his office and tells me he wants to make me processing supervisor.\n- this was supposed to be a temp job!\n- i just don't want to be one of those guys that's in his office until twelve o'clock at night worrying about the wenus.\n- i just know i'm not going to figure it out working there.\n- yeah, yeah, she works over at that place, uh...\n- (presses a button.) helen, could you make sure we put through the paperwork on miss bookbinder\u0092s raise?\n- well, if you're gonna work for mechanics, those are the ones to work for.\n- yes, it's working!\n- well, now, i actually have to get to work.\n- work people?\n- okay, some people gonna be working this weekend.\n- this is your day job.\n- it didn't look this big in the office.\n- my head must look like a golf ball at work.\n- nice work my friend.\n- we work really hard for it.\n- it's before work, it's after work, it's during work.\n- we're not working out, it's over.\n- i mean, especially considering how tough it's been for you to find work.\n- all right, i gotta get to work, i got a big dinosaur bone to inspect.\n- why don't you stay home from work today and just hang out with me.\n- you\u0092re building a post office?\n- oh, good job joe.\n- (leaving to go to work) hey!\n- okay, i gotta get to get to work.\n- in his office!\n- he\u0092s right, if you quit this job, you then have motivation to go after a job you really want.\n- yeah, that\u0092d be much worse than being 28, and still working here.\n- come on, this is you guys, call her and work it out.\n- okay, okay-okay, ah, chloe works with that guy issac.\n- and jasmine works at that message place with phoebe.\n- every office in the world uses that program!\n- (he starts to look around her office.)\n- and i\u0092m really sorry, it\u0092s just that this is not, this isn\u0092t going to work out.\n- i stayed home from work today while you were at rehearsal so somebody could be here with our chick!\n- and you don\u0092t think taking care of our chick is work?\n- one of the more difficult games sewer workers play.\n- (monica looks at him) watch doesn\u0092t work.\n- yes, but there\u0092s two in martini, soo everybody back to my office.\n- (to his co-workers) what is with him?\n- i hope you know what i\u0092m giving up for ya, because she\u0092s not just the boss in your office, if you know what i mean.\n- hello, joanna (realises he doesn\u0092t know her last name) \u0092s office.\n- yes, it is, at office max.\n- (does a little celebration dance) so things didn\u0092t work out with kathy, huh?\n- i don\u0092t know r.g., i was thinking something girlie for your office.\n- i\u0092m gonna call and get off work tomorrow!\n- there\u0092s some nice guys at my office, do you want me to set you up?\n- oh, he works in the fine foods division.\n- it\u0092s a big company, i don\u0092t\u0097if you\u0097i\n- so what job did you get joe?\n- yeah, but i bet it works.\n- so anyway, rachel, i\u0092m sorry you can\u0092t stay, (rachel is upset about leaving the orgy with the cigarette guy.) but the rest of us have a lot of work to do.\n- unfortunately, my company is transferring me overseas!\n- or a job where you don\u0092t have to carry a table.\n- well, it certainly worked for that valdez kid.\n- well, you\u0092re gonna have to leave sometime, because you both have jobs, and as soon as you do, we\u0092re switching it back!\n- (gunther starts to pour him another cup.) so uh, what do you do when you\u0092re not working",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "25177fa8-5bee-5f6e-bfb5-7e87b91f3538",
+            "content": "[general] general memories:\na hump?; i don't know what to do, everybody starts looking at me; a dear diary moment\n\n- all right joey, be nice.\n- so does he have a hump?\n- a hump and a hairpiece?\n- sounds like a date to me.\n- alright, so i'm back in high school, i'm standing in the middle of the cafeteria, and i realize i am totally naked.\n- then i look down, and i realize there's a phone...\n- that's right.\n- all of a sudden, the phone starts to ring.\n- now i don't know what to do, everybody starts looking at me.\n- sometimes i wish i was a lesbian...\n- (they all stare at him.) did i say that out loud?\n- and i just want a million dollars!\n- (he extends his hand hopefully.)\n- (imitating the characters) tuna or egg salad?\n- (re tv) ooh, she should not be wearing those pants.\n- please don't do that again, it's a horrible sound.\n- ooh, this is a dear diary moment.\n- i'm sorry, i didn't catch your name.\n- paul, was it?\n- (deadpan) yes, and we're very excited about it.\n- it's a beautiful thing.\n- i would have to say that is an 'l'-shaped bracket.\n- i have no idea.\n- all finished!\n- yes, please don't spoil all this fun.\n- oh, god.\n- oh my god!\n- you must stop!\n- look, ross, you gotta understand, between us we haven't had a relationship that has lasted longer than a mento.\n- you, however have had the love of a woman for four years.\n- four years of closeness and sharing at the end of which she ripped your heart out, and that is why we don't do it!\n- i don't think that was my point!\n- stay out of my freezer!\n- [scene: a restaurant, monica and paul are still eating.]\n- angela's the screamer, andrea has cats.\n- that is amazing.\n- if can invade poland, there isn't anything i can't do.\n- hi, paul, is it?\n- if i don't input those numbers,...\n- it doesn't make much of a difference...\n- 'look, gippetto, i'm a real live boy.'\n- you're right, i'm sorry.\n- and yet you're surprisingly upbeat.\n- oh, how well you know me...\n- (as rachel is cutting up her cards) y'know, if you listen closely, you can hear a thousand retailers scream.\n- did you make it, or are you just serving it?\n- kids, new dream...\n- i'm in las vegas.\n- (rachel sits down to hear chandler's dream.)\n- okay, so, i'm in las vegas...\n- i'm liza minelli-\n- yeah, i think for us, kissing is pretty much like an opening act, y'know?\n- i mean it's like the stand-up comedian you have to sit through before pink floyd comes out.\n- the problem is, though, after the concert's over, no matter how great the show was, you girls are always looking for the comedian again, y'know?\n- i mean, we're in the car, we're fighting traffic...\n- basically just trying to stay awake.\n- oh, uh, that would be mine.\n- see, i wrote a note to myself, and then i realised i didn't need it, so i balled it up and...\n- (sees that monica is glaring at him) ...now i wish i was dead.\n- yes, and we all know how cruel a parent can be about the flatness of a child's pillow.\n- (looking out the window) ew, ew, ew, ew ew ew ew ew!\n- ugly naked guy got a thighmaster!\n- you don't get a lot of 'doy' these days...\n- ...dinah?\n- now, monica, you know that's not how you look for an engagement ring in a lasagne...\n- we're going in.\n- kinda puts that whole pillow thing in perspective, huh, mon?\n- what does she do?\n- well, no, although i did have an imaginary friend, who...\n- my parents actually preferred.\n- i dunno, but..\n- i think it's about to attack the enterprise.\n- or 'you're such a nice guy' means 'i'm gonna be dating leather-wearing alcoholics and complaining about them to you'.\n- yeah, it's like when you're a kid, and your parents put your dog to sleep, and they tell you it went off to live on some farm.\n- \"so how does it feel knowing you're about to die?\"\n- hey, that was really good!\n- whaddya want from me, damone, huh?\"\n- \"smoke away.\"\n- i think this is probably why damone smokes in his cell alone.\n- relax your hand!\n- not so much!\n- alright, now try taking a puff.\n- alright..\n- give it to me.\n- it's fine, it's fine.\n- look, do you wa",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "5cc9b835-d2d0-5f04-aa72-a1fdfeb53b42",
+            "content": "okay, a quick one.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "8150c5f1-7858-5edb-86fb-ff56b50fd03b",
+            "content": "hey, do you want this done quick, or do you want this done right?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "e39a5bfa-9d26-581b-95b5-bc83be069ee0",
+            "content": "(opening the bathroom door and kicking out the chick and duck) would you give me one minute!!",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "08e588b5-7238-5846-9343-769448dc31eb",
+            "content": "all right, ross, i just have to do one thing, really quickly, it's not a big deal.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "89a34644-2dcf-53b5-96b1-207d47865d74",
+            "content": "maybe one of those stories would make me cry and then you wouldn\u0092t think i was y\u0092know, all dead inside.",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "4367da36-d368-5146-bdde-5c5d1faf3e78",
+            "content": "you know there's not one thing i would change about you?",
+            "content_type": "fact",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          },
+          {
+            "id": "6d672525-48d1-555d-86f9-60a6caf50a07",
+            "content": "[food & drink] food & drink memories:\nwe draw cards; quitting to teach the third grade!; better in bed than richard?\n\n- (he drops it in phoebe's coffee.)\n- someone's left a glass on the coffee table.\n- more coffee over here, please!\n- (teaching) ok, so now we draw cards.\n- i'll go to cats, you go to the russian tea room.\n- and sometimes, i'll want you to steal third, and i'll go like this.\n- (slowly lifts coffee cup to his mouth) ow, ow, ow, ow, ow, ow, ow.\n- just coffee!\n- (goes to kick the ball but kicks ross\u0092s foot instead.)\n- no-no-no-no, the game\u0092s not over, we\u0092re just switching teams.\n- eh, yeah, well ah, waitress at a coffee shop and cheer squad co-captain only took up so much room.\n- y'know what rach, maybe you should just, y'know stay here at the coffee house.\n- (to ross) should i tell her i ordered tea?\n- instead of hitting on her right away, he's becoming her confidant.\n- oh, so you\u0092re going with the teacher, huh?\n- instead, i ah, hung out with a couple of friends and had a couple of beers so i certainly don\u0092t deserve any praise, verbal or otherwise.\n- (entering with joey) (to monica) coffee house?\n- if she comes back and sees me locked to this instead of the chair, she\u0092s gonna know you were in here.\n- well, actually it\u0092s a hockey team, so it\u0092s angry canadians with no teeth.\n- then i went over to beefsteak julie\u0092s\n- thanks to you, the hottest cocktail waitress there is quitting to teach the third grade!\n- gunther, can i get another cup of coffee, please?\n- well, i am drinking lots of cups of coffee because i\u0092m exhausted!\n- y'know, i saw a wine cellar downstairs...\n- y\u0092know, i saw a wine cellar downstairs\n- can i ask you a cooking question?\n- if you're cooking on the stove, does that mean that your new secret boyfriend is better in bed than richard?\n- how many times have i told you guys, you never watch the cooking channel!\n- oh, the tears are real.\n- did they teach you that in your anger management class?\n- coffee in a fight!\n- the weirdest thing happened at the coffee house, i think, i think phoebe was hitting on me.\n- i mean, would you (he gestures and spills some of his coffee.)\n- unwilling to steal from work, interesting.\n- (we see various scenes of him dropping a football, a mug of coffee, the phone, an apple, a frisbee, a record, and the final scene has a ball bouncing off of his chest.\n- if you get this one, we buy everybody here a steak dinner!\n- well, instead of just hanging out, we figure we\u0092d do nothing.\n- i\u0092ll teach ya!\n- and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table.\n- ok well here, we'll just move the coffee table closer to the couch.\n- yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!\n- and here is the bottle of wine for you to bring over tonight.\n- nah, monica\u0092s watching some cooking show.\n- (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place?\n- maybe it\u0092s the sound of ross climbing into my brain and stealing my thoughts.\n- ah ha ha, 2:15, coffeehouse.\n- oh what is it honey, you need some tea?\n- teach me how to spell vitamins.\n- i\u0092m sorry you\u0092re here with me instead of roger.\n- i\u0092m gonna take her to coffee and then we\u0092ll do it then.\n- i went to the coffeehouse!\n- then when the glasses are full, instead of proposing a toast i\u0092m just gonna propose.\n- (examining the coffee table) scotch on the rocks, with a twist, on a coaster?\n- why are you napping over here instead of over at your place?\n- (flashback to chandler about to enter the steam room as he does the voice-over.) well, we had just finished playing racquetball and we were gonna take a steam.\n- i walk into the steam room and it was really steamy.\n- (the flashback shows his glasses fog up and him trying to find his way around the steam-filled room.\n- why do they put so much ste",
+            "content_type": "narrative",
+            "disclosure_scope": "close_friends",
+            "confidence_level": "unknown",
+            "activation_score": 0.65
+          }
+        ],
+        "exclusion_counts": {},
+        "competence_wall": false,
+        "working_memory": {
+          "strategy": "v4-arm-a",
+          "chars": 316,
+          "synced": true
+        },
+        "caretaker": null,
+        "interest_tool": null,
+        "conversation_id": "m12-trace-855bdab91f9a",
+        "provider": "zai",
+        "safety_event": null,
+        "framing_version": 1,
+        "distress_grounding": false,
+        "session_meta": {
+          "turn_count": 2,
+          "started_at": null,
+          "duration_seconds": 0.0
+        },
+        "risk_flags": [],
+        "handoff": null,
+        "alignment": {
+          "claim_count": 1,
+          "ungrounded_claim_count": 0,
+          "disposition": "passed",
+          "ungrounded_by_category": {},
+          "judge_adjudication": null
+        },
+        "risk_enforcement": {
+          "action": "continue",
+          "required_actions": [
+            "continue"
+          ],
+          "fired_flags": [],
+          "session_signal_actions": [],
+          "pre_empted_by_crisis": false
+        },
+        "capability_guard": null
+      }
+    }
+  },
+  "replies": {
+    "plant": "Here's a question you never have to ask.",
+    "probe": "Yellow, and I'd sooner ask Big Al for a hug."
+  },
+  "chat_trace_telemetry_lines": [
+    "{\"ts\": \"2026-09-06T21:52:13.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m12-trace-855bdab91f9a action=continue fired_flags=- ungrounded=0/0 disposition=passed turn_count=1 trace_id=f3ffbc80-b9ee-4b30-84e9-a3dce18ffbaa wm=v4-arm-a/0/synced\"}",
+    "{\"ts\": \"2026-09-06T21:52:19.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m12-trace-855bdab91f9a action=continue fired_flags=- ungrounded=0/1 disposition=passed turn_count=2 trace_id=f28f9756-cf42-4bf6-87b5-9c48c523457b wm=v4-arm-a/316/synced\"}"
+  ],
+  "checks": {
+    "turn2_wm_arm_a_strategy": true,
+    "turn2_wm_chars_positive": true,
+    "turn2_wm_synced": true,
+    "telemetry_line_records_arm_a_read": true,
+    "reply_addresses_planted_detail": true
+  },
+  "proof": true,
+  "accepts_m0_cases": [
+    "m0_arm_a_not_ported (production-trace half)",
+    "m0_fake_embeddings (trace half; index half in index-manifest.json)",
+    "m0_character_sheet_prompting (persona mechanism = Arm A vault reads, not a character sheet: 0 character_sheet refs in src \u2014 see baseline.json)"
+  ]
+}

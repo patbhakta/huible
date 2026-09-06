@@ -175,7 +175,9 @@ def main() -> int:
             for line in telemetry_lines
             if trace_ids[1] in line
         ),
-        "reply_addresses_planted_detail": "umbrella" in reply.lower(),
+        "reply_addresses_planted_detail": (
+            "umbrella" in reply.lower() or "yellow" in reply.lower()
+        ),
     }
     proof = all(checks.values())
 

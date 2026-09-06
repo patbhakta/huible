@@ -1,0 +1,112 @@
+{
+  "artifact": "M1.2 index manifest \u2014 full-corpus real-embedding proof (HU-2732)",
+  "generated_at": "2026-09-06T21:52:29.889513+00:00",
+  "repo": "/root/repos/huible",
+  "git": {
+    "repo": "/root/repos/huible",
+    "head": "525eaa395db08a2062f074977490e77692380641",
+    "branch": "w1-local-onnx-embeddings",
+    "pushed": false,
+    "remote_branch_sha": "02b1b92d8ec89ca3c92f3f42d5eaa796447f214e",
+    "behind_origin_main": 0,
+    "ahead_of_origin_main": 72,
+    "tracked_dirty_files": 2,
+    "origin_main_head": "0f2fe93f005fe5d5a6c1f1a97e0e799f0244c266"
+  },
+  "index": {
+    "provider": "local_onnx",
+    "model": "BAAI/bge-small-en-v1.5",
+    "model_source": "container env EMBEDDINGS_MODEL (settings.embeddings_model)",
+    "fastembed_version": "0.8.0",
+    "expected_provider_dim": 384,
+    "vector_dims_observed": {
+      "embedding_content": 384,
+      "embedding_sensory": -1,
+      "embedding_affect": 512
+    },
+    "vector_columns_populated": {
+      "embedding_content": 15341,
+      "embedding_sensory": 0,
+      "embedding_affect": 1050
+    },
+    "memories_total": 15341,
+    "memories_embedded": 15341,
+    "memories_missing_embedding": 0,
+    "coverage_fraction": 1.0,
+    "personas_indexed": {
+      "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": {
+        "memories": 14291,
+        "embedded": 14291
+      },
+      "a0000000-0000-0000-0000-000000000001": {
+        "memories": 1050,
+        "embedded": 1050
+      }
+    },
+    "index_freshness": {
+      "newest_memory_created_at": "2026-08-19T06:01:52Z",
+      "persona_count": 2
+    }
+  },
+  "corpus_source": {
+    "corpus_csv": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+    "sha256": "6c13149cdddf5a7c808e8f73a405aefed6b1e376b1889381191a77722fc36fb2",
+    "bytes": 4413513,
+    "csv_rows_total": 60817,
+    "measured_baselines": {
+      "corpus_csv": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+      "chandler_lines": 8376,
+      "question_ratio": 0.3091,
+      "question_lines": 2589,
+      "length_p99_chars": 305,
+      "reply_cap_chars": 400,
+      "reply_cap_derivation": "corpus p99 + headroom (W6 rig cap, unchanged)",
+      "assistant_speak_marker_counts": {
+        "as an ai": 0,
+        "i'm here to": 3,
+        "i am here to": 0,
+        "how can i help": 0,
+        "how may i help": 0,
+        "i'd be happy to": 0,
+        "i would be happy to": 0,
+        "certainly!": 0,
+        "of course!": 1,
+        "feel free to": 0,
+        "let me know if": 1,
+        "is there anything else": 0,
+        "i apologize": 0,
+        "i cannot assist": 0,
+        "i'm unable to": 0,
+        "sure thing": 0,
+        "hope this helps": 0
+      },
+      "code_marker_counts": {
+        "import ": 0,
+        "sys.stdout": 0,
+        "print(": 0,
+        "printf": 0,
+        "def ": 0,
+        "```": 0,
+        "std::": 0,
+        "cout": 2,
+        "puts(": 0,
+        "console.log": 0
+      }
+    }
+  },
+  "contract": {
+    "provider": "local_onnx",
+    "model": "BAAI/bge-small-en-v1.5",
+    "dim": 384,
+    "coverage": "100% of stored memories carry a content embedding"
+  },
+  "contract_satisfied": true,
+  "violations": [],
+  "advisory_findings": [
+    "embedding_sensory: 0 rows populated (unused by the current pipeline; dim recorded as observed, not assumed)",
+    "embedding_affect: 1050 rows at dim 512 != provider dim 384 \u2014 not on the live chat retrieval path (content-only); the HU-1435 dim-skip guard drops mismatched vectors if ever queried"
+  ],
+  "accepts_m0_cases": [
+    "m0_fake_embeddings (index half; trace half in m12-traces)"
+  ]
+}
