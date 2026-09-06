@@ -1,0 +1,73 @@
+name: engine-ci
+
+# HU-2732 M1.2 — CI tripwire for the m0_fake_embeddings failure class.
+# The M-0 verdict (2026-08-31) was a production deployment silently running
+# token-hash embeddings; this workflow rejects fake/legacy embedding configs
+# at the gate and runs the hermetic retrieval-integrity tests.
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'docker-compose.yml'
+      - 'docker-compose.failover.yml'
+      - 'pyproject.toml'
+      - '.github/workflows/engine-ci.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'docker-compose.yml'
+      - 'docker-compose.failover.yml'
+      - 'pyproject.toml'
+      - '.github/workflows/engine-ci.yml'
+
+jobs:
+  embedding-config-guard:
+    # M1.2 acceptance: "CI rejects fake-embedding configs". Deploy-facing
+    # configs must pin EMBEDDING_PROVIDER=local_onnx and must not carry the
+    # dead EMBEDDING_MODEL legacy variable. A rejection (exit 1) or a guard
+    # error (exit 2) fails the job.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reject fake/legacy embedding configs
+        run: python scripts/ci/check_embedding_config.py
+
+  lint:
+    # Scoped to the M1-owned surfaces (clean); the broader tree carries
+    # pre-existing lint debt tracked separately and must not red this gate.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Ruff (M1-owned surfaces)
+        run: |
+          uv run ruff check scripts/ci scripts/m1 tests/m1 \
+            src/huible/api/app.py src/huible/embeddings.py \
+            src/huible/persona/working_memory.py \
+            tests/api/test_chat_working_memory.py tests/test_embeddings.py
+
+  retrieval-integrity:
+    # Hermetic tests for the vault-read chain: the embeddings provider layer,
+    # the W4 working-memory prompt/trace contract, and the M1.2 controlled
+    # source-removal test — the last runs the REAL bge-small-en-v1.5 embedder
+    # (RUN_LOCAL_ONNX_TESTS=1) and fails if retrieval stops being
+    # corpus-dependent (the m0_fake_embeddings falsifier).
+    runs-on: ubuntu-latest
+    env:
+      RUN_LOCAL_ONNX_TESTS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Run retrieval-integrity tests
+        run: |
+          uv run pytest tests/test_embeddings.py \
+                        tests/api/test_chat_working_memory.py \
+                        tests/m1/test_source_removal_retrieval.py -q

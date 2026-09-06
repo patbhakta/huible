@@ -13,6 +13,7 @@ Arm A lane:
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 from uuid import uuid4
 
@@ -95,7 +96,7 @@ def _chat(client: TestClient, message: str):
     )
 
 
-def test_recall_reaches_prompt_and_trace() -> None:
+def test_recall_reaches_prompt_and_trace(caplog) -> None:
     lane = _StubWorkingMemory(
         recall=WorkingMemoryRecall(
             context="WM-DIGEST-MARKER turn 1: hey who r u?",
@@ -105,7 +106,8 @@ def test_recall_reaches_prompt_and_trace() -> None:
     )
     client, llm = _make_app(lane)
     _consent(client)
-    r = _chat(client, "what was the first thing I said to you?")
+    with caplog.at_level(logging.INFO, logger="huible.api.app"):
+        r = _chat(client, "what was the first thing I said to you?")
     assert r.status_code == 200, r.text
     prompt, _system = llm.calls[-1]
     assert "WORKING MEMORY" in prompt
@@ -119,6 +121,16 @@ def test_recall_reaches_prompt_and_trace() -> None:
     session_key, query = lane.recalls[-1]
     assert query == "what was the first thing I said to you?"
     assert session_key == working_memory_session_key(PERSONA_ID, CONV)
+    # M1.2 (HU-2732): the chat.trace telemetry line carries the Arm A read
+    # evidence, joined to the turn's trace id — production traces prove the
+    # vault read reached the prompt generation consumed.
+    wm_lines = [
+        rec.getMessage()
+        for rec in caplog.records
+        if "chat.trace" in rec.getMessage() and trace["trace_id"] in rec.getMessage()
+    ]
+    assert len(wm_lines) == 1
+    assert f"wm={ARM_A_STRATEGY}/33/synced" in wm_lines[0]
 
 
 def test_completed_turn_is_captured() -> None:
@@ -135,15 +147,21 @@ def test_completed_turn_is_captured() -> None:
     assert assistant_content == reply
 
 
-def test_disabled_lane_is_pre_w4() -> None:
+def test_disabled_lane_is_pre_w4(caplog) -> None:
     client, llm = _make_app()  # no lane injected -> default null lane
     assert isinstance(client.app.state.working_memory, NullWorkingMemory)  # type: ignore[union-attr]
     _consent(client)
-    r = _chat(client, "hello there")
+    with caplog.at_level(logging.INFO, logger="huible.api.app"):
+        r = _chat(client, "hello there")
     assert r.status_code == 200, r.text
     prompt, _system = llm.calls[-1]
     assert "WORKING MEMORY" not in prompt
     assert r.json()["trace"]["working_memory"] is None
+    # M1.2 (HU-2732): a disabled lane reports no Arm A read on the line.
+    trace_lines = [
+        rec.getMessage() for rec in caplog.records if "chat.trace" in rec.getMessage()
+    ]
+    assert trace_lines and "wm=-" in trace_lines[-1]
 
 
 def test_degraded_recall_keeps_turn_alive() -> None:

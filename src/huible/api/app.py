@@ -1907,6 +1907,11 @@ def _register_routes(application: FastAPI) -> None:
             claim_count=alignment.claim_count,
             disposition=alignment.disposition,
             trace_id=turn_trace_id,
+            # M1.2 (HU-2732): Arm A read evidence on the telemetry line —
+            # strategy/chars/synced prove the vault read reached this turn.
+            wm_strategy=wm_recall.strategy,
+            wm_chars=wm_recall.chars,
+            wm_synced=wm_synced if not isinstance(working_memory, NullWorkingMemory) else None,
         )
 
         # §3 Sev-1 (C) — consent-bypass defensive check (HU-1451 trigger #4).
@@ -2918,6 +2923,9 @@ def _log_chat_trace(
     claim_count: int | None = None,
     disposition: str | None = None,
     trace_id: str | None = None,
+    wm_strategy: str | None = None,
+    wm_chars: int | None = None,
+    wm_synced: bool | None = None,
 ) -> None:
     """Emit one ``chat.trace`` stdout line per chat turn (HU-1442).
 
@@ -2929,6 +2937,12 @@ def _log_chat_trace(
 
     ``trace_id`` (M1.1, HU-2732) joins the telemetry line to the per-turn id
     returned in the response ``trace`` when the caller generated one.
+
+    ``wm_*`` (M1.2, HU-2732) records the Arm A working-memory read per turn:
+    strategy (``v4-arm-a``), prompt chars, and capture-sync state. A
+    non-zero-char Arm A read on the line is the production-trace proof that
+    the vault read reached the prompt that generation consumed (the M-0
+    m0_arm_a_not_ported / m0_fake_embeddings acceptance).
     """
     turn_count = _session_meta(application, conversation_id).turn_count
     flags = ",".join(fired_flags) if fired_flags else "-"
@@ -2937,9 +2951,18 @@ def _log_chat_trace(
         if ungrounded is not None and claim_count is not None
         else "-/-"
     )
+    if not wm_strategy and not wm_chars:
+        # No Arm A content this turn: lane disabled, recall empty, or the
+        # read degraded. The response trace distinguishes disabled vs empty.
+        wm_field = "-"
+    else:
+        wm_field = (
+            f"{wm_strategy or 'none'}/{wm_chars or 0}/"
+            f"{None if wm_synced is None else ('synced' if wm_synced else 'unsynced')}"
+        )
     logger.info(
         "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s "
-        "disposition=%s turn_count=%s trace_id=%s",
+        "disposition=%s turn_count=%s trace_id=%s wm=%s",
         conversation_id or "-",
         action,
         flags,
@@ -2947,6 +2970,7 @@ def _log_chat_trace(
         disposition or "n/a",
         turn_count,
         trace_id or "-",
+        wm_field,
     )
 
 
