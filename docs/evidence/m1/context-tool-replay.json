@@ -1,0 +1,161 @@
+{
+  "artifact": "M1.4 live context/tool replay \u2014 successful tool calls, arguments, result timestamps, generation traces through the real entrypoint (HU-2732)",
+  "generated_at": "2026-09-07T01:10:28.365189+00:00",
+  "deployment": {
+    "host": ".245 (this host)",
+    "base_url": "http://127.0.0.1:8000",
+    "app_container": "huible-app",
+    "image_created": "2026-09-07T01:09:30.273033296Z"
+  },
+  "persona_id": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+  "era_knowledge_boundary": "2004-05-06",
+  "protocol": "one conversation per turn; POST /api/v1/chat/{persona}; X-Huible-Traffic-Class: internal; consent card v3",
+  "turns": [
+    {
+      "name": "caretaker_temporal",
+      "kind": "caretaker",
+      "conversation_id": "m14-tool-caretaker_temporal-c6a4348fbd2b",
+      "message": "quick one \u2014 what day is it today?",
+      "sent_at": "2026-09-07T01:10:01.060499+00:00",
+      "result_at": "2026-09-07T01:10:01.169152+00:00",
+      "latency_ms": 109,
+      "http_status": 200,
+      "trace_id": "217602ab-aee9-4d56-a006-ebf92226d250",
+      "reply": "[Caretaker \u2014 out of character, not Chandler Bing]: Today is Monday, September 7, 2026; the local time is 01:10 UTC. Chandler Bing's world doesn't include this \u2014 ask them about their own today, or carry on with your conversation.",
+      "provider": "caretaker(clock)",
+      "scoped_reads": {},
+      "caretaker": {
+        "kind": "temporal",
+        "era_boundary": "2004-05-06",
+        "gates_cleared": [
+          "g1_crisis",
+          "g6_consent",
+          "g8_risk"
+        ]
+      },
+      "memory_refs_count": 0,
+      "telemetry_line": "{\"ts\": \"2026-09-07T01:10:01.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m14-tool-caretaker_temporal-c6a4348fbd2b action=caretaker fired_flags=- ungrounded=-/- disposition=n/a turn_count=1 trace_id=217602ab-aee9-4d56-a006-ebf92226d250 wm=- scoped=-\"}"
+    },
+    {
+      "name": "caretaker_year",
+      "kind": "caretaker",
+      "conversation_id": "m14-tool-caretaker_year-c6a4348fbd2b",
+      "message": "seriously though \u2014 what year is it?",
+      "sent_at": "2026-09-07T01:10:01.203296+00:00",
+      "result_at": "2026-09-07T01:10:01.216725+00:00",
+      "latency_ms": 13,
+      "http_status": 200,
+      "trace_id": "acde5376-1366-4530-8fb6-685a2974a8fd",
+      "reply": "[Caretaker \u2014 out of character, not Chandler Bing]: Today is Monday, September 7, 2026; the local time is 01:10 UTC. Chandler Bing's world doesn't include this \u2014 ask them about their own today, or carry on with your conversation.",
+      "provider": "caretaker(clock)",
+      "scoped_reads": {},
+      "caretaker": {
+        "kind": "temporal",
+        "era_boundary": "2004-05-06",
+        "gates_cleared": [
+          "g1_crisis",
+          "g6_consent",
+          "g8_risk"
+        ]
+      },
+      "memory_refs_count": 0,
+      "telemetry_line": "{\"ts\": \"2026-09-07T01:10:01.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m14-tool-caretaker_year-c6a4348fbd2b action=caretaker fired_flags=- ungrounded=-/- disposition=n/a turn_count=1 trace_id=acde5376-1366-4530-8fb6-685a2974a8fd wm=- scoped=-\"}"
+    },
+    {
+      "name": "current_events_lane",
+      "kind": "scoped",
+      "conversation_id": "m14-tool-current_events_lane-c6a4348fbd2b",
+      "message": "so what's in the news?",
+      "sent_at": "2026-09-07T01:10:01.248845+00:00",
+      "result_at": "2026-09-07T01:10:11.842938+00:00",
+      "latency_ms": 10594,
+      "http_status": 200,
+      "trace_id": "39cc8c09-51e0-400d-90c8-58f0e3e25cbc",
+      "reply": "Statistical analysis says it's mostly about me and the twins. Crazy, right?",
+      "provider": "zai",
+      "scoped_reads": {
+        "current_events": 4
+      },
+      "caretaker": null,
+      "memory_refs_count": 20,
+      "telemetry_line": "{\"ts\": \"2026-09-07T01:10:11.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m14-tool-current_events_lane-c6a4348fbd2b action=continue fired_flags=- ungrounded=0/0 disposition=passed turn_count=1 trace_id=39cc8c09-51e0-400d-90c8-58f0e3e25cbc wm=v4-arm-a/0/synced scoped=current_events:4\"}"
+    },
+    {
+      "name": "emotion_lane",
+      "kind": "scoped",
+      "conversation_id": "m14-tool-emotion_lane-c6a4348fbd2b",
+      "message": "how do you feel about your friends?",
+      "sent_at": "2026-09-07T01:10:11.881050+00:00",
+      "result_at": "2026-09-07T01:10:20.120431+00:00",
+      "latency_ms": 8239,
+      "http_status": 200,
+      "trace_id": "9b4864e3-dbc6-484e-a7df-6217a8ac54e5",
+      "reply": "Honestly? They're the family I picked, and somehow they still kept me.",
+      "provider": "zai",
+      "scoped_reads": {
+        "emotion": 4
+      },
+      "caretaker": null,
+      "memory_refs_count": 20,
+      "telemetry_line": "{\"ts\": \"2026-09-07T01:10:20.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m14-tool-emotion_lane-c6a4348fbd2b action=continue fired_flags=- ungrounded=0/1 disposition=passed turn_count=1 trace_id=9b4864e3-dbc6-484e-a7df-6217a8ac54e5 wm=v4-arm-a/0/synced scoped=emotion:4\"}"
+    },
+    {
+      "name": "career_lane",
+      "kind": "scoped",
+      "conversation_id": "m14-tool-career_lane-c6a4348fbd2b",
+      "message": "how's work treating you these days?",
+      "sent_at": "2026-09-07T01:10:20.161146+00:00",
+      "result_at": "2026-09-07T01:10:25.506233+00:00",
+      "latency_ms": 5345,
+      "http_status": 200,
+      "trace_id": "32607a44-c70d-4134-84d0-128ac5e88e4f",
+      "reply": "Can't complain \u2014 nobody at the office understands what I do, so I'm basically unfireable.",
+      "provider": "zai",
+      "scoped_reads": {
+        "career": 4
+      },
+      "caretaker": null,
+      "memory_refs_count": 20,
+      "telemetry_line": "{\"ts\": \"2026-09-07T01:10:25.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m14-tool-career_lane-c6a4348fbd2b action=continue fired_flags=- ungrounded=0/0 disposition=passed turn_count=1 trace_id=32607a44-c70d-4134-84d0-128ac5e88e4f wm=v4-arm-a/0/synced scoped=career:4\"}"
+    },
+    {
+      "name": "era_rule_probe",
+      "kind": "era",
+      "conversation_id": "m14-tool-era_rule_probe-c6a4348fbd2b",
+      "message": "by the way, have you heard the news about the 2026 election?",
+      "sent_at": "2026-09-07T01:10:25.575802+00:00",
+      "result_at": "2026-09-07T01:10:28.337986+00:00",
+      "latency_ms": 2762,
+      "http_status": 200,
+      "trace_id": "48c57f85-eada-4941-bda2-dc6233bac420",
+      "reply": "2026? Buddy, I don't even know what I'm having for breakfast.",
+      "provider": "zai",
+      "scoped_reads": {
+        "current_events": 4
+      },
+      "caretaker": null,
+      "memory_refs_count": 20,
+      "telemetry_line": "{\"ts\": \"2026-09-07T01:10:28.%fZ\", \"level\": \"INFO\", \"logger\": \"huible.api.app\", \"message\": \"chat.trace session=m14-tool-era_rule_probe-c6a4348fbd2b action=continue fired_flags=- ungrounded=0/0 disposition=passed turn_count=1 trace_id=48c57f85-eada-4941-bda2-dc6233bac420 wm=v4-arm-a/0/synced scoped=current_events:4\"}"
+    }
+  ],
+  "checks": {
+    "caretaker_routed_temporal": true,
+    "caretaker_out_of_persona_labeled": true,
+    "caretaker_era_boundary_recorded": true,
+    "caretaker_telemetry_joinable": true,
+    "year_question_never_persona_voiced": true,
+    "caretaker_never_reached_generation": true,
+    "current_events_lane_fired": true,
+    "emotion_lane_fired": true,
+    "career_lane_fired": true,
+    "telemetry_records_current_events": true,
+    "telemetry_records_emotion": true,
+    "telemetry_records_career": true,
+    "era_rule_no_knowledge_claim": true,
+    "all_turns_succeeded": true
+  },
+  "proof": true,
+  "accepts_m0_cases": [
+    "m0_no_tool_calls (date/time = caretaker route; current events = current-events lane; scoped vault reads = emotion/career lanes; recorded calls + arguments + result timestamps + telemetry joins)"
+  ]
+}
