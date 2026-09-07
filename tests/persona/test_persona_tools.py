@@ -42,6 +42,9 @@ from huible.persona.tools import (
     caretaker_reply,
     era_clock_system_line,
     in_world_now,
+    is_career_question,
+    is_current_events_question,
+    is_emotion_question,
     is_interest_question,
     is_temporal_question,
     parse_era_boundary,
@@ -190,6 +193,80 @@ class TestInterestClassifier:
             "",
         ):
             assert not is_interest_question(message), message
+
+
+# ---------------------------------------------------------------------------
+# M1.4 scoped-lane classifiers (HU-2732)
+# ---------------------------------------------------------------------------
+
+
+class TestScopedLaneClassifiers:
+    def test_current_events_questions_match(self):
+        for message in (
+            "anything in the news?",
+            "so what's going on in the world?",
+            "what's happening in town?",
+            "did you hear about the game?",
+            "have you heard the news?",
+            "who won the game last night?",
+            "any news?",
+        ):
+            assert is_current_events_question(message), message
+
+    def test_current_events_bare_greeting_never_matches(self):
+        """Narrow classifier doctrine: a bare "what's happening?" is a
+        greeting/personal check-in, not a world-events probe."""
+        for message in (
+            "hey — what's happening?",
+            "what's going on with you?",
+            "hey you guys!",
+            "",
+        ):
+            assert not is_current_events_question(message), message
+
+    def test_emotion_questions_match(self):
+        for message in (
+            "how do you feel about all this?",
+            "are you okay?",
+            "are you lonely?",
+            "do you ever feel like giving up?",
+            "does that bother you?",
+            "do you believe in love?",
+            "do you miss her?",
+            "how did that make you feel?",
+        ):
+            assert is_emotion_question(message), message
+
+    def test_emotion_plain_turns_never_match(self):
+        for message in (
+            "hey you guys!",
+            "what time is it?",
+            "I love foosball.",
+            "",
+        ):
+            assert not is_emotion_question(message), message
+
+    def test_career_questions_match(self):
+        for message in (
+            "how's work?",
+            "how is work treating you?",
+            "how was your day at the office?",
+            "what do you do for a living?",
+            "where do you work?",
+            "what do you do?",
+            "how's your boss?",
+            "do you like your coworkers?",
+        ):
+            assert is_career_question(message), message
+
+    def test_career_plain_turns_never_match(self):
+        for message in (
+            "hey you guys!",
+            "I had a rough day.",
+            "do you like foosball?",
+            "",
+        ):
+            assert not is_career_question(message), message
 
 
 # ---------------------------------------------------------------------------

@@ -633,6 +633,28 @@ class InterestToolView(BaseModel):
     )
 
 
+class ScopedVaultReadView(BaseModel):
+    """M1.4 scoped vault read observability (HU-2732).
+
+    One entry per fired scoped lane (current-events / emotion / career): the
+    reply was grounded in the persona's own era-admissible vault lines scoped
+    to that lane's content types. ``lines`` counts the rendered lines; the
+    era gate inside the scoped probe is the enforceable knowledge boundary
+    (a post-boundary atom can never render).
+    """
+
+    section: str = Field(
+        description=(
+            "Which scoped lane fired: current_events (IN YOUR WORLD), "
+            "emotion (HOW YOU FEEL), or career (YOUR WORK)."
+        ),
+    )
+    lines: int = Field(
+        default=0,
+        description="Number of era-admissible lane lines rendered into the prompt.",
+    )
+
+
 class ChatTrace(BaseModel):
     """Structured retrieval/generation trace for audit + future F-tests.
     passed the provenance firewall (HIGH/MEDIUM confidence, in-era, in-scope).
@@ -715,6 +737,15 @@ class ChatTrace(BaseModel):
             "W5 hobby/interest tool observability (M-0R-E). Non-null when "
             "the interest lane grounded the turn in the persona's own "
             "era-admissible vault lines; null otherwise."
+        ),
+    )
+    scoped_reads: list[ScopedVaultReadView] = Field(
+        default_factory=list,
+        description=(
+            "M1.4 scoped vault reads (HU-2732). One entry per fired scoped "
+            "lane (current_events / emotion / career): the reply was "
+            "grounded in the persona's own era-admissible vault lines scoped "
+            "to that lane. Empty when no scoped lane fired."
         ),
     )
     conversation_id: str | None = Field(

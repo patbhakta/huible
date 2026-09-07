@@ -96,12 +96,21 @@ class _FakeBackend:
     async def get_edges(self, memory_id: UUID) -> list[MemoryEdge]:
         return []
 
+    async def get_active_memories(
+        self, persona_id: UUID, limit: int = 200
+    ) -> list[MemoryNode]:
+        """Grounding-corpus scan path (HU-2070); ranking is irrelevant here."""
+        return [n for n in self._memories.values() if n.persona_id == persona_id][
+            :limit
+        ]
+
 
 def _node(
     *,
     content: str,
     content_type: ContentType = ContentType.NARRATIVE,
     memory_date: date | None = None,
+    embedding: list[float] | None = None,
 ) -> MemoryNode:
     return MemoryNode(
         id=uuid4(),
@@ -109,7 +118,7 @@ def _node(
         tier=MemoryTier.CANONICAL,
         content=content,
         content_type=content_type,
-        embedding_content=_embed(content),
+        embedding_content=embedding if embedding is not None else _embed(content),
         memory_date=memory_date,
         source_type=SourceType.EXTRACTION,
         disclosure_scope=DisclosureScope.FAMILY,
@@ -350,6 +359,10 @@ class TestInterestTool:
             _node(
                 content="I love foosball, I am basically a professional.",
                 content_type=ContentType.PREFERENCE,
+                # Pinned to the query embedding so the probe clears the
+                # activation floor regardless of the ambient embedder
+                # (hermetic across EMBEDDING_PROVIDER values).
+                embedding=_embed("do you like foosball?"),
             )
         )
         client, llm = _make_app(backend=backend)

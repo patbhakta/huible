@@ -225,9 +225,18 @@ class Settings(BaseSettings):
     #   interest_tool — the hobby/interest lane: interest-shaped turns are
     #     grounded in the persona's own era-admissible preference/fact vault
     #     lines (the vault-derived interest/topic map, W1 retrieval feeds it).
+    #   current_events_tool — the M1.4 current-events lane: world-events-
+    #     shaped turns are grounded in the persona's own era-admissible
+    #     narrative/fact vault lines (in-world happenings only; the era gate
+    #     keeps post-boundary real-time events out — HU-2732).
+    #   scoped_vault_reads — the M1.4 emotion + career lanes: feeling/work-
+    #     shaped turns are grounded in the persona's own era-admissible
+    #     relationship/narrative and fact/preference vault lines (HU-2732).
     era_clock_enabled: bool = True
     caretaker_channel_enabled: bool = True
     interest_tool_enabled: bool = True
+    current_events_tool_enabled: bool = True
+    scoped_vault_reads_enabled: bool = True
 
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""

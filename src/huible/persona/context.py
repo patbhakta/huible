@@ -97,6 +97,9 @@ from huible.persona.length import (
 from huible.persona.tools import (
     era_clock_system_line,
     in_world_now,
+    is_career_question,
+    is_current_events_question,
+    is_emotion_question,
     is_interest_question,
 )
 from huible.safety.crisis import UserAffect
@@ -242,6 +245,20 @@ def _exemplar_line(node: MemoryNode) -> str:
 #: statement. The vault-derived interest/topic map reads these only —
 #: narratives/sensory/relationship atoms stay out of the section.
 _INTEREST_CONTENT_TYPES = frozenset({ContentType.PREFERENCE, ContentType.FACT})
+
+#: M1.4 current-events lane: content types that can carry a happening in the
+#: persona's world (event narratives and factual world/job lines). Era
+#: admissibility rides the same hard gates as the prompt firewall, so a
+#: post-boundary (real-time) event can never surface here.
+_CURRENT_EVENTS_CONTENT_TYPES = frozenset({ContentType.NARRATIVE, ContentType.FACT})
+
+#: M1.4 emotion lane: content types that carry how the persona relates to the
+#: people and events in his life.
+_EMOTION_CONTENT_TYPES = frozenset({ContentType.RELATIONSHIP, ContentType.NARRATIVE})
+
+#: M1.4 career lane: content types that carry the persona's job and work life
+#: (and how he feels about it).
+_CAREER_CONTENT_TYPES = frozenset({ContentType.FACT, ContentType.PREFERENCE})
 
 
 def _confidence_from_numeric(value: Any) -> ConfidenceLevel | None:
@@ -506,6 +523,14 @@ class PromptContext:
     # Prompt surface (YOUR INTERESTS section) + evidence, kept separate from
     # activated memories like the W3 deflection exemplars.
     interest_exemplars: list[MemoryNode] = field(default_factory=list)
+    # M1.4 scoped lanes (HU-2732): the persona's own era-admissible vault
+    # lines retrieved on a current-events / emotion / career-shaped turn.
+    # Prompt surface + evidence, kept separate from activated memories like
+    # the W5 interest exemplars. The era gate inside the scoped probe is the
+    # enforceable knowledge boundary: post-boundary atoms can never render.
+    current_events_exemplars: list[MemoryNode] = field(default_factory=list)
+    emotion_exemplars: list[MemoryNode] = field(default_factory=list)
+    career_exemplars: list[MemoryNode] = field(default_factory=list)
     current_message: str = ""
     framing_version: int = 0
     distress_grounding: bool = False
@@ -519,6 +544,18 @@ class PromptContext:
     def interest_tool_fired(self) -> bool:
         """True when the W5 interest tool served hobby grounding this turn."""
         return bool(self.interest_exemplars)
+
+    @property
+    def scoped_reads_fired(self) -> dict[str, int]:
+        """M1.4 scoped-lane observability: lane name -> lines rendered."""
+        fired: dict[str, int] = {}
+        if self.current_events_exemplars:
+            fired["current_events"] = len(self.current_events_exemplars)
+        if self.emotion_exemplars:
+            fired["emotion"] = len(self.emotion_exemplars)
+        if self.career_exemplars:
+            fired["career"] = len(self.career_exemplars)
+        return fired
 
     def render(self) -> str:
         """Render the full flat prompt string for a generator.
@@ -534,6 +571,14 @@ class PromptContext:
             parts.append(_render_exemplar_block(self.deflection_exemplars))
         if self.interest_exemplars:
             parts.append(_render_interest_block(self.interest_exemplars))
+        if self.current_events_exemplars:
+            parts.append(
+                _render_current_events_block(self.current_events_exemplars)
+            )
+        if self.emotion_exemplars:
+            parts.append(_render_emotion_block(self.emotion_exemplars))
+        if self.career_exemplars:
+            parts.append(_render_career_block(self.career_exemplars))
         if self.working_memory:
             parts.append(_render_working_memory(self.working_memory))
         parts.append("CONVERSATION HISTORY:")
@@ -660,6 +705,60 @@ def _render_interest_block(exemplars: Sequence[MemoryNode]) -> str:
     lines = [_INTEREST_SECTION_HEADER]
     lines.extend(f"[INTEREST] {_exemplar_line(node)}" for node in exemplars)
     return "\n".join(lines)
+
+
+# --- M1.4 scoped-lane section headers (HU-2732) ---------------------------------
+#
+# Structural machinery (same category as the ACTIVATED MEMORIES marker and the
+# W5 YOUR INTERESTS header): they tell the generator what the rendered vault
+# lines are for, never what to say. The current-events header names the era
+# bound explicitly — the lane serves the persona's in-world happenings, and
+# tool availability must not create out-of-era competence (M1.4 acceptance).
+
+
+def _render_scoped_block(
+    header: str, tag: str, exemplars: Sequence[MemoryNode]
+) -> str:
+    """Render one scoped-lane section (header + tagged vault lines)."""
+    lines = [header]
+    lines.extend(f"[{tag}] {_exemplar_line(node)}" for node in exemplars)
+    return "\n".join(lines)
+
+
+_CURRENT_EVENTS_SECTION_HEADER = (
+    "IN YOUR WORLD — what's going on in your life and the world as you know "
+    "it, from your own life and your today (the in-world clock above). You "
+    "know nothing from any later date; talk about these like the present "
+    "they are to you."
+)
+
+_EMOTION_SECTION_HEADER = (
+    "HOW YOU FEEL — how you actually feel about the people and events in "
+    "your life, from your own history. Answer like yourself, not like a "
+    "therapist."
+)
+
+_CAREER_SECTION_HEADER = (
+    "YOUR WORK — your job and work life, from your own life. It's yours to "
+    "talk about (or complain about) like you live it."
+)
+
+
+def _render_current_events_block(exemplars: Sequence[MemoryNode]) -> str:
+    """Render the M1.4 current-events lane section (in-world happenings)."""
+    return _render_scoped_block(
+        _CURRENT_EVENTS_SECTION_HEADER, "WORLD", exemplars
+    )
+
+
+def _render_emotion_block(exemplars: Sequence[MemoryNode]) -> str:
+    """Render the M1.4 emotion lane section (scoped relationship lines)."""
+    return _render_scoped_block(_EMOTION_SECTION_HEADER, "FEELING", exemplars)
+
+
+def _render_career_block(exemplars: Sequence[MemoryNode]) -> str:
+    """Render the M1.4 career lane section (scoped work lines)."""
+    return _render_scoped_block(_CAREER_SECTION_HEADER, "WORK", exemplars)
 
 
 #: W4 working-memory section header. Structural machinery (same category as
@@ -860,6 +959,15 @@ class ContextBuilder:
     #: seeds do not count).
     INTEREST_EXEMPLAR_SEED_K = 20
 
+    #: M1.4 scoped lanes (current-events / emotion / career): max era-
+    #: admissible lines rendered on a lane-shaped turn. Same doctrine as the
+    #: interest cap — the section grounds the talk, it is not a context dump.
+    SCOPED_READ_EXEMPLAR_LIMIT = 4
+
+    #: How many message-embedded seeds the scoped lanes inspect before the
+    #: hard gates thin the set to :data:`SCOPED_READ_EXEMPLAR_LIMIT`.
+    SCOPED_READ_SEED_K = 20
+
     def __init__(self, retrieval_config: RetrievalConfig | None = None) -> None:
         self._default_retrieval_config = retrieval_config
         # (backend id, persona id, disclosure scope) -> (monotonic, exemplars)
@@ -913,6 +1021,50 @@ class ContextBuilder:
         self._deflection_cache[cache_key] = (now, exemplars)
         return exemplars
 
+    async def _scoped_exemplars(
+        self,
+        *,
+        backend: MemoryBackend,
+        persona: PersonaConfig,
+        requester_tier: RelationshipTier,
+        query_embedding: list[float],
+        config: RetrievalConfig,
+        content_types: frozenset[ContentType],
+        limit: int,
+        seed_k: int,
+    ) -> list[MemoryNode]:
+        """Return era-admissible vault lines for a scoped tool lane (W5/M1.4).
+
+        One deterministic vector probe with the *message's own* embedding
+        (the lane is message-conditioned), filtered to ``content_types`` —
+        the lane's slice of the vault — through the *same* hard gates as the
+        prompt firewall (confidence fail-closed, disclosure scope, era
+        boundary) and the retrieval activation floor, capped at ``limit``.
+        Not cached: the probe is a property of the turn's message, not a
+        corpus property. The era gate is what makes the current-events lane
+        knowledge-boundary-safe: a post-boundary atom can never pass.
+        """
+        scope = requester_tier.disclosure_scope
+        seeds = await multi_vector_search(
+            backend,
+            persona.id,
+            query_embedding,
+            top_k=seed_k,
+        )
+        era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+        exemplars: list[MemoryNode] = []
+        for sr in seeds:  # similarity-descending seed order
+            if sr.score < config.activation_threshold:
+                break  # seeds are sorted; nothing further clears the floor
+            if sr.node.content_type not in content_types:
+                continue
+            ok, _reason = _check_admissible(sr.node, scope, era_boundary)
+            if ok:
+                exemplars.append(sr.node)
+                if len(exemplars) >= limit:
+                    break
+        return exemplars
+
     async def _interest_exemplars(
         self,
         *,
@@ -924,35 +1076,20 @@ class ContextBuilder:
     ) -> list[MemoryNode]:
         """Return the persona's hobby/interest lines for this turn (W5 tool).
 
-        One deterministic vector probe with the *message's own* embedding
-        (the interest lane is message-conditioned, unlike the fixed
-        deflection probe), filtered to preference/fact atoms — the
-        vault-derived interest/topic map (W1 retrieval feeds it) — through
-        the *same* hard gates as the prompt firewall (confidence fail-closed,
-        disclosure scope, era boundary) and the retrieval activation floor,
-        capped at :data:`INTEREST_EXEMPLAR_LIMIT`. Not cached: the probe is a
-        property of the turn's message, not a corpus property.
+        Message-conditioned probe filtered to preference/fact atoms — the
+        vault-derived interest/topic map (W1 retrieval feeds it). See
+        :meth:`_scoped_exemplars` for the shared gate/cap mechanics.
         """
-        scope = requester_tier.disclosure_scope
-        seeds = await multi_vector_search(
-            backend,
-            persona.id,
-            query_embedding,
-            top_k=self.INTEREST_EXEMPLAR_SEED_K,
+        return await self._scoped_exemplars(
+            backend=backend,
+            persona=persona,
+            requester_tier=requester_tier,
+            query_embedding=query_embedding,
+            config=config,
+            content_types=_INTEREST_CONTENT_TYPES,
+            limit=self.INTEREST_EXEMPLAR_LIMIT,
+            seed_k=self.INTEREST_EXEMPLAR_SEED_K,
         )
-        era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
-        exemplars: list[MemoryNode] = []
-        for sr in seeds:  # similarity-descending seed order
-            if sr.score < config.activation_threshold:
-                break  # seeds are sorted; nothing further clears the floor
-            if sr.node.content_type not in _INTEREST_CONTENT_TYPES:
-                continue
-            ok, _reason = _check_admissible(sr.node, scope, era_boundary)
-            if ok:
-                exemplars.append(sr.node)
-                if len(exemplars) >= self.INTEREST_EXEMPLAR_LIMIT:
-                    break
-        return exemplars
 
     def filter_and_render(
         self,
@@ -965,6 +1102,9 @@ class ContextBuilder:
         user_affect: UserAffect = UserAffect.NEUTRAL,
         deflection_exemplars: Sequence[MemoryNode] = (),
         interest_exemplars: Sequence[MemoryNode] = (),
+        current_events_exemplars: Sequence[MemoryNode] = (),
+        emotion_exemplars: Sequence[MemoryNode] = (),
+        career_exemplars: Sequence[MemoryNode] = (),
         working_memory: str = "",
         real_now: datetime | None = None,
     ) -> PromptContext:
@@ -987,6 +1127,12 @@ class ContextBuilder:
         section on an interest/hobby-shaped turn. Callers fetch them via
         :meth:`_interest_exemplars`; an empty sequence renders nothing.
 
+        ``current_events_exemplars`` / ``emotion_exemplars`` /
+        ``career_exemplars`` (M1.4 scoped lanes) render the IN YOUR WORLD /
+        HOW YOU FEEL / YOUR WORK sections the same way — era-admissible,
+        content-type-scoped vault lines fetched by the caller (or by
+        :meth:`build`); an empty sequence renders nothing.
+
         ``working_memory`` (W4) is the TencentDB Arm A block fetched by the
         caller; an empty string (lane disabled / degraded) renders nothing.
 
@@ -1008,6 +1154,9 @@ class ContextBuilder:
         )
         wall_exemplars = list(deflection_exemplars)
         interest = list(interest_exemplars)
+        world = list(current_events_exemplars)
+        feelings = list(emotion_exemplars)
+        work = list(career_exemplars)
         system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(
             persona,
             requester_tier,
@@ -1028,6 +1177,9 @@ class ContextBuilder:
             excluded_memory_refs=excluded_refs,
             deflection_exemplars=wall_exemplars,
             interest_exemplars=interest,
+            current_events_exemplars=world,
+            emotion_exemplars=feelings,
+            career_exemplars=work,
             working_memory=working_memory,
             current_message=current_message,
             framing_version=framing_version,
@@ -1052,6 +1204,8 @@ class ContextBuilder:
         working_memory: str = "",
         real_now: datetime | None = None,
         interest_tool: bool = True,
+        current_events_tool: bool = True,
+        scoped_vault_reads: bool = True,
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
@@ -1088,6 +1242,14 @@ class ContextBuilder:
         ``interest_tool`` (W5 hobby/interest lane) fires the message-
         conditioned interest probe on interest/hobby-shaped turns; disabled
         callers (and non-interest turns) keep the pre-W5 sections.
+
+        ``current_events_tool`` / ``scoped_vault_reads`` (M1.4, HU-2732) fire
+        the current-events / emotion / career scoped lanes the same way:
+        message-shape classified, content-type-scoped, era-gated vault
+        probes. Disabled callers (and non-matching turns) keep the pre-M1.4
+        prompt shape. The era gate inside :meth:`_scoped_exemplars` is the
+        enforceable knowledge boundary — no lane can surface a post-boundary
+        atom, so tool availability never creates out-of-era competence.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         # Class B floor override (HU-2673 C3 / HU-2707): the persona's own
@@ -1140,12 +1302,57 @@ class ContextBuilder:
         # (B2 doctrine — the lane never fabricates interests).
         interests: list[MemoryNode] = []
         if interest_tool and is_interest_question(current_message):
-            interests = await self._interest_exemplars(
+            interests = await self._scoped_exemplars(
                 backend=backend,
                 persona=persona,
                 requester_tier=requester_tier,
                 query_embedding=query_embedding_content,
                 config=config,
+                content_types=_INTEREST_CONTENT_TYPES,
+                limit=self.INTEREST_EXEMPLAR_LIMIT,
+                seed_k=self.INTEREST_EXEMPLAR_SEED_K,
+            )
+
+        # M1.4 scoped lanes (HU-2732): current-events / emotion / career
+        # turns probe the persona's own era-admissible vault slice. Same
+        # doctrine as the interest lane — shape-classified turn, scoped
+        # content types, hard-gate era admissibility, empty result renders
+        # nothing (B2: the lane never fabricates).
+        world: list[MemoryNode] = []
+        feelings: list[MemoryNode] = []
+        work: list[MemoryNode] = []
+        if current_events_tool and is_current_events_question(current_message):
+            world = await self._scoped_exemplars(
+                backend=backend,
+                persona=persona,
+                requester_tier=requester_tier,
+                query_embedding=query_embedding_content,
+                config=config,
+                content_types=_CURRENT_EVENTS_CONTENT_TYPES,
+                limit=self.SCOPED_READ_EXEMPLAR_LIMIT,
+                seed_k=self.SCOPED_READ_SEED_K,
+            )
+        if scoped_vault_reads and is_emotion_question(current_message):
+            feelings = await self._scoped_exemplars(
+                backend=backend,
+                persona=persona,
+                requester_tier=requester_tier,
+                query_embedding=query_embedding_content,
+                config=config,
+                content_types=_EMOTION_CONTENT_TYPES,
+                limit=self.SCOPED_READ_EXEMPLAR_LIMIT,
+                seed_k=self.SCOPED_READ_SEED_K,
+            )
+        if scoped_vault_reads and is_career_question(current_message):
+            work = await self._scoped_exemplars(
+                backend=backend,
+                persona=persona,
+                requester_tier=requester_tier,
+                query_embedding=query_embedding_content,
+                config=config,
+                content_types=_CAREER_CONTENT_TYPES,
+                limit=self.SCOPED_READ_EXEMPLAR_LIMIT,
+                seed_k=self.SCOPED_READ_SEED_K,
             )
 
         return self.filter_and_render(
@@ -1157,6 +1364,9 @@ class ContextBuilder:
             user_affect=user_affect,
             deflection_exemplars=exemplars,
             interest_exemplars=interests,
+            current_events_exemplars=world,
+            emotion_exemplars=feelings,
+            career_exemplars=work,
             working_memory=working_memory,
             real_now=real_now,
         )

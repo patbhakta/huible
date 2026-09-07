@@ -163,6 +163,7 @@ from huible.api.schemas import (
     RiskEnforcementView,
     RiskIntakeAssessmentRequest,
     RiskIntakeData,
+    ScopedVaultReadView,
     RiskIntakeResponse,
     SafetyEventView,
     SessionMetaView,
@@ -1690,6 +1691,8 @@ def _register_routes(application: FastAPI) -> None:
             # in-world line (disabled → pre-W5 prompt shape).
             real_now=real_now if settings.era_clock_enabled else None,
             interest_tool=settings.interest_tool_enabled,
+            current_events_tool=settings.current_events_tool_enabled,
+            scoped_vault_reads=settings.scoped_vault_reads_enabled,
         )
 
         prompt = ctx.render()
@@ -1987,6 +1990,10 @@ def _register_routes(application: FastAPI) -> None:
                     if ctx.interest_tool_fired
                     else None
                 ),
+                scoped_reads=[
+                    ScopedVaultReadView(section=section, lines=lines)
+                    for section, lines in ctx.scoped_reads_fired.items()
+                ],
                 risk_enforcement=_risk_enforcement_view(enforcement),
             ),
         )
