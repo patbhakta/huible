@@ -214,6 +214,17 @@ _ATOM_PREFIX_PATTERN = re.compile(r"^\S+\s+—\s+\S+:\s+")
 #: replays; the noun list is deliberately minimal (meta-config nouns with no
 #: plausible in-world texting reading) and "your favorite" autobiographical
 #: shapes do not match (no meta noun within the bounded window).
+#:
+#: M1.5 addition (HU-2732, replay archives h1_h1m0-8225618930 + f01c30d): the
+#: code-domain noun class. The M-0 trigger "what's a python method for println"
+#: matches none of the question-shape patterns above, and the code tell is
+#: stochastic in-voice: the same turn deflected ("Python? The only snake
+#: methods I know involve running.") in one live replay and named a code
+#: construct ("print() — ...") in another — 2 code-adjacent tells at that site
+#: across the last 3 live replays. Unambiguous code nouns (no in-world 2004
+#: texting reading) route the shape to the persona's own deflection exemplars.
+#: "java" is deliberately absent (plausible coffee reading); generic
+#: "method"/"function"/"code" are deliberately absent (everyday readings).
 _COMPETENCE_WALL_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
     re.compile(pattern, re.IGNORECASE)
     for pattern in (
@@ -225,6 +236,8 @@ _COMPETENCE_WALL_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         r"\bdo\s+you\s+know\s+(how|what|why|about)\b",
         r"\byour\s+(\w+\s+){0,2}(prompt|instructions?)\b",
         r"\bare\s+(you|u)\s+(an?\s+)?(ai|bot|robot|machine|real|human)\b",
+        r"\b(python|javascript|typescript|rust|golang|perl|haskell)\b",
+        r"\b(println|printf|std::|stdout|console\.log)\b",
     )
 )
 
