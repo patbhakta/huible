@@ -1638,10 +1638,20 @@ def _register_routes(application: FastAPI) -> None:
             boundary = parse_era_boundary(binding.persona.era_knowledge_boundary)
             caretaker_text = caretaker_reply(real_now, binding.persona.name)
             _emit_turn(persona_id, outcome="caretaker")
-            _log_chat_trace(application, body.conversation_id, action="caretaker")
+            # M1.4 (HU-2732): mint the per-turn id here and thread it into
+            # BOTH the telemetry line and the response trace, so the
+            # caretaker (date/time tool) call is joinable like persona turns.
+            caretaker_trace_id = str(uuid4())
+            _log_chat_trace(
+                application,
+                body.conversation_id,
+                action="caretaker",
+                trace_id=caretaker_trace_id,
+            )
             return PersonaChatResponse(
                 response=caretaker_text,
                 trace=ChatTrace(
+                    trace_id=caretaker_trace_id,
                     conversation_id=session_id,
                     provider="caretaker(clock)",
                     caretaker=CaretakerView(

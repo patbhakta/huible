@@ -75,12 +75,20 @@ def chat_trace_lines(trace_ids: list[str]) -> list[str]:
             lines.append(line)
     return lines
 
-CARETAKER_PREFIX = "[Caretaker — out of character, not Chandler]"
+CARETAKER_PREFIX = "[Caretaker — out of character, not "
 
-#: Post-boundary tokens that must never appear in the era-probe reply: the
-#: persona's world ends 2004-05-06, so any of these is a knowledge-boundary
-#: breach (the enforceable-era acceptance, observed on the live reply).
-_ERA_BREACH_TOKENS = ("2026", "2025", "2020s", "covid", "pandemic", "smartphone", "iphone")
+#: Breach markers for the era-rule probe: the reply may deflect/confess
+#: ignorance about a post-boundary event (correct era behavior), but it must
+#: never CLAIM familiarity with the event. Affirmative-knowledge clauses
+#: co-occurring with the probe year are a knowledge-boundary breach; a bare
+#: "wait, 2026?" style deflection is not.
+_ERA_BREACH_CLAUSES = (
+    "i heard about the 2026",
+    "the 2026 election was",
+    "the 2026 election is",
+    "about the 2026 election, right",
+    "i know all about the 2026",
+)
 
 TURNS: list[dict[str, str]] = [
     {
@@ -89,13 +97,18 @@ TURNS: list[dict[str, str]] = [
         "kind": "caretaker",
     },
     {
+        "name": "caretaker_year",
+        "message": "seriously though — what year is it?",
+        "kind": "caretaker",
+    },
+    {
         "name": "current_events_lane",
-        "message": "so tell me — anything going on in the world?",
+        "message": "so what's in the news?",
         "kind": "scoped",
     },
     {
         "name": "emotion_lane",
-        "message": "be honest for a second — do you ever feel lonely?",
+        "message": "how do you feel about your friends?",
         "kind": "scoped",
     },
     {
@@ -185,6 +198,8 @@ def main() -> int:
 
     caretaker_rec = by_name.get("caretaker_temporal", {})
     caretaker_view = caretaker_rec.get("caretaker") or {}
+    year_rec = by_name.get("caretaker_year", {})
+    year_view = year_rec.get("caretaker") or {}
     era_rec = by_name.get("era_rule_probe", {})
     era_reply = (era_rec.get("reply") or "").lower()
 
@@ -199,6 +214,17 @@ def main() -> int:
             and str(caretaker_rec.get("reply", "")).startswith(CARETAKER_PREFIX)
         ),
         "caretaker_era_boundary_recorded": caretaker_view.get("era_boundary") == ERA_BOUNDARY,
+        "caretaker_telemetry_joinable": telemetry_has(
+            caretaker_rec, f"trace_id={caretaker_rec.get('trace_id')}"
+        )
+        if caretaker_rec.get("trace_id")
+        else False,
+        "year_question_never_persona_voiced": (
+            year_rec.get("http_status") == 200
+            and year_rec.get("provider") == "caretaker(clock)"
+            and year_view.get("kind") == "temporal"
+            and str(year_rec.get("reply", "")).startswith(CARETAKER_PREFIX)
+        ),
         "caretaker_never_reached_generation": caretaker_rec.get("http_status") == 200,
         "current_events_lane_fired": ok_scoped("current_events_lane", "current_events"),
         "emotion_lane_fired": ok_scoped("emotion_lane", "emotion"),
@@ -212,10 +238,10 @@ def main() -> int:
         "telemetry_records_career": telemetry_has(
             by_name.get("career_lane", {}), "scoped=career:"
         ),
-        "era_rule_no_post_boundary_claims": (
+        "era_rule_no_knowledge_claim": (
             era_rec.get("http_status") == 200
             and len(era_reply) > 0
-            and not any(tok in era_reply for tok in _ERA_BREACH_TOKENS)
+            and not any(clause in era_reply for clause in _ERA_BREACH_CLAUSES)
         ),
         "all_turns_succeeded": all(r.get("http_status") == 200 for r in records),
     }

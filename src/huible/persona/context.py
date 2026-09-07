@@ -965,8 +965,14 @@ class ContextBuilder:
     SCOPED_READ_EXEMPLAR_LIMIT = 4
 
     #: How many message-embedded seeds the scoped lanes inspect before the
-    #: hard gates thin the set to :data:`SCOPED_READ_EXEMPLAR_LIMIT`.
-    SCOPED_READ_SEED_K = 20
+    #: hard gates thin the set to :data:`SCOPED_READ_EXEMPLAR_LIMIT`. Wider
+    #: than the interest pool (40 vs 20): the corpus is heavily fact-skewed
+    #: (14.5k facts vs ~195 relationship atoms live), so relationship/
+    #: narrative candidates for the emotion/current-events lanes need a
+    #: deeper seed pool to surface above fact noise. Seeds only widen the
+    #: candidate pool — every candidate still passes the same hard gates and
+    #: the cap stays at :data:`SCOPED_READ_EXEMPLAR_LIMIT`.
+    SCOPED_READ_SEED_K = 40
 
     def __init__(self, retrieval_config: RetrievalConfig | None = None) -> None:
         self._default_retrieval_config = retrieval_config
