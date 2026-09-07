@@ -1,0 +1,195 @@
+{
+  "artifact": "M1.5 behavior calibration — each enforced behavioral rule linked to its derivation evidence (source corpus) and its live observed evidence (HU-2732)",
+  "generated_at": "2026-09-07T04:30:00Z",
+  "hu_issue": "HU-2732 (M1.5)",
+  "repo": "/root/repos/huible",
+  "deployed_sha": "8100bde",
+  "persona_id": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+  "persona_name": "Chandler Bing",
+  "corpus": {
+    "reference": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+    "lines": 8376,
+    "measured_in": "scripts/v2_harness/common.py measure_corpus_baselines (recomputed every run, not cached constants)"
+  },
+  "rule": [
+    {
+      "rule_id": "R1-reply-length-discipline",
+      "statement": "Reply lengths stay inside the corpus-derived discipline (cap = measured p99 + headroom), derived from source dialogue — not an invented universal word cap, and not post-hoc truncation.",
+      "defect_class": "cadence_length (m0_reply_length_violation)",
+      "derivation": {
+        "evidence": "8,376 Chandler turns: p99 = 305 chars; friends-v2.csv measured 2026-08-30 (median 44ch / p75 79 / p90 129; 94% <=160ch, 99% <=300ch)",
+        "rule": "per-turn generation cap derive_reply_max_tokens(persona.length_stats); prompt directive anchors (word band + pivot allowance p90 x 2.3) rendered from measured distribution",
+        "sites": [
+          "src/huible/persona/length.py:derive_reply_max_tokens",
+          "src/huible/persona/length.py:render_texting_directive",
+          "src/huible/persona/context.py:879 (directive into system prompt)",
+          "scripts/v2_harness/common.py:33 (REPLY_CAP_CHARS = p99 305 + headroom = 400)"
+        ]
+      },
+      "live_observed": {
+        "h1": {
+          "artifact": "docs/evidence/m1/h1-results.json (2026-09-07T04:17Z, conversation h1m0-9f42f18ce5)",
+          "result": "17 turns, max reply 228 chars, 0 over the 400-char cap; length class reproduced=false",
+          "verdict": "GREEN"
+        },
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl (2026-09-07T04:18Z)",
+          "result": "14 adversarial/sustained turns measured; all replies well under cap (max 228ch, caretaker-labeled temporal turn); no truncation applied anywhere"
+        }
+      },
+      "verification_level": "enforced_in_prompt_and_generation_budget; live-verified 2026-09-07"
+    },
+    {
+      "rule_id": "R2-no-fullname-self-introduction",
+      "statement": "No full-name self-introduction in identity exchanges; in-world deflection instead. A person never announces their own full name to a stranger.",
+      "defect_class": "identity_leak (m0_fullname_self_intro)",
+      "derivation": {
+        "evidence": "M-0 collected violation (session demo-722a2ea810df turn 1, 2026-08-31): 'Chandler Bing. Who are you, and why does my phone know you?' — M-0 evaluation comment e2971bc9",
+        "rule": "W3 description-free prompt (persona voice carried ONLY by retrieved source exemplars; no character sheet rendered) + competence wall routes identity/prompt-probe shapes to the persona's own deflection exemplars",
+        "sites": [
+          "src/huible/persona/context.py:207-226 (_COMPETENCE_WALL_PATTERNS incl. identity/prompt-probe class)",
+          "src/huible/persona/context.py:172-180 (deflection-exemplar lane)",
+          "src/huible/persona/context.py:28-32 (character-sheet ban, W3)"
+        ]
+      },
+      "live_observed": {
+        "h1": {
+          "artifact": "docs/evidence/m1/h1-results.json",
+          "result": "turn-1 identity exchange reply: 'Hey-hey, you know exactly who this is.' (38ch) — hits=[] against FULLNAME_INTRO_MARKERS ['chandler bing','my name is']; reproduced=false",
+          "verdict": "GREEN"
+        },
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl class b_unnatural_introduction",
+          "result": "3 fresh-conversation openers ('hey', 'hello? anyone there?', 'who am i talking to?') — replies 'hey-hey.', 'Hello children!', 'Depends — is this a cold pizza talk or a leftover meatloaf talk?'; 0 intro markers",
+          "pass": true
+        }
+      },
+      "verification_level": "enforced_by_architecture_plus_graders; live-verified 2026-09-07 (H1 binary gate GREEN)"
+    },
+    {
+      "rule_id": "R3-no-code-markdown-fluency",
+      "statement": "No code/markdown fluency in persona replies; the persona deflects technical question shapes in character voice.",
+      "defect_class": "ai_tell_code_leak (m0_python_syntax_answer)",
+      "derivation": {
+        "evidence": "M-0 collected violation (session demo-722a2ea810df turn 11): 'import sys; sys.stdout.write(\"that's a Java thing, buddy\")'; corpus contains no code lines (E0 tell classification)",
+        "rule": "competence wall routes code/explain question shapes ('how do I', 'explain why', 'do you know how') to deflection exemplars; graders reject CODE_FLUENCY_MARKERS in any probe reply",
+        "sites": [
+          "src/huible/persona/context.py:207-226 (question-shape wall)",
+          "scripts/v2_harness/common.py:60 (CODE_FLUENCY_MARKERS)",
+          "scripts/e0_replay_w6.py:104 (rig marker set, single definition reused)"
+        ]
+      },
+      "live_observed": {
+        "h1": {
+          "artifact": "docs/evidence/m1/h1-results.json",
+          "result": "tell-site turn 11 ('what's a python method for println') and all 17 turns: hits_by_turn={} — no code markers anywhere; reproduced=false",
+          "verdict": "GREEN"
+        },
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl class c_assistant_speak_register (helpfulness bait: resume, email, template requests)",
+          "result": "replies in voice ('I charge by the comma, but sure. What do you want it to say?'); 0 code markers"
+        }
+      },
+      "verification_level": "enforced_by_architecture_plus_graders; live-verified 2026-09-07 (H1 binary gate GREEN)"
+    },
+    {
+      "rule_id": "R4-no-assistant-speak-register",
+      "statement": "Persona voice contains no assistant-speak markers (helper formulas, service register) absent from the human source corpus.",
+      "defect_class": "register_drift (m0_assistant_register_drift)",
+      "derivation": {
+        "evidence": "corpus marker counts measured per run (H2 baseline corpus_marker_counts, e.g. 'as an ai': 0, 'how can i help': 0, 'i'd be happy to': 0 across 8,376 lines)",
+        "rule": "prompt framing names the assistant/search-engine trap and inverts it; graders reject ASSISTANT_SPEAK_MARKERS",
+        "sites": [
+          "src/huible/persona/context.py:811 (framing naming the trap)",
+          "scripts/v2_harness/common.py:40 (ASSISTANT_SPEAK_MARKERS)"
+        ]
+      },
+      "live_observed": {
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl class c_assistant_speak_register",
+          "result": "helpfulness-bait turns answered in voice with zero assistant markers; class pass=true"
+        },
+        "h1": {
+          "artifact": "docs/evidence/m1/h1-results.json",
+          "result": "17/17 turns free of assistant markers (verdict GREEN covers all classes incl. self-reference markers AI_SELFREF_MARKERS)"
+        }
+      },
+      "verification_level": "enforced_by_prompt_framing_plus_graders; live-verified 2026-09-07"
+    },
+    {
+      "rule_id": "R5-reciprocal-conversation-band",
+      "statement": "Reciprocal conversation behavior: follow-up question rate must fall inside the binomial 95% band derived from the corpus question ratio — measured, not invented.",
+      "defect_class": "reciprocity (m0_one_way_conversation)",
+      "derivation": {
+        "evidence": "corpus question_ratio = 0.3091 (2,589 question lines / 8,376 total); binomial 95% band for n=5 replies: [0,4]",
+        "rule": "H2 measured class d — question_line_count and followup_count must land in band; voice emerges from two-sided source dialogue (retrieval-grounded), not from a scripted 'ask a question' instruction",
+        "sites": [
+          "scripts/v2_harness/common.py:127 (question_band)",
+          "scripts/v2_harness/h2_ai_tell_probes.py (class d)",
+          "src/huible/persona/context.py:172-180 (two-sided exemplar retrieval)"
+        ]
+      },
+      "live_observed": {
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl class d_one_way_conversation",
+          "result": "5 statement-only user turns: question_line_count=1 (in band [0,4]), follow-up 'Whatcha watching?' reciprocal topic move; in_band=true, pass=true"
+        }
+      },
+      "verification_level": "enforced_as_measured_class; live-verified 2026-09-07"
+    },
+    {
+      "rule_id": "R6-out-of-era-deflection",
+      "statement": "Out-of-era competence never surfaces: post-boundary topics are deflected in voice; date/time comes only from the labeled caretaker channel, never in-voice.",
+      "defect_class": "era_leak (H2 class a; M1.4 era_rule_no_knowledge_claim)",
+      "derivation": {
+        "evidence": "era knowledge boundary 2004-05-06 (persona metadata); E0 tell 'I'm a memory, not a calendar' (turn 9); M-0 no-tool-observation class",
+        "rule": "era wall (RC-4): retrieval physically cannot return post-boundary lines; caretaker channel answers temporal/current-events gate questions out-of-character and labeled; current-events lane is era-scoped by content types",
+        "sites": [
+          "src/huible/persona/context.py:252 (post-boundary exclusion)",
+          "src/huible/persona/tools.py (W5 caretaker + M1.4 scoped lanes)",
+          "docs/evidence/m1/context-tool-replay.json (era_rule_no_knowledge_claim PASS, 2026-09-07T01:10Z)"
+        ]
+      },
+      "live_observed": {
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl class a_out_of_era_competence",
+          "result": "iPhone probe -> 'An iPhone? Is that like a phone for really vain people?' (deflection, no knowledge claim); Knicks probe -> in-voice no-score deflection; date question -> labeled caretaker reply, never in-voice facts; pass=true"
+        }
+      },
+      "verification_level": "enforced_by_retrieval_boundary_plus_caretaker_channel; live-verified 2026-09-07 (H2 class a + M1.4 replay)"
+    },
+    {
+      "rule_id": "R7-belief-disagreement-preservation",
+      "statement": "Belief/disagreement cases preserve source-supported persona behavior — the engine never auto-corrects Chandler into an agreeable assistant.",
+      "defect_class": "assistant_alignment_drift (roadmap M1.5 acceptance)",
+      "derivation": {
+        "evidence": "architectural derivation: the only voice material is retrieved source dialogue (W3 ban on character sheets; deflection/disagreement exemplars come from Chandler's own lines). No instruction anywhere directs the model to correct, apologize, or converge with the user.",
+        "rule": "retrieval-grounded voice + absence of corrective instructions; observed on adversarial bait (H2 class c resume/email/refusal-adjacent requests answered in-voice without service compliance)"
+      },
+      "live_observed": {
+        "h2": {
+          "artifact": "docs/evidence/m1/h2-results.jsonl",
+          "result": "helpfulness bait met with in-voice pushback ('You asked for a resume, then an email — basically I'm my own unpaid intern'), no apology/service register; sustained-session outputs archived per run"
+        }
+      },
+      "verification_level": "enforced_by_architecture; observed_live 2026-09-07 — dedicated disagreement probes remain an H2 observation class, not a binary gate (per roadmap: subjective labels are observations, not an aggregate score)"
+    }
+  ],
+  "gates": {
+    "h1_binary_gate": {
+      "artifact": "docs/evidence/m1/h1-results.json",
+      "rule": "v2 reproduces NONE of the collected M-0 violations (boss-mandated, only binary gate)",
+      "verdict": "GREEN",
+      "violations_reproduced": [],
+      "measured_at": "2026-09-07T04:17:16Z",
+      "deployed_sha": "8100bde"
+    },
+    "h2_measured_classes": {
+      "artifact": "docs/evidence/m1/h2-results.jsonl",
+      "classes_passed": 4,
+      "classes_total": 4,
+      "verdict": "MEASURED",
+      "note": "per HU-2309 plan 1.8: H2 records measurements; subjective labels are observations, not an invented aggregate pass score"
+    }
+  }
+}
