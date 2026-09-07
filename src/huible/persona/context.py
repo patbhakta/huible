@@ -253,8 +253,15 @@ _INTEREST_CONTENT_TYPES = frozenset({ContentType.PREFERENCE, ContentType.FACT})
 _CURRENT_EVENTS_CONTENT_TYPES = frozenset({ContentType.NARRATIVE, ContentType.FACT})
 
 #: M1.4 emotion lane: content types that carry how the persona relates to the
-#: people and events in his life.
-_EMOTION_CONTENT_TYPES = frozenset({ContentType.RELATIONSHIP, ContentType.NARRATIVE})
+#: people and events in his life. FACT is included deliberately: the live
+#: corpus is dialogue-extracted and heavily fact-typed (14.5k fact atoms vs
+#: ~195 relationship atoms), and its feeling/relationship lines ("you're
+#: still my friend?", "family — prefers: feels connected to you") are typed
+#: fact — excluding FACT would exclude exactly the atoms the lane exists to
+#: serve. Scoping rides the message-conditioned probe + the hard gates.
+_EMOTION_CONTENT_TYPES = frozenset(
+    {ContentType.RELATIONSHIP, ContentType.NARRATIVE, ContentType.FACT}
+)
 
 #: M1.4 career lane: content types that carry the persona's job and work life
 #: (and how he feels about it).
