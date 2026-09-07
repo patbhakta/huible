@@ -1915,6 +1915,9 @@ def _register_routes(application: FastAPI) -> None:
             wm_strategy=wm_recall.strategy,
             wm_chars=wm_recall.chars,
             wm_synced=wm_synced if not isinstance(working_memory, NullWorkingMemory) else None,
+            # M1.4 (HU-2732): scoped-lane evidence on the telemetry line —
+            # lane:lines prove the scoped vault read reached this turn.
+            scoped=ctx.scoped_reads_fired or None,
         )
 
         # §3 Sev-1 (C) — consent-bypass defensive check (HU-1451 trigger #4).
@@ -2933,6 +2936,7 @@ def _log_chat_trace(
     wm_strategy: str | None = None,
     wm_chars: int | None = None,
     wm_synced: bool | None = None,
+    scoped: dict[str, int] | None = None,
 ) -> None:
     """Emit one ``chat.trace`` stdout line per chat turn (HU-1442).
 
@@ -2950,6 +2954,11 @@ def _log_chat_trace(
     non-zero-char Arm A read on the line is the production-trace proof that
     the vault read reached the prompt that generation consumed (the M-0
     m0_arm_a_not_ported / m0_fake_embeddings acceptance).
+
+    ``scoped`` (M1.4, HU-2732) records the fired scoped tool lanes per turn
+    as ``lane:lines`` joined by ``|`` (e.g. ``career:2|emotion:1``) — the
+    production-trace proof that a scoped vault read reached this turn's
+    prompt (the m0_no_tool_calls acceptance).
     """
     turn_count = _session_meta(application, conversation_id).turn_count
     flags = ",".join(fired_flags) if fired_flags else "-"
@@ -2967,9 +2976,13 @@ def _log_chat_trace(
             f"{wm_strategy or 'none'}/{wm_chars or 0}/"
             f"{None if wm_synced is None else ('synced' if wm_synced else 'unsynced')}"
         )
+    scoped_field = (
+        "|".join(f"{lane}:{lines}" for lane, lines in sorted((scoped or {}).items()))
+        or "-"
+    )
     logger.info(
         "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s "
-        "disposition=%s turn_count=%s trace_id=%s wm=%s",
+        "disposition=%s turn_count=%s trace_id=%s wm=%s scoped=%s",
         conversation_id or "-",
         action,
         flags,
@@ -2978,6 +2991,7 @@ def _log_chat_trace(
         turn_count,
         trace_id or "-",
         wm_field,
+        scoped_field,
     )
 
 
