@@ -70,11 +70,17 @@ class WorkingMemoryRecall:
     conversation digest (session gists) plus verbatim drill-down excerpts.
     It is *prompt content* (rendered in the WORKING MEMORY section).
     ``strategy`` and ``chars`` are *evidence* (trace observability only).
+    ``digest_settled``/``gist_blocks`` are settle-state evidence (HU-2687):
+    whether at least one block gist had settled when the read was served and
+    how many blocks exist — ``None`` when the gateway predates the field or
+    the read failed (i.e. "not observed", distinct from ``False``).
     """
 
     context: str
     strategy: str
     chars: int
+    digest_settled: bool | None = None
+    gist_blocks: int | None = None
 
     @classmethod
     def empty(cls) -> WorkingMemoryRecall:
@@ -186,6 +192,12 @@ class TencentWorkingMemory:
             context=context,
             strategy=str(parsed.get("strategy") or ""),
             chars=len(context),
+            digest_settled=(
+                bool(parsed["digest_settled"]) if "digest_settled" in parsed else None
+            ),
+            gist_blocks=(
+                int(parsed["gist_blocks"]) if "gist_blocks" in parsed else None
+            ),
         )
 
     async def capture(self, session_key: str, user_content: str, assistant_content: str) -> bool:

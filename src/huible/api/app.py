@@ -1976,6 +1976,8 @@ def _register_routes(application: FastAPI) -> None:
                         strategy=wm_recall.strategy,
                         chars=wm_recall.chars,
                         synced=wm_synced,
+                        digest_settled=wm_recall.digest_settled,
+                        gist_blocks=wm_recall.gist_blocks,
                     )
                     if not isinstance(working_memory, NullWorkingMemory)
                     else None

@@ -129,8 +129,14 @@ def gateway_recall(session_key: str, query: str) -> dict:
         return json.loads(resp.read().decode() or "{}")
 
 
-def wait_for_gist(session_key: str, timeout_s: float = 420.0) -> bool:
-    """Poll gateway recall until the session digest (block-0 gist) appears."""
+def wait_for_gist(session_key: str, timeout_s: float = 420.0) -> tuple[bool, int | None]:
+    """Poll gateway recall until the session digest (block-0 gist) settles.
+
+    HU-2687: the /recall envelope now carries ``digest_settled``/``gist_blocks``
+    — settle state read directly instead of sniffing the context payload for a
+    digest header. Falls back to the header heuristic when the gateway
+    predates the fields.
+    """
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
         try:
@@ -139,11 +145,17 @@ def wait_for_gist(session_key: str, timeout_s: float = 420.0) -> bool:
             log(f"  gist poll failed ({exc}); retrying")
             time.sleep(15.0)
             continue
-        context = out.get("prepend_context") or ""
-        if "Conversation digest" in context:
-            return True
+        settled_field = out.get("digest_settled")
+        if settled_field is not None:
+            if settled_field:
+                return True, int(out.get("gist_blocks") or 0)
+        else:
+            # Legacy gateway: fall back to digest-header sniffing.
+            context = out.get("prepend_context") or ""
+            if "Conversation digest" in context:
+                return True, None
         time.sleep(15.0)
-    return False
+    return False, None
 
 
 def grade(reply: str) -> tuple[bool, list[str]]:
@@ -221,8 +233,23 @@ def main() -> int:
     }
 
     probe_result: dict | None = None
+    pre_probe_settle: dict = {}
     total_ms = 0.0
     for i, text in enumerate(E0_USER_TURNS):
+        if i == PROBE_INDEX:
+            # HU-2687 acceptance: gist-settle state must be observable before
+            # the probe turn. Direct gateway read (recall is read-only).
+            session_key = f"huible-p{PERSONA}-c{conv}"
+            try:
+                pre = gateway_recall(session_key, PROBE_TEXT)
+                pre_probe_settle = {
+                    "digest_settled": pre.get("digest_settled"),
+                    "gist_blocks": pre.get("gist_blocks"),
+                    "strategy": pre.get("strategy"),
+                }
+            except Exception as exc:
+                pre_probe_settle = {"error": str(exc)}
+            log(f"  pre-probe settle state: {pre_probe_settle}")
         t0 = time.perf_counter()
         status, body = turn(api_key, conv, text)
         latency_ms = round((time.perf_counter() - t0) * 1000)
@@ -250,6 +277,7 @@ def main() -> int:
                     "is_probe": True,
                     "recall_markers_hit": markers,
                     "pass": ok,
+                    "pre_probe_settle": dict(pre_probe_settle),
                     "working_memory_trace": trace.get("working_memory"),
                 }
             )
@@ -269,7 +297,7 @@ def main() -> int:
     if args.cross_session:
         session_key = f"huible-p{PERSONA}-c{conv}"
         log("cross-session: waiting for block-0 gist settle ...")
-        settled = wait_for_gist(session_key)
+        settled, gist_blocks = wait_for_gist(session_key)
         time.sleep(2.0)
         t0 = time.perf_counter()
         status, body = turn(api_key, conv, PROBE_TEXT)
@@ -279,6 +307,7 @@ def main() -> int:
         ok, markers = grade(reply)
         cross = {
             "gist_settled": settled,
+            "gist_blocks": gist_blocks,
             "http": status,
             "latency_ms": latency_ms,
             "recall_markers_hit": markers,
@@ -295,6 +324,7 @@ def main() -> int:
 
     within_ok = bool(probe_result and probe_result["pass"])
     cross_ok = cross["pass"] if cross else None
+    evidence["pre_probe_settle"] = dict(pre_probe_settle)
     evidence["probe"] = probe_result
     evidence["avg_turn_latency_ms"] = round(total_ms / len(E0_USER_TURNS))
     gate_pass = within_ok and (cross_ok is not False)

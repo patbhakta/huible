@@ -592,6 +592,19 @@ class WorkingMemoryView(BaseModel):
         default=False,
         description="Whether the completed turn was captured to the store.",
     )
+    digest_settled: bool | None = Field(
+        default=None,
+        description=(
+            "HU-2687: whether at least one block gist had settled when the "
+            "recall read was served. None = not observed (read failed or "
+            "gateway predates the field); distinct from False (observed "
+            "pre-digest — the block-0 gist race window)."
+        ),
+    )
+    gist_blocks: int | None = Field(
+        default=None,
+        description="HU-2687: number of settled block gists at read time. None = not observed.",
+    )
 
 
 class CaretakerView(BaseModel):

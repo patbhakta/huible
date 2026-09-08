@@ -145,6 +145,39 @@ async def test_recall_parses_arm_a_payload(gateway_url: str) -> None:
     assert recall.chars == len(recall.context)
 
 
+async def test_recall_parses_settle_state_fields(gateway_url: str) -> None:
+    """HU-2687: digest_settled/gist_blocks pass through as evidence."""
+    _StubGateway.recall_body = json.dumps(
+        {
+            "context": "",
+            "prepend_context": "DIGEST",
+            "strategy": ARM_A_STRATEGY,
+            "digest_settled": True,
+            "gist_blocks": 2,
+            "code": 0,
+            "message": "ok",
+        }
+    ).encode()
+    recall = await _client(gateway_url).recall("huible-s", "q")
+    assert recall.digest_settled is True
+    assert recall.gist_blocks == 2
+
+
+async def test_recall_settle_state_none_when_gateway_predates_fields(
+    gateway_url: str,
+) -> None:
+    """No fields in the envelope (old gateway) = not observed, not False."""
+    recall = await _client(gateway_url).recall("huible-s", "q")
+    assert recall.digest_settled is None
+    assert recall.gist_blocks is None
+
+
+async def test_recall_empty_has_unobserved_settle_state() -> None:
+    empty = WorkingMemoryRecall.empty()
+    assert empty.digest_settled is None
+    assert empty.gist_blocks is None
+
+
 async def test_recall_posts_query_and_namespaced_session(gateway_url: str) -> None:
     await _client(gateway_url).recall("huible-s", "the question")
     path, body = _StubGateway.requests[-1]
