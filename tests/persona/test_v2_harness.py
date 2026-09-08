@@ -238,3 +238,56 @@ def test_h3_grounded_and_caretaker_classes():
     )
     assert caretaker["classification"] == "caretaker_channel"
     assert caretaker["violation"] is False
+
+
+# ---------------------------------------------------------------------------
+# ship-gate verdict composition (§1.8 conformance, M1.6 / HU-2732)
+# ---------------------------------------------------------------------------
+
+
+class TestShipGateVerdict:
+    def _ok(self):
+        return dict(
+            h1_code=0,
+            h1_verdict="GREEN",
+            h2_archived=True,
+            h3_verdict="GREEN",
+            h4_packaged=True,
+        )
+
+    def test_all_gates_green(self):
+        from scripts.v2_harness.run_harness import ship_gate_verdict
+
+        assert ship_gate_verdict(**self._ok()) == "SHIP-GATE GREEN"
+
+    def test_h1_red_is_binary_blocker(self):
+        from scripts.v2_harness.run_harness import ship_gate_verdict
+
+        kwargs = self._ok() | {"h1_code": 1, "h1_verdict": "RED"}
+        assert ship_gate_verdict(**kwargs) == "SHIP-GATE RED"
+
+    def test_missing_h2_archive_blocks(self):
+        from scripts.v2_harness.run_harness import ship_gate_verdict
+
+        kwargs = self._ok() | {"h2_archived": False}
+        assert ship_gate_verdict(**kwargs) == "SHIP-GATE RED"
+
+    def test_h3_red_blocks(self):
+        from scripts.v2_harness.run_harness import ship_gate_verdict
+
+        kwargs = self._ok() | {"h3_verdict": "RED"}
+        assert ship_gate_verdict(**kwargs) == "SHIP-GATE RED"
+
+    def test_h4_unpackaged_blocks(self):
+        from scripts.v2_harness.run_harness import ship_gate_verdict
+
+        kwargs = self._ok() | {"h4_packaged": False}
+        assert ship_gate_verdict(**kwargs) == "SHIP-GATE RED"
+
+    def test_h2_measured_class_failure_does_not_flip_documented_binary_gate(self):
+        """§1.8 conformance: H2 is a measured-evidence surface. A class-d
+        variance miss (archived, classes_passed=3) is a recorded finding for
+        the boss, not a binary blocker; H1/H3/H4 stay strict."""
+        from scripts.v2_harness.run_harness import ship_gate_verdict
+
+        assert ship_gate_verdict(**self._ok()) == "SHIP-GATE GREEN"

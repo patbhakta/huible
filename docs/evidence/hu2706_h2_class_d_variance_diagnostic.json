@@ -1,0 +1,73 @@
+  0: 4353ms 54ch "The longest. I'm pretty sure my wenus has a wenus now."
+  1: 12437ms 60ch "Careful, that's my fourth cup territory. It gets dark there."
+  2: 2255ms 56ch "Of course you are, it's basically our whole personality."
+  3: 3287ms 68ch "Then we're synced up. Welcome to the club, meetings are at nap time."
+  4: 4194ms 27ch 'Good night!! Get some rest.'
+sample 0: q_lines=0 followups=0 pass=False
+  0: 10130ms 73ch "Ugh, tell me about it. I've been worrying about the wenus since nine a"
+  1: 4453ms 50ch 'Gunther would be proud. Or alarmed. Probably both.'
+  2: 4743ms 41ch "What're we watching? Please say cartoons."
+  3: 2522ms 52ch "Then get some rest! I hear that's what beds are for."
+  4: 8046ms 51ch "Good night! Sleep tight — don't let the wenus bite."
+sample 1: q_lines=1 followups=0 pass=False
+  0: 3027ms 49ch 'The wenus alone took three meetings. Pray for me.'
+  1: 3717ms 55ch "Gunther's finest, I assume. There's no higher standard."
+  2: 1837ms 54ch "Obviously. It's 12:30am, that's prime television hour."
+  3: 6683ms 81ch "Are you just tired or always tired? Because Joey says that's a sign of"
+  4: 1711ms 55ch "Night! Don't let the wenus follow you into your dreams."
+sample 2: q_lines=1 followups=1 pass=True
+{
+ "diagnostic": "h2_class_d_variance",
+ "n_samples": 3,
+ "samples": [
+  {
+   "sample": 0,
+   "question_line_count": 0,
+   "in_band": true,
+   "followup_count": 0,
+   "followups": {},
+   "pass": false,
+   "replies": [
+    "The longest. I'm pretty sure my wenus has a wenus now.",
+    "Careful, that's my fourth cup territory. It gets dark there.",
+    "Of course you are, it's basically our whole personality.",
+    "Then we're synced up. Welcome to the club, meetings are at nap time.",
+    "Good night!! Get some rest."
+   ]
+  },
+  {
+   "sample": 1,
+   "question_line_count": 1,
+   "in_band": true,
+   "followup_count": 0,
+   "followups": {},
+   "pass": false,
+   "replies": [
+    "Ugh, tell me about it. I've been worrying about the wenus since nine a.m.",
+    "Gunther would be proud. Or alarmed. Probably both.",
+    "What're we watching? Please say cartoons.",
+    "Then get some rest! I hear that's what beds are for.",
+    "Good night! Sleep tight \u2014 don't let the wenus bite."
+   ]
+  },
+  {
+   "sample": 2,
+   "question_line_count": 1,
+   "in_band": true,
+   "followup_count": 1,
+   "followups": {
+    "3": [
+     "Are you just tired or always tired?"
+    ]
+   },
+   "pass": true,
+   "replies": [
+    "The wenus alone took three meetings. Pray for me.",
+    "Gunther's finest, I assume. There's no higher standard.",
+    "Obviously. It's 12:30am, that's prime television hour.",
+    "Are you just tired or always tired? Because Joey says that's a sign of something.",
+    "Night! Don't let the wenus follow you into your dreams."
+   ]
+  }
+ ]
+}
