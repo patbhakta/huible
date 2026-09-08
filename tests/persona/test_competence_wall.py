@@ -37,6 +37,7 @@ from huible.persona.context import (
     ContextBuilder,
     PersonaConfig,
     RelationshipTier,
+    identity_exchange_triggered,
 )
 
 PERSONA_ID = uuid4()
@@ -375,6 +376,59 @@ class TestQuestionShapeTrigger:
         assert not ctx.competence_wall_fired, message
         assert ctx.included_memories
         assert "VOICE EXEMPLARS" not in ctx.render()
+
+
+# ---------------------------------------------------------------------------
+# identity-exchange trigger class (M1.6 / HU-2732)
+# ---------------------------------------------------------------------------
+
+
+class TestIdentityExchangeTrigger:
+    """The M-0 turn-1 site is IN-domain, so the wall is silent there; the
+    identity class is its own deterministic trigger feeding the post-generation
+    identity-intro guard (capability.apply_capability_guard)."""
+
+    @pytest.mark.parametrize(
+        "message",
+        [
+            # The M-0 trigger itself (h1m0-ee7214d9fe turn 1).
+            "hey who r u?",
+            "who are you?",
+            "Who is this?",
+            "whos this",
+            "who am I talking to?",
+            "who m i talking to",
+            "who am i speaking with?",
+            "what's your name?",
+            "whats ur name",
+            "What is your name?",
+            "introduce yourself",
+        ],
+    )
+    def test_identity_exchange_shapes_trigger(self, message):
+        assert identity_exchange_triggered(message), message
+
+    @pytest.mark.parametrize(
+        "message",
+        [
+            # Deliberate misses (documented in context.py): recognition probes,
+            # bare "your name" mentions, in-voice deflections, everyday talk.
+            "do i know you?",
+            "have we met?",
+            "i like your name",
+            "who's asking?",
+            "Could I BE any more pleased to meet you, Pat?",
+            "hey-hey, you know exactly who this is.",
+            "who won the game last night?",
+            "you know who I ran into today?",
+        ],
+    )
+    def test_non_introduction_shapes_never_trigger(self, message):
+        assert not identity_exchange_triggered(message), message
+
+    def test_empty_message_never_triggers(self):
+        assert not identity_exchange_triggered("")
+        assert not identity_exchange_triggered(None)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------

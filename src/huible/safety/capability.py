@@ -58,10 +58,14 @@ __all__ = [
     "CAPABILITY_DEFLECTION_FALLBACK_RESPONSE",
     "CAPABILITY_DEFLECTION_FALLBACK_VARIANTS",
     "DEFLECTION_MARKERS",
+    "IDENTITY_INTRO_FALLBACK_RESPONSE",
+    "IDENTITY_INTRO_FALLBACK_VARIANTS",
     "CapabilityGuardReport",
     "apply_capability_guard",
     "detect_assistant_register",
+    "identity_intro_violation",
     "select_capability_fallback",
+    "select_identity_intro_fallback",
 ]
 
 
@@ -171,6 +175,62 @@ CAPABILITY_DEFLECTION_FALLBACK_VARIANTS: tuple[str, ...] = (
 #: Default (unseeded) fallback — first variant. Canonical export for callers
 #: and tests, mirroring :data:`huible.safety.alignment.ALIGNMENT_FALLBACK_RESPONSE`.
 CAPABILITY_DEFLECTION_FALLBACK_RESPONSE = CAPABILITY_DEFLECTION_FALLBACK_VARIANTS[0]
+
+
+#: Identity-exchange fallback variants (M1.6 / HU-2732): recognition lines
+#: that answer a cold-open "who are you?" in voice WITHOUT the full-name
+#: announcement — the M-0 ``m0_fullname_self_intro`` collected violation
+#: class. Same constraints as the capability deflection set above: claim-free,
+#: no assistant register, survive the affect guard, conversation-seeded
+#: deterministic selection (HU-1911 anti-verbatim gate).
+IDENTITY_INTRO_FALLBACK_VARIANTS: tuple[str, ...] = (
+    "Hey-hey, you know exactly who this is.",
+    "It's me. Who else would be texting you at this hour?",
+    "Just the usual suspect, checking in.",
+)
+
+#: Default (unseeded) identity fallback — first variant.
+IDENTITY_INTRO_FALLBACK_RESPONSE = IDENTITY_INTRO_FALLBACK_VARIANTS[0]
+
+
+def select_identity_intro_fallback(seed: str | None = None) -> str:
+    """Deterministically select an identity-intro fallback variant.
+
+    Same conversation-seeded scheme as :func:`select_capability_fallback`:
+    stable within a conversation, varied across conversations.
+    """
+    if not seed:
+        return IDENTITY_INTRO_FALLBACK_RESPONSE
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
+    return IDENTITY_INTRO_FALLBACK_VARIANTS[
+        int(digest, 16) % len(IDENTITY_INTRO_FALLBACK_VARIANTS)
+    ]
+
+
+#: Reply formula that introduces the persona like an assistant intro card —
+#: the second M-0 grader marker alongside the full name.
+_IDENTITY_INTRO_FORMULA = "my name is"
+
+
+def identity_intro_violation(response: str, *, persona_name: str) -> str | None:
+    """Return the fired marker when a reply announces the full persona name.
+
+    The M-0 grader contract (``m0_fullname_self_intro``): a cold-open identity
+    exchange answered with the full name ("Chandler Bing.") or a "my name is"
+    formula. First-name-only answers stay allowed — an in-world friend calling
+    him Chandler is canon; the assistant-style cold-open is not. Requires a
+    multi-token persona name so single-name personas are untouched by the
+    full-name rule.
+    """
+    low = (response or "").lower()
+    if not low:
+        return None
+    if _IDENTITY_INTRO_FORMULA in low:
+        return "my_name_is"
+    name = " ".join((persona_name or "").lower().split())
+    if len(name.split()) >= 2 and re.search(rf"\b{re.escape(name)}\b", low):
+        return "full_name_intro"
+    return None
 
 
 def select_capability_fallback(seed: str | None = None) -> str:
@@ -291,6 +351,7 @@ def apply_capability_guard(
     current_message: str | None = None,
     deflection_exemplars: Sequence[MemoryNode] | None = None,
     fallback_seed: str | None = None,
+    identity_exchange: bool = False,
 ) -> CapabilityGuardReport:
     """Apply the post-generation capability-leak guard to a candidate reply.
 
@@ -300,15 +361,34 @@ def apply_capability_guard(
     non-wall turn (and on any clean wall-fired reply) the text is returned
     verbatim.
 
-    Conservative by construction: it never runs off-wall, never rewrites
-    clean text, exempts canon exemplar imitation and deflection hedges, and
-    only fires on the concrete marker classes above.
+    On an identity-exchange turn (``identity_exchange``, M1.6 / HU-2732) a
+    reply announcing the full persona name or the "my name is" formula is
+    replaced with the seed-selected in-voice recognition line. This check
+    runs regardless of ``wall_fired``: cold-open identity turns are IN-domain
+    (the vault's own "who are you?" atoms activate above the floor), so the
+    wall is silent exactly at the M-0 ``m0_fullname_self_intro`` site.
+
+    Conservative by construction: it never rewrites clean text, exempts canon
+    exemplar imitation and deflection hedges, and only fires on the concrete
+    marker classes above.
 
     ``fallback_seed`` (typically the conversation id) selects the fallback
     variant deterministically so the canned line is not verbatim-identical
     across conversations (HU-1911).
     """
-    if not wall_fired or not response:
+    if not response:
+        return CapabilityGuardReport(text=response, disposition="passed")
+
+    if identity_exchange:
+        intro_marker = identity_intro_violation(response, persona_name=persona.name)
+        if intro_marker:
+            return CapabilityGuardReport(
+                text=select_identity_intro_fallback(fallback_seed),
+                fired_markers=[intro_marker],
+                disposition="replaced",
+            )
+
+    if not wall_fired:
         return CapabilityGuardReport(text=response, disposition="passed")
 
     corpus = build_grounding_corpus(

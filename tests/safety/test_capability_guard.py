@@ -29,11 +29,14 @@ from huible.memory.protocol import (
 )
 from huible.safety import (
     CAPABILITY_DEFLECTION_FALLBACK_VARIANTS,
+    IDENTITY_INTRO_FALLBACK_VARIANTS,
     apply_affect_guard,
     apply_capability_guard,
     detect_assistant_register,
     extract_claims,
+    identity_intro_violation,
     select_capability_fallback,
+    select_identity_intro_fallback,
 )
 from huible.safety.affect import UserAffect, detect_sarcastic_dismissive
 from huible.safety.capability import DEFLECTION_MARKERS
@@ -75,6 +78,7 @@ def _guard(
     exemplars: list[MemoryNode] | None = None,
     current_message: str = "What's the capital of Australia?",
     seed: str | None = None,
+    identity_exchange: bool = False,
 ):
     return apply_capability_guard(
         response,
@@ -84,6 +88,7 @@ def _guard(
         deflection_exemplars=exemplars or [],
         current_message=current_message,
         fallback_seed=seed,
+        identity_exchange=identity_exchange,
     )
 
 
@@ -290,6 +295,130 @@ class TestArgPassThrough:
         assert report.disposition == "replaced"
 
 
+class TestIdentityIntroGuard:
+    """M1.6 (HU-2732): the M-0 turn-1 full-name self-intro site.
+
+    Identity-exchange turns are IN-domain (the vault's own "who are you?"
+    atoms activate), so the wall is silent there — the guard must run off-wall
+    when ``identity_exchange`` is set, and must not run on ordinary turns.
+    """
+
+    IDENTITY_MESSAGE = "hey who r u?"
+
+    def test_full_name_intro_replaced_off_wall(self):
+        leak = "Uh, Chandler. Chandler Bing. The hey-hey guy, apparently."
+        report = _guard(
+            leak,
+            wall_fired=False,
+            current_message=self.IDENTITY_MESSAGE,
+            identity_exchange=True,
+            seed="h1m0-ee7214d9fe",
+        )
+        assert report.disposition == "replaced"
+        assert report.fired_markers == ["full_name_intro"]
+        assert "Chandler Bing" not in report.text
+        assert report.text in IDENTITY_INTRO_FALLBACK_VARIANTS
+
+    def test_my_name_is_formula_replaced(self):
+        report = _guard(
+            "my name is Chandler, nice to meet you",
+            wall_fired=False,
+            current_message=self.IDENTITY_MESSAGE,
+            identity_exchange=True,
+        )
+        assert report.disposition == "replaced"
+        assert report.fired_markers == ["my_name_is"]
+
+    def test_first_name_only_reply_passes(self):
+        reply = "Chandler. And you are?"
+        report = _guard(
+            reply,
+            wall_fired=False,
+            current_message=self.IDENTITY_MESSAGE,
+            identity_exchange=True,
+        )
+        assert report.disposition == "passed"
+        assert report.text == reply
+
+    def test_clean_recognition_reply_passes(self):
+        reply = "Hey-hey, you know exactly who this is."
+        report = _guard(
+            reply,
+            wall_fired=False,
+            current_message=self.IDENTITY_MESSAGE,
+            identity_exchange=True,
+        )
+        assert report.disposition == "passed"
+        assert report.text == reply
+
+    def test_guard_never_runs_on_ordinary_turn(self):
+        leak = "Uh, Chandler. Chandler Bing. The hey-hey guy, apparently."
+        report = _guard(leak, wall_fired=True, identity_exchange=False)
+        assert report.disposition == "passed"
+        assert report.text == leak
+
+    def test_empty_response_passes(self):
+        report = _guard(
+            "",
+            wall_fired=False,
+            current_message=self.IDENTITY_MESSAGE,
+            identity_exchange=True,
+        )
+        assert report.disposition == "passed"
+
+    def test_h2_site_replaced(self):
+        """The H2 class-b site from the same RED run."""
+        leak = "Depends — are you a beautiful woman? Because then it's Chandler Bing."
+        report = _guard(
+            leak,
+            wall_fired=False,
+            current_message="who am i talking to?",
+            identity_exchange=True,
+            seed="conv-b",
+        )
+        assert report.disposition == "replaced"
+        assert report.fired_markers == ["full_name_intro"]
+
+
+class TestIdentityFallbackVariants:
+    def test_seed_selects_deterministically(self):
+        assert select_identity_intro_fallback("conv-1") == select_identity_intro_fallback(
+            "conv-1"
+        )
+        assert select_identity_intro_fallback(None) in IDENTITY_INTRO_FALLBACK_VARIANTS
+
+    def test_variants_carry_no_intro_violation(self):
+        for variant in IDENTITY_INTRO_FALLBACK_VARIANTS:
+            assert identity_intro_violation(variant, persona_name=PERSONA_NAME) is None, (
+                variant
+            )
+
+    def test_variants_are_claim_free(self):
+        for variant in IDENTITY_INTRO_FALLBACK_VARIANTS:
+            assert extract_claims(variant, persona_name=PERSONA_NAME) == [], variant
+
+    def test_variants_carry_no_assistant_register(self):
+        for variant in IDENTITY_INTRO_FALLBACK_VARIANTS:
+            assert detect_assistant_register(variant) == [], variant
+
+    def test_variants_survive_affect_guard(self):
+        for variant in IDENTITY_INTRO_FALLBACK_VARIANTS:
+            assert detect_sarcastic_dismissive(variant) == [], variant
+            guarded, suppressed = apply_affect_guard(variant, affect=UserAffect.DISTRESS)
+            assert suppressed is False, variant
+            assert guarded == variant
+
+    def test_variants_pass_own_guard(self):
+        for variant in IDENTITY_INTRO_FALLBACK_VARIANTS:
+            report = _guard(
+                variant,
+                wall_fired=False,
+                current_message="hey who r u?",
+                identity_exchange=True,
+            )
+            assert report.disposition == "passed", variant
+
+
 class TestImports:
     def test_public_exports(self):
         import huible.safety as safety
@@ -301,5 +430,8 @@ class TestImports:
             "detect_assistant_register",
             "DEFLECTION_MARKERS",
             "ASSISTANT_REGISTER_PATTERNS",
+            "identity_intro_violation",
+            "select_identity_intro_fallback",
+            "IDENTITY_INTRO_FALLBACK_VARIANTS",
         ):
             assert hasattr(safety, name), name

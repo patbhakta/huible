@@ -82,10 +82,14 @@ from huible.safety.capability import (
     CAPABILITY_DEFLECTION_FALLBACK_RESPONSE,
     CAPABILITY_DEFLECTION_FALLBACK_VARIANTS,
     DEFLECTION_MARKERS,
+    IDENTITY_INTRO_FALLBACK_RESPONSE,
+    IDENTITY_INTRO_FALLBACK_VARIANTS,
     CapabilityGuardReport,
     apply_capability_guard,
     detect_assistant_register,
+    identity_intro_violation,
     select_capability_fallback,
+    select_identity_intro_fallback,
 )
 from huible.safety.consent import (
     CONSENT_CARD_VERSION,

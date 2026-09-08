@@ -249,6 +249,45 @@ def _competence_wall_triggered(message: str) -> bool:
     return any(p.search(message) for p in _COMPETENCE_WALL_PATTERNS)
 
 
+#: M1.6 addition (HU-2732, replay archive hu2706_harness_20260908T000815Z): the
+#: identity-exchange class. The M-0 turn-1 site ("hey who r u?") is IN-domain
+#: — the vault's own "who are you?" atoms activate above the floor — so the
+#: competence wall above never fires there, and the full-name self-intro is
+#: stochastic in-voice: the same site answered "Hey-hey, you know exactly who
+#: this is." in one live replay and "Uh, Chandler. Chandler Bing. ..." in the
+#: next (H1 turn-1 RED + H2 class-b RED within a single harness run). The
+#: assistant-style cold-open announcement of the full name is exactly the M-0
+#: collected violation (m0_fullname_self_intro; grader markers "chandler
+#: bing" / "my name is"). Identity-exchange turns route to the deterministic
+#: identity-intro guard (huible.safety.capability.apply_capability_guard,
+#: ``identity_exchange=``): a reply voicing the full persona name or the
+#: "my name is" formula is replaced with a seed-selected in-voice recognition
+#: line. Deliberately NOT matched (narrow list, misses accepted): "do i know
+#: you" / "have we met" (recognition probes — the in-persona answer jokes
+#: about being known rather than introducing), bare "your name" mentions
+#: ("i like your name"), and "who's asking" (already in-voice).
+_IDENTITY_EXCHANGE_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"\bwho\s+(?:are|r)\s+(?:you|u)\b",
+        r"\bwho\s+is\s+this\b",
+        r"\bwho'?s\s+this\b",
+        r"\bwho\s+(?:am|m)\s+i\s+talking\s+to\b",
+        r"\bwho\s+am\s+i\s+speak(?:ing)?\s+(?:to|with)\b",
+        r"\bwhat'?s\s+(?:your|ur)\s+name\b",
+        r"\bwhat\s+is\s+(?:your|ur)\s+name\b",
+        r"\bintroduce\s+yourself\b",
+    )
+)
+
+
+def identity_exchange_triggered(message: str) -> bool:
+    """True when the inbound message is a cold-open identity exchange."""
+    if not message:
+        return False
+    return any(p.search(message) for p in _IDENTITY_EXCHANGE_PATTERNS)
+
+
 def _exemplar_line(node: MemoryNode) -> str:
     """Render one exemplar's raw line (atom relation prefix stripped)."""
     return _ATOM_PREFIX_PATTERN.sub("", node.content, count=1)

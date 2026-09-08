@@ -189,6 +189,7 @@ from huible.persona.context import (
     ConversationTurn,
     PersonaConfig,
     RelationshipTier,
+    identity_exchange_triggered,
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.persona.length import reply_budget_tokens, stats_from_metadata
@@ -1805,6 +1806,10 @@ def _register_routes(application: FastAPI) -> None:
             current_message=body.message,
             deflection_exemplars=ctx.deflection_exemplars,
             fallback_seed=str(body.conversation_id),
+            # M1.6 (HU-2732): cold-open identity exchange guard — the M-0
+            # turn-1 site is in-domain, so the wall is silent there and the
+            # flag rides the trigger class, not the wall.
+            identity_exchange=identity_exchange_triggered(body.message),
         )
         response_text = capability.text
         alignment = apply_alignment_guard(
