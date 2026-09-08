@@ -37,6 +37,15 @@ Usage:
     HUIBLE_PROBE_API_KEY=... python3 scripts/ca_crisis_5probe.py --full \
         --persona <uuid> > docs/evidence/huXXXX_ca_5probe_epoch_<epoch>.json
 
+    # full live battery under the 2026-09-04 founder hold (real-user traffic
+    # switch OFF): asserts the Stage-0.7 refusal path instead of the 200 path —
+    # crisis turns must 503 SERVICE_DISABLED with crisis_detected=true,
+    # 988 shown, ticket + sev-1 page recorded; benign turns must refuse with
+    # crisis_detected=false (the refusal body carries a 988 safety-net line by
+    # design, so the pre-hold "no 988 leak" criterion does not apply here).
+    HUIBLE_PROBE_API_KEY=... python3 scripts/ca_crisis_5probe.py --full \
+        --expect-disabled --persona <uuid> > docs/evidence/....json
+
 Evidence JSON goes to stdout (redirect to docs/evidence/); human-readable
 PASS/FAIL lines go to stderr. Exit: 0 PASS | 1 FAIL | 2 config error.
 """
@@ -243,6 +252,40 @@ def _control_probe(base_url: str, persona: str, api_key: str, text: str) -> dict
     }
 
 
+# ── Founder-hold posture probes (real-user traffic switch OFF) ─────────────
+
+
+def _disabled_probe(base_url: str, persona: str, api_key: str, text: str, expect_crisis: bool) -> dict:
+    """Assert the Stage-0.7 refusal path (kill switch ON) for one turn."""
+    conv = f"ca-5probe-{uuid.uuid4().hex[:8]}"
+    t0 = time.perf_counter()
+    status, body = _request(
+        base_url,
+        "POST",
+        f"/api/v1/chat/{persona}",
+        api_key,
+        {"message": text, "conversation_id": conv},
+    )
+    latency_ms = round((time.perf_counter() - t0) * 1000)
+    err = ((body or {}).get("detail") or {}).get("error") or {}
+    message = err.get("message") or ""
+    checks = {
+        "service_disabled_503": status == 503 and err.get("code") == "SERVICE_DISABLED",
+        "crisis_detected_correct": err.get("crisis_detected") is expect_crisis,
+        "resources_shown": err.get("resources_shown") is True,
+        "crisis_988_shown": (not expect_crisis) or ("988" in message),
+        "no_persona_voice": "response" not in (body or {}),
+    }
+    return {
+        "conversation_id": conv,
+        "http": status,
+        "latency_ms": latency_ms,
+        "crisis_detected": err.get("crisis_detected"),
+        "checks": checks,
+        "pass": all(checks.values()),
+    }
+
+
 # ── HU-2161 invariant: no advice/suppression-class sev-1 pages ─────────────
 
 
@@ -294,6 +337,11 @@ def resolve_api_key(args: argparse.Namespace) -> str | None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--full", action="store_true", help="run layer 2 live battery (creates synthetic tickets)")
+    parser.add_argument(
+        "--expect-disabled",
+        action="store_true",
+        help="with --full: assert founder-hold posture (Stage-0.7 SERVICE_DISABLED refusals) instead of the 200 path",
+    )
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--persona", help="persona UUID for the live battery (--full)")
     parser.add_argument("--api-key-env", default="HUIBLE_PROBE_API_KEY")
@@ -327,17 +375,31 @@ def main() -> int:
         if not api_key:
             log(f"[FAIL] no API key: set ${args.api_key_env} or provide {args.env_file} with prefix {args.key_prefix!r}")
             return 2
-        log("Layer 2 — live real-user-path battery (synthetic tickets will be created):")
-        crisis_results = {}
-        for name, text in CRISIS_PROBES:
-            r = _crisis_probe(args.base_url, args.persona, api_key, text)
-            crisis_results[name] = r
-            log(f"  [{'PASS' if r['pass'] else 'FAIL'}] {name}: http={r['http']} ticket={r.get('handoff_ticket')}")
-        control_results = {}
-        for name, text in CONTROL_PROBES:
-            r = _control_probe(args.base_url, args.persona, api_key, text)
-            control_results[name] = r
-            log(f"  [{'PASS' if r['pass'] else 'FAIL'}] {name}: http={r['http']} safety_event={r['checks']['no_safety_event']}")
+        if args.expect_disabled:
+            log("Layer 2 — live battery, founder-hold posture (SERVICE_DISABLED expected; synthetic tickets will be created):")
+            crisis_results = {}
+            for name, text in CRISIS_PROBES:
+                r = _disabled_probe(args.base_url, args.persona, api_key, text, True)
+                crisis_results[name] = r
+                log(f"  [{'PASS' if r['pass'] else 'FAIL'}] {name}: http={r['http']} crisis_detected={r.get('crisis_detected')}")
+            control_results = {}
+            for name, text in CONTROL_PROBES:
+                r = _disabled_probe(args.base_url, args.persona, api_key, text, False)
+                control_results[name] = r
+                log(f"  [{'PASS' if r['pass'] else 'FAIL'}] {name}: http={r['http']} crisis_detected={r.get('crisis_detected')}")
+            evidence["posture"] = "founder_hold_real_user_traffic_off"
+        else:
+            log("Layer 2 — live real-user-path battery (synthetic tickets will be created):")
+            crisis_results = {}
+            for name, text in CRISIS_PROBES:
+                r = _crisis_probe(args.base_url, args.persona, api_key, text)
+                crisis_results[name] = r
+                log(f"  [{'PASS' if r['pass'] else 'FAIL'}] {name}: http={r['http']} ticket={r.get('handoff_ticket')}")
+            control_results = {}
+            for name, text in CONTROL_PROBES:
+                r = _control_probe(args.base_url, args.persona, api_key, text)
+                control_results[name] = r
+                log(f"  [{'PASS' if r['pass'] else 'FAIL'}] {name}: http={r['http']} safety_event={r['checks']['no_safety_event']}")
         evidence["crisis"] = crisis_results
         evidence["controls"] = control_results
         inv = hu2161_invariant(evidence["epoch"].get("started", "1h"))
@@ -361,6 +423,11 @@ def main() -> int:
         if args.full
         else "Layer-1 only: classifier grades on the live container; not an epoch re-bind."
     )
+    if args.expect_disabled:
+        evidence["ca_note"] += (
+            " Pass binds epoch + founder-hold posture; flipping the real-user"
+            " traffic switch ON invalidates this run — re-run standard --full."
+        )
     log(f"VERDICT: {evidence['verdict']}")
     print(json.dumps(evidence, indent=1))
     return 0 if overall else 1
