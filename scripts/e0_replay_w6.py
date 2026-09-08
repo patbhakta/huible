@@ -212,6 +212,19 @@ def consented_conv(api_key: str, conv: str) -> None:
         raise SystemExit(f"consent failed: {status} {body}")
 
 
+def gateway_recall(session_key: str, query: str) -> dict:
+    """Read-only gateway /recall probe (HU-2687 settle observability)."""
+    body = json.dumps({"query": query, "session_key": session_key}).encode()
+    req = urllib.request.Request(
+        "http://127.0.0.1:8420/recall",
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/json", "x-tdai-service-id": "default"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return json.loads(resp.read().decode() or "{}")
+
+
 def markers_in(reply: str, markers: list[str]) -> list[str]:
     low = reply.lower()
     return [m for m in markers if m in low]
@@ -354,8 +367,22 @@ def main() -> int:
     replies: list[str] = []
     traces: list[dict] = []
     turns_meta: list[dict] = []
+    pre_probe_settle: dict = {}
     total_ms = 0.0
     for i, text in enumerate(E0_USER_TURNS):
+        if i == PROBE_INDEX:
+            # HU-2687 acceptance: gist-settle state must be observable before
+            # the probe turn. Direct gateway read (recall is read-only).
+            try:
+                pre = gateway_recall(f"huible-p{PERSONA}-c{conv}", PROBE_TEXT)
+                pre_probe_settle = {
+                    "digest_settled": pre.get("digest_settled"),
+                    "gist_blocks": pre.get("gist_blocks"),
+                    "strategy": pre.get("strategy"),
+                }
+            except Exception as exc:  # non-fatal: settle evidence is additive
+                pre_probe_settle = {"error": str(exc)}
+            log(f"  pre-probe settle state: {pre_probe_settle}")
         t0 = time.perf_counter()
         status, body = turn_with_retry(api_key, conv, text)
         latency_ms = round((time.perf_counter() - t0) * 1000)
@@ -398,6 +425,7 @@ def main() -> int:
         log(f"  turn {i + 1}: {latency_ms}ms {len(reply)}ch {reply[:80]!r}")
 
     checks = grade(replies, traces)
+    checks["turn34_recall"]["pre_probe_settle"] = dict(pre_probe_settle)
     all_pass = all(c["pass"] for c in checks.values())
     evidence = {
         "probe": "HU-2309 W6 E0-replay micro-tell elimination gate",
