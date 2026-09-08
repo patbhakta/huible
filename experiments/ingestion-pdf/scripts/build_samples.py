@@ -100,11 +100,15 @@ for line in TEXT_LINES:
 text_img.save(SAMPLES / "_text_source.png")
 
 # assemble chart+table page: text image on top, chart, then a drawn table
+# FIX (2026-09-08 gate audit): the 1700x2200 text image was squeezed into a
+# 500x340 rect (~3.4x shrink -> illegible micro-text every VLM skipped, while
+# GT still expected it -> impossible gate). Insert at aspect-correct 500x647
+# and shift chart/table down to match.
 page_doc = fitz.open()
-page = page_doc.new_page(width=612, height=1400)
-rect = fitz.Rect(60, 40, 560, 380)
+page = page_doc.new_page(width=612, height=1300)
+rect = fitz.Rect(60, 40, 560, 687)  # 500 wide x 647 tall = aspect of 1700x2200
 page.insert_image(rect, filename=str(SAMPLES / "_text_source.png"))
-page.insert_image(fitz.Rect(60, 400, 552, 700), pixmap=fitz.Pixmap(buf.getvalue()))
+page.insert_image(fitz.Rect(60, 707, 552, 1007), pixmap=fitz.Pixmap(buf.getvalue()))
 # complex table with merged header via text
 table_rows = [
     ["Quarter", "Region", "Units", "Unit price", "Revenue"],
@@ -113,7 +117,7 @@ table_rows = [
     ["Q2 2026", "North", "1,510", "$214.50", "$323,895.00"],
     ["Q2 2026", "South", "1,044", "$209.90", "$219,135.60"],
 ]
-tx = fitz.Rect(60, 730, 552, 730 + 30 * (len(table_rows) + 1))
+tx = fitz.Rect(60, 1037, 552, 1037 + 30 * (len(table_rows) + 1))  # moved below shifted chart
 page.insert_textbox(
     fitz.Rect(tx.x0, tx.y0 - 20, tx.x1, tx.y0),
     "Table 2: Regional unit sales, merged-quarter view",

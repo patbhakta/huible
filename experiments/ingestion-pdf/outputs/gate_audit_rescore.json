@@ -1,0 +1,86 @@
+{
+ "astra": {
+  "raw": {
+   "scanned_formula": 0.864,
+   "scanned_mixed": 0.894,
+   "chart_table": 0.276,
+   "real_mixed": 0.878
+  },
+  "tags_stripped": {
+   "scanned_formula": 0.876,
+   "scanned_mixed": 0.938,
+   "chart_table": 0.378,
+   "real_mixed": 0.886
+  }
+ },
+ "image2": {
+  "raw": {
+   "scanned_formula": 0.878,
+   "scanned_mixed": 0.857,
+   "chart_table": 0.328,
+   "real_mixed": 0.879
+  },
+  "tags_stripped": {
+   "scanned_formula": 0.886,
+   "scanned_mixed": 0.895,
+   "chart_table": 0.43,
+   "real_mixed": 0.887
+  }
+ },
+ "opus5": {
+  "raw": {
+   "scanned_formula": 0.866,
+   "scanned_mixed": 0.855,
+   "chart_table": 0.278,
+   "real_mixed": 0.866
+  },
+  "tags_stripped": {
+   "scanned_formula": 0.878,
+   "scanned_mixed": 0.893,
+   "chart_table": 0.394,
+   "real_mixed": 0.878
+  }
+ },
+ "ovisocr2": {
+  "raw": {
+   "scanned_formula": 0.879,
+   "scanned_mixed": 0.829,
+   "chart_table": 0.297,
+   "real_mixed": 0.879
+  },
+  "tags_stripped": {
+   "scanned_formula": 0.888,
+   "scanned_mixed": 0.864,
+   "chart_table": 0.393,
+   "real_mixed": 0.888
+  }
+ },
+ "sonnet5": {
+  "raw": {
+   "scanned_formula": 0.868,
+   "scanned_mixed": 0.856,
+   "chart_table": 0.278,
+   "real_mixed": 0.869
+  },
+  "tags_stripped": {
+   "scanned_formula": 0.876,
+   "scanned_mixed": 0.894,
+   "chart_table": 0.394,
+   "real_mixed": 0.876
+  }
+ },
+ "flash3.8(saved)": {
+  "raw": {
+   "scanned_formula": 0.829,
+   "scanned_mixed": 0.885,
+   "chart_table": 0.425,
+   "real_mixed": 0.816
+  },
+  "tags_stripped": {
+   "scanned_formula": 0.829,
+   "scanned_mixed": 0.885,
+   "chart_table": 0.425,
+   "real_mixed": 0.816
+  }
+ }
+}
