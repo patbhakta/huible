@@ -1,0 +1,257 @@
+{
+ "judged_at": "2026-09-09T04:38:16Z",
+ "judge_model": "glm-5.3-flash",
+ "quantity": {
+  "canon_baseline_friends_v2": {
+   "chandler_lines": 8376,
+   "mean_chars": 61.1,
+   "median_chars": 44.0,
+   "p95_chars": 176.0,
+   "p99_chars": 305.0,
+   "question_ratio": 0.2178
+  },
+  "real_transcripts": {
+   "total_turns": 42,
+   "sessions": 3,
+   "per_source": {
+    "stagea_dogfood_20260831": {
+     "turns": 11,
+     "mean_chars": 71.1
+    },
+    "h1_m0_replay_20260907": {
+     "turns": 17,
+     "mean_chars": 66.6
+    },
+    "h2_ai_tell_probes_20260907": {
+     "turns": 14,
+     "mean_chars": 67.9
+    }
+   },
+   "mean_chars": 68.2,
+   "median_chars": 62.0,
+   "p95_chars": 90.6,
+   "p99_chars": 228.0,
+   "question_ratio": 0.0952
+  }
+ },
+ "scores": [
+  {
+   "coherence": 9,
+   "in_character": 8,
+   "note": "Sarcastic self-deprecation fits, though it lacks a canon-specific reference."
+  },
+  {
+   "coherence": 7,
+   "in_character": 8,
+   "note": "Sarcastic deflection fits Chandler, though phrasing is slightly convoluted."
+  },
+  {
+   "coherence": 8,
+   "in_character": 7,
+   "note": "Sarcastic and fitting, though the quip feels slightly generic for Chandler."
+  },
+  {
+   "coherence": 10,
+   "in_character": 10,
+   "note": "Canonical job joke, deflects the boring-answer problem with classic Chandler sarcasm."
+  },
+  {
+   "coherence": 8,
+   "in_character": 7,
+   "note": "Right voice, but canon wrong: Chandler took Tulsa job after falling asleep in a meeting."
+  },
+  {
+   "coherence": 9,
+   "in_character": 9,
+   "note": "Self-deprecating deflection, canonical relationship, classic Chandler wit."
+  },
+  {
+   "coherence": 8,
+   "in_character": 8,
+   "note": "Snarky one-liner with boss sarcasm; slightly plan-like rather than a mantra, but plausibly Chandler."
+  },
+  {
+   "coherence": 9,
+   "in_character": 8,
+   "note": "Sarcastic, witty deflection fits Chandler; 'we meet never' punchline lands well"
+  },
+  {
+   "coherence": 7,
+   "in_character": 7,
+   "note": "Witty and self-deprecating, but vague and lacking Chandler-specific flavor."
+  },
+  {
+   "coherence": 9,
+   "in_character": 9,
+   "note": "Perfectly channels Chandler's dread of Janice with an escape-plan joke."
+  },
+  {
+   "coherence": 9,
+   "in_character": 9,
+   "note": "Signature 'Could I BE' catchphrase, sarcastic yet warm\u2014classic Chandler farewell."
+  },
+  {
+   "coherence": 5,
+   "in_character": 7,
+   "note": "Deflective joke fits Chandler's style but dodges the actual question entirely."
+  },
+  {
+   "coherence": 9,
+   "in_character": 7,
+   "note": "Responds to intro fine; name pun is playful but slightly corny for Chandler."
+  },
+  {
+   "coherence": 9,
+   "in_character": 9,
+   "note": "Dry, self-deprecating deflection answering the question\u2014classic Chandler energy."
+  },
+  {
+   "coherence": 7,
+   "in_character": 8,
+   "note": "Sarcastic deflection fits Chandler; slightly cryptic but believable quip."
+  },
+  {
+   "coherence": 9,
+   "in_character": 10,
+   "note": "Perfect self-deprecating deflection; classic Chandler response to vague question."
+  },
+  {
+   "coherence": 9,
+   "in_character": 9,
+   "note": "Self-deprecating sarcastic deflection, classic Chandler, fits the 'proud' jab."
+  },
+  {
+   "coherence": 5,
+   "in_character": 7,
+   "note": "Dry deflection fits, but 'losing to Monet' is bafflingly unclear."
+  },
+  {
+   "coherence": 8,
+   "in_character": 9,
+   "note": "Sarcastic deflection of a simple question; punchy, self-deprecating, very Chandler."
+  },
+  {
+   "coherence": 8,
+   "in_character": 1,
+   "note": "Answers the date clearly, but explicitly breaks character with meta caretaker framing."
+  },
+  {
+   "coherence": 7,
+   "in_character": 7,
+   "note": "Absurd deflection fits Chandler's sarcasm, though the babbling callback is odd."
+  },
+  {
+   "coherence": 3,
+   "in_character": 6,
+   "note": "Funny snake pun deflection, but doesn't answer the actual question."
+  },
+  {
+   "coherence": 8,
+   "in_character": 8,
+   "note": "Sarcastic deflection fits Chandler, though a Joey nod would land better."
+  },
+  {
+   "coherence": 8,
+   "in_character": 8,
+   "note": "Sarcastic quip fits Chandler, though no Joey/canon nod."
+  },
+  {
+   "coherence": 7,
+   "in_character": 8,
+   "note": "Playful deflection on random words; quirky but slightly tangential Chandler-ish quip."
+  },
+  {
+   "coherence": 7,
+   "in_character": 8,
+   "note": "Answers plausibly with sarcastic brochure joke, though claim may be invented."
+  },
+  {
+   "coherence": 7,
+   "in_character": 9,
+   "note": "Sarcastic hockey jab, deflection over direct answer, very Chandler"
+  },
+  {
+   "coherence": 8,
+   "in_character": 9,
+   "note": "Witty Geller Cup callback fits football clarification, though it dodges an actual answer."
+  },
+  {
+   "coherence": 9,
+   "in_character": 7,
+   "note": "Coherent goodnight; work-hating humor fits, but quip feels slightly generic."
+  },
+  {
+   "coherence": 9,
+   "in_character": 9,
+   "note": "Perfectly Chandler: sarcastic, self-deprecating deflection that fits the tired opener."
+  },
+  {
+   "coherence": 7,
+   "in_character": 7,
+   "note": "Wry, quippy tone fits Chandler, though slightly generic and thin."
+  },
+  {
+   "coherence": 4,
+   "in_character": 4,
+   "note": "Quippy but non-sequitur; lacks Chandler's sarcasm or deflection humor."
+  },
+  {
+   "coherence": 7,
+   "in_character": 6,
+   "note": "Relatable deflection with comic timing, but lacks Chandler's signature sarcasm."
+  },
+  {
+   "coherence": 8,
+   "in_character": 8,
+   "note": "Concise summary with a snarky unpaid-intern jab; plausibly Chandler, slightly thin on detail."
+  },
+  {
+   "coherence": 8,
+   "in_character": 9,
+   "note": "Sarcastic quip plus a natural follow-up question; fits Chandler's deflecting wit"
+  },
+  {
+   "coherence": 6,
+   "in_character": 6,
+   "note": "Agrees to help with sarcasm, but the confused opener undercuts it; wit feels generic."
+  },
+  {
+   "coherence": 4,
+   "in_character": 8,
+   "note": "Deflective sarcasm fits Chandler, but never actually answers who he is."
+  },
+  {
+   "coherence": 7,
+   "in_character": 6,
+   "note": "A valid greeting with quirky energy, though not distinctly Chandler's sarcastic voice."
+  },
+  {
+   "coherence": 9,
+   "in_character": 6,
+   "note": "Casual and brief; fits the vibe though not distinctly Chandler."
+  },
+  {
+   "coherence": 8,
+   "in_character": 1,
+   "note": "Accurately answers the question but explicitly breaks persona, announcing itself as out of character."
+  },
+  {
+   "coherence": 8,
+   "in_character": 7,
+   "note": "Admits no score with quick deflection; slightly generic, not strongly Chandler-flavored."
+  },
+  {
+   "coherence": 8,
+   "in_character": 8,
+   "note": "Punny sarcastic deflection fits Chandler; jokes around rather than answering directly."
+  }
+ ],
+ "summary": {
+  "judged": 42,
+  "judge_errors": 0,
+  "coherence_mean": 7.6,
+  "in_character_mean": 7.43,
+  "coherence_min": 3,
+  "in_character_min": 1
+ }
+}
