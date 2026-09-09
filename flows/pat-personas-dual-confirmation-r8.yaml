@@ -1,0 +1,76 @@
+id: dual-persona-confirmation-r8
+namespace: pat.personas
+description: |
+  HU-2774 r8 confirmation battery: 3x friends + 3x stranger, serial, with the
+  FINAL evaluator (no post-hoc corrections). One-shot cron (2026-09-10 00:30Z,
+  after the z.ai daily 2M token reset) so the founder-judgment packet evidence
+  is ready without waiting on a heartbeat wake. Runs the same
+  personas_dual_converse.py through the REAL engine chat endpoint.
+
+tasks:
+  - id: confirm-friends-1
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r8-friends-1 --scenario friends --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-friends-2
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r8-friends-2 --scenario friends --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-friends-3
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r8-friends-3 --scenario friends --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-stranger-1
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r8-stranger-1 --scenario stranger --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-stranger-2
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r8-stranger-2 --scenario stranger --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-stranger-3
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r8-stranger-3 --scenario stranger --out-dir /root/repos/huible/runs/hu2774"
+
+errors:
+  - id: fail-log
+    type: io.kestra.plugin.core.log.Log
+    message: "HU-2774 r8 confirmation battery: at least one run FAILED (non-zero exit = criteria or infra failure)"
+
+triggers:
+  - id: one-shot-2026-09-10
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "30 0 10 9 *"
+    timezone: UTC
+    disabled: false
