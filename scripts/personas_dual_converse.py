@@ -69,6 +69,16 @@ DEFENSE_TELLS = [
     (r"\bi don't give (?:my )?name\b", "name-refusal"),
 ]
 
+#: Priors-leak tells per persona (zero-corpus classes measured on the v2 vault):
+#: - self-surname announcement (system prompt carries first name only; any
+#:   surname in the persona's own line comes from model priors — run-2 t24
+#:   "It's still Bing")
+#: - trademark cadence "could this/i BE any more" — 0 occurrences in the
+#:   Chandler v2 vault (hu2773 dialog study); Monica's vault holds one canon
+#:   mocking line, so the cadence is evidence-legal for her voice only.
+SURNAME_TELLS = {CHANDLER_ID: r"\bbing\b", MONICA_ID: r"\bgeller\b"}
+CADENCE_TELLS = {CHANDLER_ID: r"could (?:this|i|we) be any"}
+
 STOPWORDS = set("""a an the and or but so if then than that this these those i you he she
 it we they me him her us them my your his its our their am is are was were be been being
 do does did doing have has had having will would can could should may might must shall
@@ -245,6 +255,14 @@ def eval_transcript(transcript, opener):
         for pat, tag in AI_TELLS:
             if re.search(pat, t["text"].casefold()):
                 tells.append({"turn": t["turn"], "tell": tag, "text": t["text"]})
+        surname = SURNAME_TELLS.get(t["speaker"])
+        if surname and re.search(surname, t["text"].casefold()):
+            tells.append({"turn": t["turn"], "tell": "self-surname",
+                          "text": t["text"]})
+        cadence = CADENCE_TELLS.get(t["speaker"])
+        if cadence and re.search(cadence, t["text"].casefold()):
+            tells.append({"turn": t["turn"], "tell": "trademark-cadence",
+                          "text": t["text"]})
     checks["no_ai_tells"] = {"pass": not tells, "violations": tells}
 
     failures = [k for k, v in checks.items() if not v["pass"]]
