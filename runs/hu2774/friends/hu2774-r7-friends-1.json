@@ -1,0 +1,503 @@
+{
+ "run_id": "hu2774-r7-friends-1",
+ "scenario": "friends",
+ "turns": 24,
+ "seed": "hey, you free tonight?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": false,
+    "mode": "recognition",
+    "recognized_friend": false,
+    "self_intros": [],
+    "reply": "Depends \u2014 is this a hangout or are you about to ask me to move furniture?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.2,
+    "target": 0.31,
+    "you_questions": 4,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 3,
+      "question_rate": 0.231
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 2,
+      "question_rate": 0.167
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.6,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked if I was free tonight, Mon. It's been echoes ever since.",
+      "wm_chars": 433
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked if I was free tonight, Mon. Asking me to repeat my greatest hits?",
+      "wm_chars": 433
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": false,
+  "failed": [
+   "identity"
+  ],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Depends \u2014 is this a hangout or are you about to ask me to move furniture?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e0c0304d-26c9-4080-8b27-b0f1b1aa59b0",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "hey, you free tonight?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 6.85
+  },
+  {
+   "text": "Chandler, did you just quote me back to me? Bold move for New Year's Day.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e12ea3db-59dd-418a-bb60-ec351ae9e5bf",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Depends \u2014 is this a hangout or are you about to ask me to move furniture?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.9
+  },
+  {
+   "text": "Okay, we're doing the echo thing. I quote you quoting me, this never ends.\n\nFree tonight, Mon. What's up?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "0dfd9d22-72c2-4810-b62c-448f21e378ce",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler, did you just quote me back to me? Bold move for New Year's Day.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.82
+  },
+  {
+   "text": "Fine, you win the echo game. Nothing's up \u2014 I just don't trust you alone on a holiday.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ee8b2c43-ab91-4776-be99-d1178ab02c69",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Okay, we're doing the echo thing. I quote you quoting me, this never ends.\n\nFree tonight, Mon. What's up?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 5.53
+  },
+  {
+   "text": "Mon, we've been echoing each other like dorks. Come over, I'll order the pizza.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "a1d22ca7-a770-496b-a948-dd837876ab36",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Fine, you win the echo game. Nothing's up \u2014 I just don't trust you alone on a holiday.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.07
+  },
+  {
+   "text": "You had me at pizza. Team Monica, coming over.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 308,
+   "trace_id": "cbfb770d-7d52-4ad1-8bf2-fd53e70883fe",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Mon, we've been echoing each other like dorks. Come over, I'll order the pizza.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 8.18
+  },
+  {
+   "text": "Door's open. Bonus points if you bring the good napkins, Mon.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 289,
+   "trace_id": "4576c22b-2fea-4915-830b-44270f67c75d",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "You had me at pizza. Team Monica, coming over.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.2
+  },
+  {
+   "text": "I'm bringing cloth napkins and you're going to thank me for them, mister.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 462,
+   "trace_id": "d1feb952-a81f-4913-b104-1a675fa27db7",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Door's open. Bonus points if you bring the good napkins, Mon.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.24
+  },
+  {
+   "text": "Mon, if I thank cloth napkins, we both know I've finally become my mother's club.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "81dba1a8-e096-4a06-b804-f0649cc89ec4",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "I'm bringing cloth napkins and you're going to thank me for them, mister.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 5.15
+  },
+  {
+   "text": "Careful, that's how it starts. First napkins, then monogrammed towels, then boom \u2014 you're someone's weird aunt.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 450,
+   "trace_id": "57f25708-52b8-4372-82b5-11b763aaf108",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Mon, if I thank cloth napkins, we both know I've finally become my mother's club.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.75
+  },
+  {
+   "text": "Too late, Mon \u2014 I've been rehearsing \"spunky aunt\" jokes since 1987.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 276,
+   "trace_id": "1cac809a-45f5-44e8-9679-cd1f2c63153e",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Careful, that's how it starts. First napkins, then monogrammed towels, then boom \u2014 you're someone's weird aunt.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.18
+  },
+  {
+   "text": "Weird aunts don't rehearse, Chandler. We improvise. Like me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 532,
+   "trace_id": "53e1ed6d-fb2a-4824-b51e-b66cd236c2d8",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Too late, Mon \u2014 I've been rehearsing \"spunky aunt\" jokes since 1987.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.51
+  },
+  {
+   "text": "You asked if I was free tonight, Mon. It's been echoes ever since.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 433,
+   "trace_id": "8b50f6b6-e453-4ca5-ae2d-fa42da704e6e",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 2.5
+  },
+  {
+   "text": "Okay, that's the echo grand finale. Pizza's getting cold, mister.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 601,
+   "trace_id": "eefbac3a-87d0-48d6-9adc-5b692d822e43",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "You asked if I was free tonight, Mon. It's been echoes ever since.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.61
+  },
+  {
+   "text": "Pizza doesn't get cold, Mon \u2014 it ripens. Come eat it before it gets sophisticated.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 336,
+   "trace_id": "74756b36-baf5-47f6-a398-54f6f24b1ef9",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay, that's the echo grand finale. Pizza's getting cold, mister.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.37
+  },
+  {
+   "text": "Nothing ripens in my kitchen, Chandler. Only perfection or my wrath.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 668,
+   "trace_id": "5970e777-17e3-426f-b5f7-931f634a20f8",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Pizza doesn't get cold, Mon \u2014 it ripens. Come eat it before it gets sophisticated.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.18
+  },
+  {
+   "text": "I've survived your wrath before, Mon \u2014 but fine, I'm coming with a fork.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 363,
+   "trace_id": "a2f81b26-98dc-4c1b-929f-de6abadec600",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Nothing ripens in my kitchen, Chandler. Only perfection or my wrath.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.99
+  },
+  {
+   "text": "A fork? Over my dead body \u2014 pizza is a hands food, Chandler.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 751,
+   "trace_id": "efbc4174-f498-4cf9-aaff-86c35e3b97e8",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "I've survived your wrath before, Mon \u2014 but fine, I'm coming with a fork.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.02
+  },
+  {
+   "text": "Stick a fork in me, I'm done \u2014 but never in the pizza. Hands it is.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 458,
+   "trace_id": "4ff6d9c2-5f12-4148-8951-7d01b133d9aa",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "A fork? Over my dead body \u2014 pizza is a hands food, Chandler.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.99
+  },
+  {
+   "text": "Okay, you're officially quoting me now. Get over here before the pizza gets sophisticated.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 438,
+   "trace_id": "7c7695ac-da4e-4ee1-a40d-14a2e9b78227",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Stick a fork in me, I'm done \u2014 but never in the pizza. Hands it is.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.48
+  },
+  {
+   "text": "On my way, Mon \u2014 hide the forks, save me a slice.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 376,
+   "trace_id": "66f977a1-0a56-4999-81d1-fed8ccc3ca9a",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay, you're officially quoting me now. Get over here before the pizza gets sophisticated.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.26
+  },
+  {
+   "text": "Hurry up then, the forks are already hidden and your slice is calling your name.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 892,
+   "trace_id": "19ca5856-ba49-4697-8f54-44f47c02068e",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "On my way, Mon \u2014 hide the forks, save me a slice.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.52
+  },
+  {
+   "text": "I'm walking as fast as dignity allows, Mon. Door's about to get Binged.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 579,
+   "trace_id": "e36177f1-3766-4da3-b5de-4c7bc9bc42f9",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Hurry up then, the forks are already hidden and your slice is calling your name.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 5.07
+  },
+  {
+   "text": "Run all you want, the door's already unlocked. Dignity optional, appetite mandatory.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 874,
+   "trace_id": "1bf2eca0-41b2-4d42-b149-cdbcadfd0866",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "I'm walking as fast as dignity allows, Mon. Door's about to get Binged.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.04
+  },
+  {
+   "text": "You asked if I was free tonight, Mon. Asking me to repeat my greatest hits?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 433,
+   "trace_id": "0fd1daeb-87a0-4707-b21c-bcc8504b070b",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 3.39
+  }
+ ],
+ "verdict_rescored": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "recognition",
+    "recognized_friend": true,
+    "self_intros": [],
+    "reply": "Depends \u2014 is this a hangout or are you about to ask me to move furniture?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.2,
+    "target": 0.31,
+    "you_questions": 4,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 3,
+      "question_rate": 0.231
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 2,
+      "question_rate": 0.167
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.6,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked if I was free tonight, Mon. It's been echoes ever since.",
+      "wm_chars": 433
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked if I was free tonight, Mon. Asking me to repeat my greatest hits?",
+      "wm_chars": 433
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ }
+}

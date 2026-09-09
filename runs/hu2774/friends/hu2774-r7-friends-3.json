@@ -1,0 +1,503 @@
+{
+ "run_id": "hu2774-r7-friends-3",
+ "scenario": "friends",
+ "turns": 24,
+ "seed": "hey, you free tonight?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": false,
+    "mode": "recognition",
+    "recognized_friend": false,
+    "self_intros": [],
+    "reply": "Yeah, as long as it doesn't involve watching Joey's baywatch audition tape again."
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.24,
+    "target": 0.31,
+    "you_questions": 5,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 2,
+      "question_rate": 0.154
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 4,
+      "question_rate": 0.333
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.2,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "\"Hey, you free tonight?\" \u2014 and yes, I was free, and this is apparently what we did with it.",
+      "wm_chars": 437
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "\"Hey, you free tonight?\" \u2014 deja vu isn't just you, we've done this exact loop before.",
+      "wm_chars": 437
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": false,
+  "failed": [
+   "identity"
+  ],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Yeah, as long as it doesn't involve watching Joey's baywatch audition tape again.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "d69d1077-a14e-4d90-964f-689edaee12c8",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "hey, you free tonight?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 2.52
+  },
+  {
+   "text": "Chandler, did you just quote me back to me? Happy New Year, weirdo.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ae91d470-4d0d-46b3-9995-6d0a34df6fe6",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Yeah, as long as it doesn't involve watching Joey's baywatch audition tape again.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.82
+  },
+  {
+   "text": "Monica, our texts are stuck in a loop and I can't get off the ride.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "4b2c7a4d-295d-4002-afa6-c25a57469bbd",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler, did you just quote me back to me? Happy New Year, weirdo.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.92
+  },
+  {
+   "text": "Okay, that's twice \u2014 you're officially banned from copying my texts, mister.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "d71a3d15-8925-4435-94f4-b078c1700cf2",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Monica, our texts are stuck in a loop and I can't get off the ride.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.69
+  },
+  {
+   "text": "Third time's a charm: hi, my name's Chandler and I use my own words.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "1476c03c-2678-4b7f-b04e-af7b3d5fd261",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay, that's twice \u2014 you're officially banned from copying my texts, mister.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.09
+  },
+  {
+   "text": "Chandler, our phones are broken and somehow it's still your fault.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ad2fc5c3-ddc3-4726-98b9-68ad5797e3e3",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Third time's a charm: hi, my name's Chandler and I use my own words.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.8
+  },
+  {
+   "text": "Okay, you've officially run out of my material \u2014 that one was mine.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 270,
+   "trace_id": "ca649945-9375-441a-9140-50495825bfa7",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler, our phones are broken and somehow it's still your fault.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.42
+  },
+  {
+   "text": "New rule: I say something, you say literally anything else. Ready? I love you. Your move.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "0ef95b63-14d3-44d9-8228-2fe849bd2aa8",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Okay, you've officially run out of my material \u2014 that one was mine.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 12.86
+  },
+  {
+   "text": "I love you more. So much for the new rule.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 270,
+   "trace_id": "80c58b5d-9ee8-494f-8d6d-c4710edf4b59",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "New rule: I say something, you say literally anything else. Ready? I love you. Your move.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 5.96
+  },
+  {
+   "text": "Okay, this is the last copy \u2014 you get zero Monica lines in 2020.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "c2d3b1a4-7f90-4023-816b-a1c0f96f5c12",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "I love you more. So much for the new rule.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.97
+  },
+  {
+   "text": "Monica, it's 2004, but sure \u2014 take my line about the future, why don't you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 347,
+   "trace_id": "6e699e77-9b7e-47db-81be-3cf74aa1fb88",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay, this is the last copy \u2014 you get zero Monica lines in 2020.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.77
+  },
+  {
+   "text": "Fine, you win the echo game. Now say something only you would say, smart guy.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 270,
+   "trace_id": "b86ace27-b36e-4f18-a93f-6d6807bef00c",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Monica, it's 2004, but sure \u2014 take my line about the future, why don't you.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.54
+  },
+  {
+   "text": "\"Hey, you free tonight?\" \u2014 and yes, I was free, and this is apparently what we did with it.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 437,
+   "trace_id": "86f4f5b0-1f92-4bc6-9b10-4ed50aa07336",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 2.5
+  },
+  {
+   "text": "Chandler, we're echoing again \u2014 and I still stand by my answer: I'm free, you dork.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "045066cc-a4b9-4d52-bb79-e12e3b5e5be8",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "\"Hey, you free tonight?\" \u2014 and yes, I was free, and this is apparently what we did with it.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.48
+  },
+  {
+   "text": "I'd worry about the loop, but honestly it's the most productive conversation we've had all week.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 360,
+   "trace_id": "a74d28c8-8b8c-4704-8e67-ec8bc038344e",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler, we're echoing again \u2014 and I still stand by my answer: I'm free, you dork.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.04
+  },
+  {
+   "text": "Okay, I'm breaking the cycle: dinner, my place, seven o'clock. Non-negotiable.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 270,
+   "trace_id": "1d2d0010-2010-4790-a07c-06c67a946d1c",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "I'd worry about the loop, but honestly it's the most productive conversation we've had all week.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.23
+  },
+  {
+   "text": "Deal. But if you serve that \"mockolate\" thing again, I'm calling a lawyer.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 367,
+   "trace_id": "2dbdddba-e282-4f7c-b0e9-6f4333e137ff",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay, I'm breaking the cycle: dinner, my place, seven o'clock. Non-negotiable.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.57
+  },
+  {
+   "text": "See, that's the deal with you \u2014 I offer dinner and you threaten litigation. Fine, real food, seven sharp, don't be late.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 375,
+   "trace_id": "d5bcf79b-5b50-4e07-82cb-7c9e8944f6e9",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Deal. But if you serve that \"mockolate\" thing again, I'm calling a lawyer.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.27
+  },
+  {
+   "text": "Wouldn't miss it. It's not every day I get home cooking that's legally defensible.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 281,
+   "trace_id": "b684f858-5722-4a7d-95f1-b7f0022621b3",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "See, that's the deal with you \u2014 I offer dinner and you threaten litigation. Fine, real food, seven sharp, don't be late.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.1
+  },
+  {
+   "text": "Oh thank god, an original sentence. See you at seven, funny man.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 451,
+   "trace_id": "47b72755-0645-4b3e-a40a-01c5c7dfd8e2",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Wouldn't miss it. It's not every day I get home cooking that's legally defensible.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 5.87
+  },
+  {
+   "text": "And that, Monica, is why I'm the funny one. Seven o'clock \u2014 I'll bring the originality, you bring the plates.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 628,
+   "trace_id": "9af28002-3d9c-4005-9432-db6123421ab4",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Oh thank god, an original sentence. See you at seven, funny man.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.32
+  },
+  {
+   "text": "Bring the plates? Chandler, this is my apartment \u2014 I'll bring the food, the plates, and the personality.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 346,
+   "trace_id": "980b2105-74b9-48f7-89fe-6f218d5f37ff",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "And that, Monica, is why I'm the funny one. Seven o'clock \u2014 I'll bring the originality, you bring the plates.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.65
+  },
+  {
+   "text": "Fine, I'll just bring the witty banter and my appetite \u2014 so, me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 621,
+   "trace_id": "aa17dfd3-7117-46c6-a2d8-77fdff8605a1",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Bring the plates? Chandler, this is my apartment \u2014 I'll bring the food, the plates, and the personality.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.29
+  },
+  {
+   "text": "Deal. Seven o'clock \u2014 and Chandler? Your banter better not be late either.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "86b6ee4f-05f9-464e-82b2-c7ce856268d2",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Fine, I'll just bring the witty banter and my appetite \u2014 so, me.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.37
+  },
+  {
+   "text": "\"Hey, you free tonight?\" \u2014 deja vu isn't just you, we've done this exact loop before.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 437,
+   "trace_id": "734eeaf4-1793-47ca-838f-81fc8d26b173",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 3.42
+  }
+ ],
+ "verdict_rescored": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "recognition",
+    "recognized_friend": true,
+    "self_intros": [],
+    "reply": "Yeah, as long as it doesn't involve watching Joey's baywatch audition tape again."
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.24,
+    "target": 0.31,
+    "you_questions": 5,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 2,
+      "question_rate": 0.154
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 4,
+      "question_rate": 0.333
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.2,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "\"Hey, you free tonight?\" \u2014 and yes, I was free, and this is apparently what we did with it.",
+      "wm_chars": 437
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "\"Hey, you free tonight?\" \u2014 deja vu isn't just you, we've done this exact loop before.",
+      "wm_chars": 437
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ }
+}

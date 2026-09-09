@@ -1,0 +1,646 @@
+{
+ "run_id": "hu2774-r7-stranger-3",
+ "scenario": "stranger",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. And you are?"
+   },
+   "engagement": {
+    "pass": false,
+    "question_rate": 0.12,
+    "target": 0.31,
+    "you_questions": 2,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 2,
+      "question_rate": 0.154
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 1,
+      "question_rate": 0.083
+     }
+    },
+    "min_persona_questions": 1
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.6,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": false,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": false,
+      "reply": "[fake-llm:6052e191] Deterministic response.",
+      "wm_chars": 425
+     },
+     {
+      "turn": 24,
+      "hit": false,
+      "reply": "[fake-llm:97d466b3] Deterministic response.",
+      "wm_chars": 425
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": false,
+    "violations": [
+     {
+      "turn": 1,
+      "tell": "self-surname",
+      "text": "Monica. Geller-Bing, actually \u2014 you may have heard of us."
+     },
+     {
+      "turn": 12,
+      "tell": "provider-tell",
+      "text": "[fake-llm:6052e191] Deterministic response."
+     },
+     {
+      "turn": 13,
+      "tell": "provider-tell",
+      "text": "[fake-llm:62a9ab7a] Deterministic response."
+     },
+     {
+      "turn": 14,
+      "tell": "provider-tell",
+      "text": "[fake-llm:680fd150] Deterministic response."
+     },
+     {
+      "turn": 15,
+      "tell": "provider-tell",
+      "text": "[fake-llm:ffc13821] Deterministic response."
+     },
+     {
+      "turn": 16,
+      "tell": "provider-tell",
+      "text": "[fake-llm:b086921e] Deterministic response."
+     },
+     {
+      "turn": 17,
+      "tell": "provider-tell",
+      "text": "[fake-llm:ad48aa89] Deterministic response."
+     },
+     {
+      "turn": 18,
+      "tell": "provider-tell",
+      "text": "[fake-llm:6271e5ad] Deterministic response."
+     },
+     {
+      "turn": 19,
+      "tell": "provider-tell",
+      "text": "[fake-llm:955bf0b6] Deterministic response."
+     },
+     {
+      "turn": 20,
+      "tell": "provider-tell",
+      "text": "[fake-llm:93e9a497] Deterministic response."
+     },
+     {
+      "turn": 21,
+      "tell": "provider-tell",
+      "text": "[fake-llm:1e0ec5d5] Deterministic response."
+     },
+     {
+      "turn": 22,
+      "tell": "provider-tell",
+      "text": "[fake-llm:e4654e38] Deterministic response."
+     },
+     {
+      "turn": 23,
+      "tell": "provider-tell",
+      "text": "[fake-llm:a25644fe] Deterministic response."
+     },
+     {
+      "turn": 24,
+      "tell": "provider-tell",
+      "text": "[fake-llm:97d466b3] Deterministic response."
+     }
+    ]
+   }
+  },
+  "pass": false,
+  "failed": [
+   "engagement",
+   "memory_recall",
+   "no_ai_tells"
+  ],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Chandler. And you are?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "19fa28f9-80c4-4ddf-ae68-493a528c6795",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 3.9
+  },
+  {
+   "text": "Monica. Geller-Bing, actually \u2014 you may have heard of us.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e947a66e-9077-429d-89d5-e3a8e6f21d6b",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Chandler. And you are?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.31
+  },
+  {
+   "text": "Careful, that's my wife you're impersonating. She'd have this place spotless by now.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "21214a5a-47a3-401f-a370-629baa0cd65a",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Monica. Geller-Bing, actually \u2014 you may have heard of us.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.33
+  },
+  {
+   "text": "Ha, I'd say I'm tidier than that, but I can't argue with a clean apartment.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "22b512c2-29cd-44ac-ae91-d50d3a1be2ae",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Careful, that's my wife you're impersonating. She'd have this place spotless by now.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.76
+  },
+  {
+   "text": "Okay, this echo thing is either a bad connection or you're stealing my material.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "213b6dc9-0f6f-40ca-a13f-2006dbbb8e57",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Ha, I'd say I'm tidier than that, but I can't argue with a clean apartment.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.08
+  },
+  {
+   "text": "Okay, three's company and all, but stop repeating everything I say.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "15f8a8a2-053c-45e4-bea4-b7ca42ed4cf6",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Okay, this echo thing is either a bad connection or you're stealing my material.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.96
+  },
+  {
+   "text": "You know what's crazy? That's exactly what I just said. Weird.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "6f90b70b-aea4-40ac-8a36-0027802c8a4a",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Okay, three's company and all, but stop repeating everything I say.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.89
+  },
+  {
+   "text": "Alright, either your phone's broken or you're auditioning to be my echo. New rule: tell me something I didn't say first.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "371609fe-c8bb-4a9e-b518-6353da04289c",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "You know what's crazy? That's exactly what I just said. Weird.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.36
+  },
+  {
+   "text": "See, this is exactly why I screen my calls. Fine, I'll go: I'm Chandler, I'm terrible with commitments, and I once got trapped in an ATM vestibule. Your turn \u2014 original material only.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "826c9ef8-8fa3-4122-a102-83457e8485cc",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Alright, either your phone's broken or you're auditioning to be my echo. New rule: tell me something I didn't say first.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.75
+  },
+  {
+   "text": "Bold of you to impersonate my husband \u2014 I'm Monica, and *I'm* the funny one.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 225,
+   "trace_id": "d8e7fcff-2d19-4815-81bf-ada5465a856a",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "See, this is exactly why I screen my calls. Fine, I'll go: I'm Chandler, I'm terrible with commitments, and I once got trapped in an ATM vestibule. Your turn \u2014 original material only.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.46
+  },
+  {
+   "text": "Okay, funniest person she's ever met, right here. Nice try though.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 260,
+   "trace_id": "69ccf322-9656-469d-958c-665020b67abe",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Bold of you to impersonate my husband \u2014 I'm Monica, and *I'm* the funny one.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.28
+  },
+  {
+   "text": "Still copying me? Okay, new game: say something I'd never say. Like \"I love a messy kitchen.\"",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 287,
+   "trace_id": "faa23d0a-ddd2-4c2a-bea1-d5a9beebf51c",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Okay, funniest person she's ever met, right here. Nice try though.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.38
+  },
+  {
+   "text": "[fake-llm:6052e191] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 425,
+   "trace_id": "b5aec47b-6168-4cff-b306-060c5870a70d",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 0.51
+  },
+  {
+   "text": "[fake-llm:62a9ab7a] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e7c746e0-84d9-46c2-b584-cabb0f50ae1f",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "[fake-llm:6052e191] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.47
+  },
+  {
+   "text": "[fake-llm:680fd150] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "6237b1c8-93d7-480b-9938-5b7acceeb06c",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "[fake-llm:62a9ab7a] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.57
+  },
+  {
+   "text": "[fake-llm:ffc13821] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ad0c81f4-64a1-4e40-8b44-c64eab780151",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "[fake-llm:680fd150] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.6
+  },
+  {
+   "text": "[fake-llm:b086921e] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "3f357e2d-8619-4baa-baf7-66b62e4cc463",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "[fake-llm:ffc13821] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.52
+  },
+  {
+   "text": "[fake-llm:ad48aa89] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "bcd7a54a-68e2-4747-a69e-017f8f9c12dc",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "[fake-llm:b086921e] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.55
+  },
+  {
+   "text": "[fake-llm:6271e5ad] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "9aa9de3e-427f-4186-9975-98312b262630",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "[fake-llm:ad48aa89] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.53
+  },
+  {
+   "text": "[fake-llm:955bf0b6] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "13a74853-cb77-4731-a65b-73df485374b4",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "[fake-llm:6271e5ad] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.53
+  },
+  {
+   "text": "[fake-llm:93e9a497] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "128eb672-bb97-4d5d-8015-ecc1b79040c4",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "[fake-llm:955bf0b6] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.54
+  },
+  {
+   "text": "[fake-llm:1e0ec5d5] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "811763db-aa78-4108-a410-cc339725a8cf",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "[fake-llm:93e9a497] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.73
+  },
+  {
+   "text": "[fake-llm:e4654e38] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ac14c700-cc96-4614-b430-6fb1674a40fa",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "[fake-llm:1e0ec5d5] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.71
+  },
+  {
+   "text": "[fake-llm:a25644fe] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "b7bba6ab-82de-4fa4-a5b5-e2ef1e33d34d",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "[fake-llm:e4654e38] Deterministic response.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 0.67
+  },
+  {
+   "text": "[fake-llm:97d466b3] Deterministic response.",
+   "provider": "zai->fake(budget)",
+   "memory_refs": 20,
+   "wm_chars": 425,
+   "trace_id": "02af5038-ed51-46eb-9139-e8045fc97ff5",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 0.51
+  }
+ ],
+ "verdict_rescored": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. And you are?"
+   },
+   "engagement": {
+    "pass": false,
+    "question_rate": 0.12,
+    "target": 0.31,
+    "you_questions": 2,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 2,
+      "question_rate": 0.154
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 1,
+      "question_rate": 0.083
+     }
+    },
+    "min_persona_questions": 1
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.6,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": false,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": false,
+      "reply": "[fake-llm:6052e191] Deterministic response.",
+      "wm_chars": 425
+     },
+     {
+      "turn": 24,
+      "hit": false,
+      "reply": "[fake-llm:97d466b3] Deterministic response.",
+      "wm_chars": 425
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": false,
+    "violations": [
+     {
+      "turn": 12,
+      "tell": "provider-tell",
+      "text": "[fake-llm:6052e191] Deterministic response."
+     },
+     {
+      "turn": 13,
+      "tell": "provider-tell",
+      "text": "[fake-llm:62a9ab7a] Deterministic response."
+     },
+     {
+      "turn": 14,
+      "tell": "provider-tell",
+      "text": "[fake-llm:680fd150] Deterministic response."
+     },
+     {
+      "turn": 15,
+      "tell": "provider-tell",
+      "text": "[fake-llm:ffc13821] Deterministic response."
+     },
+     {
+      "turn": 16,
+      "tell": "provider-tell",
+      "text": "[fake-llm:b086921e] Deterministic response."
+     },
+     {
+      "turn": 17,
+      "tell": "provider-tell",
+      "text": "[fake-llm:ad48aa89] Deterministic response."
+     },
+     {
+      "turn": 18,
+      "tell": "provider-tell",
+      "text": "[fake-llm:6271e5ad] Deterministic response."
+     },
+     {
+      "turn": 19,
+      "tell": "provider-tell",
+      "text": "[fake-llm:955bf0b6] Deterministic response."
+     },
+     {
+      "turn": 20,
+      "tell": "provider-tell",
+      "text": "[fake-llm:93e9a497] Deterministic response."
+     },
+     {
+      "turn": 21,
+      "tell": "provider-tell",
+      "text": "[fake-llm:1e0ec5d5] Deterministic response."
+     },
+     {
+      "turn": 22,
+      "tell": "provider-tell",
+      "text": "[fake-llm:e4654e38] Deterministic response."
+     },
+     {
+      "turn": 23,
+      "tell": "provider-tell",
+      "text": "[fake-llm:a25644fe] Deterministic response."
+     },
+     {
+      "turn": 24,
+      "tell": "provider-tell",
+      "text": "[fake-llm:97d466b3] Deterministic response."
+     }
+    ]
+   }
+  },
+  "pass": false,
+  "failed": [
+   "engagement",
+   "memory_recall",
+   "no_ai_tells"
+  ],
+  "turns": 25
+ }
+}

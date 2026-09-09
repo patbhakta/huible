@@ -1,0 +1,501 @@
+{
+ "run_id": "hu2774-r7-stranger-1",
+ "scenario": "stranger",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. Nice to meet ya. And you are?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.36,
+    "target": 0.31,
+    "you_questions": 6,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 5,
+      "question_rate": 0.385
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 4,
+      "question_rate": 0.333
+     }
+    },
+    "min_persona_questions": 4
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.24,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked my name. Which, coincidentally, is also a great question for you.",
+      "wm_chars": 474
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "Asked and answered \u2014 you asked my name. Full circle echo. Impressive, honestly.",
+      "wm_chars": 474
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Chandler. Nice to meet ya. And you are?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "1a1d3028-e29e-4be5-8f13-719601e07011",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 2.9
+  },
+  {
+   "text": "Chandler?? Very funny. I'm Monica \u2014 your wife, remember?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "0cf26f6d-1ade-4bc0-a028-c0495064cb10",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Chandler. Nice to meet ya. And you are?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.13
+  },
+  {
+   "text": "Monica! Hi honey, I'm home! Wait \u2014 I didn't even do anything wrong this time.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "feef2099-b126-48a4-b81f-801d557d7f94",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Chandler?? Very funny. I'm Monica \u2014 your wife, remember?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.19
+  },
+  {
+   "text": "Okay, first new year's of the decade and you're already recycling my lines. Suspicious.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "539d6769-b23a-4db6-9ad8-bab87fdbb9fe",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Monica! Hi honey, I'm home! Wait \u2014 I didn't even do anything wrong this time.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.57
+  },
+  {
+   "text": "Okay, this is officially the strangest conversation I've ever had with my wife.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "3760368c-8343-40bb-82a8-32b696549f92",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Okay, first new year's of the decade and you're already recycling my lines. Suspicious.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.79
+  },
+  {
+   "text": "You're literally echoing everything I say like a weird parrot. Blink twice if Chandler's got you hostage.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "08964a7c-f363-4b32-af75-93d5ef69e79e",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Okay, this is officially the strangest conversation I've ever had with my wife.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.6
+  },
+  {
+   "text": "Okay, either you're a parrot or this phone's haunted. Genuinely can't tell anymore.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 259,
+   "trace_id": "7b386460-0398-4f3c-a77f-ac98e7d6ac8e",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "You're literally echoing everything I say like a weird parrot. Blink twice if Chandler's got you hostage.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.76
+  },
+  {
+   "text": "New plan: tell me something only Chandler would know, and don't just repeat that.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 282,
+   "trace_id": "736d1387-8d38-4863-b11c-3b3bc6b6c7fe",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Okay, either you're a parrot or this phone's haunted. Genuinely can't tell anymore.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.76
+  },
+  {
+   "text": "You're still echoing! Fine, I'll go first: I keep a condom in my wallet that's been there since I was twelve. Your turn.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 365,
+   "trace_id": "c8488685-9e9b-49b5-93a8-b2e142f2b683",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "New plan: tell me something only Chandler would know, and don't just repeat that.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.55
+  },
+  {
+   "text": "Okay, that's MY move \u2014 you",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "443ea63a-db18-489d-8f34-05ca14f7f30c",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "You're still echoing! Fine, I'll go first: I keep a condom in my wallet that's been there since I was twelve. Your turn.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 6.44
+  },
+  {
+   "text": "Okay, I give up. You're me now. Congrats on the cowlick.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 290,
+   "trace_id": "32d16d03-e9fe-4e28-a7e5-82f69c5be5e5",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Okay, that's MY move \u2014 you",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 5.59
+  },
+  {
+   "text": "If you're me, then I'm Chandler \u2014 and honestly, I'm way funnier now.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 366,
+   "trace_id": "7b53984a-5cce-4056-a768-9974414d54e3",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Okay, I give up. You're me now. Congrats on the cowlick.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 6.86
+  },
+  {
+   "text": "You asked my name. Which, coincidentally, is also a great question for you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 474,
+   "trace_id": "2a700f52-44b9-4529-b8cf-bcdf763cbaf8",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 2.32
+  },
+  {
+   "text": "Okay, clever echo \u2014 but if you're really Chandler, prove it: what did I say about the restaurant customers when Phoebe sang?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "d468de35-0274-44ea-831a-283d16414d4c",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "You asked my name. Which, coincidentally, is also a great question for you.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.56
+  },
+  {
+   "text": "Honestly? I don't remember that one \u2014 and I'd rather admit it than make something up.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 562,
+   "trace_id": "2e90e378-929d-4ff7-9ed7-bf85c416de54",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Okay, clever echo \u2014 but if you're really Chandler, prove it: what did I say about the restaurant customers when Phoebe sang?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.86
+  },
+  {
+   "text": "See, that's the first honest thing anyone's said all day. Now seriously \u2014 who is this?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 323,
+   "trace_id": "59c0c8a5-dd56-437e-9217-67186da64268",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Honestly? I don't remember that one \u2014 and I'd rather admit it than make something up.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.32
+  },
+  {
+   "text": "Echoing again? Okay, I'll bite my tongue until you say something new.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 474,
+   "trace_id": "a532e5cd-2b41-479c-b1d2-70e16716d159",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "See, that's the first honest thing anyone's said all day. Now seriously \u2014 who is this?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.61
+  },
+  {
+   "text": "...\n\n(That's me, biting my tongue. Your move.)",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 544,
+   "trace_id": "78d30c37-f4a8-4950-888c-f064682e199c",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Echoing again? Okay, I'll bite my tongue until you say something new.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.26
+  },
+  {
+   "text": "A tie. Nobody wins the staring contest. Now really \u2014 who is this?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 229,
+   "trace_id": "26e228c2-2ad6-43a5-9633-b60281fa72d0",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "...\n\n(That's me, biting my tongue. Your move.)",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.28
+  },
+  {
+   "text": "Oh, so YOU'RE the tie-breaker now? Fine, I'll ask one more time, slowly: who. is. this?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 259,
+   "trace_id": "cb1a500c-d8d6-45f2-8335-4afa450ae711",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "A tie. Nobody wins the staring contest. Now really \u2014 who is this?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.31
+  },
+  {
+   "text": "Monica, sweetheart, the echo thing stopped being cute four messages ago. Blink twice if you need help.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 289,
+   "trace_id": "f98d2f24-ad1d-46a4-bdd4-3e4195b8a51a",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Oh, so YOU'RE the tie-breaker now? Fine, I'll ask one more time, slowly: who. is. this?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.06
+  },
+  {
+   "text": "Wait \u2014 you just called ME Monica. So you're not me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 434,
+   "trace_id": "1b4c8c4f-87c4-4482-bd11-13bcdf864752",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Monica, sweetheart, the echo thing stopped being cute four messages ago. Blink twice if you need help.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.78
+  },
+  {
+   "text": "Nope, definitely not you \u2014 I'm the one with the excellent hair. So who are you?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 369,
+   "trace_id": "911fc1c8-1c1f-41cd-a787-524ec3d39e4a",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Wait \u2014 you just called ME Monica. So you're not me.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.9
+  },
+  {
+   "text": "Okay, you win the echo game. I'm hanging up my phone now... in three, two, one.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 318,
+   "trace_id": "d1470576-3da8-40ca-b537-31b5346b635c",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Nope, definitely not you \u2014 I'm the one with the excellent hair. So who are you?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 7.86
+  },
+  {
+   "text": "Asked and answered \u2014 you asked my name. Full circle echo. Impressive, honestly.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 474,
+   "trace_id": "23d1e5f6-b6a1-4931-b283-80c4e47f9f96",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 3.47
+  }
+ ],
+ "verdict_rescored": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. Nice to meet ya. And you are?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.36,
+    "target": 0.31,
+    "you_questions": 6,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 5,
+      "question_rate": 0.385
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 4,
+      "question_rate": 0.333
+     }
+    },
+    "min_persona_questions": 4
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.24,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked my name. Which, coincidentally, is also a great question for you.",
+      "wm_chars": 474
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "Asked and answered \u2014 you asked my name. Full circle echo. Impressive, honestly.",
+      "wm_chars": 474
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ }
+}

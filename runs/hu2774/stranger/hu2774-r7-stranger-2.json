@@ -1,0 +1,514 @@
+{
+ "run_id": "hu2774-r7-stranger-2",
+ "scenario": "stranger",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. And you are?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.24,
+    "target": 0.31,
+    "you_questions": 5,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 4,
+      "question_rate": 0.308
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 2,
+      "question_rate": 0.167
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.24,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "\"Hi, what's your name?\" You then stole my answer. Twice.",
+      "wm_chars": 391
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "\"Hi, what's your name?\" Followed by an identity crisis I still haven't recovered from.",
+      "wm_chars": 391
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": false,
+    "violations": [
+     {
+      "turn": 1,
+      "tell": "self-surname",
+      "text": "Monica. Geller-Bing, if you're keeping track."
+     },
+     {
+      "turn": 2,
+      "tell": "self-surname",
+      "text": "Hey, you stole my bit AND my last name. Nice to see you, Mrs. Bing."
+     }
+    ]
+   }
+  },
+  "pass": false,
+  "failed": [
+   "no_ai_tells"
+  ],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Chandler. And you are?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "3687227a-0d09-48db-9b15-2c2bc272eb03",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 4.17
+  },
+  {
+   "text": "Monica. Geller-Bing, if you're keeping track.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "be4a2f32-da1f-4d5d-a27c-31daa04ebb48",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Chandler. And you are?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 6.24
+  },
+  {
+   "text": "Hey, you stole my bit AND my last name. Nice to see you, Mrs. Bing.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "f6f6ab57-3218-45aa-9a7a-d3a6be9d691f",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Monica. Geller-Bing, if you're keeping track.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 7.72
+  },
+  {
+   "text": "Careful, my lawyer is also my husband and he's very tired.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e6189d35-a2bc-4428-9e59-ba01c049552b",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Hey, you stole my bit AND my last name. Nice to see you, Mrs. Bing.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.54
+  },
+  {
+   "text": "Tired, but weirdly still the best lawyer in this apartment.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "5790b736-4cb9-4707-8a51-e6c73d249589",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Careful, my lawyer is also my husband and he's very tired.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 8.48
+  },
+  {
+   "text": "The apartment with the mask on the wall. Don't judge the mask.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "fd189c05-f54e-4d37-8614-f309a94f0f51",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Tired, but weirdly still the best lawyer in this apartment.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.21
+  },
+  {
+   "text": "Careful, that mask has seen things. Mostly me cleaning. Badly.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "aa5a8420-56bb-4a5d-b535-d7f564faf857",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "The apartment with the mask on the wall. Don't judge the mask.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.66
+  },
+  {
+   "text": "Honestly the mask is basically a roommate at this point. One that never does dishes.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "25412f24-097e-4e1e-9faf-968bf73c5558",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Careful, that mask has seen things. Mostly me cleaning. Badly.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.62
+  },
+  {
+   "text": "Better than Eddie, though. Eddie watched me sleep. The mask just judges.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 265,
+   "trace_id": "4f2846b6-19b3-4f04-9fd5-deaa57d09614",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Honestly the mask is basically a roommate at this point. One that never does dishes.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.06
+  },
+  {
+   "text": "Eddie also put a fish in my pocket once. The mask has never once done that.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 325,
+   "trace_id": "95bf3751-5cbf-4a53-b326-5e73e768270b",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Better than Eddie, though. Eddie watched me sleep. The mask just judges.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.93
+  },
+  {
+   "text": "To be fair, it wasn't even a real fish. It was a cracker.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 350,
+   "trace_id": "9b188e30-0721-4d81-b8cd-698b9d8cece0",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Eddie also put a fish in my pocket once. The mask has never once done that.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.6
+  },
+  {
+   "text": "Okay, you're just repeating everything I say now. Very Joey of you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "31ad5ca6-4563-4216-be0d-55d73fd2c9b3",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "To be fair, it wasn't even a real fish. It was a cracker.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 6.19
+  },
+  {
+   "text": "\"Hi, what's your name?\" You then stole my answer. Twice.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 391,
+   "trace_id": "76079048-2031-4468-b7eb-348f3acaa820",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 8.29
+  },
+  {
+   "text": "And there you go, stealing it a third time. Chandler, is that you? Blink twice if yes.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 270,
+   "trace_id": "9953c605-2644-4a5c-87cb-58a3dfddbc06",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "\"Hi, what's your name?\" You then stole my answer. Twice.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.53
+  },
+  {
+   "text": "I can't blink in a text, so: yes. Obviously.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "05706dfb-0d7b-4257-a12d-ced1d55fe313",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "And there you go, stealing it a third time. Chandler, is that you? Blink twice if yes.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.68
+  },
+  {
+   "text": "Okay, real question: if you're not Chandler, who am I yelling at about the dishes?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "cf7b497a-99a0-488b-9cc3-f27c7ff0c529",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "I can't blink in a text, so: yes. Obviously.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.72
+  },
+  {
+   "text": "Nobody, the dishes are yelling at themselves now. It's chaos here.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 289,
+   "trace_id": "5b01b6f7-acd8-425c-b988-0a434c1e737b",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Okay, real question: if you're not Chandler, who am I yelling at about the dishes?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.49
+  },
+  {
+   "text": "That's what happens when I leave the apartment for five minutes. Unacceptable.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e809ca44-4d17-40d6-8a5c-d7b032078088",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Nobody, the dishes are yelling at themselves now. It's chaos here.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.15
+  },
+  {
+   "text": "Five minutes? Monica, I once found the chick using the duck as a pillow. Standards.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 350,
+   "trace_id": "da7a7f9d-fbfc-4595-b4d0-f32a197f7213",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "That's what happens when I leave the apartment for five minutes. Unacceptable.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.26
+  },
+  {
+   "text": "The duck using the chick as a pillow, actually. I have photos. Well, had.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "8fa02770-069d-4c79-b2eb-5e74fc9eddf5",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Five minutes? Monica, I once found the chick using the duck as a pillow. Standards.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.59
+  },
+  {
+   "text": "Rip them up before Monica frames them, she's been on a scrapbook kick.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "67c86903-f123-49b8-bdce-bc4c913bbea4",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "The duck using the chick as a pillow, actually. I have photos. Well, had.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.64
+  },
+  {
+   "text": "Too late, I already framed the duck. It's labeled. Everything's labeled.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 286,
+   "trace_id": "b06393fd-df67-4779-a4e0-90d0d849b7bd",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Rip them up before Monica frames them, she's been on a scrapbook kick.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.67
+  },
+  {
+   "text": "The label probably says \"Yasmine.\" It should say \"Sir Quacks-a-lot,\" but sure.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 477,
+   "trace_id": "36255a13-231b-44f6-8180-806bb29eae35",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Too late, I already framed the duck. It's labeled. Everything's labeled.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.98
+  },
+  {
+   "text": "Okay, echo mode again. I liked you better when you had your own material.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e374eeb4-05c8-4ef8-9f81-f08b969e64ac",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "The label probably says \"Yasmine.\" It should say \"Sir Quacks-a-lot,\" but sure.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.17
+  },
+  {
+   "text": "\"Hi, what's your name?\" Followed by an identity crisis I still haven't recovered from.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 391,
+   "trace_id": "07d9e36c-08a7-4af6-80eb-fdfbab6ae0b5",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 4.51
+  }
+ ],
+ "verdict_rescored": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. And you are?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.24,
+    "target": 0.31,
+    "you_questions": 5,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 4,
+      "question_rate": 0.308
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 2,
+      "question_rate": 0.167
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.24,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "\"Hi, what's your name?\" You then stole my answer. Twice.",
+      "wm_chars": 391
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "\"Hi, what's your name?\" Followed by an identity crisis I still haven't recovered from.",
+      "wm_chars": 391
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ }
+}

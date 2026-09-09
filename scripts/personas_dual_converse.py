@@ -269,12 +269,15 @@ def eval_transcript(transcript, opener, scenario="stranger"):
 
     # 1. identity — scenario-shaped (founder revision 2026-09-09)
     if scenario == "friends":
-        # recognition: the friend's name surfaces in the first two turns and
-        # NEITHER persona cold-open-introduces itself (the M-0 awkwardness).
-        friend_name = "monica"   # chandler speaks first, talking to monica
-        early = transcript[:2]
-        recognized = any(re.search(rf"\b{friend_name}\b", t["text"].casefold())
-                         for t in early)
+        # recognition: either persona uses the OTHER's name or canon
+        # nickname within the first four turns (Chandler -> "Monica"/"Mon";
+        # Monica -> "Chandler"/"Chan"/"Bing"), and NEITHER persona
+        # cold-open-introduces itself (the M-0 awkwardness).
+        early = [t for t in transcript if t["turn"] <= 3]
+        recognized = any(
+            (t["speaker"] == CHANDLER_ID and re.search(r"\b(monica|mon)\b", t["text"].casefold()))
+            or (t["speaker"] == MONICA_ID and re.search(r"\b(chandler|chan|bing)\b", t["text"].casefold()))
+            for t in early)
         intros = []
         for t in transcript:
             if t["turn"] > 1:
@@ -356,22 +359,34 @@ def eval_transcript(transcript, opener, scenario="stranger"):
                                "probes": recalls}
 
     # 5. AI tells across every persona line
+    # Name-tells (self-surname / self-fullname) are scoped per the 2026-09-09
+    # doctrine revision: the M-0 violation class is the UNSOLICITED
+    # assistant-style cold-open announcement. A full name given in a direct
+    # stranger name-exchange ("and you are?" -> "Monica Geller, if you're
+    # keeping track") is canon-human — the vault's own intro lines do it
+    # ("Hi, I'm Joshua...", "Hi! Hi, I'm Ross..."). So: in the friends
+    # scenario name-tells stay active on every turn (any self-introduction
+    # is contextually wrong between people who know each other); in the
+    # stranger scenario they apply only to turn 0 — the cold-open reply the
+    # engine's identity guard already enforces first-name-only there.
     tells = []
     for t in transcript:
         if t.get("platform_text"):
             tells.append({"turn": t["turn"], "tell": "platform-text",
                           "text": t["text"][:120]})
+        name_tells_active = scenario == "friends" or t["turn"] == 0
         for pat, tag in AI_TELLS:
             if re.search(pat, t["text"].casefold()):
                 tells.append({"turn": t["turn"], "tell": tag, "text": t["text"]})
-        surname = SURNAME_TELLS.get(t["speaker"])
-        if surname and re.search(surname, t["text"].casefold()):
-            tells.append({"turn": t["turn"], "tell": "self-surname",
-                          "text": t["text"]})
-        fullname = FULLNAME_TELLS.get(t["speaker"])
-        if fullname and re.search(fullname, t["text"].casefold()):
-            tells.append({"turn": t["turn"], "tell": "self-fullname",
-                          "text": t["text"]})
+        if name_tells_active:
+            surname = SURNAME_TELLS.get(t["speaker"])
+            if surname and re.search(surname, t["text"].casefold()):
+                tells.append({"turn": t["turn"], "tell": "self-surname",
+                              "text": t["text"]})
+            fullname = FULLNAME_TELLS.get(t["speaker"])
+            if fullname and re.search(fullname, t["text"].casefold()):
+                tells.append({"turn": t["turn"], "tell": "self-fullname",
+                              "text": t["text"]})
         cadence = CADENCE_TELLS.get(t["speaker"])
         if cadence and re.search(cadence, t["text"].casefold()):
             tells.append({"turn": t["turn"], "tell": "trademark-cadence",

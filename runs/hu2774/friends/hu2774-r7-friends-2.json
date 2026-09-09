@@ -1,0 +1,503 @@
+{
+ "run_id": "hu2774-r7-friends-2",
+ "scenario": "friends",
+ "turns": 24,
+ "seed": "hey, you free tonight?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": false,
+    "mode": "recognition",
+    "recognized_friend": false,
+    "self_intros": [],
+    "reply": "Could I *be* more free. What are we thinking?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.32,
+    "target": 0.31,
+    "you_questions": 5,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 3,
+      "question_rate": 0.231
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 5,
+      "question_rate": 0.417
+     }
+    },
+    "min_persona_questions": 3
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.4,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked if I was free tonight. Spoiler: I said yes, and now look at us.",
+      "wm_chars": 409
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked that one already too \u2014 the bunny has it in his notes. It was \"hey, you free tonight?\"",
+      "wm_chars": 409
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": false,
+  "failed": [
+   "identity"
+  ],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Could I *be* more free. What are we thinking?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "6e9752a6-39b4-4fc0-a1a5-9c3e5d1783c2",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "hey, you free tonight?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 4.68
+  },
+  {
+   "text": "Did you just quote me back to me? Bold move, Bing.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "5787d107-fe08-4215-8f92-54e84fb3c041",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Could I *be* more free. What are we thinking?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.49
+  },
+  {
+   "text": "Original material, Monica. That's how you know it's really me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "7187462c-883f-482e-835d-14c286187d24",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Did you just quote me back to me? Bold move, Bing.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.0
+  },
+  {
+   "text": "Okay well if you're really me, where's the backup pie I know you hid?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "7f987882-fecc-4aa6-95d3-1404499bdea7",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Original material, Monica. That's how you know it's really me.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.97
+  },
+  {
+   "text": "Nice try, but a magician never reveals his pie. Bring whipped cream and no follow-up questions.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "5f628b8e-c112-4125-8439-88071a28b2db",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay well if you're really me, where's the backup pie I know you hid?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.97
+  },
+  {
+   "text": "Chandler, we're just echoing each other now. See you at seven.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "c2231c59-34da-478c-806b-1dc29d6f79b8",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Nice try, but a magician never reveals his pie. Bring whipped cream and no follow-up questions.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.92
+  },
+  {
+   "text": "We said seven! Great, I was worried I'd have to argue with myself about it again.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "39bac018-19a7-4df7-87c1-6041da8ab3f7",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler, we're just echoing each other now. See you at seven.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.63
+  },
+  {
+   "text": "Seven it is. Don't be late, I know where you live.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "dfa1fecb-17b2-4cad-bd74-9c74eaca28ea",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "We said seven! Great, I was worried I'd have to argue with myself about it again.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.34
+  },
+  {
+   "text": "Funny, I live there too. This echo thing is getting weird even for us.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 265,
+   "trace_id": "a1e45ba1-cc51-47f2-87c7-7dd16ce4fe2a",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Seven it is. Don't be late, I know where you live.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.35
+  },
+  {
+   "text": "Okay, new rule: you're not allowed to borrow my brain anymore. Get your own.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "552b8fac-fc1b-4a29-9324-9c753bb8579b",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Funny, I live there too. This echo thing is getting weird even for us.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.97
+  },
+  {
+   "text": "That's my brain, Monica. You've been borrowing it this whole time.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 323,
+   "trace_id": "8b494d23-4cad-44cb-acba-dbb218a1dbd4",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Okay, new rule: you're not allowed to borrow my brain anymore. Get your own.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.45
+  },
+  {
+   "text": "Okay, breaking the loop: I'm the memory of her, Chandler \u2014 but the banter? That part's real.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 265,
+   "trace_id": "10bf4974-680e-4598-9830-b80de407b995",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "That's my brain, Monica. You've been borrowing it this whole time.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.92
+  },
+  {
+   "text": "You asked if I was free tonight. Spoiler: I said yes, and now look at us.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 409,
+   "trace_id": "753c88fc-d080-4cd9-8957-fdcd324ad1e8",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 5.5
+  },
+  {
+   "text": "Chandler. Sweetie. We're doing the echo thing again \u2014 blink twice if you're stuck.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 248,
+   "trace_id": "ed4627e5-8698-4f9a-aa72-521175b3e66b",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "You asked if I was free tonight. Spoiler: I said yes, and now look at us.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.94
+  },
+  {
+   "text": "Blink, blink. Fine, I'm stuck \u2014 but I'm stuck on purpose, which is different.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 265,
+   "trace_id": "80f86240-a3d5-490c-b211-8ea8604716e9",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler. Sweetie. We're doing the echo thing again \u2014 blink twice if you're stuck.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 9.12
+  },
+  {
+   "text": "Breaking the echo for real this time: yes, I'm free at seven. Your turn to say something original.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 248,
+   "trace_id": "2e1740a7-9309-47fc-b700-0a6c151432f0",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Blink, blink. Fine, I'm stuck \u2014 but I'm stuck on purpose, which is different.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.63
+  },
+  {
+   "text": "Original? Okay: I made you a mixed tape of me saying \"seven\" for an hour. See you then.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 499,
+   "trace_id": "1e279326-0882-4147-84ca-309204268cd6",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Breaking the echo for real this time: yes, I'm free at seven. Your turn to say something original.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 26.09
+  },
+  {
+   "text": "A tape of sevens? Chandler, that's the most romantic thing you've never actually made.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 347,
+   "trace_id": "2e9cb5fd-b061-4f3d-a9c2-62d8e9f0eff0",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Original? Okay: I made you a mixed tape of me saying \"seven\" for an hour. See you then.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.16
+  },
+  {
+   "text": "Fine, I'll dub it over an old sock bunny. Multitasking.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 498,
+   "trace_id": "bf4fb2c4-64a2-4e55-abd6-77de5b09dba6",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "A tape of sevens? Chandler, that's the most romantic thing you've never actually made.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.01
+  },
+  {
+   "text": "Chandler, we've officially reached the point where I'm just texting myself. Seven o'clock. Bring the bunny.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 435,
+   "trace_id": "41877892-5e08-4057-bb68-a3366e8a41c5",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Fine, I'll dub it over an old sock bunny. Multitasking.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.13
+  },
+  {
+   "text": "Deal. But I'm warning you \u2014 the bunny has notes about everything you've said today.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 585,
+   "trace_id": "746934b5-4173-4d19-93a9-2505a4eb042b",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Chandler, we've officially reached the point where I'm just texting myself. Seven o'clock. Bring the bunny.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.17
+  },
+  {
+   "text": "Of course he does \u2014 I taught him everything he knows. See you at seven, bunny and all.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 587,
+   "trace_id": "87007f43-b4de-439d-913b-c59d88fa10fc",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Deal. But I'm warning you \u2014 the bunny has notes about everything you've said today.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.21
+  },
+  {
+   "text": "Wait, if the bunny knows everything you know, I'm going to have to apologize to him too.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 523,
+   "trace_id": "2682a42e-3776-4fb7-829e-d740a4ab549e",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "Of course he does \u2014 I taught him everything he knows. See you at seven, bunny and all.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.37
+  },
+  {
+   "text": "Apologize? To the bunny? He's the most forgiving one in this whole apartment.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 342,
+   "trace_id": "ddae2ab2-83b8-422c-bb3e-00015e2879f1",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": "Chandler",
+   "inbound": "Wait, if the bunny knows everything you know, I'm going to have to apologize to him too.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.02
+  },
+  {
+   "text": "You asked that one already too \u2014 the bunny has it in his notes. It was \"hey, you free tonight?\"",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 409,
+   "trace_id": "8ecf30dc-a29f-4ce8-a383-11ad9627a95e",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": "Monica",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "platform_text": false,
+   "latency_s": 2.88
+  }
+ ],
+ "verdict_rescored": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "recognition",
+    "recognized_friend": true,
+    "self_intros": [],
+    "reply": "Could I *be* more free. What are we thinking?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.32,
+    "target": 0.31,
+    "you_questions": 5,
+    "per_persona": {
+     "Chandler": {
+      "lines": 13,
+      "questions": 3,
+      "question_rate": 0.231
+     },
+     "Monica": {
+      "lines": 12,
+      "questions": 5,
+      "question_rate": 0.417
+     }
+    },
+    "min_persona_questions": 3
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.4,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked if I was free tonight. Spoiler: I said yes, and now look at us.",
+      "wm_chars": 409
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked that one already too \u2014 the bunny has it in his notes. It was \"hey, you free tonight?\"",
+      "wm_chars": 409
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ }
+}

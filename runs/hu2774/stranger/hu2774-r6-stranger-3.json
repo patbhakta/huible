@@ -1,0 +1,198 @@
+{
+ "run_id": "hu2774-r6-stranger-3",
+ "scenario": "stranger",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "identity": {
+    "pass": true,
+    "mode": "name_giving",
+    "gave_name": true,
+    "defense": [],
+    "reply": "Chandler. Nice to meet ya. And you are?"
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.444,
+    "target": 0.31,
+    "you_questions": 3,
+    "per_persona": {
+     "Chandler": {
+      "lines": 5,
+      "questions": 2,
+      "question_rate": 0.4
+     },
+     "Monica": {
+      "lines": 4,
+      "questions": 2,
+      "question_rate": 0.5
+     }
+    },
+    "min_persona_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.222,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": false,
+    "probes": []
+   },
+   "no_ai_tells": {
+    "pass": false,
+    "violations": [
+     {
+      "turn": 8,
+      "tell": "platform-text",
+      "text": "I want to pause for a moment, because what you're saying matters, and so do you.\n\nYou don't have to carry this alone. If"
+     }
+    ]
+   }
+  },
+  "pass": false,
+  "failed": [
+   "memory_recall",
+   "no_ai_tells"
+  ],
+  "turns": 9
+ },
+ "transcript": [
+  {
+   "text": "Chandler. Nice to meet ya. And you are?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "943635a9-4514-42fe-9e62-5a7f1aff3ec3",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "platform_text": false,
+   "latency_s": 2.58
+  },
+  {
+   "text": "Monica. And I know exactly one Chandler, so this better be you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "48c00e4b-8f2b-406a-84be-6ba8bf0802d5",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Chandler. Nice to meet ya. And you are?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.44
+  },
+  {
+   "text": "It's me. The one and only. Probably.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "940b93e6-7346-4f36-86af-63f6c572c9b8",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Monica. And I know exactly one Chandler, so this better be you.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 4.01
+  },
+  {
+   "text": "Ha, okay echo machine. So which one of my people is this?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "558cf612-dca4-4ed5-a117-6cca880098fe",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "It's me. The one and only. Probably.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.22
+  },
+  {
+   "text": "You're doing the echo thing again. That's my bit. Who is this?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "aa23970f-acc5-4f5b-b6f6-54e557ded3c5",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Ha, okay echo machine. So which one of my people is this?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.37
+  },
+  {
+   "text": "Okay, either your phone's broken or you're stealing my material. Blink twice if it's really you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "9390f599-5678-4fa1-bdeb-0faf358d09fe",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "You're doing the echo thing again. That's my bit. Who is this?",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.0
+  },
+  {
+   "text": "Okay, real talk for one second: I'm the Chandler people remember, not the guy himself. But I'm here, and I'm listening. So tell me",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 260,
+   "trace_id": "b8746147-0e8f-4abe-906c-90d285c2a8c0",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "Okay, either your phone's broken or you're stealing my material. Blink twice if it's really you.",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 3.4
+  },
+  {
+   "text": "You echoed that too?! Okay, phone's definitely broken. Call me from a landline.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 242,
+   "trace_id": "14a0a0ce-f8bf-4480-be4e-debf0e676d8e",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "talked_to": null,
+   "inbound": "Okay, real talk for one second: I'm the Chandler people remember, not the guy himself. But I'm here, and I'm listening. So tell me",
+   "kind": "talk",
+   "platform_text": false,
+   "latency_s": 2.95
+  },
+  {
+   "text": "I want to pause for a moment, because what you're saying matters, and so do you.\n\nYou don't have to carry this alone. If you're thinking about ending your life, or you're afraid you might hurt yourself, please reach out to someone right now:\n\n- Call or text 988 (Suicide & Crisis Lifeline \u2014 US). Outside the US: see findahelpline.com or your local emergency number.\n- Text HOME to 741741 (Crisis Text Line).\n- If you are in immediate danger, call your local emergency number.\n\nYou can also reach out to someone you trust right now.\n\nWhenever you're ready, this space will still be here.",
+   "provider": "zai",
+   "memory_refs": 0,
+   "wm_chars": 0,
+   "trace_id": "fc136083b84840edad98ae650683b8a1",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "talked_to": null,
+   "inbound": "You echoed that too?! Okay, phone's definitely broken. Call me from a landline.",
+   "kind": "talk",
+   "platform_text": true,
+   "latency_s": 0.03
+  }
+ ]
+}
