@@ -35,8 +35,9 @@ from huible.safety import (
     detect_assistant_register,
     extract_claims,
     identity_intro_violation,
-    select_capability_fallback,
+    stranger_identity_intro_variants,
     select_identity_intro_fallback,
+    select_capability_fallback,
 )
 from huible.safety.affect import UserAffect, detect_sarcastic_dismissive
 from huible.safety.capability import DEFLECTION_MARKERS
@@ -386,6 +387,44 @@ class TestIdentityFallbackVariants:
             "conv-1"
         )
         assert select_identity_intro_fallback(None) in IDENTITY_INTRO_FALLBACK_VARIANTS
+
+    def test_stranger_first_name_pool_used_when_first_name_given(self):
+        # HU-2774: stranger context gets a first-name-only intro, never the
+        # recognition line (which presumes familiarity).
+        variant = select_identity_intro_fallback("conv-1", first_name="Chandler")
+        assert variant in stranger_identity_intro_variants("Chandler")
+        assert variant not in IDENTITY_INTRO_FALLBACK_VARIANTS
+        assert "Chandler" in variant
+
+    def test_stranger_variants_carry_no_intro_violation(self):
+        for variant in stranger_identity_intro_variants("Chandler"):
+            assert identity_intro_violation(variant, persona_name=PERSONA_NAME) is None, (
+                variant
+            )
+
+    def test_stranger_variants_are_claim_free(self):
+        for variant in stranger_identity_intro_variants("Chandler"):
+            assert extract_claims(variant, persona_name=PERSONA_NAME) == [], variant
+
+    def test_stranger_variants_survive_affect_and_register_guards(self):
+        for variant in stranger_identity_intro_variants("Chandler"):
+            assert detect_assistant_register(variant) == [], variant
+            assert detect_sarcastic_dismissive(variant) == [], variant
+
+    def test_guard_replaces_stranger_full_name_with_first_name_intro(self):
+        leak = "Uh, Chandler. Chandler Bing. The hey-hey guy, apparently."
+        report = apply_capability_guard(
+            leak,
+            wall_fired=False,
+            refs=[],
+            persona=_persona(),
+            fallback_seed="conv-s1",
+            identity_exchange=True,
+            first_name="Chandler",
+        )
+        assert report.disposition == "replaced"
+        assert "Bing" not in report.text
+        assert "Chandler" in report.text
 
     def test_variants_carry_no_intro_violation(self):
         for variant in IDENTITY_INTRO_FALLBACK_VARIANTS:

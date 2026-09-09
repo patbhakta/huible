@@ -1812,6 +1812,14 @@ def _register_routes(application: FastAPI) -> None:
             # turn-1 site is in-domain, so the wall is silent there and the
             # flag rides the trigger class, not the wall.
             identity_exchange=identity_exchange_triggered(body.message),
+            # HU-2774 founder revision: without a user_name the persona is
+            # meeting someone new — a full-name-intro replacement becomes a
+            # first-name-only intro, not the recognition line (which presumes
+            # familiarity the persona does not have).
+            first_name=(
+                None if body.requester_user_name()
+                else ((binding.persona.name or "").split() or [None])[0]
+            ),
         )
         response_text = capability.text
         alignment = apply_alignment_guard(

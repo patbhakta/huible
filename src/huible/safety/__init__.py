@@ -88,6 +88,7 @@ from huible.safety.capability import (
     apply_capability_guard,
     detect_assistant_register,
     identity_intro_violation,
+    stranger_identity_intro_variants,
     select_capability_fallback,
     select_identity_intro_fallback,
 )

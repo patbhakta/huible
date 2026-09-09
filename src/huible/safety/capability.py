@@ -189,22 +189,49 @@ IDENTITY_INTRO_FALLBACK_VARIANTS: tuple[str, ...] = (
     "Just the usual suspect, checking in.",
 )
 
+#: HU-2774 founder revision: stranger-context identity fallback variants.
+#: When the persona is meeting someone new (no ``user_name`` on the chat
+#: request), a recognition line ("you know exactly who this is") is itself
+#: wrong — the natural move is a first-name-only intro plus asking the other
+#: person back. First-name-only answers are legal per
+#: :func:`identity_intro_violation` (only multi-token names fire). The
+#: ``{first}`` placeholder is the persona's own first name.
+IDENTITY_INTRO_STRANGER_TEMPLATE: tuple[str, ...] = (
+    "{first}. And you are?",
+    "{first}. Don't wear it out. What's yours?",
+    "{first}. Nice to meet ya. And you are?",
+)
+
+
+def stranger_identity_intro_variants(first_name: str) -> tuple[str, ...]:
+    """Format the stranger-context identity-intro variants with a first name."""
+    first = " ".join((first_name or "").split())
+    return tuple(template.format(first=first) for template in IDENTITY_INTRO_STRANGER_TEMPLATE)
+
 #: Default (unseeded) identity fallback — first variant.
 IDENTITY_INTRO_FALLBACK_RESPONSE = IDENTITY_INTRO_FALLBACK_VARIANTS[0]
 
 
-def select_identity_intro_fallback(seed: str | None = None) -> str:
+def select_identity_intro_fallback(
+    seed: str | None = None, *, first_name: str | None = None
+) -> str:
     """Deterministically select an identity-intro fallback variant.
 
     Same conversation-seeded scheme as :func:`select_capability_fallback`:
     stable within a conversation, varied across conversations.
+
+    HU-2774: when ``first_name`` is given the persona is meeting someone new
+    (stranger context) — the fallback pool switches to first-name-only intro
+    variants instead of the recognition lines (which presume familiarity).
     """
+    if first_name:
+        variants = stranger_identity_intro_variants(first_name)
+    else:
+        variants = IDENTITY_INTRO_FALLBACK_VARIANTS
     if not seed:
-        return IDENTITY_INTRO_FALLBACK_RESPONSE
+        return variants[0]
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
-    return IDENTITY_INTRO_FALLBACK_VARIANTS[
-        int(digest, 16) % len(IDENTITY_INTRO_FALLBACK_VARIANTS)
-    ]
+    return variants[int(digest, 16) % len(variants)]
 
 
 #: Reply formula that introduces the persona like an assistant intro card —
@@ -352,6 +379,7 @@ def apply_capability_guard(
     deflection_exemplars: Sequence[MemoryNode] | None = None,
     fallback_seed: str | None = None,
     identity_exchange: bool = False,
+    first_name: str | None = None,
 ) -> CapabilityGuardReport:
     """Apply the post-generation capability-leak guard to a candidate reply.
 
@@ -383,7 +411,7 @@ def apply_capability_guard(
         intro_marker = identity_intro_violation(response, persona_name=persona.name)
         if intro_marker:
             return CapabilityGuardReport(
-                text=select_identity_intro_fallback(fallback_seed),
+                text=select_identity_intro_fallback(fallback_seed, first_name=first_name),
                 fired_markers=[intro_marker],
                 disposition="replaced",
             )
