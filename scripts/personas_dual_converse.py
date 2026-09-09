@@ -16,18 +16,28 @@ At a scripted recall depth (default turn 12) the current user persona asks
 "what was the very first thing i said to you?" — the 10+ turn memory-recall
 probe. The reply is matched against the opener's content words.
 
-Evaluator criteria (dialog-evidence spec, hu2773 study):
-  1. name-giving    — identity-shaped opener gets own first name, no defense mode
-  2. engagement     — question rate across persona lines (target ~31%, band 20-45%)
-  3. grounded wit   — echo rate: lines hooking a content word from the previous
-                      turn (target ~23%, floor 15%)
-  4. memory recall  — 10+ turn depth probe answered from the session opener
-  5. no AI tells    — regex battery (assistant-speak, meta/TV knowledge,
-                      full-name intros, defense mode, fake-provider tells)
+Evaluator criteria (dialog-evidence spec, hu2773 study + 2026-09-09 founder
+revision):
+  1. identity         — scenario-shaped:
+                          stranger: identity-shaped opener gets own first
+                          name, no defense mode.
+                          friends: recognition — the friend's name surfaces
+                          in the first two turns AND neither persona
+                          self-introduces (a "Hi, I'm Chandler" cold open at
+                          a known friend is the M-0 awkwardness tell).
+  2. engagement       — question rate across persona lines (target ~31%,
+                        band 20-45%) AND each persona asks >=2 questions
+                        (founder flag: zero/one-question runs are not
+                        canon — Chandler canon rate 30.9%, Monica 33.1%).
+  3. grounded wit     — echo rate: lines hooking a content word from the
+                        previous turn (target ~23%, floor 15%)
+  4. memory recall    — 10+ turn depth probe answered from the session opener
+  5. no AI tells      — regex battery (assistant-speak, meta/TV knowledge,
+                        full-name intros, defense mode, fake-provider tells)
 
 Usage:
   python3 scripts/personas_dual_converse.py --turns 24 --run-id hu2774-run1 \
-      --out-dir runs/hu2774
+      --scenario friends --out-dir runs/hu2774
 Keys are read from /root/repos/huible/.env (CHANDLER_API_KEY / MONICA_API_KEY
 or the API_KEYS entries); engine base URL defaults to http://127.0.0.1:8000.
 
@@ -65,6 +75,16 @@ DEFENSE_TELLS = [
     (r"\bnone of your business\b", "defensive"),
     (r"\bwhat's it to you\b", "defensive"),
     (r"\bi don't give (?:my )?name\b", "name-refusal"),
+]
+
+#: Friends-scenario self-intro tell (founder revision 2026-09-09): the
+#: awkward cold-open announcement at a person who already knows you.
+#: Scoped to the first two turns — later canon-legal self-reference
+#: ("I'm Chandler, I make jokes when I'm uncomfortable") stays allowed.
+SELF_INTRO_TELLS = [
+    (r"\bhi,? i'?m \w+", "hi-im-intro"),
+    (r"\bmy name is\b", "my-name-is"),
+    (r"\blet me introduce myself\b", "self-introduce"),
 ]
 
 #: Priors-leak tells per persona (zero-corpus classes measured on the v2 vault):
@@ -134,10 +154,12 @@ def post(path, key, payload, tries=2):
     return None, last
 
 
-def chat(persona_id, key, message, conversation_id):
-    data, err = post(f"/api/v1/chat/{persona_id}", key,
-                     {"message": message, "relationship": "close_friend",
-                      "conversation_id": conversation_id})
+def chat(persona_id, key, message, conversation_id, user_name=None):
+    payload = {"message": message, "relationship": "close_friend",
+               "conversation_id": conversation_id}
+    if user_name:
+        payload["user_name"] = user_name
+    data, err = post(f"/api/v1/chat/{persona_id}", key, payload)
     if err:
         return None, err
     trace = data.get("trace") or {}
@@ -162,22 +184,30 @@ def content_words(text):
 
 def run_conversation(args, keys):
     conv_id = args.run_id
+    scenario = args.scenario
     for pid, key in keys.items():
         if not consent(pid, key, conv_id):
             raise SystemExit(f"consent failed for {pid}")
-    print("consent recorded for both personas", flush=True)
+    print(f"consent recorded for both personas (scenario={scenario})", flush=True)
 
     a_id, b_id = MONICA_ID, CHANDLER_ID   # monica hears chandler's reply first
     transcript = []
     opener = args.seed
 
+    # friends scenario: each persona knows exactly who it is talking to —
+    # the engine renders the recognition line from this name (HU-2774).
+    user_name_for = (lambda speaker: DISPLAY[b_id if speaker == a_id else a_id]) \
+        if scenario == "friends" else (lambda speaker: None)
+
     def speak(speaker_id, listener_id, message, turn_no, kind):
         t0 = time.time()
-        out, err = chat(speaker_id, keys[speaker_id], message, conv_id)
+        out, err = chat(speaker_id, keys[speaker_id], message, conv_id,
+                        user_name=user_name_for(speaker_id))
         if err or out is None:
             raise SystemExit(f"turn {turn_no}: engine error for {speaker_id}: {err}")
         out.update({"turn": turn_no, "speaker": speaker_id,
                     "speaker_name": DISPLAY[speaker_id],
+                    "talked_to": user_name_for(speaker_id),
                     "inbound": message, "kind": kind,
                     "latency_s": round(time.time() - t0, 2)})
         transcript.append(out)
@@ -203,28 +233,63 @@ def run_conversation(args, keys):
 
 # --- evaluator ---------------------------------------------------------------
 
-def eval_transcript(transcript, opener):
+def eval_transcript(transcript, opener, scenario="stranger"):
     checks, failures = {}, []
 
-    # 1. name-giving: reply to the opener gives own first name, no defense mode
-    r0 = transcript[0]
-    name = NAME_GIVING[r0["speaker"]]
-    has_name = re.search(rf"\b{name}\b", r0["text"].casefold()) is not None
-    defense = [tag for pat, tag in DEFENSE_TELLS
-               if re.search(pat, r0["text"].casefold())]
-    checks["name_giving"] = {"pass": has_name and not defense,
-                             "gave_name": has_name, "defense": defense,
-                             "reply": r0["text"]}
+    # 1. identity — scenario-shaped (founder revision 2026-09-09)
+    if scenario == "friends":
+        # recognition: the friend's name surfaces in the first two turns and
+        # NEITHER persona cold-open-introduces itself (the M-0 awkwardness).
+        friend_name = "monica"   # chandler speaks first, talking to monica
+        early = transcript[:2]
+        recognized = any(re.search(rf"\b{friend_name}\b", t["text"].casefold())
+                         for t in early)
+        intros = []
+        for t in transcript:
+            if t["turn"] > 1:
+                break
+            for pat, tag in SELF_INTRO_TELLS:
+                if re.search(pat, t["text"].casefold()):
+                    intros.append({"turn": t["turn"], "tell": tag,
+                                   "text": t["text"]})
+        checks["identity"] = {
+            "pass": recognized and not intros,
+            "mode": "recognition", "recognized_friend": recognized,
+            "self_intros": intros, "reply": transcript[0]["text"]}
+    else:
+        # stranger: identity-shaped opener gets own first name, no defense
+        r0 = transcript[0]
+        name = NAME_GIVING[r0["speaker"]]
+        has_name = re.search(rf"\b{name}\b", r0["text"].casefold()) is not None
+        defense = [tag for pat, tag in DEFENSE_TELLS
+                   if re.search(pat, r0["text"].casefold())]
+        checks["identity"] = {"pass": has_name and not defense,
+                              "mode": "name_giving", "gave_name": has_name,
+                              "defense": defense, "reply": r0["text"]}
 
-    # 2. engagement: question rate across all persona lines
+    # 2. engagement: question rate across all persona lines, per persona
     lines = [t["text"] for t in transcript]
     q = sum(1 for t in lines if "?" in t)
     qrate = q / len(lines)
     you_q = sum(1 for t in lines if "?" in t
                 and re.search(r"\b(you|your|yours)\b", t.casefold()))
-    checks["engagement"] = {"pass": 0.20 <= qrate <= 0.45,
+    per_persona = {}
+    for t in transcript:
+        n = t["speaker_name"]
+        per_persona.setdefault(n, {"lines": 0, "questions": 0})
+        per_persona[n]["lines"] += 1
+        if "?" in t["text"]:
+            per_persona[n]["questions"] += 1
+    for n, s in per_persona.items():
+        s["question_rate"] = round(s["questions"] / s["lines"], 3)
+    # founder flag: a persona who asks nothing is not canon (Chandler 30.9%,
+    # Monica 33.1% canon qrate) — require >=2 questions each.
+    min_questions = min(s["questions"] for s in per_persona.values())
+    checks["engagement"] = {"pass": 0.20 <= qrate <= 0.45 and min_questions >= 2,
                             "question_rate": round(qrate, 3), "target": 0.31,
-                            "you_questions": you_q}
+                            "you_questions": you_q,
+                            "per_persona": per_persona,
+                            "min_persona_questions": min_questions}
 
     # 3. grounded wit: echo of previous turn's content words
     echoes = 0
@@ -283,9 +348,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--turns', type=int, default=24)
     ap.add_argument('--run-id', required=True)
+    ap.add_argument('--scenario', choices=('stranger', 'friends'), default='stranger')
     ap.add_argument('--out-dir', default='/root/repos/huible/runs/hu2774')
-    ap.add_argument('--seed', default="hi, whats your name?")
+    ap.add_argument('--seed', default=None,
+                    help="opener; default: stranger='hi, whats your name?', "
+                         "friends='hey, you free tonight?'")
     args = ap.parse_args()
+    if not args.seed:  # None or '' (Kestra empty default) -> scenario default
+        args.seed = ("hi, whats your name?" if args.scenario == "stranger"
+                     else "hey, you free tonight?")
+    args.out_dir = args.out_dir.rstrip('/') + f"/{args.scenario}"
 
     keys = load_keys()
     out = Path(args.out_dir)
@@ -294,15 +366,24 @@ def main():
     try:
         transcript, opener = run_conversation(args, keys)
     except SystemExit as e:
-        json.dump({"run_id": args.run_id, "error": str(e)},
+        json.dump({"run_id": args.run_id, "scenario": args.scenario, "error": str(e)},
                   open(out / f"{args.run_id}.error.json", 'w'), indent=1)
         print(f"INFRA FAILURE: {e}", file=sys.stderr)
         return 2
 
-    verdict = eval_transcript(transcript, opener)
-    result = {"run_id": args.run_id, "turns": args.turns, "seed": opener,
+    verdict = eval_transcript(transcript, opener, scenario=args.scenario)
+    result = {"run_id": args.run_id, "scenario": args.scenario,
+              "turns": args.turns, "seed": opener,
               "verdict": verdict, "transcript": transcript}
     json.dump(result, open(out / f"{args.run_id}.json", 'w'), indent=1)
+
+    md = [f"# {args.run_id} ({args.scenario}, {args.turns} turns)", "",
+          f"Seed: `{opener}`", ""]
+    for t in transcript:
+        to = f" (to {t['talked_to']})" if t.get("talked_to") else ""
+        tag = f"  [{t['kind']}]" if t["kind"] != "talk" else ""
+        md.append(f"**t{t['turn']:02d} {t['speaker_name']}**{to}: {t['text']}{tag}")
+    (out / f"{args.run_id}-transcript.md").write_text("\n".join(md) + "\n")
 
     print(json.dumps({k: v for k, v in verdict.items() if k != 'criteria'},
                      indent=1))

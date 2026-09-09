@@ -345,6 +345,30 @@ class TestRendering:
         ctx = ContextBuilder().filter_and_render([], _persona(), RelationshipTier.ACQUAINTANCE)
         assert "acquaintance" in ctx.system_prompt
 
+    def test_interlocutor_known_name_renders_recognition(self):
+        # HU-2774 founder revision: a known interlocutor name renders the
+        # recognition line — no introductions between people who know each
+        # other.
+        ctx = ContextBuilder().filter_and_render(
+            [], _persona(), RelationshipTier.CLOSE_FRIEND, user_name="Monica"
+        )
+        assert "You are speaking with Monica" in ctx.system_prompt
+        assert "no introductions" in ctx.system_prompt
+        assert "don't know" not in ctx.system_prompt
+
+    def test_interlocutor_unknown_renders_stranger_line(self):
+        # No name = first contact: the persona is told meeting-new-people
+        # behavior (introduce yourself, ask about them) is natural.
+        ctx = ContextBuilder().filter_and_render([], _persona(), RelationshipTier.FAMILY)
+        assert "don't know" in ctx.system_prompt
+        assert "introduce yourself" in ctx.system_prompt
+
+    def test_interlocutor_blank_name_treated_as_stranger(self):
+        ctx = ContextBuilder().filter_and_render(
+            [], _persona(), RelationshipTier.FAMILY, user_name="   "
+        )
+        assert "introduce yourself" in ctx.system_prompt
+
     def test_system_prompt_contains_texting_concision_directive(self):
         # HU-1911 human-touch gate: every persona system prompt carries the
         # texting channel shape (length bound, no lists, one-line disclosure).

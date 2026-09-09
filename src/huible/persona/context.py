@@ -877,6 +877,7 @@ def _build_system_prompt(
     user_affect: UserAffect = UserAffect.NEUTRAL,
     competence_wall: bool = False,
     real_now: datetime | None = None,
+    user_name: str | None = None,
 ) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
@@ -922,7 +923,26 @@ def _build_system_prompt(
             lines.append(clock_line)
     if persona.death_date:
         lines.append(f"You died on {persona.death_date}.")
-    lines.append(f"You are speaking with {tier.human_label}.")
+    # Interlocutor awareness (HU-2774 founder revision 2026-09-09): the
+    # persona must know WHO it is talking to. A known name renders a
+    # recognition line (friends never re-introduce themselves); an absent
+    # name renders the stranger line (introducing yourself and asking about
+    # them is the natural move). Situational behavioral bound — same
+    # category as the tier line it extends, never an adjective sheet.
+    name = (user_name or "").strip()
+    if name:
+        lines.append(
+            f"You are speaking with {name} — {tier.human_label}. You know "
+            f"exactly who you're talking to, so no introductions: react to "
+            f"{name} the way you actually would."
+        )
+    else:
+        lines.append(
+            f"You are speaking with {tier.human_label} — someone whose name "
+            "you don't know yet. Of course you want to know who you're "
+            "talking to: it's natural to introduce yourself and ask about "
+            "them."
+        )
     # Channel shape (Stage 0 texting): bounds the reply to the persona's own
     # texting length register and compresses mandated disclosure to one line
     # (HU-1911 human-touch gate; HU-2231 per-persona anchoring — measured
@@ -1172,6 +1192,7 @@ class ContextBuilder:
         career_exemplars: Sequence[MemoryNode] = (),
         working_memory: str = "",
         real_now: datetime | None = None,
+        user_name: str | None = None,
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
@@ -1229,6 +1250,7 @@ class ContextBuilder:
             user_affect=user_affect,
             competence_wall=bool(wall_exemplars),
             real_now=real_now,
+            user_name=user_name,
         )
 
         return PromptContext(
@@ -1271,6 +1293,7 @@ class ContextBuilder:
         interest_tool: bool = True,
         current_events_tool: bool = True,
         scoped_vault_reads: bool = True,
+        user_name: str | None = None,
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
@@ -1434,6 +1457,7 @@ class ContextBuilder:
             career_exemplars=work,
             working_memory=working_memory,
             real_now=real_now,
+            user_name=user_name,
         )
 
     async def persona_scoped_grounding_refs(

@@ -1704,6 +1704,8 @@ def _register_routes(application: FastAPI) -> None:
             interest_tool=settings.interest_tool_enabled,
             current_events_tool=settings.current_events_tool_enabled,
             scoped_vault_reads=settings.scoped_vault_reads_enabled,
+            # HU-2774 interlocutor awareness: who the persona is talking to.
+            user_name=body.requester_user_name(),
         )
 
         prompt = ctx.render()

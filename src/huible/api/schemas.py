@@ -174,6 +174,14 @@ class PersonaChatRequest(BaseModel):
         default=None,
         description="Opaque conversation id. Threads the in-process session log (G7).",
     )
+    user_name: str | None = Field(
+        default=None,
+        description=(
+            "Name of the person talking to the persona, when the caller knows "
+            "it. Omitted (or blank) for a first contact — the persona then "
+            "treats the turn as meeting someone new. Max 80 chars."
+        ),
+    )
 
     def requester_relationship(self) -> str:
         """Return the relationship tier, defaulting to ``family`` (spec)."""
@@ -183,6 +191,13 @@ class PersonaChatRequest(BaseModel):
                 f"relationship must be one of {sorted(_PERSONA_RELATIONSHIPS)}, got {tier!r}"
             )
         return tier
+
+    def requester_user_name(self) -> str | None:
+        """Return the sanitized interlocutor name, or ``None`` for a stranger."""
+        name = (self.user_name or "").strip()
+        if not name:
+            return None
+        return name[:80]
 
 
 class ExcludedMemoryRefView(BaseModel):

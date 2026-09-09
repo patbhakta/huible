@@ -15,9 +15,14 @@ inputs:
   - id: turns
     type: INT
     defaults: 24
+  - id: scenario
+    type: STRING
+    defaults: friends
+    description: stranger (name-ask opener, name-giving eval) | friends (known-interlocutor opener, recognition eval)
   - id: seed
     type: STRING
-    defaults: hi, whats your name?
+    defaults: ""
+    description: opener override; empty = scenario default (stranger 'hi, whats your name?', friends 'hey, you free tonight?')
 
 tasks:
   - id: dual-conversation
@@ -28,7 +33,7 @@ tasks:
       HU2774_ENGINE: http://127.0.0.1:8000
       HU2774_ENV: /root/repos/huible/.env
     commands:
-      - "mkdir -p /root/repos/huible/runs/hu2774 && python3 /root/repos/huible/scripts/personas_dual_converse.py --turns {{ inputs.turns }} --run-id '{{ inputs.run_id }}' --seed '{{ inputs.seed }}' --out-dir /root/repos/huible/runs/hu2774"
+      - "mkdir -p /root/repos/huible/runs/hu2774 && python3 /root/repos/huible/scripts/personas_dual_converse.py --turns {{ inputs.turns }} --run-id '{{ inputs.run_id }}' --scenario '{{ inputs.scenario }}' --seed '{{ inputs.seed }}' --out-dir /root/repos/huible/runs/hu2774"
 
 errors:
   - id: fail-log
