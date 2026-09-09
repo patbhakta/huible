@@ -1,0 +1,36 @@
+id: dual-persona-converse
+namespace: pat.personas
+description: |
+  HU-2774: dual-persona conversation test (Monica + Chandler) through the REAL
+  engine chat endpoint. Independent vaults + engine memories + working-memory
+  sessions per persona. N-turn alternating loop with a 10+ turn memory-recall
+  probe, scored on five dialog-evidence criteria:
+  name-giving, engagement (~31% question rate), grounded wit (~23% echo rate),
+  memory recall, no AI tells. Exit 0 = PASS. 3 consecutive passes = founder bar.
+
+inputs:
+  - id: run_id
+    type: STRING
+    defaults: hu2774-kestra-run
+  - id: turns
+    type: INT
+    defaults: 24
+  - id: seed
+    type: STRING
+    defaults: hi, whats your name?
+
+tasks:
+  - id: dual-conversation
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "mkdir -p /root/repos/huible/runs/hu2774 && python3 /root/repos/huible/scripts/personas_dual_converse.py --turns {{ inputs.turns }} --run-id '{{ inputs.run_id }}' --seed '{{ inputs.seed }}' --out-dir /root/repos/huible/runs/hu2774"
+
+errors:
+  - id: fail-log
+    type: io.kestra.plugin.core.log.Log
+    message: "HU-2774 dual-persona run {{ inputs.run_id }} FAILED (non-zero exit = criteria or infra failure)"
