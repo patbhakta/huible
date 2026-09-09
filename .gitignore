@@ -26,3 +26,6 @@ experiments/frames-eval/outputs/*/stage0_corpus/articles.json
 # HU-2723 PageIndex eval: venv + local SDK stores (regenerable)
 experiments/pageindex-eval/.venv/
 experiments/pageindex-eval/outputs/*/.pageindex/
+
+# HU-2772 portal: human test-subject transcripts (personal data, never commit)
+runs/hu2772/sessions/
