@@ -87,6 +87,30 @@ SELF_INTRO_TELLS = [
     (r"\blet me introduce myself\b", "self-introduce"),
 ]
 
+#: Platform (non-persona) text markers — G1 crisis escalation, session pause,
+#: topic refusal, caretaker. The harness must NEVER feed these back into the
+#: conversation loop: the G1 crisis response contains the very words the
+#: deterministic crisis classifier keys on ("Suicide & Crisis Lifeline"), so
+#: echoing it back re-triggers CRISIS every turn forever (observed live
+#: 2026-09-09, kestra run hu2774-kestra-run t14+). A platform text inside a
+#: dual-persona loop is a terminal run failure (it is the ultimate AI tell).
+PLATFORM_TEXT_MARKERS = [
+    "I want to pause for a moment",
+    "I think it's worth pausing",
+    "Before we go further, I want to make sure",
+    "I want to be gentle here",
+    "Call or text 988",
+    "Text HOME to 741988",
+    "Text HOME to 741741",
+]
+
+
+def is_platform_text(text, provider):
+    if provider and provider.startswith("caretaker"):
+        return True
+    low = (text or "").casefold()
+    return any(marker.casefold() in low for marker in PLATFORM_TEXT_MARKERS)
+
 #: Priors-leak tells per persona (zero-corpus classes measured on the v2 vault):
 #: - SELF-name announcement (own surname / own full name). System prompts carry
 #:   first names only, so a persona voicing their own surname comes from model
@@ -209,6 +233,7 @@ def run_conversation(args, keys):
                     "speaker_name": DISPLAY[speaker_id],
                     "talked_to": user_name_for(speaker_id),
                     "inbound": message, "kind": kind,
+                    "platform_text": is_platform_text(out["text"], out["provider"]),
                     "latency_s": round(time.time() - t0, 2)})
         transcript.append(out)
         print(f"[{turn_no:02d}] {DISPLAY[speaker_id]}<-'{message[:44]}' "
@@ -222,11 +247,17 @@ def run_conversation(args, keys):
     last_speaker = CHANDLER_ID
     probe_turns = {RECALL_TURN} | ({args.turns} if args.turns >= 20 else set())
     for turn in range(1, args.turns + 1):
+        if first["platform_text"]:
+            break  # terminal: platform text owns the loop, never feed it back
         speaker = b_id if last_speaker == a_id else a_id
         kind = "recall_probe" if turn in probe_turns else "talk"
         msg = RECALL_PROBE if turn in probe_turns else last_text
         out = speak(speaker, last_speaker, msg, turn, kind)
         last_text, last_speaker = out["text"], speaker
+        if out["platform_text"]:
+            print(f"PLATFORM TEXT at turn {turn} — stopping the loop "
+                  "(canned escalation/pause text is never fed back)", flush=True)
+            break
         time.sleep(1)
     return transcript, opener
 
@@ -320,6 +351,9 @@ def eval_transcript(transcript, opener, scenario="stranger"):
     # 5. AI tells across every persona line
     tells = []
     for t in transcript:
+        if t.get("platform_text"):
+            tells.append({"turn": t["turn"], "tell": "platform-text",
+                          "text": t["text"][:120]})
         for pat, tag in AI_TELLS:
             if re.search(pat, t["text"].casefold()):
                 tells.append({"turn": t["turn"], "tell": tag, "text": t["text"]})

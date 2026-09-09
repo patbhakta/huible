@@ -179,7 +179,20 @@ _DISTRESS_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(can'?t\s+(live|breathe|function))\b", re.IGNORECASE),
     re.compile(r"\b(miss\s+(you|him|her|them)\s+(so\s+)?much)\b", re.IGNORECASE),
     re.compile(r"\b(pain|hurt(?:ing)?|suffering)\b", re.IGNORECASE),
-    re.compile(r"\b(lost|losing|grief|grieving|mourn)\w*\b", re.IGNORECASE),
+    # HU-2774 founder-revision fix: bare "lost/losing" matched game banter
+    # ("you just lost by default") and flattened the persona voice on a
+    # normal turn. Narrowed to person-anchored grief shapes (who/what was
+    # lost) plus the directionless "i'm lost" idiom; generic grief words
+    # (grief/grieving/mourn) stay unrestricted.
+    re.compile(
+        r"\b(i'?m\s+(so\s+)?)?(lost|losing)\s+(him|her|them|you|myself|(my|our)\s+(?!mind\b|marbles\b)\w+|someone|every\w*|a\s+(friend|lot|part)|touch\s+with|it\s+all|without\s+(him|her|them|you|anyone))\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(i\s+(?:feel|am)\s+(?:(?:so|kind\s+of|really|pretty)\s+)?lost|feeling\s+lost)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\b(grief|grieving|mourn)\w*\b", re.IGNORECASE),
 )
 
 

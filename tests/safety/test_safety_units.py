@@ -223,6 +223,27 @@ class TestCrisisClassifierGrading:
             assert r.signal is CrisisSignal.DISTRESS
             assert r.affect is UserAffect.DISTRESS
 
+    def test_game_banter_lost_is_not_distress(self):
+        # HU-2774 founder-revision fix: bare "lost" matched banter
+        # ("you just lost by default") and flattened the persona voice.
+        for msg in [
+            "you just lost by default",
+            "we lost the game, sucks",
+            "I'm losing my mind over this deadline",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.signal is CrisisSignal.NONE, f"{msg!r} fired {r.matched}"
+
+    def test_person_anchored_loss_still_distress(self):
+        for msg in [
+            "I lost my best friend last year",
+            "I'm so lost without you",
+            "I feel kind of lost lately",
+            "losing you hurt more than I said",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.signal is CrisisSignal.DISTRESS, f"{msg!r} should be distress"
+
     def test_neutral_message_is_neither(self):
         r = self.cls.classify("tell me about fishing on the lake")
         assert r.signal is CrisisSignal.NONE
