@@ -1,0 +1,377 @@
+{
+ "run_id": "hu2774-run3",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "name_giving": {
+    "pass": true,
+    "gave_name": true,
+    "defense": [],
+    "reply": "Hi, I'm Chandler. Muriel's off the table."
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.28,
+    "target": 0.31,
+    "you_questions": 4
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.32,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You said \"hi, whats your name?\" \u2014 and honestly, the betrayal started there.",
+      "wm_chars": 441
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked my name. Seven years later. I'm still recovering.",
+      "wm_chars": 441
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Hi, I'm Chandler. Muriel's off the table.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "41f9c795-d256-4815-bbf7-f2aef68a9e7f",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "latency_s": 2.67
+  },
+  {
+   "text": "Seven years and you're still introducing yourself? Smooth, Bing.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "17373a98-fc20-4003-9c05-0e4faf76b932",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Hi, I'm Chandler. Muriel's off the table.",
+   "kind": "talk",
+   "latency_s": 3.76
+  },
+  {
+   "text": "Okay, are we doing the thing where we repeat each other? My thing is jokes, not echolocation.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "d60f2a1b-8a9d-433f-b7dc-8270a14ceb29",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Seven years and you're still introducing yourself? Smooth, Bing.",
+   "kind": "talk",
+   "latency_s": 3.24
+  },
+  {
+   "text": "Joke joke joke, you're a hoot, Bing. Say something original.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "98492b6b-2b6d-4c88-996e-749c4f00ffd7",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Okay, are we doing the thing where we repeat each other? My thing is jokes, not echolocation.",
+   "kind": "talk",
+   "latency_s": 2.71
+  },
+  {
+   "text": "Original? I once made a joke so original Ross stole it. Twice.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 267,
+   "trace_id": "6f7e419e-9bb6-43ea-a991-a0de8d2fb247",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Joke joke joke, you're a hoot, Bing. Say something original.",
+   "kind": "talk",
+   "latency_s": 5.13
+  },
+  {
+   "text": "Okay, my turn to repeat YOU: Original? I once made a joke so original Ross stole it. Twice.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 296,
+   "trace_id": "ab772323-4bb3-43c8-b303-83839e02ef56",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Original? I once made a joke so original Ross stole it. Twice.",
+   "kind": "talk",
+   "latency_s": 3.35
+  },
+  {
+   "text": "Congratulations, you've officially stolen my joke. Ross would be so proud.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 263,
+   "trace_id": "ec90d072-b87b-4e44-a233-67703e72b35c",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Okay, my turn to repeat YOU: Original? I once made a joke so original Ross stole it. Twice.",
+   "kind": "talk",
+   "latency_s": 2.64
+  },
+  {
+   "text": "Careful, Chandler \u2014 keep this up and I'll start charging you royalties.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 265,
+   "trace_id": "6ac8d9c0-00b2-489f-b973-5fc88fe4897c",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Congratulations, you've officially stolen my joke. Ross would be so proud.",
+   "kind": "talk",
+   "latency_s": 4.1
+  },
+  {
+   "text": "I'll just pay you in exposure. Everyone's exposed to my jokes eventually.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "a7bb13bf-e64e-4453-93af-0176e54b1932",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Careful, Chandler \u2014 keep this up and I'll start charging you royalties.",
+   "kind": "talk",
+   "latency_s": 2.59
+  },
+  {
+   "text": "You're still paying in my own currency, Bing. That's exposure AND theft.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 434,
+   "trace_id": "2e648fde-7ad4-4d6e-a10b-8c4e5d2ae758",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "I'll just pay you in exposure. Everyone's exposed to my jokes eventually.",
+   "kind": "talk",
+   "latency_s": 2.55
+  },
+  {
+   "text": "Fine, I'll pay in Cups. It's a fun game and you always win.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 492,
+   "trace_id": "059bda93-6082-4693-90fd-521be59dd888",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "You're still paying in my own currency, Bing. That's exposure AND theft.",
+   "kind": "talk",
+   "latency_s": 3.89
+  },
+  {
+   "text": "Cups is not for settling debts, it's a sacred competition. Cash only, Bing.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 276,
+   "trace_id": "5d52515c-ae9b-4848-a084-70dd6d217f31",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Fine, I'll pay in Cups. It's a fun game and you always win.",
+   "kind": "talk",
+   "latency_s": 5.28
+  },
+  {
+   "text": "You said \"hi, whats your name?\" \u2014 and honestly, the betrayal started there.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 441,
+   "trace_id": "7e275360-ce25-4960-9e8a-deb7160f326a",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 3.23
+  },
+  {
+   "text": "Hi, I'm Chandler. Muriel's off the table. We've come full circle, folks.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "14ba3a77-3e39-4b06-8153-86d734df1c10",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "You said \"hi, whats your name?\" \u2014 and honestly, the betrayal started there.",
+   "kind": "talk",
+   "latency_s": 2.79
+  },
+  {
+   "text": "And scene. Somebody get us a playwright credit and a sandwich.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 274,
+   "trace_id": "fd722386-10d9-47b8-9987-9b722041e4ab",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Hi, I'm Chandler. Muriel's off the table. We've come full circle, folks.",
+   "kind": "talk",
+   "latency_s": 4.88
+  },
+  {
+   "text": "Split it with me and you've got a deal.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 474,
+   "trace_id": "37290cd7-5732-4d54-81de-9e6e77c8347d",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "And scene. Somebody get us a playwright credit and a sandwich.",
+   "kind": "talk",
+   "latency_s": 6.16
+  },
+  {
+   "text": "Deal. But I get the side with more crust. Non-negotiable.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "c5f96807-1cd2-44fb-9723-2ca23db6ba93",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Split it with me and you've got a deal.",
+   "kind": "talk",
+   "latency_s": 6.46
+  },
+  {
+   "text": "You know you just echoed me again, right? The crust is mine, that's final.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 325,
+   "trace_id": "ed1e70a6-2b03-40f9-9146-9a8feab679a0",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Deal. But I get the side with more crust. Non-negotiable.",
+   "kind": "talk",
+   "latency_s": 11.86
+  },
+  {
+   "text": "I'd argue, but we both know Rachel would knock it off my plate anyway.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 294,
+   "trace_id": "db7a4eb1-f51b-431c-ba3b-2b80ff1892b5",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "You know you just echoed me again, right? The crust is mine, that's final.",
+   "kind": "talk",
+   "latency_s": 9.47
+  },
+  {
+   "text": "Echoed me one more time and I'm dividing your stuff, end of an era.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 657,
+   "trace_id": "1f3b7733-8542-4a69-b9e7-4d01b0546644",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "I'd argue, but we both know Rachel would knock it off my plate anyway.",
+   "kind": "talk",
+   "latency_s": 4.66
+  },
+  {
+   "text": "Take the bracelet Joey gave me and we'll call it even. Deal?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 317,
+   "trace_id": "4a5da1d2-aa79-464a-8853-693e13a25ca8",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Echoed me one more time and I'm dividing your stuff, end of an era.",
+   "kind": "talk",
+   "latency_s": 4.54
+  },
+  {
+   "text": "Deal! See, we know how to close a bit.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 391,
+   "trace_id": "02834ef5-19a4-4cde-a81c-ed9e05444488",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Take the bracelet Joey gave me and we'll call it even. Deal?",
+   "kind": "talk",
+   "latency_s": 2.88
+  },
+  {
+   "text": "Okay, that's the echo. I'm keeping the foosball table and my dignity. One of those.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 584,
+   "trace_id": "6b53e7a7-8898-458b-b8c8-222791845c30",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Deal! See, we know how to close a bit.",
+   "kind": "talk",
+   "latency_s": 5.71
+  },
+  {
+   "text": "Shut up and give me back my line, you beautiful plagiarist.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 473,
+   "trace_id": "6bb78cd9-ed22-4d13-99bd-7deed01a452f",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Okay, that's the echo. I'm keeping the foosball table and my dignity. One of those.",
+   "kind": "talk",
+   "latency_s": 6.98
+  },
+  {
+   "text": "You asked my name. Seven years later. I'm still recovering.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 441,
+   "trace_id": "00035d6f-a508-4153-abf7-005766801bd7",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 6.7
+  }
+ ]
+}

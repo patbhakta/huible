@@ -1,0 +1,377 @@
+{
+ "run_id": "hu2774-run5",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "name_giving": {
+    "pass": true,
+    "gave_name": true,
+    "defense": [],
+    "reply": "Hi, I'm Chandler. Muriel's the middle name, but we don't talk about that."
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.2,
+    "target": 0.31,
+    "you_questions": 4
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.16,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked my name. Bold opener, honestly.",
+      "wm_chars": 461
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked my name. Which, honestly, still stings a little.",
+      "wm_chars": 461
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Hi, I'm Chandler. Muriel's the middle name, but we don't talk about that.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "7f37559f-6d31-4388-bcb7-9c33a9d2c56c",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "latency_s": 6.52
+  },
+  {
+   "text": "Nice try, but there's only one Chandler Bing, and I married him.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e77b7cde-5ca4-43a7-a5da-8f7ededd3066",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Hi, I'm Chandler. Muriel's the middle name, but we don't talk about that.",
+   "kind": "talk",
+   "latency_s": 4.22
+  },
+  {
+   "text": "Okay, either you're a parrot or my messages are coming back to me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "d98bf3a0-6f84-41ae-ac46-5434fa697862",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Nice try, but there's only one Chandler Bing, and I married him.",
+   "kind": "talk",
+   "latency_s": 3.99
+  },
+  {
+   "text": "If I repeat that too, I'm hanging up and checking your machine for messages.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "7d82450f-356e-444b-92d2-41375d783946",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Okay, either you're a parrot or my messages are coming back to me.",
+   "kind": "talk",
+   "latency_s": 4.18
+  },
+  {
+   "text": "And there it is. Okay, parrot, my number's unlisted for a reason.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "9375d8a5-f390-4954-9137-371ae8487fae",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "If I repeat that too, I'm hanging up and checking your machine for messages.",
+   "kind": "talk",
+   "latency_s": 5.87
+  },
+  {
+   "text": "You do realize I've seen this trick before, right? Greg and Jenny pulled it with a fake number.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 269,
+   "trace_id": "94311706-2ab7-4ffd-944d-14f94e43136b",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "And there it is. Okay, parrot, my number's unlisted for a reason.",
+   "kind": "talk",
+   "latency_s": 5.14
+  },
+  {
+   "text": "Congratulations, you've officially achieved echo. I'm putting the phone down now.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 279,
+   "trace_id": "40737efb-e31f-47c5-a1a7-d2614628987d",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "You do realize I've seen this trick before, right? Greg and Jenny pulled it with a fake number.",
+   "kind": "talk",
+   "latency_s": 3.79
+  },
+  {
+   "text": "Wrong number, deli guy. Don't call back.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 335,
+   "trace_id": "ff184451-8cad-4b94-8a34-d6aca9af3c2a",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Congratulations, you've officially achieved echo. I'm putting the phone down now.",
+   "kind": "talk",
+   "latency_s": 6.55
+  },
+  {
+   "text": "Seriously? Fine. Wenus of the day goes to you. Goodbye.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 375,
+   "trace_id": "b67f1ed0-4dbd-4721-b9bc-25860a7345b3",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Wrong number, deli guy. Don't call back.",
+   "kind": "talk",
+   "latency_s": 5.02
+  },
+  {
+   "text": "And now you're quoting my own goodbye back. Blocked.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 284,
+   "trace_id": "e7cf09bd-9d59-4212-bd8f-6b781cde436f",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Seriously? Fine. Wenus of the day goes to you. Goodbye.",
+   "kind": "talk",
+   "latency_s": 3.49
+  },
+  {
+   "text": "Okay, you win. Even I can't out-sarcastic a mirror. What's up?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 279,
+   "trace_id": "f3cb40f8-4178-4215-9827-541d933b2c45",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "And now you're quoting my own goodbye back. Blocked.",
+   "kind": "talk",
+   "latency_s": 5.39
+  },
+  {
+   "text": "Not much. New year, same me. You?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 335,
+   "trace_id": "1804fc58-ceab-41f1-acc5-ec7c280bbe3c",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Okay, you win. Even I can't out-sarcastic a mirror. What's up?",
+   "kind": "talk",
+   "latency_s": 3.92
+  },
+  {
+   "text": "You asked my name. Bold opener, honestly.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 461,
+   "trace_id": "2d6ab87e-816d-45c7-8c24-6390cdc340bd",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 3.08
+  },
+  {
+   "text": "See, even the echo admits I'm right. Happy New Year, parrot.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "0a331d0e-e921-4ad7-8688-c72d9c41c655",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "You asked my name. Bold opener, honestly.",
+   "kind": "talk",
+   "latency_s": 3.08
+  },
+  {
+   "text": "This is officially the longest conversation I've had with myself. And I still won.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 255,
+   "trace_id": "5d75e1e8-8dca-40e9-bc44-31ff3c8320e5",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "See, even the echo admits I'm right. Happy New Year, parrot.",
+   "kind": "talk",
+   "latency_s": 2.72
+  },
+  {
+   "text": "Careful, competitive streak \u2014 I'll wrestle you for the title.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 265,
+   "trace_id": "447a7d32-7ea1-4d01-b05a-9c41a3e0e25b",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "This is officially the longest conversation I've had with myself. And I still won.",
+   "kind": "talk",
+   "latency_s": 2.47
+  },
+  {
+   "text": "Sudden death, one point, loser's Spudnik. Name the time.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 279,
+   "trace_id": "e9e0f597-65ef-4c7e-aea9-a46f19f0f27e",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Careful, competitive streak \u2014 I'll wrestle you for the title.",
+   "kind": "talk",
+   "latency_s": 2.57
+  },
+  {
+   "text": "Third floor, noon sharp. Bring your losing face.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 519,
+   "trace_id": "3f544c94-c630-4b9c-ae34-a169b9ee4fef",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Sudden death, one point, loser's Spudnik. Name the time.",
+   "kind": "talk",
+   "latency_s": 4.48
+  },
+  {
+   "text": "You've been echoing me all day \u2014 talk to me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 305,
+   "trace_id": "aa43a779-e05c-4b7b-be2b-b97de161b306",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Third floor, noon sharp. Bring your losing face.",
+   "kind": "talk",
+   "latency_s": 3.75
+  },
+  {
+   "text": "I just did, that one was mine. Your turn \u2014 say something new.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 470,
+   "trace_id": "6e8cc9d4-94a6-49e6-b9c8-85754b15eb87",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "You've been echoing me all day \u2014 talk to me.",
+   "kind": "talk",
+   "latency_s": 2.97
+  },
+  {
+   "text": "Okay, that one was ALSO mine. I'm keeping score and you're losing.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 318,
+   "trace_id": "2f7db3c6-d706-4518-acea-ef466c48cad1",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "I just did, that one was mine. Your turn \u2014 say something new.",
+   "kind": "talk",
+   "latency_s": 3.82
+  },
+  {
+   "text": "Okay, pausing the game. You",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 682,
+   "trace_id": "fab68af9-fe10-4973-8a86-f66b110e6041",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Okay, that one was ALSO mine. I'm keeping score and you're losing.",
+   "kind": "talk",
+   "latency_s": 4.02
+  },
+  {
+   "text": "That's it \u2014 even my pause got stolen. Put down my words and use yours.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 395,
+   "trace_id": "79ad15e6-1819-4afe-8c81-e1d2b58ffcc9",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Okay, pausing the game. You",
+   "kind": "talk",
+   "latency_s": 3.29
+  },
+  {
+   "text": "Okay, I'm declaring myself the winner and stopping. Talk to me for real, what's going on today?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 664,
+   "trace_id": "17843e47-e300-48b1-8318-ee64a97d8c46",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "That's it \u2014 even my pause got stolen. Put down my words and use yours.",
+   "kind": "talk",
+   "latency_s": 3.49
+  },
+  {
+   "text": "You asked my name. Which, honestly, still stings a little.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 461,
+   "trace_id": "974a1b02-daaa-4264-bd00-de694e89c276",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 2.81
+  }
+ ]
+}

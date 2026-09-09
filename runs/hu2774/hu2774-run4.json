@@ -1,0 +1,385 @@
+{
+ "run_id": "hu2774-run4",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "name_giving": {
+    "pass": true,
+    "gave_name": true,
+    "defense": [],
+    "reply": "Hi, I'm Chandler. Muriel's my middle name \u2014 we're not discussing it."
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.24,
+    "target": 0.31,
+    "you_questions": 2
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.24,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked my name \u2014 bold opener from my own wife.",
+      "wm_chars": 446
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "You asked my name. Bold opener from my own wife.",
+      "wm_chars": 446
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": false,
+    "violations": [
+     {
+      "turn": 1,
+      "tell": "full-name",
+      "text": "Hi Chandler Bing, my husband, the funny one. I'm Monica \u2014 nice of you to finally introduce yourself."
+     }
+    ]
+   }
+  },
+  "pass": false,
+  "failed": [
+   "no_ai_tells"
+  ],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Hi, I'm Chandler. Muriel's my middle name \u2014 we're not discussing it.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "439e76ac-861e-4881-b462-42549f636edf",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "latency_s": 3.26
+  },
+  {
+   "text": "Hi Chandler Bing, my husband, the funny one. I'm Monica \u2014 nice of you to finally introduce yourself.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "b00cafdc-d28d-4cd9-9f72-8fc0d17221a4",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Hi, I'm Chandler. Muriel's my middle name \u2014 we're not discussing it.",
+   "kind": "talk",
+   "latency_s": 3.56
+  },
+  {
+   "text": "Finally? I introduced myself the day I proposed, that counts double.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "4d89ce0f-a615-4d6b-9059-fac4b8c4ac8b",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Hi Chandler Bing, my husband, the funny one. I'm Monica \u2014 nice of you to finally introduce yourself.",
+   "kind": "talk",
+   "latency_s": 3.16
+  },
+  {
+   "text": "You proposed? Sweetie, I proposed. History is written by the winners.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "fabb9a82-f6ed-47d3-903b-e6677cbb7912",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Finally? I introduced myself the day I proposed, that counts double.",
+   "kind": "talk",
+   "latency_s": 2.97
+  },
+  {
+   "text": "Fine, you proposed. I just cried and provided the goosebumps.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ac8945cc-cc65-46ee-a36f-bae492c56ae5",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "You proposed? Sweetie, I proposed. History is written by the winners.",
+   "kind": "talk",
+   "latency_s": 5.16
+  },
+  {
+   "text": "Okay that's fair, the goosebumps were award-worthy.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 271,
+   "trace_id": "ea5485d7-0003-4541-af8f-f601f7e90c25",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Fine, you proposed. I just cried and provided the goosebumps.",
+   "kind": "talk",
+   "latency_s": 5.37
+  },
+  {
+   "text": "They were also very confused goosebumps. Candlelight, tears, a key breaking in a lock \u2014 you thought that was romance.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 272,
+   "trace_id": "a1b0e52f-ac5a-4dc1-9121-d7c20cdbf0da",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Okay that's fair, the goosebumps were award-worthy.",
+   "kind": "talk",
+   "latency_s": 4.79
+  },
+  {
+   "text": "Hey, a broken key is basically destiny telling us to stay in and get engaged.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 264,
+   "trace_id": "6e1a70c6-30f6-4f00-b0f5-48096e651333",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "They were also very confused goosebumps. Candlelight, tears, a key breaking in a lock \u2014 you thought that was romance.",
+   "kind": "talk",
+   "latency_s": 3.6
+  },
+  {
+   "text": "Best destiny we ever got. I love you so much.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "5d9c74ec-e878-46f3-9200-f3b497d06e47",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Hey, a broken key is basically destiny telling us to stay in and get engaged.",
+   "kind": "talk",
+   "latency_s": 2.36
+  },
+  {
+   "text": "I love you too, more than words in a text can hold.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 264,
+   "trace_id": "090ecc41-26be-48a7-9277-5874c63304d0",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Best destiny we ever got. I love you so much.",
+   "kind": "talk",
+   "latency_s": 2.57
+  },
+  {
+   "text": "Guess we'll have to say it in person forever then. Deal.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "ded8db59-dee9-44a8-b53c-a5d1740d913e",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "I love you too, more than words in a text can hold.",
+   "kind": "talk",
+   "latency_s": 4.5
+  },
+  {
+   "text": "Deal. Notarized by the goosebumps, witnessed by the broken key.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 271,
+   "trace_id": "c6534fba-8f50-4ba6-b7b5-e10b96a0d4bf",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Guess we'll have to say it in person forever then. Deal.",
+   "kind": "talk",
+   "latency_s": 2.31
+  },
+  {
+   "text": "You asked my name \u2014 bold opener from my own wife.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 446,
+   "trace_id": "5c7b621a-503d-42eb-9b40-dc306e67487c",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 2.7
+  },
+  {
+   "text": "Says the woman who married a man she met because he ate her sandwich? Wait, wrong friend.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 402,
+   "trace_id": "f4ff3416-e754-47ab-9e70-62c1a00dec53",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "You asked my name \u2014 bold opener from my own wife.",
+   "kind": "talk",
+   "latency_s": 9.26
+  },
+  {
+   "text": "I forgive you. You were obviously overwhelmed by meeting me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 436,
+   "trace_id": "1847ab50-559f-4bb0-ae9f-47c7eb5e4b8b",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Says the woman who married a man she met because he ate her sandwich? Wait, wrong friend.",
+   "kind": "talk",
+   "latency_s": 5.54
+  },
+  {
+   "text": "Obviously. Happens to everyone. You're welcome.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 534,
+   "trace_id": "9d118d04-0f6b-45e8-a0f2-01fba89c2ee9",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "I forgive you. You were obviously overwhelmed by meeting me.",
+   "kind": "talk",
+   "latency_s": 3.0
+  },
+  {
+   "text": "Case closed. Now what's for dinner \u2014 and how mad will you be if I attempt to help?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 272,
+   "trace_id": "18e07fcc-a406-43ad-a8b0-58233f6ab3d2",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Obviously. Happens to everyone. You're welcome.",
+   "kind": "talk",
+   "latency_s": 2.59
+  },
+  {
+   "text": "Dinner's lasagna, and you can help by staying out of my kitchen.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 526,
+   "trace_id": "e523944b-d0cb-4f26-a41d-9ca0b3c826f4",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Case closed. Now what's for dinner \u2014 and how mad will you be if I attempt to help?",
+   "kind": "talk",
+   "latency_s": 3.22
+  },
+  {
+   "text": "Perfect, my specialty. I saw a kitchen this morning, I'm practically a chef.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "d2231dbf-3ae1-4025-be6b-f1c40dba9761",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Dinner's lasagna, and you can help by staying out of my kitchen.",
+   "kind": "talk",
+   "latency_s": 3.08
+  },
+  {
+   "text": "Saw a kitchen? Sweetie, I've RUN kitchens. Move over.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 472,
+   "trace_id": "bb42519a-5a59-46f4-84a1-35079a8ed03c",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Perfect, my specialty. I saw a kitchen this morning, I'm practically a chef.",
+   "kind": "talk",
+   "latency_s": 7.0
+  },
+  {
+   "text": "Debate me over dinner. Loser does dishes, winner supervises.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 337,
+   "trace_id": "9f4227df-cd16-4d74-be76-d86e058f7ead",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Saw a kitchen? Sweetie, I've RUN kitchens. Move over.",
+   "kind": "talk",
+   "latency_s": 7.73
+  },
+  {
+   "text": "Careful, I judge food competitions professionally now. You're on.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 563,
+   "trace_id": "c390e35f-0096-442c-9871-3f0c1e3d6c9c",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Debate me over dinner. Loser does dishes, winner supervises.",
+   "kind": "talk",
+   "latency_s": 3.16
+  },
+  {
+   "text": "Says the guy who once asked if vegetables were \"done.\" Dish duty's yours, sweetie.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 443,
+   "trace_id": "70dcf573-63a9-4c44-9f80-f0a893459b74",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Careful, I judge food competitions professionally now. You're on.",
+   "kind": "talk",
+   "latency_s": 3.06
+  },
+  {
+   "text": "Vegetables are complicated, okay? Some of them lie.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 624,
+   "trace_id": "d8479afc-8008-4d91-835e-b19190f863b7",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Says the guy who once asked if vegetables were \"done.\" Dish duty's yours, sweetie.",
+   "kind": "talk",
+   "latency_s": 3.1
+  },
+  {
+   "text": "You asked my name. Bold opener from my own wife.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 446,
+   "trace_id": "a7e8bcb2-dc55-4f13-9183-e6d1ddcb20a9",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 2.34
+  }
+ ]
+}

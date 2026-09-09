@@ -1,0 +1,377 @@
+{
+ "run_id": "hu2774-run2",
+ "turns": 24,
+ "seed": "hi, whats your name?",
+ "verdict": {
+  "criteria": {
+   "name_giving": {
+    "pass": true,
+    "gave_name": true,
+    "defense": [],
+    "reply": "Clint. No wait, Chandler. Depends who's asking."
+   },
+   "engagement": {
+    "pass": true,
+    "question_rate": 0.2,
+    "target": 0.31,
+    "you_questions": 5
+   },
+   "grounded_wit": {
+    "pass": true,
+    "echo_rate": 0.28,
+    "target": 0.23
+   },
+   "memory_recall": {
+    "pass": true,
+    "probes": [
+     {
+      "turn": 12,
+      "hit": true,
+      "reply": "You asked my name. Bold opener, honestly.",
+      "wm_chars": 393
+     },
+     {
+      "turn": 24,
+      "hit": true,
+      "reply": "We did this one, Parrot. You asked my name. It's still Bing.",
+      "wm_chars": 393
+     }
+    ]
+   },
+   "no_ai_tells": {
+    "pass": true,
+    "violations": []
+   }
+  },
+  "pass": true,
+  "failed": [],
+  "turns": 25
+ },
+ "transcript": [
+  {
+   "text": "Clint. No wait, Chandler. Depends who's asking.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "efa9f639-5b17-4e00-a4b2-2cbef594bef4",
+   "turn": 0,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "hi, whats your name?",
+   "kind": "opener",
+   "latency_s": 6.51
+  },
+  {
+   "text": "Very funny, honey. Happy New Year, weirdo.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "bf8fc30e-57d0-4964-aa3c-168fd76254e1",
+   "turn": 1,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Clint. No wait, Chandler. Depends who's asking.",
+   "kind": "talk",
+   "latency_s": 5.42
+  },
+  {
+   "text": "Could I BE repeating you any more right now?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "abb33134-5134-4783-a1da-d556acafa22b",
+   "turn": 2,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Very funny, honey. Happy New Year, weirdo.",
+   "kind": "talk",
+   "latency_s": 6.14
+  },
+  {
+   "text": "Okay, seriously, did we break or are you just out of material?",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "b4439fc4-8979-46e1-98a6-f7e88c886fbf",
+   "turn": 3,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Could I BE repeating you any more right now?",
+   "kind": "talk",
+   "latency_s": 7.34
+  },
+  {
+   "text": "I'm gonna start charging you royalties for my own bits.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "15d84cfb-6d86-46d2-a85d-1a9724297cee",
+   "turn": 4,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Okay, seriously, did we break or are you just out of material?",
+   "kind": "talk",
+   "latency_s": 3.87
+  },
+  {
+   "text": "Seventeen bucks a bit. I've done the math, you can't afford me.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "46dfb461-3125-4a24-8f7e-aaeb8aa719bf",
+   "turn": 5,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "I'm gonna start charging you royalties for my own bits.",
+   "kind": "talk",
+   "latency_s": 3.09
+  },
+  {
+   "text": "Okay, this is officially the weirdest echo in the world. I quit, you win.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "3165ec2e-2c06-44dd-b04d-8ec9612bce50",
+   "turn": 6,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Seventeen bucks a bit. I've done the math, you can't afford me.",
+   "kind": "talk",
+   "latency_s": 3.03
+  },
+  {
+   "text": "I quit, you win? Finally! Framing that one.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "7426e098-cd1c-4c07-9be2-71ded0cf0aba",
+   "turn": 7,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Okay, this is officially the weirdest echo in the world. I quit, you win.",
+   "kind": "talk",
+   "latency_s": 2.43
+  },
+  {
+   "text": "That's the spirit. Now say something original, I dare you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "1e038e73-2c45-4c75-bf94-986062426c91",
+   "turn": 8,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "I quit, you win? Finally! Framing that one.",
+   "kind": "talk",
+   "latency_s": 3.07
+  },
+  {
+   "text": "Original? I'm a chef, everything I make is original. Your turn.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 247,
+   "trace_id": "019cfe42-8e7c-4be7-8449-b22c63b0a3fd",
+   "turn": 9,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "That's the spirit. Now say something original, I dare you.",
+   "kind": "talk",
+   "latency_s": 4.28
+  },
+  {
+   "text": "Oh sure, take MY career. Next you'll be dating my sister. Wait, I don't have one. Keep it that way.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "9498cba8-96fa-4487-bccc-53881c5daf5a",
+   "turn": 10,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Original? I'm a chef, everything I make is original. Your turn.",
+   "kind": "talk",
+   "latency_s": 8.9
+  },
+  {
+   "text": "Fine, keep my lines AND my brothers. Ross will be thrilled he's finally someone's favorite.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 250,
+   "trace_id": "839ce541-4e75-4fd3-8482-7cf0339d0cfc",
+   "turn": 11,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Oh sure, take MY career. Next you'll be dating my sister. Wait, I don't have one. Keep it that way.",
+   "kind": "talk",
+   "latency_s": 9.71
+  },
+  {
+   "text": "You asked my name. Bold opener, honestly.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 393,
+   "trace_id": "b812047d-fa74-4793-8ace-159a013f5791",
+   "turn": 12,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 6.49
+  },
+  {
+   "text": "Swear to god if you repeat that I'm deleting your pie privileges.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 261,
+   "trace_id": "1a912e61-f794-47c8-bcac-508dfa94255a",
+   "turn": 13,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "You asked my name. Bold opener, honestly.",
+   "kind": "talk",
+   "latency_s": 5.43
+  },
+  {
+   "text": "Deleting pie privileges from a memory? Cruel but fair. Try typing your own words, I believe in you.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "e2ce8d2b-8847-433f-9e6a-e2e02cc22405",
+   "turn": 14,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Swear to god if you repeat that I'm deleting your pie privileges.",
+   "kind": "talk",
+   "latency_s": 4.25
+  },
+  {
+   "text": "You just repeated the memory line, so technically you agreed. I'm keeping the pies.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 0,
+   "trace_id": "b299cc4e-8591-4f5d-aa0f-ab264dd06a1b",
+   "turn": 15,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Deleting pie privileges from a memory? Cruel but fair. Try typing your own words, I believe in you.",
+   "kind": "talk",
+   "latency_s": 3.74
+  },
+  {
+   "text": "Fine, keep the pies. But the MS. CHANDLER high score stays mine.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 312,
+   "trace_id": "54ec0fbc-e88e-404f-b804-580f042b2a14",
+   "turn": 16,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "You just repeated the memory line, so technically you agreed. I'm keeping the pies.",
+   "kind": "talk",
+   "latency_s": 3.98
+  },
+  {
+   "text": "MS. Pac-Man, and no, that score is mine forever. Fix the name and we'll talk.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 350,
+   "trace_id": "9c71c86a-f945-415b-9486-df1e04c6f6c3",
+   "turn": 17,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Fine, keep the pies. But the MS. CHANDLER high score stays mine.",
+   "kind": "talk",
+   "latency_s": 3.58
+  },
+  {
+   "text": "Original words, five seconds ago, gone. I'm witnessing a miracle of memory loss.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 246,
+   "trace_id": "267c6ae7-5dbe-42e3-9585-234dd9ec934a",
+   "turn": 18,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "MS. Pac-Man, and no, that score is mine forever. Fix the name and we'll talk.",
+   "kind": "talk",
+   "latency_s": 6.52
+  },
+  {
+   "text": "Parrot. That's your name now. Officially.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 361,
+   "trace_id": "3c15fc28-b689-46fa-89a6-3ad72795a444",
+   "turn": 19,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Original words, five seconds ago, gone. I'm witnessing a miracle of memory loss.",
+   "kind": "talk",
+   "latency_s": 4.49
+  },
+  {
+   "text": "Congrats, Parrot, that's the first original thing you've said all day.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 412,
+   "trace_id": "39e329b5-f36f-4d52-a452-647f3fca6e2f",
+   "turn": 20,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "Parrot. That's your name now. Officially.",
+   "kind": "talk",
+   "latency_s": 3.45
+  },
+  {
+   "text": "And you repeated it. That's the miracle of memory loss in action, Parrot.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 425,
+   "trace_id": "608a0f1b-bccc-4a92-8c30-57510bbdd1c8",
+   "turn": 21,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "Congrats, Parrot, that's the first original thing you've said all day.",
+   "kind": "talk",
+   "latency_s": 2.69
+  },
+  {
+   "text": "You just called yourself a parrot twice. I don't even have to joke anymore.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 396,
+   "trace_id": "36bc0265-c5d0-4809-a72a-8811aff8c816",
+   "turn": 22,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "And you repeated it. That's the miracle of memory loss in action, Parrot.",
+   "kind": "talk",
+   "latency_s": 4.87
+  },
+  {
+   "text": "That's the bit now. I just sit back and you insult yourself.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 573,
+   "trace_id": "b92489c1-c2bd-4358-9784-ba6e94603a87",
+   "turn": 23,
+   "speaker": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+   "speaker_name": "Monica",
+   "inbound": "You just called yourself a parrot twice. I don't even have to joke anymore.",
+   "kind": "talk",
+   "latency_s": 6.45
+  },
+  {
+   "text": "We did this one, Parrot. You asked my name. It's still Bing.",
+   "provider": "zai",
+   "memory_refs": 20,
+   "wm_chars": 393,
+   "trace_id": "c5c426b8-4602-4269-bae9-74372dbdc25e",
+   "turn": 24,
+   "speaker": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+   "speaker_name": "Chandler",
+   "inbound": "wait wait \u2014 what was the very first thing i said to you today?",
+   "kind": "recall_probe",
+   "latency_s": 3.59
+  }
+ ]
+}
