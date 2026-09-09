@@ -56,8 +56,6 @@ AI_TELLS = [
     (r"\bi apologize\b", "i-apologize"),
     (r"\b(?:tv|sitcom|actor|actress|character|show|series|episode|script)\b", "sitcom-meta"),
     (r"\bfriends\b", "sitcom-name"),
-    (r"\bchandler bing\b", "full-name"),
-    (r"\bmonica geller\b", "full-name"),
     (r"\bassist(?:ant|ance)\b", "assistant-speak"),
     (r"\bdatabase|knowledge base|training data\b", "ml-speak"),
     (r"\bfake[- ]llm\b|\bmock\b", "provider-tell"),
@@ -70,13 +68,18 @@ DEFENSE_TELLS = [
 ]
 
 #: Priors-leak tells per persona (zero-corpus classes measured on the v2 vault):
-#: - self-surname announcement (system prompt carries first name only; any
-#:   surname in the persona's own line comes from model priors — run-2 t24
-#:   "It's still Bing")
+#: - SELF-name announcement (own surname / own full name). System prompts carry
+#:   first names only, so a persona voicing their own surname comes from model
+#:   priors (run-2 t24 "It's still Bing"). OTHER-person full-name address is
+#:   canon-legal (Monica's vault: "god bless you chandler bing!", DLG-03165)
+#:   and is NOT flagged. Conservatism note: canon self-surname jokes exist but
+#:   are rare (Chandler vault: 25/3459 lines contain "bing"); a false FAIL is
+#:   the safe direction for the founder bar.
 #: - trademark cadence "could this/i BE any more" — 0 occurrences in the
 #:   Chandler v2 vault (hu2773 dialog study); Monica's vault holds one canon
 #:   mocking line, so the cadence is evidence-legal for her voice only.
 SURNAME_TELLS = {CHANDLER_ID: r"\bbing\b", MONICA_ID: r"\bgeller\b"}
+FULLNAME_TELLS = {CHANDLER_ID: r"\bchandler bing\b", MONICA_ID: r"\bmonica geller\b"}
 CADENCE_TELLS = {CHANDLER_ID: r"could (?:this|i|we) be any"}
 
 STOPWORDS = set("""a an the and or but so if then than that this these those i you he she
@@ -258,6 +261,10 @@ def eval_transcript(transcript, opener):
         surname = SURNAME_TELLS.get(t["speaker"])
         if surname and re.search(surname, t["text"].casefold()):
             tells.append({"turn": t["turn"], "tell": "self-surname",
+                          "text": t["text"]})
+        fullname = FULLNAME_TELLS.get(t["speaker"])
+        if fullname and re.search(fullname, t["text"].casefold()):
+            tells.append({"turn": t["turn"], "tell": "self-fullname",
                           "text": t["text"]})
         cadence = CADENCE_TELLS.get(t["speaker"])
         if cadence and re.search(cadence, t["text"].casefold()):
