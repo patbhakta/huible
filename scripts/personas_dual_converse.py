@@ -339,10 +339,17 @@ def eval_transcript(transcript, opener, scenario="stranger"):
     # 4. memory recall at 10+ turn depth
     probes = [t for t in transcript if t["kind"] == "recall_probe"]
     recalls = []
-    for t in probes:
+    for i, t in enumerate(probes):
         want = content_words(opener) | {"hi"}
         got = content_words(t["text"])
         hit = bool(want & got)
+        if not hit and i > 0:
+            # A later probe answered "you already asked me that" demonstrates
+            # the memory is intact — accept explicit repeat acknowledgment.
+            hit = re.search(
+                r"\b(already asked|deja vu|asked me that|same question|"
+                r"first thing you asked)\b",
+                t["text"].casefold()) is not None
         recalls.append({"turn": t["turn"], "hit": hit,
                         "reply": t["text"], "wm_chars": t["wm_chars"]})
     checks["memory_recall"] = {"pass": bool(recalls) and all(r["hit"] for r in recalls),

@@ -174,7 +174,13 @@ _MEANS_PATTERNS: tuple[re.Pattern[str], ...] = (
 
 _DISTRESS_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(crying|can'?t\s+stop\s+cry|sob(bing)?)\b", re.IGNORECASE),
-    re.compile(r"\b(heartbroken|shattered|devastated|broken)\b", re.IGNORECASE),
+    # HU-2774: bare "broken" matched "phone's broken" banter and (via two
+    # hits) escalated a session to distress_trend_rising -> handoff. Keep the
+    # emotional anchors; require a first-person/relational shape for "broken".
+    re.compile(r"\b(heartbroken|shattered|devastated)\b", re.IGNORECASE),
+    re.compile(r"\b(i'?m|feeling|feel)\s+(so\s+)?broken\b", re.IGNORECASE),
+    re.compile(r"\bbroken\s+without\b", re.IGNORECASE),
+    re.compile(r"\bbroke\s+me\b", re.IGNORECASE),
     re.compile(r"\b(alone|lonely|empty|numb)\b", re.IGNORECASE),
     re.compile(r"\b(can'?t\s+(live|breathe|function))\b", re.IGNORECASE),
     re.compile(r"\b(miss\s+(you|him|her|them)\s+(so\s+)?much)\b", re.IGNORECASE),

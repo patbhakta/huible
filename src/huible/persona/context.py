@@ -249,6 +249,33 @@ def _competence_wall_triggered(message: str) -> bool:
     return any(p.search(message) for p in _COMPETENCE_WALL_PATTERNS)
 
 
+#: HU-2774: memory-recall shapes. A recall question ("what was the first
+#: thing I said to you?") is answered from the W4 working-memory block and
+#: the conversation history — NOT from vault retrieval — so on an
+#: empty-admissible turn the competence wall must not route it to the
+#: deflection exemplars (observed live: the probe got the canned "I don't
+#: know the first thing about it" reply even though the opener sat in the
+#: working-memory section). These turns keep their normal retrieval; the
+#: wall just stays out of the way.
+_MEMORY_RECALL_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"\bfirst\s+thing\s+i\s+said\b",
+        r"\bwhat\s+did\s+i\s+(?:say|ask)\b",
+        r"\bhow\s+did\s+(?:this|our)\s+conversation\s+start\b",
+        r"\bwhat\s+(?:was\s+)?my\s+(?:very\s+)?first\b",
+        r"\bremember\s+what\s+i\s+(?:said|asked)\b",
+    )
+)
+
+
+def is_memory_recall_question(message: str) -> bool:
+    """True when the inbound asks the persona to recall this conversation."""
+    if not message:
+        return False
+    return any(p.search(message) for p in _MEMORY_RECALL_PATTERNS)
+
+
 #: M1.6 addition (HU-2732, replay archive hu2706_harness_20260908T000815Z): the
 #: identity-exchange class. The M-0 turn-1 site ("hey who r u?") is IN-domain
 #: — the vault's own "who are you?" atoms activate above the floor — so the
@@ -934,7 +961,8 @@ def _build_system_prompt(
         lines.append(
             f"You are speaking with {name} — {tier.human_label}. You know "
             f"exactly who you're talking to, so no introductions: react to "
-            f"{name} the way you actually would."
+            f"{name} the way you actually would (using their name comes "
+            f"naturally between people who know each other)."
         )
     else:
         lines.append(
@@ -1365,7 +1393,10 @@ class ContextBuilder:
         # assistant-trap question shape (world-knowledge / explanation
         # request — retrieval activation does not separate domains, see
         # _COMPETENCE_WALL_PATTERNS). In-domain turns are served by their own
-        # retrieved exemplar lines.
+        # retrieved exemplar lines. HU-2774: memory-recall questions are
+        # exempt on the empty-admissible path — their grounding is the
+        # working-memory/history section, not vault retrieval, and wall
+        # routing there dead-answered the recall probe.
         exemplars: list[MemoryNode] = []
         if deflection_probe_embedding is not None:
             era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
@@ -1374,7 +1405,10 @@ class ContextBuilder:
                 requester_scope=requester_tier.disclosure_scope,
                 era_boundary=era_boundary,
             )
-            if not admissible or _competence_wall_triggered(current_message):
+            recall_exempt = is_memory_recall_question(current_message)
+            if (not admissible and not recall_exempt) or (
+                not recall_exempt and _competence_wall_triggered(current_message)
+            ):
                 exemplars = await self._deflection_exemplars(
                     backend=backend,
                     persona=persona,
