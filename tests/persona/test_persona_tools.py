@@ -39,6 +39,8 @@ from huible.persona.context import (
     RelationshipTier,
 )
 from huible.persona.tools import (
+    PINNED_NOON,
+    PERSONA_IN_WORLD_CLOCK_KEY,
     caretaker_reply,
     era_clock_system_line,
     in_world_now,
@@ -48,6 +50,7 @@ from huible.persona.tools import (
     is_interest_question,
     is_temporal_question,
     parse_era_boundary,
+    resolve_in_world_time_of_day,
 )
 
 PERSONA_ID = uuid4()
@@ -96,6 +99,32 @@ class TestInWorldNow:
 
     def test_missing_boundary_fails_closed(self):
         assert in_world_now(self.NOW, None) is None
+
+    def test_time_of_day_override_pins_noon_keeps_date_pin(self):
+        in_world = in_world_now(self.NOW, self.BOUNDARY, time_of_day=PINNED_NOON)
+        assert in_world is not None
+        assert in_world.date() == self.BOUNDARY
+        assert in_world.time() == PINNED_NOON
+
+    def test_time_of_day_override_respected_in_era_too(self):
+        now = datetime(2003, 10, 31, 2, 55, tzinfo=UTC)
+        in_world = in_world_now(now, self.BOUNDARY, time_of_day=PINNED_NOON)
+        assert in_world is not None
+        assert in_world.date() == now.date()
+        assert in_world.time() == PINNED_NOON
+
+
+class TestResolveInWorldTimeOfDay:
+    def test_noon_metadata_pins_noon(self):
+        assert resolve_in_world_time_of_day({PERSONA_IN_WORLD_CLOCK_KEY: "noon"}) == PINNED_NOON
+
+    def test_absent_metadata_is_none(self):
+        assert resolve_in_world_time_of_day(None) is None
+        assert resolve_in_world_time_of_day({}) is None
+
+    def test_invalid_mode_falls_back_to_wall_clock(self):
+        assert resolve_in_world_time_of_day({PERSONA_IN_WORLD_CLOCK_KEY: "midnight"}) is None
+        assert resolve_in_world_time_of_day({PERSONA_IN_WORLD_CLOCK_KEY: 42}) is None
 
 
 class TestEraClockLine:
@@ -368,6 +397,38 @@ class TestBuilderEraClockLine:
         assert "In-world clock:" in ctx.system_prompt
         assert "May 6, 2004" in ctx.system_prompt
 
+    async def test_noon_clock_metadata_pins_battery_hour_to_noon(self):
+        now = datetime(2026, 9, 4, 2, 55, tzinfo=UTC)  # battery wall-clock hour
+        persona = PersonaConfig(
+            id=PERSONA_ID,
+            name="Chandler",
+            era_knowledge_boundary="2004-05-06",
+            metadata={PERSONA_IN_WORLD_CLOCK_KEY: "noon"},
+        )
+        ctx = await ContextBuilder().build(
+            persona=persona,
+            requester_tier=RelationshipTier.FAMILY,
+            backend=_InterestBackend([]),
+            query_embedding_content=[0.1],
+            real_now=now,
+        )
+        assert "In-world clock:" in ctx.system_prompt
+        assert "May 6, 2004" in ctx.system_prompt
+        assert "12:00" in ctx.system_prompt
+        assert "02:55" not in ctx.system_prompt
+
+    async def test_without_clock_metadata_wall_time_carries_through(self):
+        now = datetime(2026, 9, 4, 2, 55, tzinfo=UTC)
+        ctx = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=_InterestBackend([]),
+            query_embedding_content=[0.1],
+            real_now=now,
+        )
+        assert "In-world clock:" in ctx.system_prompt
+        assert "02:55" in ctx.system_prompt
+
     async def test_no_clock_keeps_pre_w5_prompt_shape(self):
         ctx = await ContextBuilder().build(
             persona=_persona(),
@@ -513,3 +574,52 @@ class TestInterestToolLane:
         )
         assert "YOUR INTERESTS" not in ctx_off.render()
         assert [n.id for n in ctx_off.included_memories] == [n.id for n in ctx.included_memories]
+
+
+class TestQuestionExemplarLane:
+    """HU-2774 question-affordance lane: the persona's own question-shaped
+    vault lines render as register modeling (the corpus asks at ~1/3 of
+    lines; generation drifts declarative under banter)."""
+
+    async def _build(self, seeds, message="man, what a week it's been."):
+        return await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=_InterestBackend(seeds),
+            query_embedding_content=[0.1],
+            deflection_probe_embedding=[0.2],
+            current_message=message,
+        )
+
+    async def test_question_line_renders_ask_block(self):
+        q = _node(content="(to chandler) so how was your week at work?")
+        stmt = _node(content="I love foosball")
+        ctx = await self._build([_seed(stmt), _seed(q)])
+        assert len(ctx.question_exemplars) == 1
+        assert "[ASK]" in ctx.render()
+        assert "QUESTIONS YOU ASK" in ctx.render()
+
+    async def test_lane_suppressed_when_inbound_is_a_question(self):
+        # Answering a question is the natural move there — the lane only
+        # injects question register on declarative drift (otherwise it
+        # compounds into answer-with-question ping-pong, r10-final-verify-1).
+        q = _node(content="(to chandler) so how was your week at work?")
+        ctx = await self._build([_seed(q)], message="how's your week been?")
+        assert ctx.question_exemplars == []
+        assert "QUESTIONS YOU ASK" not in ctx.render()
+
+    async def test_no_question_lines_renders_nothing(self):
+        stmt = _node(content="I love foosball")
+        ctx = await self._build([_seed(stmt)])
+        assert ctx.question_exemplars == []
+        assert "QUESTIONS YOU ASK" not in ctx.render()
+
+    async def test_inbound_duplicate_question_line_is_damped(self):
+        # A vault question that merely restates the inbound never renders
+        # (the damping gate runs upstream of the lane).
+        dup = _node(content="hey, how's your week been?")
+        ctx = await self._build(
+            [_seed(dup)], message="hey, how's your week been?"
+        )
+        assert ctx.question_exemplars == []
+        assert ctx.exclusion_counts.get("inbound_duplicate") == 1

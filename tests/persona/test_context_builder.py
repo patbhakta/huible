@@ -250,6 +250,78 @@ class TestEraBoundary:
 
 
 # ---------------------------------------------------------------------------
+# Acceptance: inbound-duplicate damping (HU-2774 engagement lever)
+# ---------------------------------------------------------------------------
+
+
+class TestInboundDuplicateDamping:
+    def _render(self, contents: list[str], message: str):
+        activated = [_activated(_node(content=c, memory_date=None)) for c in contents]
+        return ContextBuilder().filter_and_render(
+            activated, _persona(), RelationshipTier.FAMILY,
+            current_message=message,
+        )
+
+    def test_near_duplicate_of_inbound_excluded_with_audit_ref(self):
+        ctx = self._render(
+            ["(to chandler) hey, how's your week been?"],
+            "hey, how's your week been?",
+        )
+        assert ctx.included_memories == []
+        assert ctx.exclusion_counts.get("inbound_duplicate") == 1
+        assert ctx.excluded_memory_refs[0].reason == "inbound_duplicate"
+
+    def test_topically_adjacent_lines_are_kept(self):
+        ctx = self._render(
+            ["how was your week at work?", "you never ask about my week"],
+            "hey, how's your week been?",
+        )
+        assert len(ctx.included_memories) == 2
+        assert "inbound_duplicate" not in ctx.exclusion_counts
+
+    def test_empty_inbound_disables_the_gate(self):
+        ctx = self._render(["hey, how's your week been?"], "")
+        assert len(ctx.included_memories) == 1
+        assert "inbound_duplicate" not in ctx.exclusion_counts
+
+    def test_mixed_set_keeps_order_drops_only_the_duplicate(self):
+        ctx = self._render(
+            [
+                "Dad loved fishing",
+                "hey, how's your week been?",
+                "I hate Thanksgiving",
+            ],
+            "hey, how's your week been?",
+        )
+        assert [n.content for n in ctx.included_memories] == [
+            "Dad loved fishing",
+            "I hate Thanksgiving",
+        ]
+        assert ctx.exclusion_counts.get("inbound_duplicate") == 1
+
+    def test_gate_runs_after_hard_gates(self):
+        # A private line that near-duplicates the inbound is still excluded as
+        # disclosure_scope when the requester tier cannot see it (first gate
+        # wins, single audit reason per memory).
+        ctx = ContextBuilder().filter_and_render(
+            [
+                _activated(
+                    _node(
+                        content="hey, how's your week been?",
+                        disclosure_scope=DisclosureScope.PRIVATE,
+                        memory_date=None,
+                    )
+                )
+            ],
+            _persona(),
+            RelationshipTier.ACQUAINTANCE,
+            current_message="hey, how's your week been?",
+        )
+        assert ctx.exclusion_counts.get("disclosure_scope") == 1
+        assert "inbound_duplicate" not in ctx.exclusion_counts
+
+
+# ---------------------------------------------------------------------------
 # Acceptance: disclosure scoping (INV-DS)
 # ---------------------------------------------------------------------------
 
@@ -385,6 +457,27 @@ class TestRendering:
         assert "You are speaking with Monica" in ctx.system_prompt
         assert "no introductions" in ctx.system_prompt
         assert "don't know" not in ctx.system_prompt
+        # HU-2774 engagement affordance: the friends line names curiosity
+        # (corpus asks questions at ~1/3 of lines; generation drifts
+        # declarative under banter).
+        assert "curiosity" in ctx.system_prompt
+
+    def test_fictional_persona_gets_conversation_dynamics_bound(self):
+        # HU-2774: one invented "did you just echo me?" accusation collapsed
+        # a whole run into a verbatim repeat loop. Fictional personas get a
+        # scene-not-conversation bound; memorial prompts keep their shape.
+        persona = _persona()
+        persona.metadata = {"framing_class": "fictional"}
+        ctx = ContextBuilder().filter_and_render(
+            [], persona, RelationshipTier.CLOSE_FRIEND, user_name="Monica"
+        )
+        assert "Play the scene, not the conversation" in ctx.system_prompt
+
+    def test_memorial_persona_has_no_dynamics_bound(self):
+        ctx = ContextBuilder().filter_and_render(
+            [], _persona(), RelationshipTier.CLOSE_FRIEND, user_name="Monica"
+        )
+        assert "Play the scene, not the conversation" not in ctx.system_prompt
 
     def test_interlocutor_unknown_renders_stranger_line(self):
         # No name = first contact: the persona is told meeting-new-people

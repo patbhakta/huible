@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 
 from huible.api.app import (
     WORKING_MEMORY_SERVICE_ID_METADATA_KEY,
+    _claim_conversation_index,
     _writeback_conversation_memory,
     create_app,
 )
@@ -200,3 +201,68 @@ def test_wm_service_id_metadata_key_wired() -> None:
     assert client._service_id == "default"
     assert scoped._service_id == "huible-chandler"
     assert WORKING_MEMORY_SERVICE_ID_METADATA_KEY == "working_memory_service_id"
+
+
+def _helper_app() -> FastAPI:
+    app = FastAPI()
+    app.state.settings = Settings(conversation_writeback_enabled=True)
+    return app
+
+
+def test_index_claims_are_per_persona_per_conversation() -> None:
+    """HU-2774 regression (r10-noon-verify-1): the episodic index used to key
+    on ``turn_count == 1`` — the first turn of the SHARED conversation — so
+    in a dual-persona run only the persona who spoke the literal first turn
+    ever got an index, and persona 2's cross-session recall was structurally
+    unanswerable. Each side of a shared conversation now claims its own
+    index on its own first completed turn."""
+    app = _helper_app()
+    persona_a, persona_b = uuid4(), uuid4()
+    shared_conv = "dual-run-shared"
+    assert _claim_conversation_index(app, persona_a, shared_conv) is True
+    # Persona B's first turn of the SAME shared conversation still claims.
+    assert _claim_conversation_index(app, persona_b, shared_conv) is True
+    # Later turns never re-claim.
+    assert _claim_conversation_index(app, persona_a, shared_conv) is False
+    assert _claim_conversation_index(app, persona_b, shared_conv) is False
+    # A fresh conversation id re-arms the claim.
+    assert _claim_conversation_index(app, persona_a, "next-run") is True
+    # No conversation id -> never.
+    assert _claim_conversation_index(app, persona_a, None) is False
+
+
+def test_second_persona_first_turn_in_shared_conversation_writes_index() -> None:
+    """Direct helper-level version of the dual-persona shape: persona B's
+    first completed turn of a conversation persona A already spoke in must
+    persist B's exchange AND B's own index."""
+    app = _helper_app()
+    persona_b = PersonaConfig(id=PERSONA_ID, name="Monica")
+    backend = InMemoryMemoryBackend()
+    kwargs = dict(
+        persona=persona_b,
+        persona_id=PERSONA_ID,
+        backend=backend,
+        user_message="Oh, can't complain — which for me is basically a full week of complaining.",
+        persona_reply="Chandler, did you just quote me back to me?",
+        conversation_id=CONV,
+        user_name="Chandler",
+    )
+    loop = asyncio.new_event_loop()
+    try:
+        # Persona A "spoke first": claim the index under a different id.
+        other = uuid4()
+        assert _claim_conversation_index(app, other, CONV) is True
+
+        assert loop.run_until_complete(
+            _writeback_conversation_memory(app, **kwargs)
+        ) is True
+    finally:
+        loop.close()
+    memories = [
+        m for m in backend.memories.values() if m.source_type == SourceType.CONVERSATION
+    ]
+    assert len(memories) == 2  # exchange + index, despite turn_count semantics
+    index = [m for m in memories if m.metadata.get("kind") == "conversation_index"]
+    assert len(index) == 1
+    assert "the first thing Chandler said to Monica" in index[0].content
+    assert "can't complain" in index[0].content

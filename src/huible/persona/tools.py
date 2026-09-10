@@ -13,6 +13,14 @@ sanctioned escape hatch):
    gives the persona a *sanctioned* temporal anchor without piercing the era
    wall (the in-world date can never move past the boundary).
 
+   HU-2774: a persona may pin the time-of-day via
+   ``metadata["in_world_clock"] = "noon"`` — machine-driven conversations
+   (battery flows) run at the *caller's* wall-clock hour, and a 3 AM prompt
+   clock collapses engagement (personas nag each other to sleep instead of
+   talking). ``"noon"`` pins the in-world clock to 12:00 local while the
+   era-gated date pinning is unchanged. Absent/invalid → the real
+   time-of-day carries through (fail-safe: existing personas byte-identical).
+
 2. **Caretaker channel** (§1.6b minimal spec + CA C2). Date/time-class
    questions route out-of-persona: a clearly-labeled, non-persona answer from
    the *real* clock. It never speaks in-voice, never feeds the persona corpus
@@ -55,9 +63,12 @@ Design constraints:
 from __future__ import annotations
 
 import re
-from datetime import date, datetime
+from datetime import date, datetime, time
+from typing import Any
 
 __all__ = [
+    "PINNED_NOON",
+    "PERSONA_IN_WORLD_CLOCK_KEY",
     "caretaker_reply",
     "era_clock_system_line",
     "in_world_now",
@@ -67,6 +78,7 @@ __all__ = [
     "is_interest_question",
     "is_temporal_question",
     "parse_era_boundary",
+    "resolve_in_world_time_of_day",
 ]
 
 
@@ -90,7 +102,38 @@ def parse_era_boundary(raw: str | None) -> date | None:
 # --- In-world era clock --------------------------------------------------------
 
 
-def in_world_now(real_now: datetime, boundary: date | None) -> datetime | None:
+#: Per-persona in-world clock mode key inside ``PersonaConfig.metadata``
+#: (HU-2774). ``"noon"`` pins the in-world time-of-day to 12:00 so machine-
+#: driven conversations (battery flows running at the caller's wall-clock
+#: hour) never inherit "3 AM — why are you awake, go to bed" dynamics.
+#: Absent/invalid → the real time-of-day carries through (fail-safe).
+PERSONA_IN_WORLD_CLOCK_KEY = "in_world_clock"
+
+#: The pinned in-world time-of-day for ``in_world_clock = "noon"``.
+PINNED_NOON = time(12, 0)
+
+
+def resolve_in_world_time_of_day(metadata: dict[str, Any] | None) -> time | None:
+    """Resolve the persona's pinned in-world time-of-day from its metadata.
+
+    Returns ``PINNED_NOON`` for ``metadata[PERSONA_IN_WORLD_CLOCK_KEY] ==
+    "noon"``, otherwise ``None`` (the caller then carries the real
+    time-of-day through). Only the exact string ``"noon"`` is honored;
+    absent, mistyped, or unknown values fall back to the wall clock —
+    misconfiguration can only restore the default behavior, never invent a
+    new one.
+    """
+    if not metadata:
+        return None
+    mode = metadata.get(PERSONA_IN_WORLD_CLOCK_KEY)
+    return PINNED_NOON if mode == "noon" else None
+
+
+def in_world_now(
+    real_now: datetime,
+    boundary: date | None,
+    time_of_day: time | None = None,
+) -> datetime | None:
     """The persona's in-world "now", era-gated (never past the boundary).
 
     - Real date still in-era (``real_now.date() <= boundary``): the persona
@@ -101,13 +144,19 @@ def in_world_now(real_now: datetime, boundary: date | None) -> datetime | None:
       carries through (the persona experiences the same hour of day as the
       user; a clock time is not a historical fact and cannot leak an era).
 
+    ``time_of_day`` (HU-2774) overrides the carried-through time — machine-
+    driven conversations pin it (``"noon"`` personas) so the conversation's
+    energy is not set by the battery's wall-clock hour. ``None`` keeps the
+    legacy carry-through byte-identically.
+
     Returns ``None`` when ``boundary`` is ``None`` (fail-closed: no date
     claims at all rather than an unpinned one).
     """
     if boundary is None:
         return None
     pinned_date = min(real_now.date(), boundary)
-    return datetime.combine(pinned_date, real_now.time(), tzinfo=real_now.tzinfo)
+    carry_time = time_of_day if time_of_day is not None else real_now.time()
+    return datetime.combine(pinned_date, carry_time, tzinfo=real_now.tzinfo)
 
 
 def era_clock_system_line(in_world: datetime | None) -> str:

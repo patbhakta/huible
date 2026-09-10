@@ -101,6 +101,7 @@ from huible.persona.tools import (
     is_current_events_question,
     is_emotion_question,
     is_interest_question,
+    resolve_in_world_time_of_day,
 )
 from huible.safety.crisis import UserAffect
 from huible.safety.framing import get_distress_addendum, get_framing
@@ -612,6 +613,12 @@ class PromptContext:
     # Evidence + prompt surface are kept separate: these nodes are rendered
     # in the VOICE EXEMPLARS section, never as activated memories.
     deflection_exemplars: list[MemoryNode] = field(default_factory=list)
+    # HU-2774 question-affordance lane: the persona's OWN question-shaped
+    # vault lines from this turn's post-gate retrieval (register modeling —
+    # the corpus asks questions at ~1/3 of lines; generation drifts
+    # declarative under banter). Prompt surface + evidence, kept separate
+    # from activated memories like the W3 deflection exemplars.
+    question_exemplars: list[MemoryNode] = field(default_factory=list)
     # W4 working memory (M-0R-B): the TencentDB Arm A block (session-gist
     # digest + verbatim excerpts) for this conversation — long-range session
     # state the HISTORY_WINDOW tail would otherwise have evicted (RC-3).
@@ -668,6 +675,8 @@ class PromptContext:
         parts.append(self.memory_blocks if self.memory_blocks else "(none)")
         if self.deflection_exemplars:
             parts.append(_render_exemplar_block(self.deflection_exemplars))
+        if self.question_exemplars:
+            parts.append(_render_question_block(self.question_exemplars))
         if self.interest_exemplars:
             parts.append(_render_interest_block(self.interest_exemplars))
         if self.current_events_exemplars:
@@ -733,10 +742,41 @@ def _check_admissible(
     return True, "admitted"
 
 
+#: Word-Jaccard threshold above which a retrieved vault line is treated as a
+#: near-duplicate of the current inbound message (HU-2774 engagement lever).
+#: Measured against the live failure: the seed "hey, how's your week been?"
+#: against the vault line "(to chandler) hey, how's your week been?" scores
+#: 0.71; unrelated vault lines about the same topic score < 0.30. Deliberately
+#: conservative — only lines that essentially restate the inbound are damped;
+#: topically adjacent lines are the retrieval system working as designed.
+INBOUND_DUPLICATE_JACCARD = 0.65
+
+
+def _inbound_duplicate(content: str, current_message: str) -> bool:
+    """True when a retrieved line near-duplicates the current inbound message.
+
+    Rationale (HU-2774 r9-verify post-mortem): a vault line that essentially
+    restates what the interlocutor just said makes the persona accuse the
+    other of quoting/echoing them ("did you just quote me back to me?") —
+    the meta-storyline that suppresses questions and collapses engagement.
+    Normalized word-set Jaccard; empty inbound never matches.
+    """
+    if not current_message or not content:
+        return False
+    inbound_words = set(re.findall(r"[a-z0-9']+", current_message.lower()))
+    content_words = set(re.findall(r"[a-z0-9']+", content.lower()))
+    if not inbound_words or not content_words:
+        return False
+    overlap = len(inbound_words & content_words)
+    union = len(inbound_words | content_words)
+    return overlap / union >= INBOUND_DUPLICATE_JACCARD
+
+
 def _filter_activated(
     activated: Sequence[ActivatedMemory],
     requester_scope: DisclosureScope,
     era_boundary: date | None,
+    current_message: str = "",
 ) -> tuple[list[ActivatedMemory], dict[str, int], list[ExcludedMemoryRef]]:
     """Apply all hard gates to retrieval output.
 
@@ -744,12 +784,18 @@ def _filter_activated(
     counts map keyed by exclusion reason for audit, and the structured exclusion
     refs (G4 both-directions: tests assert an excluded memory appears here, not
     in ``memory_refs``).
+
+    ``current_message`` (HU-2774) enables the inbound-duplicate damping gate;
+    empty (legacy callers / deterministic tests) keeps the exact pre-existing
+    gate set.
     """
     admissible: list[ActivatedMemory] = []
     counts: dict[str, int] = {}
     excluded: list[ExcludedMemoryRef] = []
     for am in activated:
         ok, reason = _check_admissible(am.node, requester_scope, era_boundary)
+        if ok and _inbound_duplicate(am.node.content, current_message):
+            ok, reason = False, "inbound_duplicate"
         if ok:
             admissible.append(am)
         else:
@@ -803,6 +849,24 @@ def _render_interest_block(exemplars: Sequence[MemoryNode]) -> str:
     """Render the W5 interest-tool section (vault-derived hobby grounding)."""
     lines = [_INTEREST_SECTION_HEADER]
     lines.extend(f"[INTEREST] {_exemplar_line(node)}" for node in exemplars)
+    return "\n".join(lines)
+
+
+#: HU-2774 question-affordance section header. Structural machinery (same
+#: category as the other exemplar headers): it tells the generator these are
+#: the persona's *own* question lines — asking is register the persona
+#: already has, not an instruction to interrogate.
+_QUESTION_SECTION_HEADER = (
+    "QUESTIONS YOU ASK — your own question lines, in your voice. Between "
+    "people who know each other, asking comes naturally; sound like "
+    "yourself."
+)
+
+
+def _render_question_block(exemplars: Sequence[MemoryNode]) -> str:
+    """Render the HU-2774 question-affordance section."""
+    lines = [_QUESTION_SECTION_HEADER]
+    lines.extend(f"[ASK] {_exemplar_line(node)}" for node in exemplars)
     return "\n".join(lines)
 
 
@@ -973,7 +1037,16 @@ def _build_system_prompt(
     # in-world date claims at all) or the caller passed no clock (legacy /
     # deterministic test callers keep the exact pre-W5 prompt shape).
     if real_now is not None:
-        clock_line = era_clock_system_line(in_world_now(real_now, era_boundary))
+        # HU-2774: a "noon" in_world_clock persona pins the time-of-day (a
+        # machine-driven conversation must not inherit the caller's 3 AM
+        # wall clock); everyone else carries the real time through.
+        clock_line = era_clock_system_line(
+            in_world_now(
+                real_now,
+                era_boundary,
+                time_of_day=resolve_in_world_time_of_day(persona.metadata),
+            )
+        )
         if clock_line:
             lines.append(clock_line)
     if persona.death_date:
@@ -984,13 +1057,21 @@ def _build_system_prompt(
     # name renders the stranger line (introducing yourself and asking about
     # them is the natural move). Situational behavioral bound — same
     # category as the tier line it extends, never an adjective sheet.
+    # HU-2774 engagement lever (r10-noon-verify-2): the friends branch names
+    # curiosity explicitly — the corpus asks questions at ~1/3 of lines
+    # (Monica 0.331, Chandler 0.309) but generation drifts declarative under
+    # banter (Monica 0/12 lines in the failing verify), which reads as
+    # disengagement. The clause states the corpus behavior, no numbers, no
+    # quota — an affordance, not a coaching script.
     name = (user_name or "").strip()
     if name:
         lines.append(
             f"You are speaking with {name} — {tier.human_label}. You know "
             f"exactly who you're talking to, so no introductions: react to "
             f"{name} the way you actually would (using their name comes "
-            f"naturally between people who know each other)."
+            f"naturally between people who know each other — and so does "
+            f"curiosity: friends ask each other about their lives, in your "
+            f"own way)."
         )
     else:
         lines.append(
@@ -998,6 +1079,21 @@ def _build_system_prompt(
             "you don't know yet. Of course you want to know who you're "
             "talking to: it's natural to introduce yourself and ask about "
             "them."
+        )
+    # HU-2774 conversational-dynamics bound (fictional personas only —
+    # memorial prompts keep their exact clinical shape). Live finding
+    # (r10-noon-verify-3): one invented "did you just echo me?" accusation
+    # made the whole conversation ABOUT the conversation — a verbatim
+    # repeat loop, zero topical content, questions suppressed on both
+    # sides. The bound keeps hooks/callbacks (the wit criterion) while
+    # ruling out the meta-storyline that kills engagement. Positive first,
+    # negative second: the model must not read this as "stop hooking".
+    if framing_class_key == "fictional":
+        lines.append(
+            "Play the scene, not the conversation: callbacks are how you "
+            "two talk, but the conversation itself is never the topic — no "
+            "'you echoed me' bits, no commenting on who repeated whom, no "
+            "narrating the chat instead of having it."
         )
     # Memory-recall affordance (HU-2774, ordinal-recall probes): when the
     # inbound message directly asks what was said earlier ("what was the very
@@ -1115,6 +1211,15 @@ class ContextBuilder:
     #: admissible lines rendered on a lane-shaped turn. Same doctrine as the
     #: interest cap — the section grounds the talk, it is not a context dump.
     SCOPED_READ_EXEMPLAR_LIMIT = 4
+
+    #: HU-2774 question-affordance lane: max of the persona's OWN question-
+    #: shaped lines rendered from this turn's admissible retrieval. Register
+    #: modeling (the corpus asks questions at ~1/3 of lines; generation
+    #: drifts declarative under banter), never a quota. Calibrated live:
+    #: lane@2 over-drove the band (0.52 vs ceiling 0.45, both personas ~0.5
+    #: — answer-with-question ping-pong); lane@1 plus the inbound-question
+    #: suppression sits between no-lane (Monica 0) and lane@2 (Monica 6).
+    QUESTION_EXEMPLAR_LIMIT = 1
 
     #: How many message-embedded seeds the scoped lanes inspect before the
     #: hard gates thin the set to :data:`SCOPED_READ_EXEMPLAR_LIMIT`. Wider
@@ -1259,6 +1364,7 @@ class ContextBuilder:
         *,
         user_affect: UserAffect = UserAffect.NEUTRAL,
         deflection_exemplars: Sequence[MemoryNode] = (),
+        question_exemplars: Sequence[MemoryNode] = (),
         interest_exemplars: Sequence[MemoryNode] = (),
         current_events_exemplars: Sequence[MemoryNode] = (),
         emotion_exemplars: Sequence[MemoryNode] = (),
@@ -1303,6 +1409,7 @@ class ContextBuilder:
             activated,
             requester_scope=requester_tier.disclosure_scope,
             era_boundary=era_boundary,
+            current_message=current_message,
         )
 
         memory_blocks = "\n".join(_format_memory_block(am.node) for am in admissible)
@@ -1312,6 +1419,7 @@ class ContextBuilder:
             self.WORKING_MEMORY_HEAD_CAP,
         )
         wall_exemplars = list(deflection_exemplars)
+        questions = list(question_exemplars)
         interest = list(interest_exemplars)
         world = list(current_events_exemplars)
         feelings = list(emotion_exemplars)
@@ -1337,6 +1445,7 @@ class ContextBuilder:
             exclusion_counts=exclusion_counts,
             excluded_memory_refs=excluded_refs,
             deflection_exemplars=wall_exemplars,
+            question_exemplars=questions,
             interest_exemplars=interest,
             current_events_exemplars=world,
             emotion_exemplars=feelings,
@@ -1444,13 +1553,32 @@ class ContextBuilder:
         # working-memory/history section, not vault retrieval, and wall
         # routing there dead-answered the recall probe.
         exemplars: list[MemoryNode] = []
+        question_exemplars: list[MemoryNode] = []
         if deflection_probe_embedding is not None:
             era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
             admissible, _, _ = _filter_activated(
                 activated,
                 requester_scope=requester_tier.disclosure_scope,
                 era_boundary=era_boundary,
+                current_message=current_message,
             )
+            # HU-2774 question-affordance lane: the persona's own question-
+            # shaped lines from this turn's post-gate retrieval (register
+            # modeling, not a quota). The corpus asks questions at ~1/3 of
+            # lines but generation drifts declarative under banter (Monica
+            # 0/12 in r10-noon-verify-2) — seeing her own "?" lines each
+            # turn keeps her natural register in view. Suppressed when the
+            # inbound is itself a question: answering a question is the
+            # natural move there, and the lane otherwise compounds into
+            # answer-with-question ping-pong (r10-final-verify-1, rate
+            # 0.52 > ceiling 0.45). Rides the same hard gates +
+            # inbound-duplicate damping as every rendered line.
+            if not current_message.rstrip().endswith("?"):
+                question_exemplars = [
+                    am.node
+                    for am in admissible
+                    if am.node.content.rstrip().endswith("?")
+                ][: self.QUESTION_EXEMPLAR_LIMIT]
             recall_exempt = is_memory_recall_question(current_message)
             if (not admissible and not recall_exempt) or (
                 not recall_exempt and _competence_wall_triggered(current_message)
@@ -1553,6 +1681,7 @@ class ContextBuilder:
             current_message=current_message,
             user_affect=user_affect,
             deflection_exemplars=exemplars,
+            question_exemplars=question_exemplars,
             interest_exemplars=interests,
             current_events_exemplars=world,
             emotion_exemplars=feelings,

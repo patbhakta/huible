@@ -1937,7 +1937,6 @@ def _register_routes(application: FastAPI) -> None:
             user_message=body.message,
             persona_reply=response_text,
             conversation_id=body.conversation_id,
-            turn_count=_session_meta(application, body.conversation_id).turn_count,
             user_name=body.user_name,
             skip=budget_fallback,
         )
@@ -2814,6 +2813,41 @@ def _record_turn(
 WORKING_MEMORY_SERVICE_ID_METADATA_KEY = "working_memory_service_id"
 
 
+def _claim_conversation_index(
+    application: FastAPI, persona_id: UUID, conversation_id: str | None
+) -> bool:
+    """Claim the right to write this conversation's episodic index (HU-2774).
+
+    The index used to key on ``turn_count == 1`` — the first turn of the
+    CONVERSATION. In a dual-persona run both personas share one conversation
+    id, so only the persona who spoke the literal first turn ever got an
+    index; the other side's cross-session recall probe was structurally
+    unanswerable (r10-noon-verify-1, 2026-09-10: Monica answered "this is
+    literally the first text you've sent me today" — her store held no main
+    index at all). The claim is per (persona, conversation): each side of a
+    shared conversation writes its own index on ITS first completed turn.
+
+    In-memory by design (application.state): an engine restart
+    mid-conversation can re-claim and write a second index whose quoted
+    "first message" is the post-restart first inbound — acceptable (the
+    recall lane picks the freshest index; evidence runs always use fresh
+    conversation ids and a memory reset between runs).
+    """
+    if not conversation_id:
+        return False
+    keys: set[tuple[str, str]] | None = getattr(
+        application.state, "conversation_index_claims", None
+    )
+    if keys is None:
+        keys = set()
+        application.state.conversation_index_claims = keys
+    key = (str(persona_id), str(conversation_id))
+    if key in keys:
+        return False
+    keys.add(key)
+    return True
+
+
 async def _writeback_conversation_memory(
     application: FastAPI,
     *,
@@ -2823,7 +2857,6 @@ async def _writeback_conversation_memory(
     user_message: str,
     persona_reply: str,
     conversation_id: str | None,
-    turn_count: int | None = None,
     user_name: str | None = None,
     skip: bool = False,
 ) -> bool | None:
@@ -2874,7 +2907,9 @@ async def _writeback_conversation_memory(
     if not user_text or not reply_text:
         return False
     content = f"{user_text}\n{persona.name or 'they'} said: {reply_text}"
-    # Episodic index (first turn of a conversation only): an ordinal-recall
+    # Episodic index (this persona's first completed turn of the
+    # conversation — claimed per (persona, conversation), see
+    # ``_claim_conversation_index``): an ordinal-recall
     # pointer whose CONTENT matches "what was the very first thing i said to
     # you?" queries. The plain exchange memory stores the user's words, but a
     # recall probe asks about the EVENT, not the words — vector search on the
@@ -2882,7 +2917,7 @@ async def _writeback_conversation_memory(
     # 2026-09-10, smoke-3-s2). The index line carries the probe's own
     # vocabulary verbatim plus the quoted first message.
     index_node = None
-    if turn_count == 1:
+    if _claim_conversation_index(application, persona_id, conversation_id):
         who = (user_name or "").strip() or "they"
         index_node = MemoryNode(
             id=uuid4(),

@@ -87,10 +87,30 @@ AI_TELLS = [
     (r"\bi'm not (?:allowed|able) to\b", "not-allowed"),
     (r"\bi apologize\b", "i-apologize"),
     (r"\b(?:tv|sitcom|actor|actress|character|show|series|episode)\b", "sitcom-meta"),
-    (r"\bfriends\b", "sitcom-name"),
+    # Corpus revision 2026-09-10 (r10-ask-verify false positives, F3
+    # doctrine): bare \bfriends\b flagged "the vacuum and I are just
+    # friends" — the corpus has 58 everyday "friends" lines ("meet my
+    # friends", "my feet's best friends") and exactly ONE TV-context line
+    # ("Previously on Friends."). Flag only TV-context collocations; bare
+    # "sitcom"/"tv"/"episode" stays covered by sitcom-meta above.
+    (
+        r"\bpreviously on friends\b|\b(?:tv|television) show friends\b"
+        r"|\bthe show[,.!]?\s+friends\b|\bepisode of friends\b"
+        r"|\bfriends[,.!]?\s+(?:tv|sitcom|show)\b",
+        "sitcom-name",
+    ),
     (r"\bassist(?:ant|ance)\b", "assistant-speak"),
     (r"\bdatabase|knowledge base|training data\b", "ml-speak"),
-    (r"\bfake[- ]llm\b|\bmock\b", "provider-tell"),
+    # Corpus revision 2026-09-10 (same pass): bare \bmock\b flagged "Don't
+    # mock it — it's the most loyal thing in that cabinet." The corpus's
+    # only mock* hits are ridicule-sense ("Are you mocking me?"), zero
+    # provider-sense. Flag mock only with a technical object.
+    (
+        r"\bfake[- ]llm\b"
+        r"|\bmock(?:ing|ed|s)?\s+(?:response|data|answers?|replies?|provider|api|llm|generation|server|endpoint|model)\b"
+        r"|\bis a mock\b",
+        "provider-tell",
+    ),
 ]
 DEFENSE_TELLS = [
     (r"\bwhy do you (?:want|need) to know\b", "interrogating-asker"),

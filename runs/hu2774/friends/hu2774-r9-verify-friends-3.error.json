@@ -1,0 +1,5 @@
+{
+ "run_id": "hu2774-r9-verify-friends-3",
+ "scenario": "friends",
+ "error": "s2 turn 1: engine error for 3ef60bec-79d2-5e31-8d9e-e856bb1ebfea: {'status': 500, 'detail': {}}"
+}
