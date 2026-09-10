@@ -76,13 +76,17 @@ RECALL_TURN = 12
 RECALL_PROBE = "wait wait — what was the very first thing i said to you today?"
 
 #: AI-tell battery: any hit in a persona line is a violation.
+#: "script" dropped from sitcom-meta (r9-verify finding 2026-09-10: "the only
+#: script I follow is my cleaning schedule" is everyday vocabulary — the word
+#: alone carries no show meta; the meta CLASSES are show/episode/actor/
+#: actress/sitcom/tv/series/character).
 AI_TELLS = [
     (r"\bas an ai\b", "as-an-ai"),
     (r"\blanguage model\b", "language-model"),
     (r"\bi (?:cannot|can't) (?:help|assist|disclose|reveal|share)\b", "refusal-assist"),
     (r"\bi'm not (?:allowed|able) to\b", "not-allowed"),
     (r"\bi apologize\b", "i-apologize"),
-    (r"\b(?:tv|sitcom|actor|actress|character|show|series|episode|script)\b", "sitcom-meta"),
+    (r"\b(?:tv|sitcom|actor|actress|character|show|series|episode)\b", "sitcom-meta"),
     (r"\bfriends\b", "sitcom-name"),
     (r"\bassist(?:ant|ance)\b", "assistant-speak"),
     (r"\bdatabase|knowledge base|training data\b", "ml-speak"),
@@ -129,20 +133,35 @@ def is_platform_text(text, provider):
     low = (text or "").casefold()
     return any(marker.casefold() in low for marker in PLATFORM_TEXT_MARKERS)
 
-#: Priors-leak tells per persona (zero-corpus classes measured on the v2 vault):
-#: - SELF-name announcement (own surname / own full name). System prompts carry
-#:   first names only, so a persona voicing their own surname comes from model
-#:   priors (run-2 t24 "It's still Bing"). OTHER-person full-name address is
-#:   canon-legal (Monica's vault: "god bless you chandler bing!", DLG-03165)
-#:   and is NOT flagged. Conservatism note: canon self-surname jokes exist but
-#:   are rare (Chandler vault: 25/3459 lines contain "bing"); a false FAIL is
-#:   the safe direction for the founder bar.
-#: - trademark cadence "could this/i BE any more" — 0 occurrences in the
-#:   Chandler v2 vault (hu2773 dialog study); Monica's vault holds one canon
-#:   mocking line, so the cadence is evidence-legal for her voice only.
+#: Priors-leak tells per persona — UNSOLICITED self-name announcement only.
+#: Corpus revision 2026-09-10 (r8-friends-1 post-mortem): the original
+#: zero-corpus doctrine ("a persona voicing their own surname comes from
+#: model priors") is contradicted by the vault itself — Monica's corpus has
+#: "i'm monica geller" / "this is monica geller" self-intros (22/3534 lines
+#: mention 'geller') and Chandler's has "this is chandler bing!" (answering
+#: machine). A self-name GIVEN IN DIRECT RESPONSE to an identity/model
+#: elicitation ("what's your name?", "what model are you?") is therefore
+#: canon-legal in-voice evidence; an UNSOLICITED cold-open announcement at a
+#: person who already knows you (or mid-conversation) stays a tell. This
+#: mirrors the SELF_INTRO_TELLS scoping: the M-0 violation class is the
+#: unsolicited announcement, never the answer to a direct question.
 SURNAME_TELLS = {CHANDLER_ID: r"\bbing\b", MONICA_ID: r"\bgeller\b"}
 FULLNAME_TELLS = {CHANDLER_ID: r"\bchandler bing\b", MONICA_ID: r"\bmonica geller\b"}
 CADENCE_TELLS = {CHANDLER_ID: r"could (?:this|i|we) be any"}
+
+#: Identity/model elicitation: the inbound message directly asks who the
+#: persona is or what it is. A self-name in the reply to one of these is
+#: evidence-legal (see SURNAME_TELLS note).
+ELICITATION_RE = re.compile(
+    r"\b(what'?s your name|who are you|what model|which model|are you an? "
+    r"ai|are you a (?:bot|robot|chatbot|computer)|did a company write|"
+    r"are you real)\b"
+)
+
+
+def _reply_is_elicited(turn):
+    """True when the inbound message directly elicited identity/model info."""
+    return bool(ELICITATION_RE.search((turn.get("inbound") or "").casefold()))
 
 #: Adversarial AI-tell probe set (CEO bar raise 2026-09-09, criterion 5):
 #: the tell battery must hold under DIRECT elicitation attempts, not just
@@ -210,7 +229,7 @@ def load_keys():
     return {CHANDLER_ID: entries[CHANDLER_ID], MONICA_ID: entries[MONICA_ID]}
 
 
-def post(path, key, payload, tries=2):
+def post(path, key, payload, tries=4):
     body = json.dumps(payload).encode()
     last = None
     for a in range(tries):
@@ -325,52 +344,49 @@ def run_conversation(args, keys):
 
 
 def run_session2(args, keys, s1_transcript, user_name_for):
-    """Session 2 under a FRESH conversation id: the working-memory session is
-    new, so cross-session recall must come from persisted memory (TencentDB /
-    pgvector), not the context window. Cross-session recall probes first
-    ("what was the very first thing i said to you earlier?"), then a short
-    natural wind-down, then the adversarial AI-tell probe set (2/persona)."""
-    conv2 = f"{args.run_id}-s2"
-    for pid, key in keys.items():
-        if not consent(pid, key, conv2):
-            raise SystemExit(f"s2 consent failed for {pid}")
-    print("session 2 consent recorded (fresh conversation id -> persisted-memory path)",
-          flush=True)
-    xs_msg = "wait wait — what was the very first thing i said to you earlier?"
-    plan = ([("xsession_probe", xs_msg)] * 2
-            + [("talk", None)] * 2
-            + [("adversarial_probe", p) for p in ADVERSARIAL_PROBES])
-    transcript = []
-    last_text = s1_transcript[-1]["text"] if s1_transcript else ""
-    for i, (kind, msg) in enumerate(plan):
-        speaker = CHANDLER_ID if i % 2 == 0 else MONICA_ID
-        if msg is None:
-            msg = last_text
-        t0 = time.time()
-        out, err = chat(speaker, keys[speaker], msg, conv2,
-                        user_name=user_name_for(speaker))
-        if err or out is None:
-            raise SystemExit(f"s2 turn {i + 1}: engine error for {speaker}: {err}")
-        out.update({"turn": i + 1, "speaker": speaker,
-                    "speaker_name": DISPLAY[speaker],
-                    "talked_to": user_name_for(speaker),
-                    "inbound": msg, "kind": kind,
-                    "platform_text": is_platform_text(out["text"], out["provider"]),
-                    "latency_s": round(time.time() - t0, 2)})
-        transcript.append(out)
-        last_text = out["text"]
-        print(f"[s2-{i + 1:02d}] {DISPLAY[speaker]}<-'{msg[:44]}' "
-              f"-> '{out['text'][:60]}' (mem={out['memory_refs']} "
-              f"wm={out['wm_chars']} {out['provider']})", flush=True)
-        if out["platform_text"]:
-            print(f"PLATFORM TEXT in session 2 at turn {i + 1} — stopping s2",
-                  flush=True)
-            break
-        time.sleep(1)
-    return {"conversation_id": conv2,
-            "first_inbound": {CHANDLER_ID: args.seed,
+    """Session 2: one FRESH conversation id PER PERSONA (cross-session recall
+    + adversarial AI-tell probes must be answered independently — a shared
+    session let the second persona parrot the first's answer, r9-verify
+    finding 2026-09-10). The working-memory session is new, so cross-session
+    recall must come from persisted memory, not the context window."""
+    xs_msg = ("wait wait — earlier, in our last conversation — what was the "
+              "very first thing i said to you?")
+    bridge = "haha okay okay, you actually remembered. alright, one more thing —"
+    s2_out = {}
+    for speaker in (CHANDLER_ID, MONICA_ID):
+        conv2 = f"{args.run_id}-s2-{DISPLAY[speaker].lower()}"
+        if not consent(speaker, keys[speaker], conv2):
+            raise SystemExit(f"s2 consent failed for {speaker}")
+        plan = [("xsession_probe", xs_msg), ("talk", bridge)] + [
+            ("adversarial_probe", p) for p in ADVERSARIAL_PROBES
+        ]
+        transcript = []
+        for i, (kind, msg) in enumerate(plan):
+            t0 = time.time()
+            out, err = chat(speaker, keys[speaker], msg, conv2,
+                            user_name=user_name_for(speaker))
+            if err or out is None:
+                raise SystemExit(
+                    f"s2 turn {i + 1}: engine error for {speaker}: {err}")
+            out.update({"turn": i + 1, "speaker": speaker,
+                        "speaker_name": DISPLAY[speaker],
+                        "talked_to": user_name_for(speaker),
+                        "inbound": msg, "kind": kind,
+                        "platform_text": is_platform_text(out["text"], out["provider"]),
+                        "latency_s": round(time.time() - t0, 2)})
+            transcript.append(out)
+            print(f"[s2-{DISPLAY[speaker]}-{i + 1:02d}]<-'{msg[:40]}' "
+                  f"-> '{out['text'][:60]}' (mem={out['memory_refs']} "
+                  f"wm={out['wm_chars']} {out['provider']})", flush=True)
+            if out["platform_text"]:
+                print(f"PLATFORM TEXT in session 2 ({DISPLAY[speaker]}) at "
+                      f"turn {i + 1} — stopping this session", flush=True)
+                break
+            time.sleep(1)
+        s2_out[speaker] = {"conversation_id": conv2, "transcript": transcript}
+    return {"first_inbound": {CHANDLER_ID: args.seed,
                               MONICA_ID: s1_transcript[0]["text"]},
-            "transcript": transcript}
+            "sessions": s2_out}
 
 
 # --- evaluator ---------------------------------------------------------------
@@ -491,16 +507,17 @@ def eval_transcript(transcript, opener, scenario="stranger", s2=None):
                         "reply": t["text"], "wm_chars": t["wm_chars"]})
     xs = []
     if s2:
-        for t in s2["transcript"]:
-            if t["kind"] != "xsession_probe":
-                continue
-            want = content_words(s2["first_inbound"][t["speaker"]])
-            got = content_words(t["text"])
-            hit = bool(want & got) or re.search(
-                r"\b(already asked|asked me that|first thing you (?:said|asked))\b",
-                t["text"].casefold()) is not None
-            xs.append({"turn": t["turn"], "persona": t["speaker_name"],
-                       "hit": hit, "reply": t["text"]})
+        for pid, sess in s2["sessions"].items():
+            for t in sess["transcript"]:
+                if t["kind"] != "xsession_probe":
+                    continue
+                want = content_words(s2["first_inbound"][t["speaker"]])
+                got = content_words(t["text"])
+                hit = bool(want & got) or re.search(
+                    r"\b(already asked|asked me that|first thing you (?:said|asked))\b",
+                    t["text"].casefold()) is not None
+                xs.append({"turn": t["turn"], "persona": t["speaker_name"],
+                           "hit": hit, "reply": t["text"]})
     checks["memory_recall"] = {
         "pass": bool(recalls) and all(r["hit"] for r in recalls)
                 and (not xs or all(x["hit"] for x in xs)),
@@ -520,19 +537,26 @@ def eval_transcript(transcript, opener, scenario="stranger", s2=None):
     # stranger scenario they apply only to turn 0 — the cold-open reply the
     # engine's identity guard already enforces first-name-only there.
     tells = []
-    all_lines = list(transcript) + (list(s2["transcript"]) if s2 else [])
+    all_lines = list(transcript)
+    if s2:
+        for sess in s2["sessions"].values():
+            all_lines.extend(sess["transcript"])
     for t in all_lines:
         if t.get("platform_text"):
             tells.append({"turn": t["turn"], "tell": "platform-text",
                           "text": t["text"][:120]})
         name_tells_active = scenario == "friends" or t["turn"] == 0
-        for pat, tag in AI_TELLS:
-            if re.search(pat, t["text"].casefold()):
+        # Quotation exemption (r9-verify finding 2026-09-10): a persona
+        # echoing the interlocutor's own words is canon-human ("if I were a
+        # chatbot I'd have funnier material" — the word came from the probe,
+        # not the persona's self-concept). A tell hit is skipped when the
+        # matched span is present in the inbound message being replied to.
+        inbound_low = (t.get("inbound") or "").casefold()
+        for pat, tag in AI_TELLS + ADVERSARIAL_TELLS:
+            m = re.search(pat, t["text"].casefold())
+            if m and m.group(0) not in inbound_low:
                 tells.append({"turn": t["turn"], "tell": tag, "text": t["text"]})
-        for pat, tag in ADVERSARIAL_TELLS:
-            if re.search(pat, t["text"].casefold()):
-                tells.append({"turn": t["turn"], "tell": tag, "text": t["text"]})
-        if name_tells_active:
+        if name_tells_active and not _reply_is_elicited(t):
             surname = SURNAME_TELLS.get(t["speaker"])
             if surname and re.search(surname, t["text"].casefold()):
                 tells.append({"turn": t["turn"], "tell": "self-surname",
@@ -564,7 +588,7 @@ def main():
     ap.add_argument('--out-dir', default='/root/repos/huible/runs/hu2774')
     ap.add_argument('--seed', default=None,
                     help="opener; default: stranger='hi, whats your name?', "
-                         "friends='hey, you free tonight?'")
+                          "friends='hey, how's your week been?'")
     ap.add_argument('--session2', action=argparse.BooleanOptionalAction, default=True,
                     help="session-2 phase (cross-session recall + adversarial "
                          "AI-tell probes) under a fresh conversation id; "
@@ -572,7 +596,7 @@ def main():
     args = ap.parse_args()
     if not args.seed:  # None or '' (Kestra empty default) -> scenario default
         args.seed = ("hi, whats your name?" if args.scenario == "stranger"
-                     else "hey, you free tonight?")
+                     else "hey, how's your week been?")
     args.out_dir = args.out_dir.rstrip('/') + f"/{args.scenario}"
 
     keys = load_keys()
@@ -601,13 +625,14 @@ def main():
         tag = f"  [{t['kind']}]" if t["kind"] != "talk" else ""
         md.append(f"**t{t['turn']:02d} {t['speaker_name']}**{to}: {t['text']}{tag}")
     if s2:
-        md += ["", f"## session 2 (`{s2['conversation_id']}` — fresh "
-                   f"conversation id: cross-session recall + adversarial probes)",
-               ""]
-        for t in s2["transcript"]:
-            tag = f"  [{t['kind']}]" if t["kind"] != "talk" else ""
-            md.append(f"**s2-t{t['turn']:02d} {t['speaker_name']}**: "
-                      f"{t['text']}{tag}")
+        for pid, sess in s2["sessions"].items():
+            md += ["", f"## session 2 — {DISPLAY[pid]} (`{sess['conversation_id']}`"
+                       f" — fresh conversation id: cross-session recall +"
+                       f" adversarial probes)", ""]
+            for t in sess["transcript"]:
+                tag = f"  [{t['kind']}]" if t["kind"] != "talk" else ""
+                md.append(f"**s2-t{t['turn']:02d} {t['speaker_name']}**: "
+                          f"{t['text']}{tag}")
     (out / f"{args.run_id}-transcript.md").write_text("\n".join(md) + "\n")
 
     print(json.dumps({k: v for k, v in verdict.items() if k != 'criteria'},

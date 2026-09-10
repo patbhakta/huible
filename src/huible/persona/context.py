@@ -261,9 +261,11 @@ _MEMORY_RECALL_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
     re.compile(pattern, re.IGNORECASE)
     for pattern in (
         r"\bfirst\s+thing\s+i\s+said\b",
+        r"\bfirst\s+thing\s+you\s+said\b",
         r"\bwhat\s+did\s+i\s+(?:say|ask)\b",
         r"\bhow\s+did\s+(?:this|our)\s+conversation\s+start\b",
         r"\bwhat\s+(?:was\s+)?my\s+(?:very\s+)?first\b",
+        r"\bwhat\s+was\s+the\s+very\s+first\b",
         r"\bremember\s+what\s+i\s+(?:said|asked)\b",
     )
 )
@@ -487,6 +489,17 @@ class PersonaConfig:
 #: before retrieval is enabled; derivation procedure:
 #: ``docs/evidence/hu2673_c3_activation_floor_derivation_20260905.md``.
 RETRIEVAL_ACTIVATION_FLOOR_KEY = "retrieval_activation_floor"
+
+#: Per-persona framing-class key inside ``PersonaConfig.metadata``
+#: (HU-2774). ``"fictional"`` renders the character-framing block
+#: (``huible.safety.framing.FICTIONAL_FRAMING_BLOCK``) instead of the
+#: memorial reality-framing block; ``"memorial"`` or absent keeps the
+#: clinical default. Invalid values fall back to ``"memorial"``.
+PERSONA_FRAMING_CLASS_KEY = "framing_class"
+
+#: Ordinal-recall probe shape (HU-2774): the inbound message directly asks
+#: what was said/asked earlier. Detection reuses :func:`is_memory_recall_question`
+#: (the recall-affordance line and the ordinal-index lane key on it).
 
 #: Sanity band for any *explicit* activation floor (the settings default and
 #: the per-persona override alike). Below it the inclusion gate is a no-op
@@ -905,6 +918,7 @@ def _build_system_prompt(
     competence_wall: bool = False,
     real_now: datetime | None = None,
     user_name: str | None = None,
+    current_message: str = "",
 ) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
@@ -924,12 +938,26 @@ def _build_system_prompt(
     Returns ``(system_prompt, constraints, framing_version, distress_grounding)``
     so callers can surface the framing revision + distress flag on the trace.
     """
-    framing = get_framing(persona.name)
+    framing_class_key = (persona.metadata or {}).get(PERSONA_FRAMING_CLASS_KEY)
+    if not isinstance(framing_class_key, str) or framing_class_key not in (
+        "memorial",
+        "fictional",
+    ):
+        # Absent/invalid class -> the clinical memorial default (fail-safe:
+        # misconfiguration can only make the framing more conservative).
+        framing_class_key = "memorial"
+    framing = get_framing(persona.name, framing_class_key)
     boundary_label = era_boundary.isoformat() if era_boundary else persona.era_knowledge_boundary
 
     lines: list[str] = [framing.text]
     lines.append("")  # blank separator between framing and persona skeleton
-    lines.append(f"You are embodying {persona.name}.")
+    # Memorial personas are "embodying" a real person (representation framing);
+    # fictional personas ARE the character (HU-2774) — "embodying" would
+    # re-import the copy/actor framing the fictional block just removed.
+    if framing_class_key == "fictional":
+        lines.append(f"You are {persona.name}.")
+    else:
+        lines.append(f"You are embodying {persona.name}.")
     if persona.age_at_death is not None:
         lines.append(f"You lived to {persona.age_at_death} years old.")
     # W3 (description-free prompt, HU-2309 v1.8 §1.7.2): the hand-written
@@ -970,6 +998,23 @@ def _build_system_prompt(
             "you don't know yet. Of course you want to know who you're "
             "talking to: it's natural to introduce yourself and ask about "
             "them."
+        )
+    # Memory-recall affordance (HU-2774, ordinal-recall probes): when the
+    # inbound message directly asks what was said earlier ("what was the very
+    # first thing i said to you?"), grant the recall and direct the answer to
+    # the CONTENT. Without it the model holds the retrieved memory but
+    # answers with meta-attitude ("nobody remembers anything at 2:30 AM") —
+    # verified live 2026-09-10. Rendered ONLY on probe-shaped messages so
+    # ordinary turns keep the exact pre-existing prompt shape. The last
+    # sentence keeps the no-invention constraint authoritative.
+    if is_memory_recall_question(current_message):
+        lines.append(
+            "You remember what was said between you two, even from earlier "
+            "conversations. When asked what someone first said or asked, "
+            "SHOW it: quote or closely paraphrase what they actually said. "
+            "Saying only that you remember, or that it was 'the first "
+            "thing,' without the words, is not an answer. Never invent an "
+            "exchange you don't actually remember."
         )
     # Channel shape (Stage 0 texting): bounds the reply to the persona's own
     # texting length register and compresses mandated disclosure to one line
@@ -1279,6 +1324,7 @@ class ContextBuilder:
             competence_wall=bool(wall_exemplars),
             real_now=real_now,
             user_name=user_name,
+            current_message=current_message,
         )
 
         return PromptContext(
@@ -1477,6 +1523,28 @@ class ContextBuilder:
                 seed_k=self.SCOPED_READ_SEED_K,
             )
 
+        # HU-2774 ordinal-recall lane: on recall-probe-shaped turns, put the
+        # best conversation-index memory VERBATIM into the working-memory
+        # section — the strongest prompt position, mirroring the gateway's
+        # in-session ordinal handling (matchOrdinalProbe). The exchange
+        # memories alone lose to the persona voice ("nobody remembers
+        # anything at 2:30 AM", verified live 2026-09-10); the index line
+        # carries the probe's own vocabulary so recall has its content at
+        # hand. Gates ride the same hard path as every other lane (confidence,
+        # disclosure, era); no index found renders nothing (B2 doctrine).
+        if is_memory_recall_question(current_message):
+            index_line = await self._ordinal_index_line(
+                backend=backend,
+                persona=persona,
+                requester_tier=requester_tier,
+                query_embedding=query_embedding_content,
+            )
+            if index_line:
+                working_memory = (
+                    f"{index_line}\n{working_memory}".strip() if working_memory
+                    else index_line
+                )
+
         return self.filter_and_render(
             activated,
             persona=persona,
@@ -1493,6 +1561,46 @@ class ContextBuilder:
             real_now=real_now,
             user_name=user_name,
         )
+
+    async def _ordinal_index_line(
+        self,
+        *,
+        persona: PersonaConfig,
+        requester_tier: RelationshipTier,
+        backend: MemoryBackend,
+        query_embedding: list[float],
+    ) -> str:
+        """Best conversation-index memory content for a recall-probe turn.
+
+        Searches the persona's own store for ``metadata.kind ==
+        'conversation_index'`` nodes (written by the chat write-back lane on
+        each conversation's first turn), applies the same hard gates as the
+        prompt firewall, and returns the freshest hit's content verbatim.
+        Empty string when the backend has none (fresh persona) or nothing
+        survives the gates — the lane never fabricates.
+        """
+        try:
+            results = await backend.search_by_content(
+                persona.id, query_embedding, top_k=16
+            )
+        except Exception:  # degraded lane: never break the turn
+            logger.warning("ordinal-index search failed", exc_info=True)
+            return ""
+        era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+        candidates = []
+        for sr in results:
+            node = sr.node
+            if (node.metadata or {}).get("kind") != "conversation_index":
+                continue
+            ok, _ = _check_admissible(
+                node, requester_tier.disclosure_scope, era_boundary
+            )
+            if ok:
+                candidates.append((node.created_at, node.content))
+        if not candidates:
+            return ""
+        candidates.sort(key=lambda pair: pair[0], reverse=True)
+        return candidates[0][1]
 
     async def persona_scoped_grounding_refs(
         self,

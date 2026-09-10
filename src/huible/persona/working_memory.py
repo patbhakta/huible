@@ -218,3 +218,21 @@ class TencentWorkingMemory:
             )
             return False
         return True
+
+    def with_service_id(self, service_id: str) -> "TencentWorkingMemory":
+        """Return a clone of this client bound to ``service_id``.
+
+        The gateway partitions all state (L0/L1/gists) per
+        ``x-tdai-service-id`` instance, so a per-persona service id gives
+        fully disjoint working memories (HU-2774 isolation setup:
+        persona-scoped TencentDB service IDs). The shared app-level client
+        keeps its configured default; personas whose metadata carries
+        ``working_memory_service_id`` get a cheap stateless clone per
+        deployment (no sockets are held — every call is a bounded POST).
+        """
+        return TencentWorkingMemory(
+            self._base_url,
+            api_key=self._api_key,
+            service_id=service_id or self._service_id,
+            timeout_s=self._timeout_s,
+        )

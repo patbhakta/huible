@@ -198,6 +198,20 @@ class Settings(BaseSettings):
     working_memory_service_id: str = "default"
     working_memory_timeout_s: float = 10.0
 
+    # ── Conversation write-back (HU-2774 cross-session recall) ─────────────
+    # Persist each completed persona chat turn as an ACCRUED memory
+    # (source_type='conversation') in the persona-scoped pgvector store, so a
+    # FRESH conversation id (new working-memory session) can still recall
+    # earlier sessions through the normal retrieval path. Without it,
+    # conversation content lives only in the session-scoped TencentDB working
+    # memory and cross-session recall is architecturally impossible (r8
+    # finding, 2026-09-10). Default off; failures degrade to "no write-back
+    # this turn" — the lane never breaks a chat turn. Crisis/consent/
+    # guardrail-canned branches never reach the write-back (it only rides the
+    # normal persona reply path), and budget-fallback replies are skipped so
+    # non-persona fallback text is never persisted as persona memory.
+    conversation_writeback_enabled: bool = False
+
     # ── Retrieval activation floor (HU-2673 C3 / HU-2707) ──────────────────
     # Class-A (Chandler pilot) corpus-derived default: 0.50 sits inside the
     # widest structural gap between the lexical-at-floor filler band (≤0.390)

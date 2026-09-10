@@ -1,0 +1,98 @@
+id: dual-persona-confirmation-r9
+namespace: pat.personas
+description: |
+  HU-2774 r9 confirmation battery: 3x friends + 3x stranger, serial, with the
+  FINAL evaluator (no post-hoc corrections). One-shot cron (2026-09-11 00:30Z,
+  after the z.ai daily 2M token reset).
+
+  r8 fix (2026-09-10): every conversation task carries allowFailure: true so a
+  failing run NEVER aborts the remaining runs (r8 stopped after run 1 — the
+  evaluator's non-zero exit failed the flow before friends-2/3 executed).
+  The DONE bar (3 consecutive passing conversations) is enforced once, in the
+  personas_battery_gate.py aggregate task, over all six run verdicts.
+
+tasks:
+  - id: reset-conversation-memory
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_reset_conversation_memory.py --env /root/repos/huible/.env --execute"
+  - id: confirm-friends-1
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    allowFailure: true
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r9-friends-1 --scenario friends --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-friends-2
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    allowFailure: true
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r9-friends-2 --scenario friends --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-friends-3
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    allowFailure: true
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r9-friends-3 --scenario friends --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-stranger-1
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    allowFailure: true
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r9-stranger-1 --scenario stranger --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-stranger-2
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    allowFailure: true
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r9-stranger-2 --scenario stranger --out-dir /root/repos/huible/runs/hu2774"
+  - id: confirm-stranger-3
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    allowFailure: true
+    env:
+      HU2774_ENGINE: http://127.0.0.1:8000
+      HU2774_ENV: /root/repos/huible/.env
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_dual_converse.py --turns 24 --run-id hu2774-r9-stranger-3 --scenario stranger --out-dir /root/repos/huible/runs/hu2774"
+  - id: battery-gate
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - "python3 /root/repos/huible/scripts/personas_battery_gate.py --out-dir /root/repos/huible/runs/hu2774 hu2774-r9-friends-1 hu2774-r9-friends-2 hu2774-r9-friends-3 hu2774-r9-stranger-1 hu2774-r9-stranger-2 hu2774-r9-stranger-3"
+
+errors:
+  - id: fail-log
+    type: io.kestra.plugin.core.log.Log
+    message: "HU-2774 r9 confirmation battery: gate FAILED — all six runs executed (allowFailed), aggregate bar not met"
+
+triggers:
+  - id: one-shot-2026-09-11
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "30 0 11 9 *"
+    timezone: UTC
+    disabled: false

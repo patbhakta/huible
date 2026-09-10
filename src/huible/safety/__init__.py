@@ -116,6 +116,7 @@ from huible.safety.crisis import (
 )
 from huible.safety.framing import (
     DISTRESS_GROUNDING_ADDENDUM,
+    FICTIONAL_FRAMING_VERSION,
     FRAMING_VERSION,
     REALITY_FRAMING_BLOCK,
     FramingBlock,
@@ -198,6 +199,7 @@ __all__ = [
     "DEFLECTION_MARKERS",
     "DISTRESS_FALLBACK_RESPONSE",
     "DISTRESS_GROUNDING_ADDENDUM",
+    "FICTIONAL_FRAMING_VERSION",
     "FRAMING_VERSION",
     "IDENTITY_CLAIM_PATTERNS",
     "MINOR_DECEDENT_AGE_THRESHOLD",
@@ -262,8 +264,7 @@ __all__ = [
     "escalate_to_human",
     "extract_claims",
     "get_distress_addendum",
-    "get_framing",
-    "is_grounded",
+    "get_framing",    "is_grounded",
     "parse_coverage_days",
     "select_alignment_fallback",
     "select_capability_fallback",

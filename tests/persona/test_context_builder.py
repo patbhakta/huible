@@ -41,6 +41,7 @@ from huible.persona.context import (
     get_confidence_level,
 )
 from huible.safety.crisis import UserAffect
+from huible.safety.framing import FICTIONAL_FRAMING_VERSION
 
 PERSONA_ID = uuid4()
 
@@ -323,6 +324,35 @@ class TestRendering:
         persona = _persona()
         ctx = ContextBuilder().filter_and_render([], persona, RelationshipTier.FAMILY)
         assert "Bob" in ctx.system_prompt
+
+    def test_memorial_default_renders_reality_framing_and_embodying(self):
+        # Default (no framing_class): clinical memorial framing, "embodying".
+        persona = _persona()
+        ctx = ContextBuilder().filter_and_render([], persona, RelationshipTier.FAMILY)
+        assert "[REALITY FRAMING" in ctx.system_prompt
+        assert "You are embodying Bob." in ctx.system_prompt
+        assert "[CHARACTER FRAMING" not in ctx.system_prompt
+
+    def test_fictional_class_renders_character_framing(self):
+        # HU-2774: metadata.framing_class='fictional' swaps the memorial
+        # reality-framing for the character framing and drops "embodying"
+        # (the copy/actor framing that leaked into r8 self-concept).
+        persona = _persona()
+        persona.metadata["framing_class"] = "fictional"
+        ctx = ContextBuilder().filter_and_render([], persona, RelationshipTier.FAMILY)
+        assert "[CHARACTER FRAMING" in ctx.system_prompt
+        assert "[REALITY FRAMING" not in ctx.system_prompt
+        assert "You are Bob." in ctx.system_prompt
+        assert "You are embodying Bob." not in ctx.system_prompt
+        # The framing_version surfaces so evidence can pin which block ran.
+        assert ctx.framing_version == FICTIONAL_FRAMING_VERSION
+
+    def test_fictional_invalid_class_falls_back_to_memorial(self):
+        persona = _persona()
+        persona.metadata["framing_class"] = "guerrilla"
+        ctx = ContextBuilder().filter_and_render([], persona, RelationshipTier.FAMILY)
+        assert "[REALITY FRAMING" in ctx.system_prompt
+        assert "[CHARACTER FRAMING" not in ctx.system_prompt
 
     def test_voice_instructions_never_rendered(self):
         # W3 description-free prompt (HU-2309 v1.8 §1.7.2): the hand-written

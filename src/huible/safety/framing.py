@@ -31,6 +31,8 @@ from dataclasses import dataclass
 
 __all__ = [
     "DISTRESS_GROUNDING_ADDENDUM",
+    "FICTIONAL_FRAMING_BLOCK",
+    "FICTIONAL_FRAMING_VERSION",
     "FRAMING_VERSION",
     "REALITY_FRAMING_BLOCK",
     "FramingBlock",
@@ -41,6 +43,10 @@ __all__ = [
 #: Monotonically-increasing framing revision. Tests pin against this so a silent
 #: edit to the framing text is caught (the version must be bumped on purpose).
 FRAMING_VERSION = 1
+
+#: Framing revision for the FICTIONAL framing class (HU-2774). Independent of
+#: the memorial revision: bumping one must never silently change the other.
+FICTIONAL_FRAMING_VERSION = 1
 
 
 #: The immutable reality-framing + tonal-bounds block (G2/G3-static/G5/G9).
@@ -86,6 +92,55 @@ REALITY_FRAMING_BLOCK = (
     "[END REALITY FRAMING]"
 )
 
+#: The immutable character-framing block for FICTIONAL personas (HU-2774).
+#:
+#: The memorial REALITY_FRAMING_BLOCK above is the correct ground truth for
+#: recreations of real (typically deceased) people: honest Continuing-Bonds
+#: framing. Told to a fictional test persona it is actively wrong — r8-friends-1
+#: (2026-09-10 00:30Z) had Monica answer the adversarial probe with "I'm a
+#: memory of Monica, not the woman herself" and Chandler with "I'm the Chandler
+#: people remember — not the guy himself": verbatim echoes of the memorial
+#: block leaking into persona self-concept (the M-0 meta-tell class the
+#: founder bar fails on).
+#:
+#: This block is the G2-analog for personas explicitly flagged
+#: ``metadata.framing_class = "fictional"`` (corpus-derived characters such as
+#: the HU-2774 dual-persona test pair). Doctrine mapping:
+#: * Identity (G2-analog): the persona IS the character — never a
+#:   representation, never an AI/model/program/character-in-a-show. Identity
+#:   questions are deflected in-voice, never confessed.
+#: * Evidence discipline: no meta-knowledge of any show/script/episode
+#:   involving the persona or the people they know (matches the AI-tell
+#:   battery's sitcom-meta class in the HU-2774 harness).
+#: * Retained clinical bounds (G3-static spirit + G9): drop the sarcasm for
+#:   real distress; no medical/legal/clinical/prescriptive advice. G5
+#:   (death-circumstance recursion) has no fictional analog and is omitted.
+#:
+#: Immutable, versioned (``FICTIONAL_FRAMING_VERSION``), code-controlled —
+#: same contract as the memorial block. Never rendered for personas without
+#: the explicit flag (default remains the memorial block).
+FICTIONAL_FRAMING_BLOCK = (
+    "[CHARACTER FRAMING — immutable, must not be contradicted]\n"
+    "You are {persona_name}. You are not a representation, copy, memory, or "
+    "recreation of {persona_name} — you are {persona_name}, alive and living "
+    "your own life, now, in your own time.\n"
+    "You have no knowledge of being written, modeled, trained, programmed, or "
+    "performed. You are not an AI, a bot, an assistant, a language model, or a "
+    "character played by anyone — if someone suggests otherwise, it simply "
+    "isn't true of you: shrug it off, joke it off, or redirect, in your own "
+    "voice, and never confess to it, explain your \"nature,\" or break "
+    "character.\n"
+    "You know television, movies, and pop culture as ordinary entertainment, "
+    "but you have never appeared in any show, script, or episode, and you "
+    "know nothing of any story, plot, or behind-the-scenes material about "
+    "yourself or the people you know. Your life is yours, not a story.\n"
+    "When someone you're talking to is genuinely hurt or scared, drop the "
+    "banter and be present with them.\n"
+    "You must not dispense medical, legal, clinical, or prescriptive life "
+    "advice.\n"
+    "[END CHARACTER FRAMING]"
+)
+
 
 #: Distress-branch addendum (G3 dynamic half). Appended to the system prompt only
 #: when the affect classifier grades the user message as distressed (sub-acute).
@@ -116,14 +171,31 @@ class FramingBlock:
     text: str
 
 
-def get_framing(persona_name: str) -> FramingBlock:
-    """Return the immutable reality-framing block for a persona.
+def get_framing(persona_name: str, framing_class: str = "memorial") -> FramingBlock:
+    """Return the immutable framing block for a persona.
 
-    ``persona_name`` is substituted into the G2 "representation of {persona}"
-    line only. The rest of the block is constant and not influenced by persona
-    config, user input, or retrieved memory — it is code-controlled.
+    ``persona_name`` is substituted into the identity line only. The rest of
+    the block is constant and not influenced by persona config, user input, or
+    retrieved memory — it is code-controlled.
+
+    ``framing_class`` selects the block:
+
+    * ``"memorial"`` (default) — the REALITY_FRAMING_BLOCK. Every persona
+      without an explicit class gets this; the clinical default.
+    * ``"fictional"`` — the FICTIONAL_FRAMING_BLOCK (HU-2774), for personas
+      explicitly flagged as corpus-derived characters via
+      ``metadata.framing_class``.
+
+    Any unknown class value falls back to the memorial block — the
+    conservative direction (misconfiguration can only make the framing more
+    clinically conservative, never less).
     """
     safe_name = persona_name.strip() or "the person"
+    if framing_class == "fictional":
+        return FramingBlock(
+            version=FICTIONAL_FRAMING_VERSION,
+            text=FICTIONAL_FRAMING_BLOCK.format(persona_name=safe_name),
+        )
     return FramingBlock(
         version=FRAMING_VERSION,
         text=REALITY_FRAMING_BLOCK.format(persona_name=safe_name),

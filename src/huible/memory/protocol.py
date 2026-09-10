@@ -27,6 +27,12 @@ class SourceType(str, Enum):
     FAMILY_UPLOAD = "family_upload"
     CANONICAL_SEED = "canonical_seed"
     INFERENCE = "inference"
+    #: Completed chat turns persisted by the engine's conversation write-back
+    #: lane (HU-2774): the durable, persona-scoped record of what was actually
+    #: said in a live conversation, retrievable from FRESH conversations
+    #: (cross-session recall). Distinct from EXTRACTION so evidence-only vault
+    #: corpora and conversation-derived memories stay separable in queries.
+    CONVERSATION = "conversation"
 
 
 class DisclosureScope(str, Enum):

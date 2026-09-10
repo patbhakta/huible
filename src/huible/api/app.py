@@ -179,7 +179,14 @@ from huible.llm.client import (
     LLMProvider,
     build_llm_client,
 )
-from huible.memory.protocol import MemoryBackend, MemoryNode
+from huible.memory.protocol import (
+    ContentType,
+    DisclosureScope,
+    MemoryBackend,
+    MemoryNode,
+    MemoryTier,
+    SourceType,
+)
 from huible.memory.retrieval import RetrievalConfig
 from huible.memory.store import PostgresMemoryBackend
 from huible.persona.context import (
@@ -1686,6 +1693,16 @@ def _register_routes(application: FastAPI) -> None:
         # to an empty block (pre-W4 prompt shape); the lane never breaks a
         # clinical turn.
         working_memory = application.state.working_memory
+        # HU-2774 isolation: personas with an explicit
+        # ``working_memory_service_id`` in their metadata get their own
+        # TencentDB MemoryCore instance (the gateway partitions all state per
+        # ``x-tdai-service-id``), so two personas never share working memory
+        # or the cross-session L1 layer. The clone is stateless and cheap.
+        _persona_wm_service = (binding.persona.metadata or {}).get(
+            WORKING_MEMORY_SERVICE_ID_METADATA_KEY
+        )
+        if _persona_wm_service and isinstance(working_memory, TencentWorkingMemory):
+            working_memory = working_memory.with_service_id(str(_persona_wm_service))
         wm_session_key = working_memory_session_key(persona_id, session_id)
         wm_recall = await working_memory.recall(wm_session_key, body.message)
         ctx = await application.state.context_builder.build(
@@ -1904,6 +1921,26 @@ def _register_routes(application: FastAPI) -> None:
         wm_synced = await working_memory.capture(
             wm_session_key, body.message, response_text
         )
+        # HU-2774 conversation write-back: persist the completed turn as an
+        # ACCRUED persona-scoped memory (source_type='conversation') so FRESH
+        # conversations recall earlier sessions through the normal retrieval
+        # path — the durable half of cross-session memory (the TencentDB
+        # working memory is session-scoped by design). Rides only the normal
+        # persona reply path (crisis/consent/guardrail branches return
+        # earlier); budget-fallback replies are skipped so non-persona
+        # fallback text is never persisted as persona memory.
+        writeback = await _writeback_conversation_memory(
+            application,
+            persona=binding.persona,
+            persona_id=persona_id,
+            backend=binding.backend,
+            user_message=body.message,
+            persona_reply=response_text,
+            conversation_id=body.conversation_id,
+            turn_count=_session_meta(application, body.conversation_id).turn_count,
+            user_name=body.user_name,
+            skip=budget_fallback,
+        )
         _emit_turn(
             persona_id,
             outcome="persona_budget_fallback" if budget_fallback else "persona",
@@ -1940,6 +1977,7 @@ def _register_routes(application: FastAPI) -> None:
             wm_strategy=wm_recall.strategy,
             wm_chars=wm_recall.chars,
             wm_synced=wm_synced if not isinstance(working_memory, NullWorkingMemory) else None,
+            writeback=writeback,
             # M1.4 (HU-2732): scoped-lane evidence on the telemetry line —
             # lane:lines prove the scoped vault read reached this turn.
             scoped=ctx.scoped_reads_fired or None,
@@ -2770,6 +2808,139 @@ def _record_turn(
     store.append_turn(conversation_id, ConversationTurn(speaker="persona", content=reply))
 
 
+#: Metadata key on ``PersonaConfig`` selecting the persona-scoped TencentDB
+#: working-memory service id (HU-2774 isolation setup). Absent -> the
+#: settings default (shared service).
+WORKING_MEMORY_SERVICE_ID_METADATA_KEY = "working_memory_service_id"
+
+
+async def _writeback_conversation_memory(
+    application: FastAPI,
+    *,
+    persona: PersonaConfig,
+    persona_id: UUID,
+    backend: MemoryBackend | None,
+    user_message: str,
+    persona_reply: str,
+    conversation_id: str | None,
+    turn_count: int | None = None,
+    user_name: str | None = None,
+    skip: bool = False,
+) -> bool | None:
+    """HU-2774 conversation write-back: persist one completed chat turn as an
+    ACCRUED persona-scoped memory (``source_type='conversation'``).
+
+    Cross-session recall requires conversation content to outlive the
+    session-scoped TencentDB working memory: a fresh conversation id starts
+    with an empty working-memory session (r8-friends-1 s2 probes, 2026-09-10
+    — both personas answered the recall probe with deflections because
+    nothing durable carried over). This lane writes each completed turn into
+    the pgvector store the retrieval path already reads every turn, so a
+    fresh conversation semantically finds earlier sessions.
+
+    Contract:
+
+    * Never raises — any failure logs and returns ``None`` (the lane must
+      never break a chat turn; same posture as the W4 capture lane).
+    * Returns ``True`` when a memory was stored, ``False`` when disabled or
+      skipped (budget fallback), ``None`` on failure — the telemetry line
+      distinguishes all three.
+    * Content carries the user's words verbatim plus the persona reply, so
+      "what was the very first thing I said to you?" semantically matches the
+      turn that actually holds those words.
+    * Disclosure scope CLOSE_FRIENDS: the strictest scope every chat requester
+      tier (family and closer) may see — the INV-DS ordering is
+      most→least restrictive (all_contacts, close_friends, family, private),
+      so a family-tier requester admits close_friends nodes while an
+      acquaintance never can. ``confidence`` is ``medium`` — admissible in
+      the prompt per the provenance firewall, but clearly sub-canonical next
+      to vault evidence.
+    * ``memory_date`` stays ``None`` so the era gate (which exists to stop
+      post-era *world* facts from leaking) does not silently drop the
+      persona's own lived conversation turns.
+    """
+    settings: Settings = application.state.settings
+    if not settings.conversation_writeback_enabled:
+        return False
+    if skip:
+        return False
+    # Write where retrieval reads: the persona-scoped backend on the request
+    # binding (the same store the context builder searched this turn), not a
+    # process-global handle.
+    if backend is None:
+        return None
+    user_text = (user_message or "").strip()
+    reply_text = (persona_reply or "").strip()
+    if not user_text or not reply_text:
+        return False
+    content = f"{user_text}\n{persona.name or 'they'} said: {reply_text}"
+    # Episodic index (first turn of a conversation only): an ordinal-recall
+    # pointer whose CONTENT matches "what was the very first thing i said to
+    # you?" queries. The plain exchange memory stores the user's words, but a
+    # recall probe asks about the EVENT, not the words — vector search on the
+    # probe text never reaches "hey, how's your week been?" (verified live
+    # 2026-09-10, smoke-3-s2). The index line carries the probe's own
+    # vocabulary verbatim plus the quoted first message.
+    index_node = None
+    if turn_count == 1:
+        who = (user_name or "").strip() or "they"
+        index_node = MemoryNode(
+            id=uuid4(),
+            persona_id=persona_id,
+            tier=MemoryTier.ACCRUED,
+            content=(
+                f"Conversation index: the first thing {who} said to "
+                f"{persona.name or 'me'} was: \"{user_text}\""
+            ),
+            content_type=ContentType.NARRATIVE,
+            embedding_content=_embed(
+                f"the first thing {who} said to {persona.name or 'me'} "
+                f"was: {user_text}"
+            ),
+            source_type=SourceType.CONVERSATION,
+            disclosure_scope=DisclosureScope.CLOSE_FRIENDS,
+            source_ref={"conversation_id": conversation_id,
+                        "origin": "chat_writeback",
+                        "kind": "conversation_index"},
+            metadata={"confidence_level": "medium",
+                      "conversation_id": conversation_id,
+                      "origin": "chat_writeback",
+                      "kind": "conversation_index"},
+        )
+    try:
+        node = MemoryNode(
+            id=uuid4(),
+            persona_id=persona_id,
+            tier=MemoryTier.ACCRUED,
+            content=content,
+            content_type=ContentType.NARRATIVE,
+            embedding_content=_embed(f"{user_text} {reply_text}"),
+            source_type=SourceType.CONVERSATION,
+            disclosure_scope=DisclosureScope.CLOSE_FRIENDS,
+            source_ref={
+                "conversation_id": conversation_id,
+                "origin": "chat_writeback",
+            },
+            metadata={
+                "confidence_level": "medium",
+                "conversation_id": conversation_id,
+                "origin": "chat_writeback",
+            },
+        )
+        await backend.store_memory(node)
+        if index_node is not None:
+            await backend.store_memory(index_node)
+    except Exception:
+        logger.warning(
+            "conversation write-back failed for persona %s conv %s",
+            persona_id,
+            conversation_id or "-",
+            exc_info=True,
+        )
+        return None
+    return True
+
+
 #: HU-2243 BYOK: chat-turn header carrying a client-supplied provider API
 #: key. Honored only when ``BYOK_ENABLED`` arms the gate and the product
 #: voice runs on a real hosted provider; otherwise ignored (house key). The
@@ -2964,6 +3135,7 @@ def _log_chat_trace(
     wm_chars: int | None = None,
     wm_synced: bool | None = None,
     scoped: dict[str, int] | None = None,
+    writeback: bool | None = None,
 ) -> None:
     """Emit one ``chat.trace`` stdout line per chat turn (HU-1442).
 
@@ -3007,9 +3179,14 @@ def _log_chat_trace(
         "|".join(f"{lane}:{lines}" for lane, lines in sorted((scoped or {}).items()))
         or "-"
     )
+    # HU-2774 conversation write-back state: stored / off-skipped / failed /
+    # "-" (lane disabled or not applicable on this exit path).
+    wb_field = (
+        "-" if writeback is None else ("stored" if writeback else "skipped")
+    )
     logger.info(
         "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s "
-        "disposition=%s turn_count=%s trace_id=%s wm=%s scoped=%s",
+        "disposition=%s turn_count=%s trace_id=%s wm=%s scoped=%s wb=%s",
         conversation_id or "-",
         action,
         flags,
@@ -3019,6 +3196,7 @@ def _log_chat_trace(
         trace_id or "-",
         wm_field,
         scoped_field,
+        wb_field,
     )
 
 

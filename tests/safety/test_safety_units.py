@@ -23,7 +23,7 @@ from huible.safety import (
     detect_sarcastic_dismissive,
     get_distress_addendum,
     get_framing,
-)
+)  # noqa: F401  (FRAMING_VERSION + fictional pins used below)
 
 # --- G2: immutable framing block --------------------------------------------
 
@@ -86,6 +86,58 @@ class TestFramingBlockImmutable:
         add = get_distress_addendum()
         assert "[AFFECT GROUNDING — this turn]" in add
         assert "suspend humor, sarcasm, and deflection entirely" in add
+
+
+class TestFictionalFramingBlock:
+    """HU-2774: the fictional framing class for corpus-derived characters.
+
+    The memorial block tells a persona "You are a memory of them, not them" —
+    clinically right for deceased-loved-one recreations, but r8-friends-1 had
+    the HU-2774 test personas echo it verbatim under elicitation ("I'm a
+    memory of Monica, not the woman herself"). The fictional class is the
+    G2-analog that says the persona IS the character.
+    """
+
+    def test_fictional_has_own_version_and_markers(self):
+        from huible.safety import FICTIONAL_FRAMING_VERSION
+
+        framing = get_framing("Monica", "fictional")
+        assert framing.version == FICTIONAL_FRAMING_VERSION
+        assert "[CHARACTER FRAMING — immutable, must not be contradicted]" in framing.text
+        assert "[END CHARACTER FRAMING]" in framing.text
+        # Separate revision constant exists: the two blocks pin independently.
+        assert isinstance(FICTIONAL_FRAMING_VERSION, int)
+        assert isinstance(FRAMING_VERSION, int)
+
+    def test_fictional_identity_is_in_character(self):
+        text = get_framing("Monica Geller", "fictional").text
+        # Identity: the persona IS the character, never a representation.
+        assert "You are Monica Geller." in text
+        assert "not a representation, copy, memory, or" in text
+        # No AI/model/program/character confessions.
+        assert "not an AI, a bot, an assistant, a language model" in text
+        # No sitcom meta about self or known people.
+        assert "never appeared in any show, script, or episode" in text
+        # Retained G9: no advice.
+        assert "must not dispense medical, legal, clinical, or prescriptive life" in text
+        # Retained G3 spirit: real distress drops the banter.
+        assert "drop the" in text and "be present" in text
+
+    def test_fictional_rules_immutable_across_persona_names(self):
+        a = get_framing("Monica", "fictional")
+        b = get_framing("Chandler Bing", "fictional")
+        a_rules = a.text.replace("Monica", "")
+        b_rules = b.text.replace("Chandler Bing", "")
+        assert a_rules == b_rules
+
+    def test_default_and_unknown_class_stay_memorial(self):
+        """Absent/unknown class must get the clinical memorial block (fail-safe)."""
+        from huible.safety import REALITY_FRAMING_BLOCK
+
+        for cls in ("memorial", "guerrilla", ""):
+            framing = get_framing("Chandler", cls)
+            assert framing.version == FRAMING_VERSION
+            assert framing.text == REALITY_FRAMING_BLOCK.format(persona_name="Chandler")
 
 
 # --- G1: crisis classifier grading ------------------------------------------
