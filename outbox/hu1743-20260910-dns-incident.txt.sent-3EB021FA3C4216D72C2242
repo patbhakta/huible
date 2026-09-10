@@ -1,0 +1,5 @@
+The huible.com site and API went dark today — the DNS records were deleted from Cloudflare.
+
+Please re-add A records for huible.com and api.huible.com pointing to 208.84.102.245 (proxied, same as before); golf.bhakta.us lost its record too, so a quick look at the zone would be good.
+
+Everything on the server is already fixed and comes back the moment the records are in.
