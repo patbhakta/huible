@@ -5,9 +5,17 @@ description: |
   vault-grounded personas through the real engine chat path, description-only
   comparator arm, cross-vault leakage gate, seeded blind pairing, 5-dim
   scoring package. Boss-gated (--i-am-the-boss mirrors the kit doctrine).
-  One-shot cron (2026-09-11 00:40Z, after the z.ai daily token reset) — the
-  run needs a fresh daily window (budget guard: the harness aborts loudly on
-  any fake-voice fallback; real generator only).
+
+  VEHICLE CHANGE (2026-09-10 23:3xZ, HU-2811): trigger DISABLED — the Kestra
+  Process taskRunner executes INSIDE the kestra2 container, where
+  /root/repos/huible does not exist (no repo mount) and the harness's host
+  bindings (127.0.0.1:8000 engine, docker exec psql) are unreachable. Zero
+  executions ever succeeded under this pattern (r9 flow included: total=0).
+  Execution now runs as a HOST-side detached one-shot at 2026-09-11 00:40Z
+  (after the z.ai daily token reset; effective ceiling 2M/day via
+  ZAI_DAILY_TOKEN_LIMIT; planned draw ~155k). Evidence: runs/hu2811/ +
+  docs/evidence/hu2811_five_friends_v0/. Collection monitor on HU-2811
+  (nextCheckAt 2026-09-11T02:00Z). Tasks kept as the canonical command line.
 
 tasks:
   - id: preflight
@@ -33,4 +41,4 @@ triggers:
     type: io.kestra.plugin.core.trigger.Schedule
     cron: "40 0 11 9 *"
     timezone: UTC
-    disabled: false
+    disabled: true
