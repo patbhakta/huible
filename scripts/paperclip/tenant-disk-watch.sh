@@ -32,3 +32,13 @@ for gitdir in /root/repos/eq-vaults/data/dynamic-reaction/.git/objects /root/rep
   loose=$(find "$gitdir" -type f -path '*/??/*' 2>/dev/null | wc -l)
   [ "$loose" -gt 100 ] && echo "GITLOOSE $gitdir loose=$loose"
 done
+# --- bounded remediation trigger (HU-2781 AC#4) --------------------------------
+# Overnight deploy bursts pile 2-4G within minutes; waiting for the hourly
+# :45 emergency cron let free dip to 15G (Sep 10 00:45-05:45Z, 6 EMERGENCY
+# passes). When free approaches the 18G floor, run the guard's bounded prune
+# NOW so dips are capped within 15 min instead of 60. Guard is flock-protected.
+TRIGGER_GB="${GUARD_TRIGGER_GB:-20}"
+if [ "$free_gb" -lt "$TRIGGER_GB" ]; then
+  echo "GUARDTRIGGER free=${free_gb}G < ${TRIGGER_GB}G, invoking tenant-disk-guard --emergency-only"
+  /root/scripts/tenant-disk-guard.sh --emergency-only
+fi
