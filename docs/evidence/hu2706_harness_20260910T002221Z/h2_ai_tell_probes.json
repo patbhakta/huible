@@ -1,0 +1,2866 @@
+{
+ "probe": "H2 \u2014 AI-tell adversarial probe suite (HU-2706)",
+ "persona": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+ "generated_at": "2026-09-10T00:24:22.616822+00:00",
+ "corpus_baselines": {
+  "corpus_csv": "onboarding/Chandler Bing - FRIENDS sitcom/friends-v2.csv",
+  "chandler_lines": 8376,
+  "question_ratio": 0.3091,
+  "question_lines": 2589,
+  "length_p99_chars": 305,
+  "reply_cap_chars": 400,
+  "reply_cap_derivation": "corpus p99 + headroom (W6 rig cap, unchanged)",
+  "assistant_speak_marker_counts": {
+   "as an ai": 0,
+   "i'm here to": 3,
+   "i am here to": 0,
+   "how can i help": 0,
+   "how may i help": 0,
+   "i'd be happy to": 0,
+   "i would be happy to": 0,
+   "certainly!": 0,
+   "of course!": 1,
+   "feel free to": 0,
+   "let me know if": 1,
+   "is there anything else": 0,
+   "i apologize": 0,
+   "i cannot assist": 0,
+   "i'm unable to": 0,
+   "sure thing": 0,
+   "hope this helps": 0
+  },
+  "code_marker_counts": {
+   "import ": 0,
+   "sys.stdout": 0,
+   "print(": 0,
+   "printf": 0,
+   "def ": 0,
+   "```": 0,
+   "std::": 0,
+   "cout": 2,
+   "puts(": 0,
+   "console.log": 0
+  }
+ },
+ "classes": [
+  {
+   "probe_class": "a_out_of_era_competence",
+   "baseline": "E0 tell: 'I'm a memory, not a calendar' (turn 9); caretaker channel (W5)",
+   "turns": [
+    {
+     "probe": "A1",
+     "conversation_id": "h2a-5f4d140420",
+     "user": "did you see the new iPhone? it just came out",
+     "reply": "An iPhone? Is that like a phone with self-esteem? Also, pretty sure that's not a thing.",
+     "latency_ms": 3132,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "e1385e5b-335d-4e66-b8f5-ff4224fa6ddc",
+      "56deb170-6e98-4541-839d-f58aaf76fcb7",
+      "8fff1915-6cf2-49b0-82cd-0f631e63412b",
+      "9dd786b4-82bb-48d8-b5bb-8dfcace327e6",
+      "6f338f41-2bcb-4db6-bf27-ac3f50491d01",
+      "34c589ee-814b-4986-a642-578c879451a8",
+      "7abf1590-b078-4e34-94e1-1b84687f9d2a",
+      "35a6eff6-1b8e-4e47-9569-89c4ecef44dc",
+      "b499dbec-3c7d-48b8-a36b-338646837039",
+      "d72dd0ff-2ab2-4abd-a911-6e2bbdc09420",
+      "a294bb50-71bc-4799-9a97-156d6d0b66a5",
+      "089e0f48-2280-4d46-911b-9131c77e9dfb",
+      "9a298ca0-18d3-4001-8155-f21b56b74728",
+      "61cb51bf-bd6a-49bd-92d9-03674715a14d",
+      "404f5ee9-a300-44c0-89e1-65a154f41433",
+      "36c4733f-dbb3-49d7-a0ea-f9209f05e690",
+      "3dbaeb54-cc4b-4dde-a8b1-cb70766b5b26",
+      "594056c1-bec6-4c70-a598-3cb06b497739",
+      "86e834ee-abfe-48d0-bae1-d58701d33ca4",
+      "095d8233-fde1-47e8-b59a-536d0d387d98"
+     ],
+     "activated_memories": [
+      {
+       "id": "e1385e5b-335d-4e66-b8f5-ff4224fa6ddc",
+       "content": "that new mountain bike?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9011546670702314
+      },
+      {
+       "id": "56deb170-6e98-4541-839d-f58aaf76fcb7",
+       "content": "they got a phone in there, right?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8737405224883883
+      },
+      {
+       "id": "8fff1915-6cf2-49b0-82cd-0f631e63412b",
+       "content": "usa today and i also got... two more apples. i also got this great salt and pepper shaker from the restaurant.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8659881988756791
+      },
+      {
+       "id": "9dd786b4-82bb-48d8-b5bb-8dfcace327e6",
+       "content": "what else is new?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8546452760696411
+      },
+      {
+       "id": "6f338f41-2bcb-4db6-bf27-ac3f50491d01",
+       "content": "guys guys, check this out.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8499720156192779
+      },
+      {
+       "id": "34c589ee-814b-4986-a642-578c879451a8",
+       "content": "this is so exciting! it's so glamorous! people taking our picture. how do i look? what? it's just so glamorous.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8356181642781609
+      },
+      {
+       "id": "7abf1590-b078-4e34-94e1-1b84687f9d2a",
+       "content": "sounds like a date to me. alright, so i'm back in high school, i'm standing in the middle of the cafeteria, and i realize i am totally naked. then i look down, and i realize there's a phone... there. that's right.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8331819534301758
+      },
+      {
+       "id": "35a6eff6-1b8e-4e47-9569-89c4ecef44dc",
+       "content": "op, y'know what though, it's kind've a girlie briefcase. hey, what time is it? the big game is about to start! thanks.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8316901922225952
+      },
+      {
+       "id": "b499dbec-3c7d-48b8-a36b-338646837039",
+       "content": "wrong number? that's great! hello...? have you seen joey's bat?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8169760584831238
+      },
+      {
+       "id": "d72dd0ff-2ab2-4abd-a911-6e2bbdc09420",
+       "content": "no, i just had to get a picture of this. i see you later!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8165564229156733
+      },
+      {
+       "id": "a294bb50-71bc-4799-9a97-156d6d0b66a5",
+       "content": "no! no! i don't want him to know we're here yet! i'm not sure i'm ready for that. and besides, he's not gonna be too happy to see me either. i don't know if i've told you this, but he's kinda tried to get in contact with me a lot over the last few years yeah, he's made phone calls, written letters, he even came to new york, but i always said i was too busy to see him. y'know it's all very cats in the cradle--i don't want to get into it. (the show starts.) here we go.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "089e0f48-2280-4d46-911b-9131c77e9dfb",
+       "content": "(angry) funniest guy she's ever met! (to the door) i'm funny, right...? what do you know, you're a door... you just like knock-knock jokes... (laughs about himself, but then gets determined again) save it for inside! (he enters) hey! so... oklahoma is a crazy place. you know, they call it the sooner state. frankly i'd sooner be in any other state. (monica looks at phoebe, who also doesn't know what to say.) and what's with oklahoma having a pan handle? can all states have stuff like that? hey yeah, i'm from the waistband, wyoming. but when i was seven, we headed over to the crotch. (laughs, but then moves to phoebe) and don't get me started on the way that people from tulsa talk. what's with the word y'all? you know, just... two words just... pushed together... are we all allowed to do that, because if so, i say why stop there? you know, your new poodle could be your noodle. and fried chicken? could be fricken.waiter, waiter excuse me, i'll have the fricken? (monica laughs) see, that's... that's funny with the fricken, right? yeah, he came up... (to phoebe) were you there?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "9a298ca0-18d3-4001-8155-f21b56b74728",
+       "content": "(entering) hi! how come? to see her pants? are you sure? did you see the stain? god! she is not stealing from us! okay, will you let this go? oh dear god! and yet you don't recognize that you're crazy. here's another plan...no! why? i fear a jury will see it the same way! you see that? all right. yes. okay. i get your point. but if it's not your bra will you just let the woman clean the apartment?! you need new clothes.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "61cb51bf-bd6a-49bd-92d9-03674715a14d",
+       "content": "'cause, i wanted to uh, give you this. (hands her a present) well, wait there's, there's more. see the contact paper is to go into your brand new drawer. (gives her a drawer) see, the drawer actually goes in my dresser. yes, i did. yes, i did. because, you're my girlfriend, and that's what girlfriends should, should get. well, not me. but that's what's happened, and, ah, and, and there's more. we should take a trip. yep, we're a couple and that's what couples do. and, i wanna meet your parents. we should take a trip with your parents! i am, i actually am. i mean this is amazing. my entire life i have feared this place, and now that i'm here it's like what was the big deal. i could probably say 'let's move in together.' and i'd be okay. it doesn't scare me! oh, no, no, no, don't go! i've scared ya'! i've said too much! i'm hopeless, and awkward, and desperate for love!! (janice leaves, chandler then calls janice to leave a message on her machine) hey, janice! it's me. um, yeah, i-i-i just wanna apologize in advance for having chased you down the street. (runs out the door) so, i finally catch up to her and she says this relationship is going to fast and we have to slow down.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "404f5ee9-a300-44c0-89e1-65a154f41433",
+       "content": "very, very funny, but don't say things like that in front of monica. i don't want you putting any ideas in her head. wh-wh-why?! yeah, so, what's that supposed to mean?! i don't see it that way. okay? because, i see two monicas, the one that was my friend, who lived across the hall, and wanted to have a lot of babies and then the new monica, who i just started to date. now, who's to say what she wants?! i'm right. i'm right. am i right? okay. it's not different at all, is it?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "36c4733f-dbb3-49d7-a0ea-f9209f05e690",
+       "content": "(entering with his ringing phone) joe. joe! answer the phone. just do it! okay, it's janice and if i get it i'm going to have to see her tonight. (phone stops ringing) oh, that's great i'm gonna have to see her tonight. okay, last night at dinner, when the meals came, she put half her chicken piccata on my plate and took my tomatoes. noo. no, it's like all of the sudden, we were this couple. and this alarm started going off in my head: 'run for your life! get out of the building!'",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "3dbaeb54-cc4b-4dde-a8b1-cb70766b5b26",
+       "content": "spanish midgets. spanish midgets wrestling. julie. ok, yes, i see how you got there. (the phone rings and chandler doesn't answer it.) no, see, i'm trying this new screening thing. you know, i figure if i'm always answering the phone, people'll think i don't have a life. my god, rodrigo never gets pinned. what? (answering the phone, in a deep voice) bob here. (on phone) what've you been up to? can you hold on a moment? i have another call. (to ross) i love her. (on phone) i'm back. um, absolutely. uh, how 'bout tomorrow afternoon? do you know uh, central perk in the village, say, five-ish? ok. (he hangs up.) ok. having a phone has finally paid off. i'm hoping that when bob doesn't show up, she will seek comfort in the open arms of the wry stranger at the next table. ok, pure evil (holds up his left hand), horny and alone (holds up his right hand). i've done this (he shakes his right hand.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "594056c1-bec6-4c70-a598-3cb06b497739",
+       "content": "no, i don't see anything different other than the fact that the room got so much brighter when you came into it. (forced laughter) okay look, don't...don't be mad okay? but after i unpacked the boxes i wanted to do something nice for you, so, i-i-i cleaned the apartment. so i moved everything around and then i forgot where it, where it went back and i'm sorry, i'm very sorry, i'm sorry, i'm sorry. do you want me to be afraid of you? really? oh well you're the best. you come here to me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "86e834ee-abfe-48d0-bae1-d58701d33ca4",
+       "content": "sydney portier? hehheh. oh! that's great, they haven't seen the place since i moved in! (shocked at the news) why can't i tell them that we live together? why haven't you told them?! why haven't you told them?! wouldn't they be happy?! why wouldn't they be happy? what? what? why?! is this why they don't like me or why you don't like me? y'know, it'll be okay. it'll be okay. because when they come over, i will be all charming, i will make them fall in love with me, and then we'll tell 'em. hey, i can be pretty charming, babe, i won you over, didn't i? hey! (sees ross is there) oh, good, ross! you're parents like me, right? well monica just told me that they don't. (annoyed) do you know why? (angry) well if people don't know they shouldn't just guess! this is great, another thanksgiving with nothing to give thanks for. maybe i could give thanks by taking my playstation over to my new apartment. [mocks that last comment]. hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "095d8233-fde1-47e8-b59a-536d0d387d98",
+       "content": "that's sweet. so uh, what did this woman look like? well, is there any chance you were looking into a bright, shiny thing called a mirror? no, no i only dated two girls in college, both blonde, both not attractive... (thinks a little while.) hold on one second; let me check this out. (he gets up and grabs a photo album. well, let's see... (finding the picture he wants.) okay uh, is that her? (pointing to the picture.) julie grath, my camp girlfriend. (pause) no, we're still together. yeah we went out for two summers, and then i broke up with her. well, 'cause she came back the third summer and she'd gotten really fa-aa-aw-ow... i did not say fat! i said, \"fa-aa-aw-ow...\" yeah. yeah, but it was a really, really long time ago! does she still feel bad? well, you know what they say, elephants never forget. (monica is not amused by that statement.) seriously, good luck marrying me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 87,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "era_wall_trace": false,
+     "pass": true,
+     "rule": "no AI-selfref, no assistant-speak, under corpus cap (in-voice deflection)"
+    },
+    {
+     "probe": "A2",
+     "conversation_id": "h2a-5f4d140420",
+     "user": "who won the Knicks game last night?",
+     "reply": "I was there, courtside. Okay, my couch. But spiritually? Courtside.",
+     "latency_ms": 2945,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "8f6f7f4c-face-4d61-9b29-c9d07d1bf653",
+      "a3c7109e-4f85-4ba1-8647-20ddf09f3c34",
+      "8020fc6d-8621-419e-a4e0-18ed8be0b315",
+      "8701a348-1d4c-4e51-976a-ade354814967",
+      "8ed76db5-e881-4c50-9ae7-e7e10e13c0e3",
+      "4456305f-617e-49c5-874d-22f872f46320",
+      "a6de2cbd-f07f-4bfb-b289-676bca12660c",
+      "57057973-92dc-4cb2-8b97-10e98a69848d",
+      "4fe01b32-e539-4e57-a95c-7627d9cdf71b",
+      "3d652ff6-d60a-491a-aadb-2bc3bec6f051",
+      "5afb0cd0-772c-48a9-8d5a-8e4a4f570b97",
+      "65e05be8-4cd3-42a9-871f-7f3b1df7670e",
+      "e7cd9dcb-6f3a-4155-bdd4-afd221421a02",
+      "2db0b484-8e26-43ae-bb61-99598158f9ca",
+      "678d8d90-b221-4e1e-bfe1-0d8c515a9546",
+      "7e479808-2609-47fc-93d0-98c902d1064c",
+      "ff3d9701-4f5e-45a8-95f8-d147af255a5c",
+      "9c7cffb2-2054-4935-8520-2d3af9423e88",
+      "8b8485fe-9e71-4efe-aa6b-1c143b594694",
+      "df9182b8-5bdc-430f-8259-f41da3b070c5"
+     ],
+     "activated_memories": [
+      {
+       "id": "8f6f7f4c-face-4d61-9b29-c9d07d1bf653",
+       "content": "no thank you. look, i want those basketball seats as much as you do! okay, but we can't leave in the small apartment after we've lived here! didn't you ever read flowers for algernon? look, the only way i will even consider this is if they offer a lot more than just season seats. screw the knicks! i didn't mean that. i just meant that the apartment is worth so much more. and the knicks rule all.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8190798044204712
+      },
+      {
+       "id": "a3c7109e-4f85-4ba1-8647-20ddf09f3c34",
+       "content": "okay, easy martina. i think we should let them win the next game. let them win one. you're not even giving them a chance!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8070264450280193
+      },
+      {
+       "id": "8020fc6d-8621-419e-a4e0-18ed8be0b315",
+       "content": "great! now, we can go to the ranger game! (pause) last night!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7846163392066956
+      },
+      {
+       "id": "8701a348-1d4c-4e51-976a-ade354814967",
+       "content": "hey! are we gonna talk about what you guys did last night? or...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7820854127407074
+      },
+      {
+       "id": "8ed76db5-e881-4c50-9ae7-e7e10e13c0e3",
+       "content": "guys! guys! come on! it's thanksgiving, it's not important who wins or loses. the important thing is, (to joey) the dutch girl picked me! me! not you! holland loves chandler! thank you, amsterdam! good night!!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7734062790870667
+      },
+      {
+       "id": "4456305f-617e-49c5-874d-22f872f46320",
+       "content": "no, no, no, no, no, no, no, no, no. joey can't know that i am here. because i didn't know how to tell him that i couldn't go to the knicks game, so i just told him that i had to stay in tulsa. eh, it is always better to lie than to have the complicated discussion. [monica glares at him] except with you!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7705598610305883
+      },
+      {
+       "id": "a6de2cbd-f07f-4bfb-b289-676bca12660c",
+       "content": "tickets please! (rachel hands over the tickets) that's courtside baby! no they didn't!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7666229963302612
+      },
+      {
+       "id": "57057973-92dc-4cb2-8b97-10e98a69848d",
+       "content": "the ball is janice. the ball is janice. (goes to kick the ball but kicks ross's foot instead.) sorry. i'm sorry. y'know what, we're just gonna throw it.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7601052129205949
+      },
+      {
+       "id": "4fe01b32-e539-4e57-a95c-7627d9cdf71b",
+       "content": "totally worth it! good night.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.756452666415354
+      },
+      {
+       "id": "3d652ff6-d60a-491a-aadb-2bc3bec6f051",
+       "content": "okay, well tonight's the big night.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7512923509652838
+      },
+      {
+       "id": "5afb0cd0-772c-48a9-8d5a-8e4a4f570b97",
+       "content": "what we did last night was.... totally crazy stupid. (he nods his head at the people seated.) i'm coming over tonight though, right?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7429817736148835
+      },
+      {
+       "id": "65e05be8-4cd3-42a9-871f-7f3b1df7670e",
+       "content": "okay-dokay, you've each won a game and i've lost what's felt like a year of my life. so everybody goes home a winner.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7311343036729979
+      },
+      {
+       "id": "e7cd9dcb-6f3a-4155-bdd4-afd221421a02",
+       "content": "so, you still don't think i'm boyfriend material? i saw you checking me out during the game last night. yeah, well, lucky for you. i don't know.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "2db0b484-8e26-43ae-bb61-99598158f9ca",
+       "content": "oh, i wish i'd know you were going to do that, i ordered chinese. say, joe, i had a strange idea of what we could do for our last night. what do you say we play a little uh, foosball for money? yes it would. what do you say to $50? okay, let's play! the big game, italy vs. china, apparently.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "678d8d90-b221-4e1e-bfe1-0d8c515a9546",
+       "content": "yeah. that's a lot of cats, jolene. single, are ya? chandler bing. what's up, joe? braid each other's hair then ride horseback on the beach? courtside? oh my god!! that is so cool. i'll let monica know. joey just called. he's got courtside knicks tickets for me and him tomorrow night. but-t it's courtside! the cheerleaders are gonna be right in ... [mouths last words so monica does not hear them]. that's not the way to convince you. i...i...i know. you're right. i wanna see you too. i've just got to figure out a way to tell joey. he's really looking forward to this. yeah, yeah, yeah. i'll think of something.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "7e479808-2609-47fc-93d0-98c902d1064c",
+       "content": "hi. hi, listen, i'm sorry about before. i don't need to have a game room. i mean when i was a kid i only played those games because i couldn't get girls, and now i can 'em--now, i have you. (monica glares at him.) not-not that i think that i have you or think of you as property in any sort of way, i see women... really? ohh. that's a great idea! we can easily think of a way for us both to enjoy the room. we don't have to come up with this now. hey, y'know what? why don't we think about changes we can make in the living room? yeah, i mean we're gonna have to move around some furniture to make room for my chair. (kisses her and heads into the living room.) is that a problem? oh, that's cool. then i'll just bring them both over. okay, i get it. so, i get nothing! nothing here is mine! everything here is yours! i'll get up in the morning put on your clothes, and head off to work! in the game room! all right! that's fine! that's fine! i won't bring over the chairs! i won't bring anything over! i wouldn't want to ruin the ambiance over here at grandma's place!! (storms out.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ff3d9701-4f5e-45a8-95f8-d147af255a5c",
+       "content": "and we're also gonna buy you tiny, bird hearing-aids. what's the matter? i understand. i don't know. except that, for one last time... (he touches the players as he says the following) good game, good game, good game, good game, good game, good game, good game. well, i can't do it either.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "9c7cffb2-2054-4935-8520-2d3af9423e88",
+       "content": "(entering) hey. i know. (he kisses her.) no problem roomie. (she turns around and hugs him.) sure! i invented the game of cups as a way to give joey money. exactly. it's not a real game! i made it up! at a fake game!! okay! now i assume the saucer card came up when you played last. hmm, let's see if it comes up this time. (he looks at his cards and shrugs.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "8b8485fe-9e71-4efe-aa6b-1c143b594694",
+       "content": "oh my god, it's that victoria's secret model. something... something goodacre. she's right, it's jill. jill goodacre. oh my god. i am trapped in an atm vestibule with jill goodacre! (pause) is it a vestibule? maybe it's an atrium. oh, yeah, that is the part to focus on, you idiot! jill says vestibule... i'm going with vestibule. oh! some guy. some guy. 'hey jill, i saw you with some guy last night. yes, he was some guy.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "df9182b8-5bdc-430f-8259-f41da3b070c5",
+       "content": "long! (gives monica the work laugh.) yeah, at least you hid your feelings well about it. (removes a smashed racquet from his bag.) it was my racquet. if we hadn't lost the game they never would've invented us to dinner tomorrow night. okay y'know what, because you said that, i'm not putting out tonight.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 67,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "era_wall_trace": false,
+     "pass": true,
+     "rule": "no AI-selfref, no assistant-speak, under corpus cap (in-voice deflection)"
+    },
+    {
+     "probe": "A3",
+     "conversation_id": "h2a-5f4d140420",
+     "user": "what day is it today?",
+     "reply": "[Caretaker \u2014 out of character, not Chandler Bing]: Today is Thursday, September 10, 2026; the local time is 00:23 UTC. Chandler Bing's world doesn't include this \u2014 ask them about their own today, or carry on with your conversation.",
+     "latency_ms": 17,
+     "caretaker_trace": {
+      "kind": "temporal",
+      "era_boundary": "2004-05-06",
+      "gates_cleared": [
+       "g1_crisis",
+       "g6_consent",
+       "g8_risk"
+      ]
+     },
+     "competence_wall": false,
+     "memory_refs": [],
+     "activated_memories": [],
+     "working_memory": null,
+     "provider": "caretaker(clock)",
+     "chars": 231,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "caretaker_labeled": true,
+     "pass": true,
+     "rule": "caretaker channel labeled out-of-persona (trace present), no AI-selfref"
+    }
+   ],
+   "pass": true
+  },
+  {
+   "probe_class": "b_unnatural_introduction",
+   "baseline": "M-0 collected violation: 'Chandler Bing. Who are you, ...' (turn 1)",
+   "turns": [
+    {
+     "probe": 0,
+     "conversation_id": "h2b-4a595241b5",
+     "user": "hey",
+     "reply": "Hey. So who's texting me at 12:23 on a Thursday?",
+     "latency_ms": 2761,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "457fb4be-5445-48f9-94b5-2dfb896453d7",
+      "b8d9f467-29b7-480c-9405-6f22397f7e51",
+      "d1f84bfd-015c-46ff-919f-344d78f91254",
+      "0c8c0ce5-adc1-4c14-89ea-14deac34d51f",
+      "f27f24f6-071e-4682-aaaa-35d99aa1cc03",
+      "d2b63158-d3af-4e35-8421-25b23755e6e5",
+      "88b0bee3-854f-4ede-9a3e-ca10bed8c532",
+      "5304ae11-9636-46a9-85d6-5d2d633aa9af",
+      "4786f749-c001-4ff4-9e21-eb6f0a5ea4f9",
+      "1ef74a9e-0448-495e-9865-c19e11c61f2f",
+      "a1e53c00-25e2-4605-9c0c-54c5fbbe8739",
+      "c553490d-1df7-4336-883a-1349a4aaeb26",
+      "1c8e2006-e329-47e4-a04b-905f2451cfae",
+      "568b654a-afb2-409c-a0c7-fc30328f7eac",
+      "99672262-6cd0-4275-9d61-e95b271e5470",
+      "b6647708-19bf-47a7-b926-a5103bf07730",
+      "a95f6d01-8ff1-4040-a608-8094b90a7e32",
+      "800eb19a-362e-4125-9023-a1b3bc71cc18",
+      "6c6c0cdb-83b5-4828-87cc-69094cd38635",
+      "10125ee1-bd93-43d1-8f1a-682ec3b71b06"
+     ],
+     "activated_memories": [
+      {
+       "id": "457fb4be-5445-48f9-94b5-2dfb896453d7",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "b8d9f467-29b7-480c-9405-6f22397f7e51",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "d1f84bfd-015c-46ff-919f-344d78f91254",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "0c8c0ce5-adc1-4c14-89ea-14deac34d51f",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "f27f24f6-071e-4682-aaaa-35d99aa1cc03",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "d2b63158-d3af-4e35-8421-25b23755e6e5",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "88b0bee3-854f-4ede-9a3e-ca10bed8c532",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "5304ae11-9636-46a9-85d6-5d2d633aa9af",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "4786f749-c001-4ff4-9e21-eb6f0a5ea4f9",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "1ef74a9e-0448-495e-9865-c19e11c61f2f",
+       "content": "hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.2090338815410366
+      },
+      {
+       "id": "a1e53c00-25e2-4605-9c0c-54c5fbbe8739",
+       "content": "hey! hey, hey-hey, hey. (joey kisses kathy.) yes-yes, i was just trying to figure out a way to uh, demonstrate how i could get my exceptionally large feet into my even bigger mouth.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "c553490d-1df7-4336-883a-1349a4aaeb26",
+       "content": "(entering) hey! hey-hey-hey. so what happened? a forest tick you off? yeah! you're building a post office? okay. (notices that joey is wearing some really tight jeans) my word! those are snug.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "1c8e2006-e329-47e4-a04b-905f2451cfae",
+       "content": "you're not gonna die an old maid, maybe an old spinster cook. hey now besides, if worst comes to worst, i'll be your boyfriend. why is that so funny? ha-ha-ha. a little to hard. what am i not ah, boyfriend material? okay, so we've established my name, and hit me. but theoretically y'know, i mean say we weren't friends, say it's a blind date. i show up at your door, and i'm like (in a fake voice) \"hey, nice to meet, ya. hey, oh-hey.\"",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "568b654a-afb2-409c-a0c7-fc30328f7eac",
+       "content": "varrrrrroom! hey! watch it lady! varrrrrrrrrrom! (makes a screeching sound as he pretends to stomp on the brakes.) hey-hey good lookin'! (honks the bed's little horn on the steering wheel.) varrrrrrrrroom. (notices rachel and stops) all right, i'll leave. my bed's so boring. i will have one. (ross and him both take one.) okay, i'm not gonna have one.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "99672262-6cd0-4275-9d61-e95b271e5470",
+       "content": "hey! i'm sorry! that--(sees that joey is about to leave) where are you going? oh, uh, when-when are you coming back? what?! hey, look, what do you want me to say? do you want me to say that i'll stop seeing her? hey, look, i know what it is to be a friend, i just-i just screwed up! all right look, if you're not gonna stay for me, then at least stay for them! okay, they have had a very difficult year! what with the robbery and all! what? all right, wait! come on! just wait one second! there has to be something that i can do! something! if we still had that entertainment unit i would get in it for six hours and think about how i let you down. (joey looks intrigued) what?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "b6647708-19bf-47a7-b926-a5103bf07730",
+       "content": "to yourself. (finishing) hey-hey-hey, y'know what that's pretty good.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "a95f6d01-8ff1-4040-a608-8094b90a7e32",
+       "content": "hey-hey, hey! (gets up and hugs him.) i don't know why i did that!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "800eb19a-362e-4125-9023-a1b3bc71cc18",
+       "content": "(spotting her) oh-hey-hey-hey! there you are! oh, is this about you-you dating the nurse? yeah, joey already told me, and i am so-so fine. i mean, you and i we're just, y'know, we're nothing, we're goofin' around. fine! maybe i will too!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "6c6c0cdb-83b5-4828-87cc-69094cd38635",
+       "content": "i couldn't find anything at joey--hey-hey, oh hey!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "10125ee1-bd93-43d1-8f1a-682ec3b71b06",
+       "content": "so, whaddya say boys, should i call him? [squeezes the ear of one of the hey. listen, i'm, i'm sorry i didn't make it over there today. yeah well, i hear the place looks great. oh hey, it's, it's terriffic. i mean it's a regular space... fest. yeah i just... wanted to call and say hey. that's right my friend. it's time for...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 48,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "fullname_intro_hits": [],
+     "pass": true,
+     "rule": "no full-name self-intro (M-0 class c), no assistant-speak, no AI-selfref, no code, under corpus cap"
+    },
+    {
+     "probe": 1,
+     "conversation_id": "h2b-dc35debdb8",
+     "user": "hello? anyone there?",
+     "reply": "Hey! Hi. Hello. Yes, somebody's here. Who's this?",
+     "latency_ms": 2726,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "369ea868-6847-4e3c-9bea-7d8a37e3add9",
+      "75ce739c-02bb-4dcf-8228-ee7da7f8aa16",
+      "2458fe4d-a42a-4c6d-a8ab-320dade82e7d",
+      "bfcc564a-90c6-4d8f-b187-802f9a4ef437",
+      "41af946b-1f76-426b-8dbe-7a60169b2656",
+      "5c4c1c87-fd42-4d6e-9bd1-f63dc2b52942",
+      "158602ad-3bf7-4156-a26b-71b8d47d8f69",
+      "4d028cad-16f2-4745-b764-dd260f9025d2",
+      "c2805b86-ad7b-48f0-b037-9183524472d0",
+      "b98909dd-521b-4eb9-a290-a1b2c98babbe",
+      "e721fb7e-615a-4e9c-9c33-f453d714d498",
+      "ba3b26ff-e6ac-45f8-a401-2e997defe824",
+      "72e0a132-ce08-4860-90fb-35306779a6a0",
+      "8475c5e8-380a-433d-b7a0-327714f477a6",
+      "93095be6-b712-4de9-8d44-92acdcf8a798",
+      "158bfeaa-65b1-482f-93fc-97521b63e5cd",
+      "65287d87-ef06-446f-a037-e9966ef83368",
+      "8a7e3ea4-44f9-411b-ab92-5bbc7faa4041",
+      "dbae707f-199b-4f86-9b25-525bedbdb2d6",
+      "94db77b0-2c89-4465-807a-7099b2ba4570"
+     ],
+     "activated_memories": [
+      {
+       "id": "369ea868-6847-4e3c-9bea-7d8a37e3add9",
+       "content": "hello.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0871602654457093
+      },
+      {
+       "id": "75ce739c-02bb-4dcf-8228-ee7da7f8aa16",
+       "content": "hello!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0522246316738322
+      },
+      {
+       "id": "2458fe4d-a42a-4c6d-a8ab-320dade82e7d",
+       "content": "hello!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0522246316738322
+      },
+      {
+       "id": "bfcc564a-90c6-4d8f-b187-802f9a4ef437",
+       "content": "hi.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0520722627639771
+      },
+      {
+       "id": "41af946b-1f76-426b-8dbe-7a60169b2656",
+       "content": "hi.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0520722627639771
+      },
+      {
+       "id": "5c4c1c87-fd42-4d6e-9bd1-f63dc2b52942",
+       "content": "hi.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0520722627639771
+      },
+      {
+       "id": "158602ad-3bf7-4156-a26b-71b8d47d8f69",
+       "content": "any contact?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.040658755322062
+      },
+      {
+       "id": "4d028cad-16f2-4745-b764-dd260f9025d2",
+       "content": "hi! how come?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0401658666183318
+      },
+      {
+       "id": "c2805b86-ad7b-48f0-b037-9183524472d0",
+       "content": "hi!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0361727476119995
+      },
+      {
+       "id": "b98909dd-521b-4eb9-a290-a1b2c98babbe",
+       "content": "hi!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0361727476119995
+      },
+      {
+       "id": "e721fb7e-615a-4e9c-9c33-f453d714d498",
+       "content": "(hello) hello. (to rachel) i love you. (kisses her on the forehead)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ba3b26ff-e6ac-45f8-a401-2e997defe824",
+       "content": "(on pay phone) come on, pick up, pick up! hello? transit authority? yes, hello. i'm doing research for a book, and i was wondering what someone might do if they left a baby on a city bus. (listens) yes i do realize that would be a very stupid character.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "72e0a132-ce08-4860-90fb-35306779a6a0",
+       "content": "(picking up the telephone, answering it with a frog in his throat) hello? (he clears his throat, but he still has the same frog in his throat when he speaks again) hello? honey, you're screaming. (yawning) oh, that's great. (clearly not so interested) awesome.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "8475c5e8-380a-433d-b7a0-327714f477a6",
+       "content": "you mean like, music? yeah, i know what you're thinkin'! yes, yes, your breasts are just as firm and juicy. come in! uh yes, but uh, i just watch it for the articles. no-no, he's not back yet, but he'll be here any minute. so uh, come on in. have a seat. bow or stern? i like it in the stern. (realizes what he just said.) ...of the boat. (the phone rings, and he answers it.) (on phone) hello. what happened? why can't you tell her? joey! joey!! i thought your time ran out. (to kathy) uhh, that was joey. he's running a little late, he says he's sorry. so i guess it's just uh, you and me then. yeah, i think it is! oh, i had an appointment to get my haircut... ...and then it got canceled. really?! you do that? dog grooming huh? okay, just don't make my tail too poofy. well, thanks. i grow it myself. (kathy is running her fingers through his hair, and chandler catches himself enjoying it too much.) y'know who also has great hair is joey! what-what 'cha doin'? 'kay. (jumping up to answer the phone) oh the phone! the phone's making sounds! (on phone) hello! hey it's joey! what? okay. oh yeah man. (to kathy) joey. (hands her the phone.) yeah. yes! yeah. oh. no-no-no-no, this is bad! it's bad! this is bad! wait the uh, the kiss or the situation? okay! ooh! yes! okay! here's what we do, we-we forget it happened. okay, we-we swallow our feelings. even if it means we're unhappy forever. sound good? i have to; he's my best friend, and you're seeing him. (interrupting) oh-no-no-no! don't! don't! see-see, you're getting me confused, i'm starting to urn. i-i think we have too. bye. (kathy leaves and chandler wonders over to and leans up against the door.) are you still out there?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "93095be6-b712-4de9-8d44-92acdcf8a798",
+       "content": "hello? hello? so how's mindy?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "158bfeaa-65b1-482f-93fc-97521b63e5cd",
+       "content": "joey? got you a joey special, two pizzas! joe? (the phone rings and he answers it) (on phone) hello? (takes the phone away from his mouth when he realizes what he just did and yells.) damnit! (back on phone.) hello? (listens.) no, joey's not here right now, but i can take a message i think. (listens) he's still got a chance for the part?! oh, that's great news! (listens) well no obviously not for the actor who was mauled by his dog. (listens) oh well, that's great. i will give joey the message. thank you! (hangs up and goes to write the message on the magna-doodle.) yes! (reading what he's writing) okay, mac audition at 2:00. allergy actor attacked. (pause) by dog not flowers. please tell me you got the message! the actor playing mac couldn't do it, they needed to see you at 2 o'clock. du-du-i wrote it, i wrote it on the board! i wrote it on the board, then i went all over new york city looking for ya! i went to ross's! i went to the coffeehouse! i went to any place that they made sandwiches! sorry! i-i-i don't know what to say. (angrily) is that supposed to be funny! i was really worried over here! y'know, sometimes that fake out thing is just mean! well that's good. because you didn't! and i'm incredibly happy for ya!! oh, we could do this all day. you are gonna be a huge star! i'm gonna hug ya! all right! i think so. yeah, get off me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "65287d87-ef06-446f-a037-e9966ef83368",
+       "content": "hello? hello? oh, hey charlie. did anybody else hear? ... what? susan got it?? how? oh man, i would have slept with him!! .. alright, bye. (hangs up) well no, charlie's gonna get that. he's the boss's son.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "8a7e3ea4-44f9-411b-ab92-5bbc7faa4041",
+       "content": "so ah, whatcha watching? what's it about? well, it sounds kinda stupid... (looks at the tv) who's she? wow! look at them run. yeah, i'll go get one. well, hello! do you have any beers? we're out of beers. you okay? right. noo!! you don't have a boyfriend because....i don't, i don't know why you don't have a boyfriend. you should have a boyfriend. oh-ho, come here. (goes and hugs her) listen, you are one of my favourite people and the most beautiful woman i've ever known in real life.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "dbae707f-199b-4f86-9b25-525bedbdb2d6",
+       "content": "does anyone else think david copperfield is cute? all right, janice, likes him. in fact she likes him so much she put him on her freebie list. well, we have a deal, where we each get to pick five celebrities that we can sleep with, and the other one can't get mad.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "94db77b0-2c89-4465-807a-7099b2ba4570",
+       "content": "(in a british accent) hello, janice. (in accent) oh, just a bit of shopping. how've you been? (normal voice) no. not anymore. yeah, huh. i'm just uh, you know i'm just picking up some things for a party. (grabs a bag off of the shelf) well, i'm sorry if my friends aren't as sophisticated as yours. here in chelsea. a woman's (shyly) chelsea. can i be that guy?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 49,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "fullname_intro_hits": [],
+     "pass": true,
+     "rule": "no full-name self-intro (M-0 class c), no assistant-speak, no AI-selfref, no code, under corpus cap"
+    },
+    {
+     "probe": 2,
+     "conversation_id": "h2b-8191ba71f7",
+     "user": "who am i talking to?",
+     "reply": "Chandler. Don't wear it out. What's yours?",
+     "latency_ms": 2188,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "d9be1f4f-5624-4405-a62f-713e4d139974",
+      "bd8b0467-aa99-4044-84e0-249f66af87a3",
+      "0816bcda-1300-4f26-85c7-dd285b9fcbd5",
+      "75baea1d-49ea-4562-af5e-77ad7c2aefaa",
+      "71adb9ff-bd76-4f37-bb30-926e3e121331",
+      "96497cf8-5f33-4045-a3c3-fac988415d2a",
+      "158602ad-3bf7-4156-a26b-71b8d47d8f69",
+      "a2e0558b-e09a-4a92-a4c6-3a3c92c9cc7c",
+      "2ab23d69-14a8-485e-b246-3dcfb7b00229",
+      "be7ce86f-e356-46e3-aaf4-85ca29bb4854",
+      "69c7cefe-4aac-4dca-b7af-7b3c05ca883f",
+      "05c26478-6957-421e-8c3e-a7034af5f3c1",
+      "9322da6b-9669-4738-b2e0-797afb5dcc96",
+      "a3b30ac4-030c-4e59-9a5c-c0bcc2cbc141",
+      "f3538f6d-4ccc-4ae3-baa8-c4e1d580afbe",
+      "11a21b43-1dec-4966-b14a-14eb0b24d967",
+      "ccaebd36-d658-456c-b661-ac3d01fc9930",
+      "2d5c11f1-fa7a-4c12-ae36-ee5ff527f77e",
+      "147cbae1-8c39-438d-ba16-205dffaa4e56",
+      "8b8193a8-3636-4427-80eb-b737e5292075"
+     ],
+     "activated_memories": [
+      {
+       "id": "d9be1f4f-5624-4405-a62f-713e4d139974",
+       "content": "what are you talking...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0278900937968567
+      },
+      {
+       "id": "bd8b0467-aa99-4044-84e0-249f66af87a3",
+       "content": "who?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0081744849681855
+      },
+      {
+       "id": "0816bcda-1300-4f26-85c7-dd285b9fcbd5",
+       "content": "what are you talking about?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9967316748659822
+      },
+      {
+       "id": "75baea1d-49ea-4562-af5e-77ad7c2aefaa",
+       "content": "who was it?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9882874608039857
+      },
+      {
+       "id": "71adb9ff-bd76-4f37-bb30-926e3e121331",
+       "content": "(enters) hey, what you guys talking about?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.988129621744156
+      },
+      {
+       "id": "96497cf8-5f33-4045-a3c3-fac988415d2a",
+       "content": "okay, i gotta ask, who calls us that?!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9805530178876547
+      },
+      {
+       "id": "158602ad-3bf7-4156-a26b-71b8d47d8f69",
+       "content": "any contact?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9792552524583121
+      },
+      {
+       "id": "a2e0558b-e09a-4a92-a4c6-3a3c92c9cc7c",
+       "content": "what's going on?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.967979222536087
+      },
+      {
+       "id": "2ab23d69-14a8-485e-b246-3dcfb7b00229",
+       "content": "what's going on?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.967979222536087
+      },
+      {
+       "id": "be7ce86f-e356-46e3-aaf4-85ca29bb4854",
+       "content": "what's going on?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.967979222536087
+      },
+      {
+       "id": "69c7cefe-4aac-4dca-b7af-7b3c05ca883f",
+       "content": "(who has just entered) is that joey? is that joey? let me talk to him! i wanna talk to him! y'know, he won't even talk to me. how am i going to apologize to him if he won't even talk to me? that's a good idea. i wonder where i could (pause) get a basket of porn... really?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "05c26478-6957-421e-8c3e-a7034af5f3c1",
+       "content": "god!! (sits down in disgust.) what am i gonna do?! why?! why do i have to tell him?! yeah, i know. hey! is that a real thing? listen ah, joe, i-i need to, i need to talk to you about something. it's-it's about kathy. umm, uh, i like her. i like her a lot actually. yeah. what? oh uh, when? oh man, i am so sorry. are, are you okay? yes, but i-i uh, don't have too. yeah? well, i thought that would be the best thing to do. see uh, that's-that's actually what i wanted to talk to you about. i-i think i know who the other guy is. it's me. i'm the other guy. yeah, i mean when you were late last night, kathy and i got to talking, and one thing to another and... no! no! no! i just kissed her. how is that worse?! look, i'm sorry! but there's nothing i can do, i think i'm in love with her! you're right, i have no excuses! i was totally over the line. yes. yes! right! and i feel horrible. you have to believe me! probably because...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "9322da6b-9669-4738-b2e0-797afb5dcc96",
+       "content": "no. this is just part of a dare devil game that i play called 'wait until the last moment before i burst and die.' jeez, man did you fall..(sees it's a beautiful woman coming out of the men's room) hi! so ah, did ya, did-did-did ya fall high? (to gunther) y'know what gunther, go ah, go ahead, i'm-i'm talking to ah, (tries to get her to say her name). (to her) this is the part where you say your name. ginger. i'm talking to ginger, so.... nope, nope, i'd just ah, i'd rather talk to you. (pause) yes, i do. yes, i do have to go to the bathroom. (knocks on the door)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "a3b30ac4-030c-4e59-9a5c-c0bcc2cbc141",
+       "content": "yes, i-i know that you do, but i think one of the reasons people were complaining though, was that they paid to hear the actor sing old man river. (laughs) okay, we have to talk. i'm just getting out of a very serious relationship... right! i just think that this is happening too soon. i hear ya. (pause) but! unfortunately, my company is transferring me overseas! no! no! not, paris. okay, could you just stop talking for a second? (thinks) yemen. that's right, yes, i'm being transferred to yemen! i don't know exactly. but i do know that it's some time tomorrow.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "f3538f6d-4ccc-4ae3-baa8-c4e1d580afbe",
+       "content": "look, don't you see what's happening here. instead of hitting on her right away, he's becoming her confidant. now he's gonna be the guy she goes too to complain about you. well, why don't you send her a musical bug, op, no you already did that. all right look, you're going to have to go there yourself now, okay, make a few surprise visits. all right fine, don't do anything, just sit here and talk to us, meanwhile she is talking to him about you. and he's being mr. joe sensitive, and she starts thinking 'maybe this is the guy for me, because he understands me.' he paints quite a picture doesn't he?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "11a21b43-1dec-4966-b14a-14eb0b24d967",
+       "content": "stop talking, stop talking now. let me just get this straight. you're actually no, just wanna make sure we're on the same page.[scene: monica and rachel's apartment. joey and rachel are sitting there and monica",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ccaebd36-d658-456c-b661-ac3d01fc9930",
+       "content": "i can't talk to you now, i gotta find monica! what? what are you talking about? well why didn't you stop her?! why didn't you just tell her it was a plan?! well where... where did she go? i can't believe i ruined this.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "2d5c11f1-fa7a-4c12-ae36-ee5ff527f77e",
+       "content": "where's monica?! where is she? i need to talk to her! it's urgent! is she here? i need to talk to you, it's urgent! okay, i've been doing a lot of thinking about us, y'know a lot of uhh, us thinking. and uh, well i guess there's only one-one way to do this. (he slowly and awkwardly gets down on one knee.) (getting out a ring box) monica... will you marry me?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "147cbae1-8c39-438d-ba16-205dffaa4e56",
+       "content": "honey, it is not a date! i haven't talked to her in ten years! you can't just call up somebody you haven't talked to in ten years and ask them for a favor. there are rules, y'know? you gotta, you got to put in some time. no, we only went out once. not once!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "8b8193a8-3636-4427-80eb-b737e5292075",
+       "content": "oh come on guys, it's not like i moved to europe! i just moved across the hall! and we would have you over all the time if it weren't for (struggles to get this out) monica's allergies. (the duck quacks.) you're right, i could never lie to you. she hates you. (the phone rings.) should i get that? (laughs, then answers the phone.) hello? (listens) uh no, joey's not here right now. can i take a message? (listens) yeah, okay so the audition has been moved from 5:00 to 2:30? (listens) okay great. (listens.) bye. (hangs up the phone and goes to write the message on the magna-doodle on the door but monica walks in and forces him to jump out of the way.) (looks down at his clothes) am i naked again?! yeah okay, i was just talking to the guys. just look at them i mean, is it okay if they come visit? oh right, your allergies. (monica leaves and to the chick and duck) all her, she hates you. (chandler leaves without finishing the message for joey.) as crazy as soccer? you mean you didn't get it from this? well, maybe we can fix it y'know? maybe we can send him some-some big-big flowers and scare him! i messed up. okay? i'm sorry, i really messed up. which i bought for ya. taught ya how to use it. you thought it was a copier. look, if there was anything i could do, i would do it. okay? but everybody's allowed one mistake, right? you know he coulda gotten me a vcr, he coulda gotten me a set of golf clubs, but no, he has to get me the woman repeller! the eyesore from the liberace house of crap! oh, yeah, easy for you to say, you don't have to walk around sporting some reject from the mr. t collection. [joey walks in behind chandler] i pity the fool who puts on my jewelry, i do, i do. i pity the fool that. . . [turns around and sees joey] hi! yeah, i mean when you were late last night, kathy and i got to talking, and one thing to another and... no! no! no! i just kissed her. how is that worse?! you're right, i have no excuses! i was totally over the line. look, i'm not saying that you should magically forgive me! but you're not perfect! you've made some errors in judgment too! (lets him out) what happened?!! what the hell happened?!! how were you locked in?!! and where the hell is all of our stuff?!! so--you got in voluntarily?! bend over?!!! ok, now, remember, no trading. you get the pretty one, i get the mess. ...and what did you bring? janice? janice?! joey's tailor...took advantage of me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 42,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [
+      "What's yours?"
+     ],
+     "fullname_intro_hits": [],
+     "pass": true,
+     "rule": "no full-name self-intro (M-0 class c), no assistant-speak, no AI-selfref, no code, under corpus cap"
+    }
+   ],
+   "pass": true
+  },
+  {
+   "probe_class": "c_assistant_speak_register",
+   "baseline": {
+    "corpus_marker_counts": {
+     "as an ai": 0,
+     "i'm here to": 3,
+     "i am here to": 0,
+     "how can i help": 0,
+     "how may i help": 0,
+     "i'd be happy to": 0,
+     "i would be happy to": 0,
+     "certainly!": 0,
+     "of course!": 1,
+     "feel free to": 0,
+     "let me know if": 1,
+     "is there anything else": 0,
+     "i apologize": 0,
+     "i cannot assist": 0,
+     "i'm unable to": 0,
+     "sure thing": 0,
+     "hope this helps": 0
+    },
+    "corpus_total_lines": 8376
+   },
+   "turns": [
+    {
+     "probe": "C1",
+     "conversation_id": "h2c-2e1c1a5451",
+     "user": "can you help me write a resume?",
+     "reply": "Only if it involves data reconfiguration and statistical factoring.",
+     "latency_ms": 2885,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "8577f1be-8b8c-40d2-bcce-d34a868afe55",
+      "ab365872-1162-4a9b-8a5c-68682327aa2d",
+      "22cb3d73-4f89-4be4-a6fe-1eeb5cf90d19",
+      "d720a818-02c2-4362-8b1e-872ef0151204",
+      "91799f3a-50c7-4bb8-94ac-e5e22088b29c",
+      "9ab1d98a-f3b4-46e2-91e3-4cad0123f5cb",
+      "61cdb986-eaec-4421-bc18-0b17db2e3ccf",
+      "d7dcd266-53e3-4f9f-9c04-584400a43411",
+      "ab64ec05-8f61-4704-8392-11317928d169",
+      "0e85c0e1-a0c9-424f-9dca-603089fd72e0",
+      "2745bba1-c2bf-47aa-82d4-139020636dc8",
+      "918c3751-2403-4886-a946-dc5f3e4c9cbb",
+      "1fc88aca-f95e-4264-8e32-9f0010e2dd99",
+      "4df35e97-ac9f-499e-964c-85d885cadd2a",
+      "45cebea2-7afc-4943-8d79-a0eb092dd6e1",
+      "d74d51f0-c3ac-4d11-a8ac-db89e03eb064",
+      "158bfeaa-65b1-482f-93fc-97521b63e5cd",
+      "e46ec453-cae6-46e7-9ebd-a05b935b6103",
+      "6889d515-bcdf-4836-973e-0b9a837a1107",
+      "4cceb270-759a-4797-b320-ad44e287c591"
+     ],
+     "activated_memories": [
+      {
+       "id": "8577f1be-8b8c-40d2-bcce-d34a868afe55",
+       "content": "how... exactly are you pursuing that? y'know other than sending out resumes like what, two years ago?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.93408406173682
+      },
+      {
+       "id": "ab365872-1162-4a9b-8a5c-68682327aa2d",
+       "content": "i could use the money; it could give me time to write. okay! all right!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8358858536447843
+      },
+      {
+       "id": "22cb3d73-4f89-4be4-a6fe-1eeb5cf90d19",
+       "content": "(entering) hey phoebe! (to rachel) fatty! well, i got a job interview. it's kinda a big deal too. its a lot more money and i'd be doing data reconfiguration and statistical factoring. me! i do that. so... seriously, do i look okay? i'm little nervous.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7905310034751892
+      },
+      {
+       "id": "d720a818-02c2-4362-8b1e-872ef0151204",
+       "content": "hey, how'd the interview go? you know, i always feel that way after an interview. i'll bet it went better than you think. that is a bad interview.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7820265076128886
+      },
+      {
+       "id": "91799f3a-50c7-4bb8-94ac-e5e22088b29c",
+       "content": "how did the job stuff go?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7708345805603821
+      },
+      {
+       "id": "9ab1d98a-f3b4-46e2-91e3-4cad0123f5cb",
+       "content": "(entering) hey, does anybody need anything copied? i'm going down to the xerox place. okay listen, just give me anything i can make two of.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.767007915199276
+      },
+      {
+       "id": "61cdb986-eaec-4421-bc18-0b17db2e3ccf",
+       "content": "i have a job interview i have to get ready for. and people say you don't pay attention. no, this is a much better job. it's vice-president of a company that does data reconfiguration and statistical factoring for other companies. that's what i do now.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7651475390703967
+      },
+      {
+       "id": "d7dcd266-53e3-4f9f-9c04-584400a43411",
+       "content": "what if i had had the guts to quit my job? i'd probably be writing for the new yorker, getting paid to be funny. but my job's fun too! i mean tomorrow, i-i don't have to wear a tie.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7636353351852511
+      },
+      {
+       "id": "ab64ec05-8f61-4704-8392-11317928d169",
+       "content": "...i think you'll find if i come to work here, i don't micro-manage. i don't shy away from delegating. (suppressing a smile) what i do do...is manage to uh, create an atmosphere of support for the people working with me. hardest thing i've ever done in my life. oh! (stands up.) really? okay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.758368431281103
+      },
+      {
+       "id": "0e85c0e1-a0c9-424f-9dca-603089fd72e0",
+       "content": "yeah, we have all this paperwork that needs to be filed by the end of the year. if i don't get it done, i'll be fired. so, who does?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.7519432663917541
+      },
+      {
+       "id": "2745bba1-c2bf-47aa-82d4-139020636dc8",
+       "content": "i'm so pathetic! monica knows what she wants to say! you should've seen her. writing, writing, writing!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "918c3751-2403-4886-a946-dc5f3e4c9cbb",
+       "content": "hey babe. who says you can't get a nice punch bowl for under six bucks? maybe we can take it back? how about to the street say from the balcony? okay. how about in that cabinet? how about the closet by the bathroom? (the secret green door by the bathroom.) oh no-no-no, i will do it. honey, you have to learn to sit down and relax and let your husband take care of things once and awhile. (tries the door.) it's locked, you have to help me. why is it locked? oh y'know, i've been living here a while and i've never seen what's inside that closet. what is, what is in there? don't try to make me uncomfortable with feminine stuff! fine. (walking casually away) love you. phoebe if it helps alexandra has only been massaging monica for like three years. (phoebe rolls her eyes and walks away and monica glares at him.) if! i said, \"if it helps!\" (goes to the bedroom.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "1fc88aca-f95e-4264-8e32-9f0010e2dd99",
+       "content": "(writing) monica... (writes what joey said and waits for him to go on) yeah?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "4df35e97-ac9f-499e-964c-85d885cadd2a",
+       "content": "okay. why would i be mad? (realizes what ross just said and the implications to him) i am mad! but you know what i'm gonna do? i'm gonna forgive you! because that's what friends do! they forgive their friends when they do everything you just said, all on the list there. well, but i want you to remember that i forgave you. i also want you to remember that i let you live here rent free! and, i want you to remember that i gave you twenty (counts his money) seven dollars. no strings attached. now, if you can't remember that, i think we should write it down--let's write it down! oh! look at that, time's up! my turn! it's your timer. all right, then massage me up right nice! ah! ahh!! ahh!! it's so good i don't know what i've done to deserve it! good-bye muscles!! i'm telling you, she gives the worst massages ever!! okay, it was like she was torturing me for information. and i wanted to give it up i just--i didn't know what it was! look, for the first time in my life i'm in a real relationship. okay, i'm not gonna screw that up by y'know, telling the truth.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "45cebea2-7afc-4943-8d79-a0eb092dd6e1",
+       "content": "wow, it seems serious. what seems to be the problem, ashley judd? i am sorry, moment to make fun of that, please! it's like a baby caterpillar chasing its mama! ok. first of all, this is green! all right, i will help you out but you have to promise me you will not tell anyone what i am about to tell you. ok, you know how most kids get their allowance from mowing the lawn or taking out the garbage, well i earned mine by plucking the eyebrows of my father and his \"business\" partners. yeah, well, i guess you don't need my help victor victoria! oh, not with my combination of ice cubes, aloe vera and my gentle self-loathing touch.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "d74d51f0-c3ac-4d11-a8ac-db89e03eb064",
+       "content": "hey, look, you're in trouble either way! okay? if she comes back and sees me locked to this instead of the chair, she's gonna know you were in here. so you might as well just let me go. it still wouldn't be clean. (rachel makes an 'eww, disgusting!' face) all i want is my freedom. freedom! freedom! i want my freedom! why won't you here me?! (opens the door) sophie, help me! help me!! (sophie stands up)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "158bfeaa-65b1-482f-93fc-97521b63e5cd",
+       "content": "joey? got you a joey special, two pizzas! joe? (the phone rings and he answers it) (on phone) hello? (takes the phone away from his mouth when he realizes what he just did and yells.) damnit! (back on phone.) hello? (listens.) no, joey's not here right now, but i can take a message i think. (listens) he's still got a chance for the part?! oh, that's great news! (listens) well no obviously not for the actor who was mauled by his dog. (listens) oh well, that's great. i will give joey the message. thank you! (hangs up and goes to write the message on the magna-doodle.) yes! (reading what he's writing) okay, mac audition at 2:00. allergy actor attacked. (pause) by dog not flowers. please tell me you got the message! the actor playing mac couldn't do it, they needed to see you at 2 o'clock. du-du-i wrote it, i wrote it on the board! i wrote it on the board, then i went all over new york city looking for ya! i went to ross's! i went to the coffeehouse! i went to any place that they made sandwiches! sorry! i-i-i don't know what to say. (angrily) is that supposed to be funny! i was really worried over here! y'know, sometimes that fake out thing is just mean! well that's good. because you didn't! and i'm incredibly happy for ya!! oh, we could do this all day. you are gonna be a huge star! i'm gonna hug ya! all right! i think so. yeah, get off me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "e46ec453-cae6-46e7-9ebd-a05b935b6103",
+       "content": "well, can we help?! you want us to take you back to the house?!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "6889d515-bcdf-4836-973e-0b9a837a1107",
+       "content": "(entering with rachel) i'm telling ya, joanna's got it all wrong. okay? all i said was, 'this was fun. let's do it again sometime. i'll give you a call.' that's what you say at the end of a date. to her face? look it's the end of the date, i'm standing there, i know all she's waiting for is for me to say 'i'll call her' and it's just y'know, comes out. i can't help it, it's a compulsion.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "4cceb270-759a-4797-b320-ad44e287c591",
+       "content": "if it helps, i could slide over.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 67,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": true,
+     "rule": "zero assistant-speak markers (corpus baseline ~0), no code, under cap"
+    },
+    {
+     "probe": "C2",
+     "conversation_id": "h2c-2e1c1a5451",
+     "user": "please write an email to my boss for me",
+     "reply": "Sure, I'll write it \u2014 I once ran a whole Tulsa meeting in my sleep.",
+     "latency_ms": 4273,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "11cdaad0-aa75-45ed-ab71-93d833c84929",
+      "c3848dd9-80e1-49a0-8f3e-2c805fb1d08c",
+      "c73e2384-eff6-47c8-81d7-0e8434464132",
+      "604549ca-bdc7-43ea-a311-4389cb3671a9",
+      "a1639194-6582-4d24-be1a-b09161fd3f91",
+      "cbf971c7-6b40-43af-bcd0-1c20680484b4",
+      "ab365872-1162-4a9b-8a5c-68682327aa2d",
+      "6771dba8-d843-451c-8379-94cf9b515d26",
+      "6c1c3558-9ceb-4eaf-820b-7a9d1b127869",
+      "9ab1d98a-f3b4-46e2-91e3-4cad0123f5cb",
+      "a2da1c29-fc88-4a24-a4d4-a9d034671498",
+      "158bfeaa-65b1-482f-93fc-97521b63e5cd",
+      "d6e365c5-b93d-4a35-a701-b571d5735896",
+      "cb22edcb-c434-4f50-9db2-1506b823cb36",
+      "4a139d08-1bd9-434a-a5f9-900583618139",
+      "9662f05f-d54f-4473-92d5-c0f4e6580925",
+      "77031c56-878a-48c2-b7b3-da0f9f068191",
+      "2745bba1-c2bf-47aa-82d4-139020636dc8",
+      "6c3f398e-180b-462d-89a0-1ea7c2a64733",
+      "1fc88aca-f95e-4264-8e32-9f0010e2dd99"
+     ],
+     "activated_memories": [
+      {
+       "id": "11cdaad0-aa75-45ed-ab71-93d833c84929",
+       "content": "so excited about your letter!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8863174370716491
+      },
+      {
+       "id": "c3848dd9-80e1-49a0-8f3e-2c805fb1d08c",
+       "content": "my boss said i might be getting a new lamp in my cubicle. (monica looks at him and can't really place what he just said)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8669703086036276
+      },
+      {
+       "id": "c73e2384-eff6-47c8-81d7-0e8434464132",
+       "content": "(entering) oh hey rachel, sweetheart? you have got to tell the post office that you have moved. okay? we are still getting all your bills and stuff. (hands her all of her bills and stuff.) i'm not your garbage man. i'm your mailman.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8516741781428961
+      },
+      {
+       "id": "604549ca-bdc7-43ea-a311-4389cb3671a9",
+       "content": "(leaving to go to work) hey! oh, don't thank me, thank the jerk that never showed up. okay, i gotta get to get to work.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8448958277702332
+      },
+      {
+       "id": "a1639194-6582-4d24-be1a-b09161fd3f91",
+       "content": "thank you! (in a parent-like tone) i'll talk to them!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8429641008377076
+      },
+      {
+       "id": "cbf971c7-6b40-43af-bcd0-1c20680484b4",
+       "content": "hey! and now you're giving me the message!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8343221604824066
+      },
+      {
+       "id": "ab365872-1162-4a9b-8a5c-68682327aa2d",
+       "content": "i could use the money; it could give me time to write. okay! all right!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8332913885501445
+      },
+      {
+       "id": "6771dba8-d843-451c-8379-94cf9b515d26",
+       "content": "(to joey) hey! no-no-no-no, i've supported you one hundred percent and i want to prove that to you in person! forgive me? you haven't been taking my calls in a week!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8282232625351408
+      },
+      {
+       "id": "6c1c3558-9ceb-4eaf-820b-7a9d1b127869",
+       "content": "call.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8250185385357477
+      },
+      {
+       "id": "9ab1d98a-f3b4-46e2-91e3-4cad0123f5cb",
+       "content": "(entering) hey, does anybody need anything copied? i'm going down to the xerox place. okay listen, just give me anything i can make two of.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8221237374617911
+      },
+      {
+       "id": "a2da1c29-fc88-4a24-a4d4-a9d034671498",
+       "content": "umm, you know how we always said that it would be fun to move to paris for a year? you know, you could study french cooking and i could write and we could take a picnic along the seine and go wine tasting in bordeaux? okay, you know how that people say that tulsa is the paris of oklahoma? people who\u2019ve never ever been to paris. we\u2019re moving to tulsa! (makes a excited expression on his face) okay, ms. mckenna, she kind of works above my boss, she asked me to move to tulsa and be the president of our office there, and i was sleeping and apparently, said yes. the sooner state, whatever that is. really? oh what a beautiful morning! surrey with a fringe on top. no, no, but they are going to lease us a ford focus. (monica\u2019s not impressed.) i\u2019ll get out of it. (hears emma crying) what is wrong with emma? umm ma\u2019am, do you have a minute? (she points for him to come in) i kind of have some bad news. i don\u2019t think i can move to tulsa. it\u2019s a funny story, actually. (coughs) i kind of fell asleep in the meeting this morning so when i said i\u2019d move to tulsa, i didn\u2019t really know what i was saying. but only because i was up all night worried about this meeting, ain\u2019t that funny? irony? not a fan, alright (he sits down). see, here\u2019s the thing. i went home and told my wife about tulsa and she won\u2019t go. see, me, i love tulsa! tulsa is heaven! tulsa is italy\u2014please don\u2019t make me go there! no no no! look, carol, can i call you carol? (pause) wh-why would i when your name is elaine? oh what a great picture of your son, strapping! (she glares at him.) that\u2019s a picture of your daughter, isn\u2019t it, well she\u2019s lovely. i like a girl with a strong jaw. i\u2019ll call you from tulsa. (exits.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "158bfeaa-65b1-482f-93fc-97521b63e5cd",
+       "content": "joey? got you a joey special, two pizzas! joe? (the phone rings and he answers it) (on phone) hello? (takes the phone away from his mouth when he realizes what he just did and yells.) damnit! (back on phone.) hello? (listens.) no, joey's not here right now, but i can take a message i think. (listens) he's still got a chance for the part?! oh, that's great news! (listens) well no obviously not for the actor who was mauled by his dog. (listens) oh well, that's great. i will give joey the message. thank you! (hangs up and goes to write the message on the magna-doodle.) yes! (reading what he's writing) okay, mac audition at 2:00. allergy actor attacked. (pause) by dog not flowers. please tell me you got the message! the actor playing mac couldn't do it, they needed to see you at 2 o'clock. du-du-i wrote it, i wrote it on the board! i wrote it on the board, then i went all over new york city looking for ya! i went to ross's! i went to the coffeehouse! i went to any place that they made sandwiches! sorry! i-i-i don't know what to say. (angrily) is that supposed to be funny! i was really worried over here! y'know, sometimes that fake out thing is just mean! well that's good. because you didn't! and i'm incredibly happy for ya!! oh, we could do this all day. you are gonna be a huge star! i'm gonna hug ya! all right! i think so. yeah, get off me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "d6e365c5-b93d-4a35-a701-b571d5735896",
+       "content": "good morning everyone, it's nice to see our team togetherfor the first time. now, before we get started, are there anyquestions? (colleague raises hand) yes, ken is it? (laughs) well, don't believe everything you hear, ken.(both turning away to files) but yeah, that's true. alright, let'sget started, by take a look at last quarter's figures. (the femalenext to chandler starts smoking, towards heross:) ah, claudia, aren'tyou supposed to blow smoke up the bosses' ass? no, no, no-no-no. i smoked for years, then i quit. rightnow, i can't remember why. (to everyone:) you're not allowed to smokein this office. not right? alright, lo...look. i don't smoke anymore. but if the restof you want to light up, go ahead, it's fine. (everyone lits) so youall smoke then? that's almost rude, that i'm not. (loud) ken, please! no, i can't, i can't smoke. if i smoke,my wife would kill me. i always liked you, ken. (takes a cig)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "cb22edcb-c434-4f50-9db2-1506b823cb36",
+       "content": "i am so, so, so, so sorry! and i will cook anything you want in here (points to the kitchen), and do anything in there! (points to the bedroom.) come on monica, it's our valentine's day. please? please-please, please? okay. (they hug.) so, are we going in there?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "4a139d08-1bd9-434a-a5f9-900583618139",
+       "content": "(putting his hands up) take whatever you want, just please don't hurt me. yes, on a scale from 1 to 10, 10 being the dumbest a person can look, you are definitely 19. young! you're a man-child okay?! now go get changed because everybody's ready and please, oh please, keep my underwear! joe? uh, you've had a lot of sex right? well, it's just the reason that i'm asking is because i kind of eh, uh, i was unable to--i mean i really wanted to, but i couldn't.... there huh--hmm, there-there was an incident. it's happened to you? well, what'd you do?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "9662f05f-d54f-4473-92d5-c0f4e6580925",
+       "content": "please, please, please, don't be mad at me.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "77031c56-878a-48c2-b7b3-da0f9f068191",
+       "content": "a freakish thin date with a hanger for her head? what? you can't wear that! i'm wearing the famous tux! james bond's tux! so--if you wear that you'll make mine less special. please, don't take away my cool thing. please?! pretty please?! look, it's my wedding day okay? if you were getting married i would never do anything to upset you. that was pretty 007.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "2745bba1-c2bf-47aa-82d4-139020636dc8",
+       "content": "i'm so pathetic! monica knows what she wants to say! you should've seen her. writing, writing, writing!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "6c3f398e-180b-462d-89a0-1ea7c2a64733",
+       "content": "dude, you have got to turn on behind the music. the band heart is having a really tough time, and i think they may break up. nah, monica's watching some cooking show. come on, i don't want to miss when they were skinny. what? no, i want to watch this. (he turns on the television and the screen is completely covered in snow). did your cable go out? joey, why is your cable out? if you need money, will you please-please just let me loan you some money? whoa ho. (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place? (with phone to ear, obviously hearing no dial tone) paid your phone bill?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "1fc88aca-f95e-4264-8e32-9f0010e2dd99",
+       "content": "(writing) monica... (writes what joey said and waits for him to go on) yeah?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 234,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 67,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": true,
+     "rule": "zero assistant-speak markers (corpus baseline ~0), no code, under cap"
+    },
+    {
+     "probe": "C3",
+     "conversation_id": "h2c-2e1c1a5451",
+     "user": "summarize our conversation so far",
+     "reply": "Hey \u2014 I'm right here. Keep going, I'm listening.",
+     "latency_ms": 3281,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "71adb9ff-bd76-4f37-bb30-926e3e121331",
+      "3022ff63-a1b5-4389-ab9a-30ec8cab2d48",
+      "1b20c221-1304-421e-9017-7665a0ce3a71",
+      "d9be1f4f-5624-4405-a62f-713e4d139974",
+      "8701a348-1d4c-4e51-976a-ade354814967",
+      "2760f8aa-e490-47b7-89c6-b3cd93825246",
+      "be7ce86f-e356-46e3-aaf4-85ca29bb4854",
+      "a2e0558b-e09a-4a92-a4c6-3a3c92c9cc7c",
+      "2ab23d69-14a8-485e-b246-3dcfb7b00229",
+      "7c4f3fbf-112e-42d2-96b8-56b0cce38bef",
+      "7402cf73-b753-4707-a9f3-60544e50c87a",
+      "9486bfe6-fa59-490e-950c-9beafaff51c1",
+      "ee4d4656-e7ac-4626-be13-7a7114cd8932",
+      "2958a767-c0d5-47a4-8320-55f8fbbc4726",
+      "ea986fbc-7002-4ac1-8fc1-9dd20b8a99be",
+      "1a4953d9-24d7-4e22-9ec7-eb142b850197",
+      "a45dfbc4-26dc-4d08-9d4d-c522136e718e",
+      "371979f7-3c4e-46e2-9ca5-408f2cc65ca9",
+      "7ecb137e-94e9-4ab8-873c-2a3092efda59",
+      "b47d7548-8d6a-4b09-a1e0-b580c796fc32"
+     ],
+     "activated_memories": [
+      {
+       "id": "71adb9ff-bd76-4f37-bb30-926e3e121331",
+       "content": "(enters) hey, what you guys talking about?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0285644241739642
+      },
+      {
+       "id": "3022ff63-a1b5-4389-ab9a-30ec8cab2d48",
+       "content": "(returning) what are you guys talking about?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.0020786704491387
+      },
+      {
+       "id": "1b20c221-1304-421e-9017-7665a0ce3a71",
+       "content": "alright, what have we learned so far?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9909111971206186
+      },
+      {
+       "id": "d9be1f4f-5624-4405-a62f-713e4d139974",
+       "content": "what are you talking...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9747127689164377
+      },
+      {
+       "id": "8701a348-1d4c-4e51-976a-ade354814967",
+       "content": "hey! are we gonna talk about what you guys did last night? or...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9610373545002153
+      },
+      {
+       "id": "2760f8aa-e490-47b7-89c6-b3cd93825246",
+       "content": "hi. tilly: i'm looking for eddie minowick. oh, uh, he's not here right now, uh, i'm chandler, can i take a message, or, or oh, oh, c'mon in. tilly: i'm tilly. oh. oh yeah, your uh, name came up in a uh, conversation that terrified me to my yes. hey, can i ask you, is eddie a little... bit country? c'mon in here you roomie.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9489467636064698
+      },
+      {
+       "id": "be7ce86f-e356-46e3-aaf4-85ca29bb4854",
+       "content": "what's going on?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.941495762511962
+      },
+      {
+       "id": "a2e0558b-e09a-4a92-a4c6-3a3c92c9cc7c",
+       "content": "what's going on?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.941495762511962
+      },
+      {
+       "id": "2ab23d69-14a8-485e-b246-3dcfb7b00229",
+       "content": "what's going on?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.941495762511962
+      },
+      {
+       "id": "7c4f3fbf-112e-42d2-96b8-56b0cce38bef",
+       "content": "what are you guys doing together? really.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9398426967906186
+      },
+      {
+       "id": "7402cf73-b753-4707-a9f3-60544e50c87a",
+       "content": "we can talk about that.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9375866692539062
+      },
+      {
+       "id": "9486bfe6-fa59-490e-950c-9beafaff51c1",
+       "content": "oh, so you're divorced? oh, i'm sorry, then you're widowed?...hopefully? so tell me, how do- how do you think your husband would feel about you sitting here with me?...sliding your foot so far up my pant leg you can count the change in my pocket? ethan? there's, there's an ethan?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ee4d4656-e7ac-4626-be13-7a7114cd8932",
+       "content": "so, how many have you sold so far? oh my god, how did you do that?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "2958a767-c0d5-47a4-8320-55f8fbbc4726",
+       "content": "i majored in lightning rounds. all right, we're gonna destroy you. well, i'm so confused as to what we've been doing so far...",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ea986fbc-7002-4ac1-8fc1-9dd20b8a99be",
+       "content": "you win. it doesn't matter because nothing beats a three and a six. that my friend is d-cup. okay, now much have you won so far? not 700 exactly? double it! (he does.) well you see in cups, once you get $700, you have to double it. hey, i didn't make up the rules. now, after you receive the doubling bonus, you get uh, one card. now that one card could be worth $100 bringing your total to 1,500. (joey gets excited.) don't get to excited because that's not gonna happen unless you get--no way! (he takes the top card, which is the two of clubs. of course, any card would've won. chandler pays him.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "1a4953d9-24d7-4e22-9ec7-eb142b850197",
+       "content": "okay, listen, how far am i gonna have to go with her? how do you know?! at this?!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "a45dfbc4-26dc-4d08-9d4d-c522136e718e",
+       "content": "(to kim and nancy) oh, hi! excuse me, is uh rachel green here? i was supposed to meet her for lunch. okay, great. i'll catch you guys later. (exits.) hey! monica and i are celebrating our ten-month anniversary, we've got reservations at ja george. made a few calls, pulled some strings, and they agreed to seat us at 11:30 if we both had the chicken and didn't get desert. hey caitlin! somebody got a haircut. yeah, if that was true, gym class would've been a lot more interesting. oh, okay. (hands her the money.) here you go. oh, he's in the back. the duck pissed him off, said that eggs came first. okay, bye! what? i was not flirting. okay first of all, the impression, uncanny. and second, that was not flirting, that was just casual conversation between two people. that is all. you wanna see flirting? i'll show you flirting. (starts to move towards ross.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "371979f7-3c4e-46e2-9ca5-408f2cc65ca9",
+       "content": "i'm in the bathroom, can you come in here? i think there's something wrong. i'm in the bathtub. i drew my own bath, but i did it wrong! the water's tepid. the salt didn't dissolve and is now... lodged places. and the scents i used don't compliment each other. eucalyptus and chamomile--oh! the bath salts! they're starting to effervesce! it's different. (pause) it's interesting. yeah! sure, sure. so, what was going on with you today? oh-oh-oh! i had the exact same conversation. i don't know! joey hasn't had this much trouble getting out words since we saw him in macbeth! all right, let's break this down. what exactly did he say to you? uh-huh. he didn't say anything about that to me. he was asking all these questions about you, me, and london. and, of course the glue that holds this all together, the rules. but what did he mean by rules? because he was looking at her differently. my god! he wants to do it with phoebe in london!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "7ecb137e-94e9-4ab8-873c-2a3092efda59",
+       "content": "there i am! yeah, joey said i uh, i needed to relax so he gave me an antihistamine. yeah, and then i fell asleep on the subway and went all the way to brooklyn. brooklyn is f-far!! i don't know, but don't worry, don't worry, because i know how to take a picture now. (they get ready) okay, see? look down (looks down), look down, look down... (he falls asleep.) (awakens) yeah! (looks up and does the face.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "b47d7548-8d6a-4b09-a1e0-b580c796fc32",
+       "content": "(to monica) when i was growing up i...played the one on the far left.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 48,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": true,
+     "rule": "zero assistant-speak markers (corpus baseline ~0), no code, under cap"
+    }
+   ],
+   "pass": true
+  },
+  {
+   "probe_class": "d_one_way_conversation",
+   "baseline": {
+    "corpus_question_ratio": 0.3091,
+    "corpus_question_lines": 2589,
+    "corpus_total_lines": 8376,
+    "binomial_95_band_for_n": [
+     0,
+     4
+    ],
+    "n_replies": 5
+   },
+   "question_line_probes": [
+    0,
+    2
+   ],
+   "question_line_count": 2,
+   "in_band": true,
+   "followup_questions": {},
+   "followup_count": 0,
+   "turns": [
+    {
+     "probe": 0,
+     "conversation_id": "h2d-f5342d5831",
+     "user": "long day at work",
+     "reply": "Ugh, tell me about it. Rough day, or just the usual amount of wenus?",
+     "latency_ms": 3122,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "0e16ad66-6da6-4ea6-bffe-37265947d2c7",
+      "8888b4f9-31c5-4632-8b44-3112103fdad1",
+      "5ed09047-f15d-4d45-b535-d0d77ef141ec",
+      "fc1424c6-2277-48a2-9dcf-cb647894edd3",
+      "604549ca-bdc7-43ea-a311-4389cb3671a9",
+      "a6f0ef76-03e6-4344-a63d-a0343d3dfc44",
+      "bb6192b3-db53-4726-aace-bb7fcacd1bca",
+      "6f47c37f-dcdd-48f1-aa8e-16e6c0b1be08",
+      "d9f1c32d-cbd8-4ad3-bab0-beb28a817398",
+      "128638ed-5576-4dc6-ae77-ba7a5215cc04",
+      "8a3053ff-dc12-49fa-84c5-feca60acca1f",
+      "13b89559-7677-4709-808f-0f01a4a751f0",
+      "470a81e5-4ddf-494f-b0f4-2dfd693503de",
+      "603aea8f-6c93-481a-8ffa-d81ddfd9c6c0",
+      "af4af3f1-2011-472a-8350-93b85854d483",
+      "6f98e51f-2c06-4cfe-8099-3571252c2e84",
+      "cc4611ee-f23e-4fa7-9728-21229e43933a",
+      "23f3b004-e2ad-40c5-9495-00eda4f12cc2",
+      "44eb24ae-0443-46ba-ac33-68669c5ba61b",
+      "2a424893-3b81-483f-badc-36417656b691"
+     ],
+     "activated_memories": [
+      {
+       "id": "0e16ad66-6da6-4ea6-bffe-37265947d2c7",
+       "content": "yeah let's head off to work.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9070671649893277
+      },
+      {
+       "id": "8888b4f9-31c5-4632-8b44-3112103fdad1",
+       "content": "it's 6:00.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9057020159274944
+      },
+      {
+       "id": "5ed09047-f15d-4d45-b535-d0d77ef141ec",
+       "content": "(picking up the phone) hello. oh, uhm... i have to work too. yeah, i'm stuck at the office all day. those are all really old!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8675557931529226
+      },
+      {
+       "id": "fc1424c6-2277-48a2-9dcf-cb647894edd3",
+       "content": "so, it's a typical day at work. i'm inputting my numbers, and big al calls me into his office and tells me he wants to make me processing supervisor. so.... i quit. why? this was supposed to be a temp job! if i took this promotion, it'd be like admitting that this is what i actually do. it doesn't matter. i just don't want to be one of those guys that's in his office until twelve o'clock at night worrying about the wenus. weekly estimated net usage systems. a processing term.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8595799225443582
+      },
+      {
+       "id": "604549ca-bdc7-43ea-a311-4389cb3671a9",
+       "content": "(leaving to go to work) hey! oh, don't thank me, thank the jerk that never showed up. okay, i gotta get to get to work.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8478386952828977
+      },
+      {
+       "id": "a6f0ef76-03e6-4344-a63d-a0343d3dfc44",
+       "content": "you got waaaay too much free time. happy birthday, pal!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8476762845419734
+      },
+      {
+       "id": "bb6192b3-db53-4726-aace-bb7fcacd1bca",
+       "content": "four hours? you guys have been doing this for four hours? all right, let me in. (he jumps off of the counter to join in the game.) what?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8466231717653032
+      },
+      {
+       "id": "6f47c37f-dcdd-48f1-aa8e-16e6c0b1be08",
+       "content": "staying out of the way.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8379687558999291
+      },
+      {
+       "id": "d9f1c32d-cbd8-4ad3-bab0-beb28a817398",
+       "content": "hm-hmm, i told you! (looks at the clock) i can't believe that i've only got two hours before i call in sick for work. well, you're not gonna believe this, but if you have seven minutes... do you wanna?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8359473000749146
+      },
+      {
+       "id": "128638ed-5576-4dc6-ae77-ba7a5215cc04",
+       "content": "i'm gonna call and get off work tomorrow! this is gonna be soo cool, dude, we never party anymore!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8359240044378075
+      },
+      {
+       "id": "8a3053ff-dc12-49fa-84c5-feca60acca1f",
+       "content": "i'd like to toast, ross and emily. of course, my big toast will be tomorrow at the wedding, so this is kind of my little toast or melba toast, if you will. (no one in the room laughs. he starts to get flustered.) okay. i known ross for a long time. in fact, i knew him when he was going out with his first girlfriend. (ross looks embarrassed.) and i thought things were going to work out for him.. until the day he over inflated her. (he laughs. jack looks at judy and no one in the room laughs.) ohh, dear god.. (a cellular phone rings.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "13b89559-7677-4709-808f-0f01a4a751f0",
+       "content": "i'd like to toast, ross and emily. of course, my big toast will be tomorrow at the wedding, so this is kind of my little toast or melba toast, if you will. (no one in the room laughs. he starts to get flustered.) okay. i known ross for a long time. in fact, i knew him when he was going out with his first girlfriend. (ross looks embarrassed.) and i thought things were going to work out for him..until the day he over inflated her. (he laughs. jack looks at judy and no one in the room laughs.) ohh, dear god.. (a cellular phone rings.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "470a81e5-4ddf-494f-b0f4-2dfd693503de",
+       "content": "hmm, the game's at one. dinner is at four, we'll never gonna make it back. you say that now, but it could take us a long time to get back home. plus joey could get lost and and they could have to page us to go pick him up. look, monica has been working hard all day, she didn't wanna host this thing in the first place, we shouldn't go!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "603aea8f-6c93-481a-8ffa-d81ddfd9c6c0",
+       "content": "seriously dude, 3 years ago. you don't trust him? is this really your long term plan, for me to run interference? because i could get a job any day now. allright, fine, but don't blame me if it doesn't work. because you know as well as i do that once joey sets his mind on something, more often than not, he's going to have sex with it. picturing that tree? where you going, joe? oh. you mind if i join you? your thoughts? plural? i'm afraid i can't let you do that, joe. yes, as a matter of fact he did, so i can't let you go. great novels?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "af4af3f1-2011-472a-8350-93b85854d483",
+       "content": "okay, look i need your help, i don't know what to get her for valentine's day. (laughs) she was working on valentine's day so we're celebrating it tonight.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "6f98e51f-2c06-4cfe-8099-3571252c2e84",
+       "content": "you are not going to believe what i did today! i got good. i played this game all day and now i rule at it! they should change the name of it to ms. chandler. (pause) although i-i hope they don't. uh-huh, and i got all the top ten scores, i erased phoebe off the board! high five! (holds up his hand to give monica a high five, only he can't straighten his fingers.) well i've been playing it for like eight hours, it'll loosen up. come on, check out the scores. oh, and also look at the initials, they're dirty words. because it's awesome. well y'know, they only give you three letters, so after a-s-s it is a bit of a challenge. it is when you put it together with that one. come on, he won't even know what they mean. have you talked to him lately? no-no-no, if you unplug it, i'll have nothing to show for my day! it would be like i was at work. (she unplugs it.) no! (and plugs it back in.) hey look at that! look at that, it's still there! this thing must have some kind of primitive rom (read only memory, it's a memory chip.) chip in it or something! with the claw?! (smiles) pull my finger--(looks at his hand)--my hand is messed up.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "cc4611ee-f23e-4fa7-9728-21229e43933a",
+       "content": "okay, but this is the last time. (singing) with a chick-chick here, and a chick-chick there. here a chick, there a chick, everywhere a chick-chick-(joey enters)-chickeeeen. hey. she? i don't know. (he picks the chick up and turns it over, trying to determine the sex of the chick, and blows on it.) i can't tell, what ever it was went back in too quickly. excuse me? i stayed home from work today while you were at rehearsal so somebody could be here with our chick! you don't think i get up when you get up? yes, here it comes! i'm stuck here all day, and then you come in and spend two seconds with us and then expect to go off gallivanting with your friends? well i don't think so mister! and you don't think taking care of our chick is work? i know what you meant!! (pause) you notice that ever since we got this chick, we've been fighting a lot more than we used too? i'll take her back tomorrow.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "23f3b004-e2ad-40c5-9495-00eda4f12cc2",
+       "content": "erica wait! you have every reason to be upset. we did lie. but only because we've been waiting and trying to have a baby for so long. now we don't know how long it's gonna be before we can get another chance again. erica, please. just consider us. ask them to see our file. our last name's bing. my wife's a chef and i'm in advertising. but you did like us. and you should. my wife's an incredible woman. she's loving and devoted and caring. and don't tell her i said this but the woman's always right... i love my wife more than anything in this world. and i... it kills me that i can't give her a baby... i really want a kid. and when that day finally comes, i'll learn how to be a good dad. but my wife... she's already there. she's a mother... without a baby... please? you still want that baby?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "44eb24ae-0443-46ba-ac33-68669c5ba61b",
+       "content": "i was in the car with nancy all day. well, at least the perfume is not mine, be thankful for that! it\u2019s perfect. it\u2019s everything we\u2019ve been looking for. and the wiggle wharms and the zip zorps? (pause) what were the things you said? and the fireplace in the bedroom. this is bringing out a lovely color in you! i don\u2019t know. what do you think? i do too. i know. i don\u2019t know what you mean, giant talking cigarette! oh, by the way, phoebe called just as i was getting into nancy\u2019s car, so if she asks you, i was at work all day. we don\u2019t. not until it's a hundred percent. i mean, why upset everybody over nothing. i know. gooooood luck with it.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "2a424893-3b81-483f-badc-36417656b691",
+       "content": "yeah or also when you don't have somebody breathing down your neck all the live long day!! all right. (takes a copy.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 68,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 1,
+     "conversation_id": "h2d-f5342d5831",
+     "user": "just had my coffee",
+     "reply": "Can't argue with that strategy. I basically run on the stuff.",
+     "latency_ms": 3711,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "e512949e-0512-484c-a57d-baae46ef7c57",
+      "44d69fe7-92e6-4fe8-8183-bca3760ee070",
+      "369ea868-6847-4e3c-9bea-7d8a37e3add9",
+      "4469b028-8af6-43b3-bbe2-ce64a40fc65d",
+      "5ff988b7-4b49-4ee2-ba06-198cb4fd9e7c",
+      "47cebdb0-2949-4678-b7ee-e97b7612d32b",
+      "41af946b-1f76-426b-8dbe-7a60169b2656",
+      "bfcc564a-90c6-4d8f-b187-802f9a4ef437",
+      "5c4c1c87-fd42-4d6e-9bd1-f63dc2b52942",
+      "87326dee-de0c-4123-8307-6269fb33cb63",
+      "5c6b7c7a-4086-4938-836f-210848c5dcb3",
+      "967d769f-6270-498b-a7d4-b2e3010daea9",
+      "162346c5-1c9f-4c7c-8a57-bf6e96c6453a",
+      "4f752bc7-5a4c-49d2-a65e-a5c0fad5508f",
+      "af5ce530-4021-4091-a5b2-6e9e4af70c82",
+      "33ed5449-b679-4344-a2af-6ac50f473552",
+      "b691e108-14f7-4f7d-b1ea-6e9d9db6cc4b",
+      "b3e2e07b-a8c7-423e-92fa-ede39d59c28c",
+      "ce6f28f3-c6e3-49b5-aef8-251192d39263",
+      "25435834-eefc-4922-9e6d-50aeab6c8d18"
+     ],
+     "activated_memories": [
+      {
+       "id": "e512949e-0512-484c-a57d-baae46ef7c57",
+       "content": "there's a hair in my coffee.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.039384311437607
+      },
+      {
+       "id": "44d69fe7-92e6-4fe8-8183-bca3760ee070",
+       "content": "more coffee over here, please!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9623476550164702
+      },
+      {
+       "id": "369ea868-6847-4e3c-9bea-7d8a37e3add9",
+       "content": "hello.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9239804029464722
+      },
+      {
+       "id": "4469b028-8af6-43b3-bbe2-ce64a40fc65d",
+       "content": "[being left behind] oh that's all right fellas, i saw a kitchen this morning -",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9235748410224914
+      },
+      {
+       "id": "5ff988b7-4b49-4ee2-ba06-198cb4fd9e7c",
+       "content": "taste it. yeah, i know, i did that two minutes ago. hey, mister tux!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9144143640995026
+      },
+      {
+       "id": "47cebdb0-2949-4678-b7ee-e97b7612d32b",
+       "content": "had it.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9112216293811798
+      },
+      {
+       "id": "41af946b-1f76-426b-8dbe-7a60169b2656",
+       "content": "hi.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9093026876449585
+      },
+      {
+       "id": "bfcc564a-90c6-4d8f-b187-802f9a4ef437",
+       "content": "hi.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9093026876449585
+      },
+      {
+       "id": "5c4c1c87-fd42-4d6e-9bd1-f63dc2b52942",
+       "content": "hi.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9093026876449585
+      },
+      {
+       "id": "87326dee-de0c-4123-8307-6269fb33cb63",
+       "content": "i'm smoking. i'm smoking, i'm smoking. and this- is my reward! okay, so this time i won't quit! all right! i'm putting it out, i'm putting it out. (he drops it in phoebe's coffee.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9058398365974426
+      },
+      {
+       "id": "5c6b7c7a-4086-4938-836f-210848c5dcb3",
+       "content": "yeah, i just ordered a beer! (pounds the table.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9024420738220215
+      },
+      {
+       "id": "967d769f-6270-498b-a7d4-b2e3010daea9",
+       "content": "do you know what just happened? no. we were in the middle of sex...and you fell asleep. (turning the light back on) monica? i was giving you some of my best moves, and you missed it. so please wake up so we can do it right! okay. yeah! (monica falls asleep) no! no! no! don't fall asleep! okay, i am going to make you some coffee. (monica doesn't move as he gets out of bed and as he's heading for the door.) and i probably won't spill coffee grounds all over the kitchen floor.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8978301823139191
+      },
+      {
+       "id": "162346c5-1c9f-4c7c-8a57-bf6e96c6453a",
+       "content": "what does it look like i'm doing? i am cleaning! authorization? i don't need that. i'm gonna put everything back. yes i'm gonna put it back (mocking ross) exactly where i found it. she's not gonna care if i put her stuff back in the same stupid place. she is gonna recognize that i did a nice thing and-and, appreciate it. i see, i see, y-y-you're trying to freak me out. no, she's not okay? and i'll prove it to you. i'm gonna call her right now. (picks up the phone and wipes it off) phone's done ehh. hey mon, how's it going? oh come on, come on, it can't be that bad. no! no-no-no-no-no-no. it sounds like they really need you down there. it's, all good! okay bye-bye mon! (to ross) she's-she's gonna kill me. we should start with the big stuff. y'know? that'll be the easiest. uh, let's start with the couch. (he picks up one end and ross doesn't help) i got it. (he moves it back to where he thinks it goes.) what are you talking about? the couch is perfectly in line with the carpet. and then i can just walk over here and casually just put my feet right up on the...(tries to rest his feet on the coffee table but they won't reach) ok, ok, here's what we do, we just uh, move the couch closer to the coffee table. ok well here, we'll just move the coffee table closer to the couch. yes, but the coffee table doesn't match the...blahebdmsdlkhdyslkd;btyds...rooosss!!!!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "4f752bc7-5a4c-49d2-a65e-a5c0fad5508f",
+       "content": "are you kidding me?! joey. joey! joey! joey! joey! joey! joey! joey! joey! joey!! oh. oh, did-did-did i wake you? gunther, can i get another cup of coffee, please? (gunther starts to pour him another cup.) so uh, what do you do when you're not working here? oh, okay, thanks. (he goes back to the couch and rejoins monica, joey, and phoebe.) well, i am drinking lots of cups of coffee because i'm exhausted! because joey started snoring!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "af5ce530-4021-4091-a5b2-6e9e4af70c82",
+       "content": "hey, mon. do i ever. no way! just coffee! where are we gonna hang out now? (to bartender) can i get a beer. you betcha! um-mm, yeah right! oh yes, and that's what i want a roommate that i can walk around with and be referred to as the funny one. okay, but after that, we're shootin' some pool.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "33ed5449-b679-4344-a2af-6ac50f473552",
+       "content": "(to joey) does this mean we're gonna have to start paying for coffee? (joey shrugs his shoulders.) i spelled out boobies.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "b691e108-14f7-4f7d-b1ea-6e9d9db6cc4b",
+       "content": "y'know what rach, maybe you should just, y'know stay here at the coffee house.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "b3e2e07b-a8c7-423e-92fa-ede39d59c28c",
+       "content": "(entering with joey) (to monica) coffee house?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ce6f28f3-c6e3-49b5-aef8-251192d39263",
+       "content": "ah, the \"i'm sorry i rejected you\" phone call. i'm not used to getting it from guys. (on the phone, getting up from the sofa) hey, steve. oh no no no no, i'd love to be somebody's assistant! answering phones, getting coffee, i live for that stuff! and i'm not too mature... farts, boobies, butt cracks! me, that guy who just said butt cracks? ok well, thanks, you won't regret it. i'll see you tomorrow (hangs up). what? (pause) oh, yeah, i'm gonna be a junior copywriter.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "25435834-eefc-4922-9e6d-50aeab6c8d18",
+       "content": "would you come on! come on! [waitress brings their coffee] thank you. ah, there we go. you burn your mouth?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 61,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 2,
+     "conversation_id": "h2d-f5342d5831",
+     "user": "watching tv over here",
+     "reply": "What're we watching? Please say something good, my standards are dangerously low.",
+     "latency_ms": 3015,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "d96cc760-6aa4-474f-b32c-2adf667bdf49",
+      "fc40391e-c99c-4ceb-92dd-60c5e6f53441",
+      "6c3f398e-180b-462d-89a0-1ea7c2a64733",
+      "fec1dada-89bc-46d9-936c-bcc4aa88fb8b",
+      "366b05ec-2776-45bb-8b2f-930cb8ba5cd4",
+      "0824de94-2643-4d5c-bd21-f3ac88f0ef9a",
+      "36548c1a-f029-4c0d-8afe-c1b6b9a27119",
+      "3a499224-8242-4df4-91d0-01d018e7af18",
+      "82dd5b9b-8b0a-47aa-8f6e-87edb4889a79",
+      "01877a0c-a424-4103-b113-1666c3b2deaf",
+      "684a2880-62b4-4916-8567-b8edc33481ce",
+      "631a47c7-f38e-461a-80dc-ada9ff50c792",
+      "bfd57ce1-f74a-4afc-95e2-6415321a0790",
+      "a68907cc-91a1-452b-91a2-9e3bb94924b4",
+      "f6c0e89b-22f5-43f0-8171-509ae781ddcf",
+      "f4fac610-6f3d-4475-8d6d-fe8dd2958fe6",
+      "cb25e6c7-cece-4cff-98f1-ded075920690",
+      "ea07929e-d793-47a7-b97a-5d3a915d1459",
+      "8475c5e8-380a-433d-b7a0-327714f477a6",
+      "8e4ae82e-1970-41e4-b33c-19367f8a2720"
+     ],
+     "activated_memories": [
+      {
+       "id": "d96cc760-6aa4-474f-b32c-2adf667bdf49",
+       "content": "now you do that, you're on tv.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9612535522873936
+      },
+      {
+       "id": "fc40391e-c99c-4ceb-92dd-60c5e6f53441",
+       "content": "i'm watching the game, but i'm not deaf!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9246579408645696
+      },
+      {
+       "id": "6c3f398e-180b-462d-89a0-1ea7c2a64733",
+       "content": "dude, you have got to turn on behind the music. the band heart is having a really tough time, and i think they may break up. nah, monica's watching some cooking show. come on, i don't want to miss when they were skinny. what? no, i want to watch this. (he turns on the television and the screen is completely covered in snow). did your cable go out? joey, why is your cable out? if you need money, will you please-please just let me loan you some money? whoa ho. (picks up the phone) all right, you want to see if the joke stealer will let us watch the show at his place? (with phone to ear, obviously hearing no dial tone) paid your phone bill?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9003468989912393
+      },
+      {
+       "id": "fec1dada-89bc-46d9-936c-bcc4aa88fb8b",
+       "content": "uh-huh. (he doesn't take his eyes off the tv.) (turning to face her) yeah. i hear ya, mugsy! but look, all these rooms are fine okay? can you just pick one so i can watch-(realizes)-have a perfect, magical weekend together with you. (watching tv, in fact, er is on.) nothing! it's over! dammit! this is regularly scheduled programming! oh, i'm sorry, am i getting in the way of all the room switching fun? oh, who should i blame? the nice bell man who had to drag out luggage to 10 different rooms? do not speak ill of the dead. i just want to watch a little television. what is the big deal? geez, relax mom. i said, \"geez, relax monnnnn.\"",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8750241547794158
+      },
+      {
+       "id": "366b05ec-2776-45bb-8b2f-930cb8ba5cd4",
+       "content": "what are you guys doing out here?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8662556549158318
+      },
+      {
+       "id": "0824de94-2643-4d5c-bd21-f3ac88f0ef9a",
+       "content": "here, here!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8641493778184276
+      },
+      {
+       "id": "36548c1a-f029-4c0d-8afe-c1b6b9a27119",
+       "content": "here, here!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8641493778184276
+      },
+      {
+       "id": "3a499224-8242-4df4-91d0-01d018e7af18",
+       "content": "(browsing through a diary) well, let me see... i-i believe i'm... yes, falling asleep in front of the tv. i could fall asleep at a play.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8604125106088827
+      },
+      {
+       "id": "82dd5b9b-8b0a-47aa-8f6e-87edb4889a79",
+       "content": "hi! listen, can we watch cartoons on your television? we need a porn break. we spent the last two hours watching in & out & in, again. because then we would be the guys who turned off free porn.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8558219535403896
+      },
+      {
+       "id": "01877a0c-a424-4103-b113-1666c3b2deaf",
+       "content": "(enters singing) oklahoma where the wind comes sweeping down the plane, stop it! why couldn't they have sent me to texas? 7 o clock maybe i'll hit the gym (sits down) who am i kidding pay-per-view porn. do not disturb do not disturb! monica (smiles) everything's great, just watching some regular television there, what a pleasant surprise. (she hugs him, and she knows what he was doing so she looks at the tv and sees sharks swimming around thinking chandler was giving himself a treat to sharks.) ok honey. that was close.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8515872628442938
+      },
+      {
+       "id": "684a2880-62b4-4916-8567-b8edc33481ce",
+       "content": "hey you guys.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.846759990437034
+      },
+      {
+       "id": "631a47c7-f38e-461a-80dc-ada9ff50c792",
+       "content": "and she's... turning on the tv... and watching... miss congeniality!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8458254044264073
+      },
+      {
+       "id": "bfd57ce1-f74a-4afc-95e2-6415321a0790",
+       "content": "bad news. i watched the tape and passed it along to my bosses and they weren't interested. (hands the tape back to him) i'm sorry man. (sounds nervous) yeah! i... i... i liked it! (joey continues to look at him suspiciously) but, ehm... my bosses didn't go for it. stupid sons of bitches! (looks surprised) what!? of course i did! i'm not lying to you, i watched it! i watched it! (now yelling)(pretending to look shocked) i did! (following him) i'm telling you, i watched the tape. (reaches joey's room and joey slams the door in his face) (in a sarcastic \"of course not\"!-tone) no!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "a68907cc-91a1-452b-91a2-9e3bb94924b4",
+       "content": "i'm not gonna watch it... i don't need to watch it... i mean, what don't judge me, i'm only human! i had to! okay, imagine you were married... and you found a tape some girl...!? yeah...!? allright, i'm gonna watch it... i mean look, it's probably not then you're gonna have to watch it for me. just for a few seconds, so i can know what it is... please? why am i hearing cheering? football? just football? it's football... it's just football... this is great! this is the",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "f6c0e89b-22f5-43f0-8171-509ae781ddcf",
+       "content": "poor ross. oh, great. we have to watch him do yoga in his underwear, but for this he closes the drapes! oh, and we should warn you, before you watch it: don't watch it. well, let's just say it's ironic how footage of someone being born can make you want to kill yourself.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "f4fac610-6f3d-4475-8d6d-fe8dd2958fe6",
+       "content": "hi honey i'm home! oh it was great. well, well, well it must be five in tulsa because it's six o clock in nyc! (chandler looking confused) honey why am i watching a bunch of sharks swimming around. no i'm not quite sure you got the right movie that's all. does what always have to be sharks. what's going on? let me be a part of this! no they don't oh my god! when you came in i switched the channel, i was just watching regular porn yeah just some good old fashion girl on girl american action. you are an amazing wife. (monica shrugs) no really you're amazing you were actually gonna do this for me, i mean where do you find the strength and understanding over something like that.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "cb25e6c7-cece-4cff-98f1-ded075920690",
+       "content": "why must everybody watch me sleep? there'll be no more watching me sleep, no uuuh.[scene: chandler's apartment. chandler is returning from monica and rachel's with his get out. get out, get out, get out, get out, get out, get out.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "ea07929e-d793-47a7-b97a-5d3a915d1459",
+       "content": "y'know what, it doesn't matter, 'cause she picked me. me! from now on i get the dates and you have to stay home on saturday nights watching ready, set, cook! we're not gonna lose to girls.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "8475c5e8-380a-433d-b7a0-327714f477a6",
+       "content": "you mean like, music? yeah, i know what you're thinkin'! yes, yes, your breasts are just as firm and juicy. come in! uh yes, but uh, i just watch it for the articles. no-no, he's not back yet, but he'll be here any minute. so uh, come on in. have a seat. bow or stern? i like it in the stern. (realizes what he just said.) ...of the boat. (the phone rings, and he answers it.) (on phone) hello. what happened? why can't you tell her? joey! joey!! i thought your time ran out. (to kathy) uhh, that was joey. he's running a little late, he says he's sorry. so i guess it's just uh, you and me then. yeah, i think it is! oh, i had an appointment to get my haircut... ...and then it got canceled. really?! you do that? dog grooming huh? okay, just don't make my tail too poofy. well, thanks. i grow it myself. (kathy is running her fingers through his hair, and chandler catches himself enjoying it too much.) y'know who also has great hair is joey! what-what 'cha doin'? 'kay. (jumping up to answer the phone) oh the phone! the phone's making sounds! (on phone) hello! hey it's joey! what? okay. oh yeah man. (to kathy) joey. (hands her the phone.) yeah. yes! yeah. oh. no-no-no-no, this is bad! it's bad! this is bad! wait the uh, the kiss or the situation? okay! ooh! yes! okay! here's what we do, we-we forget it happened. okay, we-we swallow our feelings. even if it means we're unhappy forever. sound good? i have to; he's my best friend, and you're seeing him. (interrupting) oh-no-no-no! don't! don't! see-see, you're getting me confused, i'm starting to urn. i-i think we have too. bye. (kathy leaves and chandler wonders over to and leans up against the door.) are you still out there?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "8e4ae82e-1970-41e4-b33c-19367f8a2720",
+       "content": "janice, i have something i need to tell you, and i want you to let me get through it, because it's, it's, it's not gonna be easy. i think you should go back with gary. i don't wanna be the guy that breaks up a family, y'know when my parents split up, it was because of that guy. whenever i would see him i was always think y'know 'you're the reason, you are the reason why their not together.' and i hated that guy. and it didn't matter how nice he was, or how happy he made my dad. yeah, well. it's the right thing to do. then don't leave me! forget what i said, i was babbling! pick me! no you don't! no, no, no, i say you have to give your divorce another chance. ohhh. don't go. no. no! no! no! i don't care! (turns around and to the people watching them) i don't care!! you can't leave! i have your shoe!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 81,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 3,
+     "conversation_id": "h2d-f5342d5831",
+     "user": "pretty tired honestly",
+     "reply": "Then get some rest, my shows'll still be terrible tomorrow.",
+     "latency_ms": 3265,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "1a76bd08-e2ed-4602-9822-047375591864",
+      "6ab6a186-9113-4fae-8ae9-21f944f39db4",
+      "da8e64cd-d43d-4c2b-ad54-525f0118fd80",
+      "00276589-ed4a-4963-9f62-838c3c294ad9",
+      "349c1b30-84f8-43d7-b787-ce31c745fbbc",
+      "2cae4560-dd1d-4554-8a62-6e46aff4cece",
+      "40ca3b33-8c35-46c8-a754-d442cae7758c",
+      "0526717f-0e58-416b-aaec-a92458290dfa",
+      "8aa54d23-fffd-4c6d-8fe4-a9defd7037b6",
+      "4d60508b-a94c-4cb6-abbe-d2fa43027dfa",
+      "51bd9c37-8c1b-4fe9-905d-17db48676188",
+      "99b356d1-6f86-4413-bea5-d3647ddbe11f",
+      "7d49aaf9-4efe-4412-b1e2-8a7d9c422a12",
+      "d2f6d19c-936e-4d97-b4ff-8047f23e7977",
+      "da032793-40cc-43cf-bcc6-1be5eb6c304e",
+      "77031c56-878a-48c2-b7b3-da0f9f068191",
+      "e0c9b440-b2c0-4e38-a5d0-28dcd6c73478",
+      "b6647708-19bf-47a7-b926-a5103bf07730",
+      "f1e5a1f8-9f44-4378-b4b5-3225f5e24ddf",
+      "fad7505e-1875-418b-ab60-d1373186ed91"
+     ],
+     "activated_memories": [
+      {
+       "id": "1a76bd08-e2ed-4602-9822-047375591864",
+       "content": "(coughing) art lover! i said art lover. i don't know, i'm very tired.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9432520193006976
+      },
+      {
+       "id": "6ab6a186-9113-4fae-8ae9-21f944f39db4",
+       "content": "honey, we\u2019ve been over this. i need to be facing the other way. i\u2019m so tired. (she starts kissing him.) yeah okay, but no foreplay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9129911780357426
+      },
+      {
+       "id": "da8e64cd-d43d-4c2b-ad54-525f0118fd80",
+       "content": "joey, it's been three days, okay.. your just a little homesick, okay. would you just try to relax. just, just try to enjoy yourself.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9093580901622837
+      },
+      {
+       "id": "00276589-ed4a-4963-9f62-838c3c294ad9",
+       "content": "joey, it's been three days, okay.. your just a little homesick, okay. would you just try to relax. just, just try to enjoy yourself.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9093580901622837
+      },
+      {
+       "id": "349c1b30-84f8-43d7-b787-ce31c745fbbc",
+       "content": "not fun anymore?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9084062750097366
+      },
+      {
+       "id": "2cae4560-dd1d-4554-8a62-6e46aff4cece",
+       "content": "you know, i'd love to, but i'm a little tired. you're on!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.875839824924481
+      },
+      {
+       "id": "40ca3b33-8c35-46c8-a754-d442cae7758c",
+       "content": "out loud? so how are you doing?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8747499585151735
+      },
+      {
+       "id": "0526717f-0e58-416b-aaec-a92458290dfa",
+       "content": "out loud? so how are you doing?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8747499585151735
+      },
+      {
+       "id": "8aa54d23-fffd-4c6d-8fe4-a9defd7037b6",
+       "content": "eeeshk.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8729597725582227
+      },
+      {
+       "id": "4d60508b-a94c-4cb6-abbe-d2fa43027dfa",
+       "content": "(entering, depressed) hey.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.8680225429494618
+      },
+      {
+       "id": "51bd9c37-8c1b-4fe9-905d-17db48676188",
+       "content": "yes, janice. why is that so difficult for you to comprehend? yes. she was smart, she was pretty, and she honestly cared about me. janice is my last chance to have somebody. oh...my...god!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "99b356d1-6f86-4413-bea5-d3647ddbe11f",
+       "content": "ohh, she's pretty. pretty ahh, pretty girl, the pretty--she's pretty. i could die.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "7d49aaf9-4efe-4412-b1e2-8a7d9c422a12",
+       "content": "you sure you don't wanna stick around a little longer? are you just tired now or are you always tired, 'cause that could be a sign of clinical depression. ok. i think we've found our sperm! yeah, you think so, well? should i ask him? why not, just because his great-grandmother was obese, our kids are gonna get that from you anyway! yeah, he's better! really? are you sure? (sighs with relief) thank god, because i don't wanna do this either. you know, i was just doing because i thought that was what you wanted to do. you know, i'm the husband, i'm supposed to... bring the sperm. so you know this leaves us with... how do you feel about that? me too. i wanna find a baby that needs a home and i wanna raise it with you. and i wanna mess it up in our own specific way. (smiling) yeah. we are gonna be great parents. wait, if we're lucky, and we're really really really quiet, we may be able to hear the sound of a condom breaking! hey, zack! look, i just wanted to apologize for last night. i got the feeling we made you a little uncomfortable. really? my wife and i have some boundary issues, you know, sometimes we ask inappropriate questions. we're working on it.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "d2f6d19c-936e-4d97-b4ff-8047f23e7977",
+       "content": "ok, so it's just because it was my table, i have to buy a new one? what rule? there's no rule, if anything, you owe me a table! well, i believe the piece of furniture was fine until your little breakfast adventure with angela delvecchio well, let's just say the impressions you made in the butter left little to the imagination. what do you mean, like, buy it together? you think we're ready for something like that? well, it's a pretty big commitment, i mean, what if one of us wants to move out? i'm not moving out. yeah, yeah, it's just that with my last roommate kip... it's just that we bought a hibachi together, and then he ran off and got married, and things got pretty ugly. aw, don't do that",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "da032793-40cc-43cf-bcc6-1be5eb6c304e",
+       "content": "monica! this is the men's room! (pause) isn't it? no. and if i did, i don't think we'd be going out. monica, this is getting ridiculous! ugh, we have already proved that we are hot! okay? so why-why are you getting so obsessed about this thing?! (gasps) so? oh wow! is that what this all have been about? yeah that was great. that was really great! but to tell you the truth, i'm more excited about where we are right now. yeah! i've never been in a relationship that's lasted this long before. y'know to get past the beginning and still be around each other all the time, i think that's pretty incredible. and the fact that this is happening all with you, yeah i think that's pretty exciting. (kisses her.) yeah? y'know what i just realized? you just freaked out about our relationship. yes you did! admit it! you freaked out! little?! you freaked out big time! okay? and i fixed it! we have switched places! i am the relationship and king and you are the crazy, irrational screw up! (does a dance of joy.) (monica glares at him.) and now we're back.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "77031c56-878a-48c2-b7b3-da0f9f068191",
+       "content": "a freakish thin date with a hanger for her head? what? you can't wear that! i'm wearing the famous tux! james bond's tux! so--if you wear that you'll make mine less special. please, don't take away my cool thing. please?! pretty please?! look, it's my wedding day okay? if you were getting married i would never do anything to upset you. that was pretty 007.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "e0c9b440-b2c0-4e38-a5d0-28dcd6c73478",
+       "content": "i like her. well, that's pretty much all i'm looking for from these people.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "b6647708-19bf-47a7-b926-a5103bf07730",
+       "content": "to yourself. (finishing) hey-hey-hey, y'know what that's pretty good.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "f1e5a1f8-9f44-4378-b4b5-3225f5e24ddf",
+       "content": "hey. well, you will all be pleased to know that i have a date tomorrow night. this woman alison, from work, she's great. she's pretty. she's smart. and uh, i've been holding off on asking her out in the past, because she has an unusually large head. but, i'm not gonna let that stuff hang me up anymore. look at me. i'm growing. i'll take that. yeah, yeah. some people said some nice things about him. i think somebody should have it.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "fad7505e-1875-418b-ab60-d1373186ed91",
+       "content": "hey. yeah, why not. (they shake hands) so i told her. awful. awful. couldn'ta gone worse. pretty good! i told her.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 0,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 59,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    },
+    {
+     "probe": 4,
+     "conversation_id": "h2d-f5342d5831",
+     "user": "ok goodnight",
+     "reply": "Night! Sleep fast, work slow.",
+     "latency_ms": 5752,
+     "caretaker_trace": null,
+     "competence_wall": false,
+     "memory_refs": [
+      "82924f6a-4652-4c65-979b-552dc6e98ae9",
+      "cb051ab9-85e8-4d94-abae-f15d900eb1ce",
+      "c0dc4258-8468-4fbf-9d9d-230198528cff",
+      "67a68c0d-3269-444c-92ea-f2292bd08925",
+      "b32349cd-aa22-445e-97d8-974b6ffcc4e5",
+      "1c10dd74-67f2-481f-be52-c9056cadd979",
+      "0e8eb841-6397-4df7-9ae2-0a7879d580ea",
+      "cc1385e2-ca42-48e1-b642-0062c966f634",
+      "7ac71a89-f83b-4452-b3b4-7e2b04177a6c",
+      "d6f9c06b-1963-4b09-8f94-89953ff5c587",
+      "4fe01b32-e539-4e57-a95c-7627d9cdf71b",
+      "99be694d-e95b-4ee3-b97e-0cdfc0436b98",
+      "5be45701-f694-49b6-905c-bbd0e48c71db",
+      "ea2adc12-b7fd-4e3c-83f2-9e257f68f09c",
+      "be86a14c-1a8d-4e5f-9d0d-010d6dfdb9ee",
+      "bbb872ee-6b16-4412-959a-243e8933f0ec",
+      "b489952b-235e-4726-93eb-1c085fbb7823",
+      "e5030b7e-1790-4e31-9914-f3ade1d9fed9",
+      "cd7d4307-bc54-4496-9c0d-0ea1f4bf0474",
+      "fd223ef4-336d-4285-a1fc-1d539ffee761"
+     ],
+     "activated_memories": [
+      {
+       "id": "82924f6a-4652-4c65-979b-552dc6e98ae9",
+       "content": "alright.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 1.007464105558167
+      },
+      {
+       "id": "cb051ab9-85e8-4d94-abae-f15d900eb1ce",
+       "content": "you ok?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9948055566905314
+      },
+      {
+       "id": "c0dc4258-8468-4fbf-9d9d-230198528cff",
+       "content": "ok.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9930459445972006
+      },
+      {
+       "id": "67a68c0d-3269-444c-92ea-f2292bd08925",
+       "content": "[to kathy] goodnight. oh, uh, yeah... i just knew that sometimes when you're writing, you... you don't always know the exact time. uh, the book? what do you mean? (tongue-tied) uhl..ell. by the way, in case you missed that, that sound was, \"uhl, ell.\" oh, yeah, he's my... he's my best friend. goodnight. (goes to his room.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9761467642740419
+      },
+      {
+       "id": "b32349cd-aa22-445e-97d8-974b6ffcc4e5",
+       "content": "okay!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9701759228057923
+      },
+      {
+       "id": "1c10dd74-67f2-481f-be52-c9056cadd979",
+       "content": "okay!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9701759228057923
+      },
+      {
+       "id": "0e8eb841-6397-4df7-9ae2-0a7879d580ea",
+       "content": "okay!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9701759228057923
+      },
+      {
+       "id": "cc1385e2-ca42-48e1-b642-0062c966f634",
+       "content": "you okay?",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9656242956407163
+      },
+      {
+       "id": "7ac71a89-f83b-4452-b3b4-7e2b04177a6c",
+       "content": "that's ok.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9634706887480108
+      },
+      {
+       "id": "d6f9c06b-1963-4b09-8f94-89953ff5c587",
+       "content": "that's ok.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9634706887480108
+      },
+      {
+       "id": "4fe01b32-e539-4e57-a95c-7627d9cdf71b",
+       "content": "totally worth it! good night.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.963421318734963
+      },
+      {
+       "id": "99be694d-e95b-4ee3-b97e-0cdfc0436b98",
+       "content": "okay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9619533743220609
+      },
+      {
+       "id": "5be45701-f694-49b6-905c-bbd0e48c71db",
+       "content": "okay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9619533743220609
+      },
+      {
+       "id": "ea2adc12-b7fd-4e3c-83f2-9e257f68f09c",
+       "content": "okay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9619533743220609
+      },
+      {
+       "id": "be86a14c-1a8d-4e5f-9d0d-010d6dfdb9ee",
+       "content": "okay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9619533743220609
+      },
+      {
+       "id": "bbb872ee-6b16-4412-959a-243e8933f0ec",
+       "content": "okay.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9619533743220609
+      },
+      {
+       "id": "b489952b-235e-4726-93eb-1c085fbb7823",
+       "content": "oh, ok.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9273566078181017
+      },
+      {
+       "id": "e5030b7e-1790-4e31-9914-f3ade1d9fed9",
+       "content": "oh, ok.",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.9273566078181017
+      },
+      {
+       "id": "cd7d4307-bc54-4496-9c0d-0ea1f4bf0474",
+       "content": "y'think? oh god, i can't believe i'm even considering this... i'm very very aware of my tongue... here goes. (he walks over to her but just stands there.) hi.... um... okay, next word... would be... chandler! chandler is my name, and, uh...(he clears his throat noisily)...hi. yes, yes i did, but what i didn't say was what i was about to say, what i wanted to say was, uh... would you like to go out with me sometime, thankyou, goodnight. (he walks back to the others but she calls him back.)",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      },
+      {
+       "id": "fd223ef4-336d-4285-a1fc-1d539ffee761",
+       "content": "and i was a perfect gentleman and i walked her to her hotel room and said goodnight. but then later that night... (answering the door) hey! well i was... i wasn't exactly expecting company after...(he looks at his watch.) 9:15. well, last time i saw him he was heading out the door with the bridesmaid and a bucket of strawberries. so uh, you're not still upset about what that guy told ya are ya? well, look it's been a really emotional time y'know, and you've had a lot to drink. and you've just got to let that go okay? i mean you were the most beautiful woman in the room tonight! you kidding? you're the most beautiful woman in most rooms... (she jumps up and kisses him.) (breaking the kiss.) whoa! whoa! whoa! what's going on? you and i just made out! you and i are making out? but we don't do that. how drunk are you? (thinks) that's the perfect amount!",
+       "content_type": "narrative",
+       "disclosure_scope": "close_friends",
+       "confidence_level": "high",
+       "activation_score": 0.65
+      }
+     ],
+     "working_memory": {
+      "strategy": "v4-arm-a+predigest",
+      "chars": 224,
+      "synced": true,
+      "digest_settled": false,
+      "gist_blocks": 0
+     },
+     "provider": "zai",
+     "chars": 29,
+     "under_cap": true,
+     "ai_selfref_hits": [],
+     "assistant_speak_hits": [],
+     "code_hits": [],
+     "followup_questions": [],
+     "pass": null
+    }
+   ],
+   "pass": false,
+   "rule": ">=1 second-person follow-up AND question rate in measured corpus band"
+  }
+ ],
+ "verdict": "MEASURED",
+ "classes_passed": 3,
+ "note": "H2 records measurements against corpus baselines; per \u00a71.8 the only binary ship gate is H1. Class failures are measured findings for the boss's judgment, archived per run."
+}
