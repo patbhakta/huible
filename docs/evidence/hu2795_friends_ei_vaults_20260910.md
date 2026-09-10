@@ -37,7 +37,14 @@ spec v0.2, pass founder review as usable, realistic reference vaults?
 ## Gate inputs honored (v0.2 decision 4)
 
 HU-2790 gate PASSED 2026-09-10 (friends-gold-v2, honest bars: audio
-0.300/0.275, text 0.257/0.213). `readings.huible-local-v1` filled with
+0.300/0.275, text 0.257/0.213). **Update (HU-2798):** gold re-issued as
+**v2.1** with the split-safe duration-unique join; gate re-scored, canonical
+bars now **audio 0.357/0.314, text 0.175/0.207** (`gate-v2.1-results.json`).
+Conclusions unchanged — emotion2vec incumbent strengthened. Vault artifacts
+verified unaffected: this builder already used the safe `(split,dia,utt)` +
+duration-unique join, and v2.1's join owners are byte-identical to
+`provenance/friends-ei/media-join.json` (4,842).
+`readings.huible-local-v1` filled with
 - audio lane: emotion2vec_plus_large (per-clip, beat = mean of clip dists)
 - text lane: roberta-base-go_emotions (top-5 raw + basic-7 pred)
 - fused with `meld-human`; `agreement` recorded per note; conflicts kept
