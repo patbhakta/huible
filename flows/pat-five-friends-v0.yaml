@@ -1,0 +1,36 @@
+id: five-friends-v0
+namespace: pat.personas
+description: |
+  HU-2811 Five-Friends test v0 EXECUTION (HU-2309 §1.7.4/§1.8 H4): five
+  vault-grounded personas through the real engine chat path, description-only
+  comparator arm, cross-vault leakage gate, seeded blind pairing, 5-dim
+  scoring package. Boss-gated (--i-am-the-boss mirrors the kit doctrine).
+  One-shot cron (2026-09-11 00:40Z, after the z.ai daily token reset) — the
+  run needs a fresh daily window (budget guard: the harness aborts loudly on
+  any fake-voice fallback; real generator only).
+
+tasks:
+  - id: preflight
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - "python3 /root/repos/huible/scripts/v2_harness/h4_five_friends_run.py --check"
+  - id: execute
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - "python3 /root/repos/huible/scripts/v2_harness/h4_five_friends_run.py --i-am-the-boss --run --turns 35 --out-dir /root/repos/huible/runs/hu2811"
+
+errors:
+  - id: fail-log
+    type: io.kestra.plugin.core.log.Log
+    message: "HU-2811 Five-Friends v0: preflight or execution FAILED (leakage gate fail / fake-voice guard / budget exhaustion all exit non-zero)"
+
+triggers:
+  - id: one-shot-2026-09-11
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "40 0 11 9 *"
+    timezone: UTC
+    disabled: false
