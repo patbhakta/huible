@@ -36,12 +36,21 @@ Slots 3–5 were provisioned with the proven HU-2774 Monica recipe
 
 | slot | persona | notes built | frontmatter leaks | memories ingested |
 | --- | --- | --- | --- | --- |
-| 3 | Joey | 3,115 | 0 | (post-run table) |
-| 4 | Phoebe | 2,895 | 0 | (post-run table) |
-| 5 | Ross | 3,261 | 0 | (post-run table) |
+| 3 | Joey | 3,115 | 0 | 3,115 (0 null embeddings) |
+| 4 | Phoebe | 2,895 | 0 | 2,895 (0 null embeddings) |
+| 5 | Ross | 3,261 | 0 | 3,261 (0 null embeddings) |
 
 Era boundary 2004-05-06, display name first-name-only, voice instructions
 empty (description-free, vault-carried persona per §1.7.1/W3).
+
+Retrieval smoke (zero tokens, local ONNX query path): Joey "how you doin" →
+0.854/0.834/0.830 own-vault signature lines; Phoebe "smelly cat song" →
+0.843/0.804/0.804; Ross "dinosaur guy museum thing" → 0.700/0.677/0.670.
+
+Memory-level question rates (notes merge adjacent corpus lines; context for
+the engagement band read): Chandler 46.0%, Monica 48.1%, Joey 51.6%,
+Phoebe 44.9%, Ross 49.8% of 3,115/3,534/2,895/3,261 notes. Reply-level
+corpus band stays the founder-approved 0.20–0.45 (single-line register).
 
 ## Execution
 
