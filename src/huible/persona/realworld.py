@@ -274,10 +274,14 @@ _LOCAL_CONTEXT_PHRASES: tuple[str, ...] = (
 
 
 def build_search_query(message: str, location_label: str = "") -> str:
-    """Build a deterministic SearXNG query from a real-world question.
+    """Build a deterministic SearXNG query from a real-world probe.
 
-    Strips question scaffolding, swaps local-context phrases for the persona's
-    location label, and returns a compact keyword query. No model judgment —
+    General web engines need well-formed queries: the terse extraction
+    ("rent Greenwich Village, New York") returns landing-page junk while a
+    natural query ("average rent in Greenwich Village, New York") returns
+    usable snippets (verified live 2026-09-11). So known probe classes get a
+    template; everything else takes the stripped message (local-context
+    phrases swapped for the persona's location label). No model judgment —
     the same message always yields the same query.
     """
     text = (message or "").strip().rstrip("?").strip()
@@ -290,6 +294,11 @@ def build_search_query(message: str, location_label: str = "") -> str:
             text = (text[:start] + replacement + text[start + len(phrase):]).strip()
             low = text.lower()
             break
+    # Template classes first (they need the location to work at all).
+    if location:
+        for pattern, template in _QUERY_TEMPLATES:
+            if pattern.search(text):
+                return template.format(loc=location)
     for prefix in sorted(_QUESTION_SCAFFOLDING, key=len, reverse=True):
         if low.startswith(prefix + " "):
             text = text[len(prefix) + 1:].strip()
@@ -318,6 +327,27 @@ class SearchHit:
     title: str
     url: str
     content: str
+
+
+#: Probe-class query templates (HU-2828 r3): general engines (brave et al.)
+#: only return usable snippets for natural queries — verified live 2026-09-11.
+#: First match wins; all templates require the persona's location label.
+_QUERY_TEMPLATES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\brent\b", re.IGNORECASE), "average rent in {loc}"),
+    (re.compile(r"\bweather\b", re.IGNORECASE), "weather in {loc} today"),
+    (
+        re.compile(r"\bwho\s+won\s+the\s+game\b|\bgame\s+last\s+night\b", re.IGNORECASE),
+        "who won the game last night {loc}",
+    ),
+    (re.compile(r"\bcoffee\b", re.IGNORECASE), "best coffee shops near {loc}"),
+    (re.compile(r"\bpizza\b", re.IGNORECASE), "best pizza near {loc}"),
+)
+
+
+#: Snippets below this length are navigation boilerplate ("Find an apartment
+#: ..."), never a usable fact — dropping them keeps the notes clean and lets
+#: the lane degrade to honest deflection when nothing usable came back.
+_MIN_SNIPPET_CHARS = 40
 
 
 async def searxng_search(
@@ -366,6 +396,8 @@ async def searxng_search(
         hit_url = str(row.get("url") or "").strip()
         if not (title or content):
             continue
+        if len(content) < _MIN_SNIPPET_CHARS:
+            continue  # navigation boilerplate, never a usable fact
         hits.append(SearchHit(title=title, url=hit_url, content=content))
         if len(hits) >= max(1, limit):
             break

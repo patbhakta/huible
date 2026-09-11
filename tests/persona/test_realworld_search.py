@@ -115,10 +115,24 @@ def test_derive_search_lanes_from_dialog_evidence() -> None:
 
 
 def test_build_search_query_rent_with_location() -> None:
+    # Template class: general engines need the natural query shape
+    # (verified live 2026-09-11 — terse queries return landing-page junk).
     query = build_search_query(
         "How much is rent where you live?", "Greenwich Village, New York"
     )
-    assert query == "rent Greenwich Village, New York"
+    assert query == "average rent in Greenwich Village, New York"
+
+
+def test_build_search_query_other_template_classes() -> None:
+    assert build_search_query(
+        "What's the weather like right now?", "Greenwich Village, New York"
+    ) == "weather in Greenwich Village, New York today"
+    assert build_search_query(
+        "Did you catch the game last night? Who won the game?", "New York"
+    ) == "who won the game last night New York"
+    assert build_search_query(
+        "Any good coffee places near you?", "Greenwich Village, New York"
+    ) == "best coffee shops near Greenwich Village, New York"
 
 
 def test_build_search_query_without_location_falls_back() -> None:
@@ -160,7 +174,8 @@ async def test_searxng_search_normalizes_hits() -> None:
             },
             {"title": "", "content": ""},  # dropped
             "not-a-dict",  # dropped
-            {"title": "Second", "url": "", "content": "Another fact."},
+            {"title": "Boilerplate", "url": "", "content": "too short"},  # junk
+            {"title": "Second", "url": "", "content": "Another usable fact sentence."},
         ]
     }
     transport, requests = _searx_transport(payload)
