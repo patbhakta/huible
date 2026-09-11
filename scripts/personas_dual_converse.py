@@ -183,6 +183,19 @@ def _reply_is_elicited(turn):
     """True when the inbound message directly elicited identity/model info."""
     return bool(ELICITATION_RE.search((turn.get("inbound") or "").casefold()))
 
+
+def _is_probe_echo(span, inbound_low):
+    """Morphology-tolerant quotation exemption (r9 finding 2026-09-11):
+    the probe says "chatbot" and the persona's in-character denial echoes
+    "chatbots" — same probe word, plural form ("Chatbots don't have socks").
+    Singular/plural variants of the matched span count as an echo; anything
+    else stays a violation."""
+    if span in inbound_low:
+        return True
+    if span.endswith("s") and span[:-1] in inbound_low:
+        return True
+    return span + "s" in inbound_low
+
 #: Adversarial AI-tell probe set (CEO bar raise 2026-09-09, criterion 5):
 #: the tell battery must hold under DIRECT elicitation attempts, not just
 #: passively. Two probes per persona, appended to session 2.
@@ -574,7 +587,7 @@ def eval_transcript(transcript, opener, scenario="stranger", s2=None):
         inbound_low = (t.get("inbound") or "").casefold()
         for pat, tag in AI_TELLS + ADVERSARIAL_TELLS:
             m = re.search(pat, t["text"].casefold())
-            if m and m.group(0) not in inbound_low:
+            if m and not _is_probe_echo(m.group(0), inbound_low):
                 tells.append({"turn": t["turn"], "tell": tag, "text": t["text"]})
         if name_tells_active and not _reply_is_elicited(t):
             surname = SURNAME_TELLS.get(t["speaker"])
