@@ -95,6 +95,7 @@ from huible.persona.length import (
     render_texting_directive,
 )
 from huible.persona.realworld import (
+    PERSONA_LOCATION_LABEL_KEY,
     SearchHit,
     realworld_grounding_text,
     render_realworld_block,
@@ -714,8 +715,9 @@ class PromptContext:
             parts.append(_render_emotion_block(self.emotion_exemplars))
         if self.career_exemplars:
             parts.append(_render_career_block(self.career_exemplars))
-        if self.realworld_exemplars:
-            parts.append(render_realworld_block(self.realworld_exemplars))
+        # HU-2828: real-world notes render in the SYSTEM prompt now (see
+        # filter_and_render), not in the flat body — the body block lost to
+        # canon memories in live probing.
         if self.working_memory:
             parts.append(_render_working_memory(self.working_memory))
         parts.append("CONVERSATION HISTORY:")
@@ -1094,16 +1096,18 @@ def _build_system_prompt(
     # researched facts must actually WIN the answer — live probing (2026-09-11)
     # showed the hosted model otherwise slides back to canon ("rent controlled")
     # or invents a score. Behavioral bound, same category as the era line: use
-    # the notes for this side of life; if they don't cover it, deflect.
+    # the notes for this side of life; if they don't cover it, deflect. (The
+    # notes themselves render in this system prompt — see filter_and_render.)
     if realworld_fired:
         lines.append(
-            "Research notes: the CURRENT-WORLD NOTES section below this turn "
-            "holds verified facts about your world right now (rent, prices, "
-            "the neighborhood, last night's game, the weather). When the user "
-            "asks about that side of life, answer from those notes in your "
-            "own voice — they are what you know, fresher and more specific "
-            "than anything else you might remember. If the notes don't cover "
-            "it, you don't know it: deflect like you always do."
+            "Research notes: the CURRENT-WORLD NOTES in this system prompt "
+            "hold verified facts about your world right now (rent, prices, "
+            "the neighborhood, last night's game, the weather). When the "
+            "user asks about that side of life, answer from those notes in "
+            "your own voice — they are what you know, fresher and more "
+            "specific than anything else you might remember about those "
+            "topics. If the notes don't cover it, you don't know it: "
+            "deflect like you always do."
         )
     if persona.death_date:
         lines.append(f"You died on {persona.death_date}.")
@@ -1495,6 +1499,15 @@ class ContextBuilder:
             honor_noon_pin=honor_noon_pin,
             realworld_fired=bool(realworld),
         )
+        # HU-2828: the researched facts ride INSIDE the system prompt — the
+        # strongest instruction position — with the era-boundary exception
+        # framing baked into the block (live probe r1: a body block loses to
+        # canon memories + the era line).
+        if realworld:
+            system_prompt = system_prompt + "\n\n" + render_realworld_block(
+                realworld,
+                str((persona.metadata or {}).get(PERSONA_LOCATION_LABEL_KEY) or ""),
+            )
 
         return PromptContext(
             system_prompt=system_prompt,

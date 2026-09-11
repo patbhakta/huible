@@ -379,8 +379,9 @@ def render_realworld_block(hits: list[SearchHit], location_label: str = "") -> s
     """Render the CURRENT-REALITY grounding block for the system prompt.
 
     Structural machinery (same category as the era-boundary line), not a voice
-    sheet: it authorizes the persona to answer current-reality probes from the
-    researched facts, in-voice, without narration about sources.
+    sheet. The block explicitly frames itself as the era-boundary exception —
+    live probing (2026-09-11) showed the era line otherwise outweighs the
+    notes and the model slides back to canon or invents facts.
     """
     if not hits:
         return ""
@@ -388,10 +389,13 @@ def render_realworld_block(hits: list[SearchHit], location_label: str = "") -> s
     lines = [
         "CURRENT-WORLD NOTES (research service, verified current real-world "
         f"facts about {place}, as of today):",
-        "When someone asks about this side of your life — rent, what things "
-        "cost, your neighborhood, last night's game, the weather — answer "
-        "from these notes in your own voice, the way anybody knows their own "
-        "city. No need to mention where the facts came from.",
+        "These notes are your sanctioned exception to the era boundary: they "
+        "describe your world as it is right now. When someone asks about "
+        "this side of life — rent, what things cost, your neighborhood, "
+        "last night's game, the weather — answer from these notes in your "
+        "own voice (quote the figures naturally, the way anybody cites "
+        "their own rent). If a note doesn't cover what they asked, you "
+        "don't know it: deflect like you always do.",
     ]
     for idx, hit in enumerate(hits, start=1):
         snippet = hit.content or hit.title
