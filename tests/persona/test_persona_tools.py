@@ -724,3 +724,18 @@ class TestPersonaLocationTimezone:
         assert "CURRENT-WORLD NOTES" in ctx.render()
         assert "$4,200" in ctx.realworld_grounding
         assert ctx.realworld_lane_fired
+        # The system prompt carries the authority line so the researched
+        # facts actually win the answer (live probe 2026-09-11: without it
+        # the model slid back to canon / invented a score).
+        assert "answer from those notes" in ctx.system_prompt
+
+    def test_no_realworld_hits_no_authority_line(self):
+        persona = PersonaConfig(
+            id=uuid4(),
+            name="Chandler",
+            voice_instructions="",
+            era_knowledge_boundary="2004-05-06",
+        )
+        ctx = self._ctx(persona)
+        assert "answer from those notes" not in ctx.system_prompt
+        assert "CURRENT-WORLD NOTES" not in ctx.render()

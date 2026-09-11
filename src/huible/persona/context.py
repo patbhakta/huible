@@ -1013,6 +1013,7 @@ def _build_system_prompt(
     user_name: str | None = None,
     current_message: str = "",
     honor_noon_pin: bool = True,
+    realworld_fired: bool = False,
 ) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
@@ -1089,6 +1090,21 @@ def _build_system_prompt(
         )
         if clock_line:
             lines.append(clock_line)
+    # HU-2828: authority line for a lane-fired CURRENT-REALITY turn. The
+    # researched facts must actually WIN the answer — live probing (2026-09-11)
+    # showed the hosted model otherwise slides back to canon ("rent controlled")
+    # or invents a score. Behavioral bound, same category as the era line: use
+    # the notes for this side of life; if they don't cover it, deflect.
+    if realworld_fired:
+        lines.append(
+            "Research notes: the CURRENT-WORLD NOTES section below this turn "
+            "holds verified facts about your world right now (rent, prices, "
+            "the neighborhood, last night's game, the weather). When the user "
+            "asks about that side of life, answer from those notes in your "
+            "own voice — they are what you know, fresher and more specific "
+            "than anything else you might remember. If the notes don't cover "
+            "it, you don't know it: deflect like you always do."
+        )
     if persona.death_date:
         lines.append(f"You died on {persona.death_date}.")
     # Interlocutor awareness (HU-2774 founder revision 2026-09-09): the
@@ -1477,6 +1493,7 @@ class ContextBuilder:
             user_name=user_name,
             current_message=current_message,
             honor_noon_pin=honor_noon_pin,
+            realworld_fired=bool(realworld),
         )
 
         return PromptContext(
