@@ -186,7 +186,8 @@ class TestRealworldLaneChatWiring:
 
         assert r.status_code == 200, r.text
         prompt, _system = llm.calls[-1]
-        assert "CURRENT-WORLD NOTES" in prompt
+        assert "YOUR WORLD RIGHT NOW" in prompt
+        assert "[CURWORLD]" in prompt
         assert "$4,200 a month" in prompt
         # The lane-fired turn is in-domain: the competence wall stayed silent.
         assert r.json()["trace"]["competence_wall"] is False
@@ -214,7 +215,8 @@ class TestRealworldLaneChatWiring:
         assert r.status_code == 200
         assert requests == [], "academic probe must not reach SearXNG"
         prompt, _system = llm.calls[-1]
-        assert "CURRENT-WORLD NOTES" not in prompt
+        assert "YOUR WORLD RIGHT NOW" not in prompt
+        assert "[CURWORLD]" not in prompt
 
     def test_lane_not_provisioned_skips_search(self):
         persona_metadata = {"search_lanes": None}
@@ -230,7 +232,8 @@ class TestRealworldLaneChatWiring:
         assert r.status_code == 200
         assert requests == []
         prompt, _system = llm.calls[-1]
-        assert "CURRENT-WORLD NOTES" not in prompt
+        assert "YOUR WORLD RIGHT NOW" not in prompt
+        assert "[CURWORLD]" not in prompt
 
     def test_searxng_failure_degrades_without_breaking_turn(self):
         client, llm, application = _make_app(settings=SEARCH_SETTINGS)
@@ -242,7 +245,8 @@ class TestRealworldLaneChatWiring:
 
         assert r.status_code == 200, r.text
         prompt, _system = llm.calls[-1]
-        assert "CURRENT-WORLD NOTES" not in prompt
+        assert "YOUR WORLD RIGHT NOW" not in prompt
+        assert "[CURWORLD]" not in prompt
 
 
 class TestPersonaLocalClock:

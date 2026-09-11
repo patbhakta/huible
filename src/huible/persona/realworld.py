@@ -62,6 +62,7 @@ __all__ = [
     "is_real_world_question",
     "realworld_grounding_text",
     "render_realworld_block",
+    "render_realworld_memory_lines",
     "searxng_search",
 ]
 
@@ -453,6 +454,12 @@ def render_realworld_block(hits: list[SearchHit], location_label: str = "") -> s
     sheet. The block explicitly frames itself as the era-boundary exception —
     live probing (2026-09-11) showed the era line otherwise outweighs the
     notes and the model slides back to canon or invents facts.
+
+    Superseded in live wiring by :func:`render_realworld_memory_lines`
+    (HU-2828 r5): a research block at the tail of the system prompt still lost
+    to canon memories even with real brave figures in the notes (portal-5134,
+    2026-09-11 22:12: four searches, five hits each, answer still "rent
+    controlled"). Kept for grounding-adjacent callers and tests.
     """
     if not hits:
         return ""
@@ -472,6 +479,41 @@ def render_realworld_block(hits: list[SearchHit], location_label: str = "") -> s
         snippet = hit.content or hit.title
         label = f"{hit.title} — " if hit.title and hit.title != snippet else ""
         lines.append(f"{idx}. {label}{snippet}")
+    return "\n".join(lines)
+
+
+#: HU-2828 r5 header for the imitation-zone section. Structural machinery,
+#: not a voice sheet: it marks the ``[CURWORLD]`` lines below as the persona's
+#: own CURRENT knowledge and gives them precedence over older canon memories
+#: when the two disagree (the exact live failure mode of r1-r4).
+_REALWORLD_MEMORY_HEADER = (
+    "YOUR WORLD RIGHT NOW — verified facts about your life today "
+    "(rent, prices, the neighborhood, last night's game, the weather), "
+    "fetched fresh for this conversation. These lines are things you "
+    "actually know right now: when one of them disagrees with an older "
+    "memory on the same topic, today's fact is the one you remember."
+)
+
+
+def render_realworld_memory_lines(
+    hits: list[SearchHit], location_label: str = ""
+) -> str:
+    """Render searched facts as in-voice activated-memory lines (r5).
+
+    The imitation-zone presentation: the same shape the generator already
+    imitates (``[TYPE] content`` memory lines), placed directly after the
+    ``ACTIVATED MEMORIES:`` block, so the researched figures are treated as
+    the persona's own current knowledge instead of external notes it weighs
+    against canon (and drops). Empty hits render nothing — the lane degrades
+    to honest canon/deflection exactly as before.
+    """
+    if not hits:
+        return ""
+    lines = [_REALWORLD_MEMORY_HEADER]
+    for hit in hits:
+        snippet = (hit.content or hit.title).strip()
+        if snippet:
+            lines.append(f"[CURWORLD] {snippet}")
     return "\n".join(lines)
 
 

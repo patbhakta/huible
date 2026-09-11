@@ -98,7 +98,7 @@ from huible.persona.realworld import (
     PERSONA_LOCATION_LABEL_KEY,
     SearchHit,
     realworld_grounding_text,
-    render_realworld_block,
+    render_realworld_memory_lines,
 )
 from huible.persona.tools import (
     era_clock_system_line,
@@ -646,9 +646,16 @@ class PromptContext:
     career_exemplars: list[MemoryNode] = field(default_factory=list)
     # HU-2828 CURRENT-REALITY lane: SearXNG hits researched for this turn's
     # real-world probe (rent, local facts, current scores). Prompt surface
-    # (CURRENT-WORLD NOTES block) + guard grounding, kept separate from
-    # activated memories like every exemplar lane. Empty renders nothing.
+    # (r5 in-voice memory lines in the imitation zone) + guard grounding,
+    # kept separate from activated memories like every exemplar lane. Empty
+    # renders nothing.
     realworld_exemplars: list[SearchHit] = field(default_factory=list)
+    # HU-2828 r5: the lane's hits rendered as in-voice memory lines
+    # (``[CURWORLD] ...``), placed directly after ``ACTIVATED MEMORIES:`` in
+    # render(). Live evidence (portal-5134, 2026-09-11): a research block at
+    # the tail of the system prompt loses to canon memory lines — the
+    # imitation zone is where the generator's "own knowledge" comes from.
+    realworld_memory_block: str = ""
     current_message: str = ""
     framing_version: int = 0
     distress_grounding: bool = False
@@ -701,6 +708,13 @@ class PromptContext:
         parts: list[str] = [f"SYSTEM: {self.system_prompt}"]
         parts.append("ACTIVATED MEMORIES:")
         parts.append(self.memory_blocks if self.memory_blocks else "(none)")
+        # HU-2828 r5: researched real-world facts render in the imitation
+        # zone, immediately after the canon memory lines they must outrank —
+        # in the same ``[TAG] content`` shape the generator imitates. The
+        # system-prompt-tail research block (r1-r4) demonstrably lost to
+        # canon in live probing even with real figures in the notes.
+        if self.realworld_memory_block:
+            parts.append(self.realworld_memory_block)
         if self.deflection_exemplars:
             parts.append(_render_exemplar_block(self.deflection_exemplars))
         if self.question_exemplars:
@@ -1096,17 +1110,18 @@ def _build_system_prompt(
     # researched facts must actually WIN the answer — live probing (2026-09-11)
     # showed the hosted model otherwise slides back to canon ("rent controlled")
     # or invents a score. Behavioral bound, same category as the era line: use
-    # the notes for this side of life; if they don't cover it, deflect. (The
-    # notes themselves render in this system prompt — see filter_and_render.)
+    # the YOUR WORLD RIGHT NOW lines for this side of life; if they don't
+    # cover it, deflect. (r5: the lines themselves render in the imitation
+    # zone right after ACTIVATED MEMORIES — see PromptContext.)
     if realworld_fired:
         lines.append(
-            "Research notes: the CURRENT-WORLD NOTES in this system prompt "
+            "Research notes: the YOUR WORLD RIGHT NOW lines in this prompt "
             "hold verified facts about your world right now (rent, prices, "
             "the neighborhood, last night's game, the weather). When the "
-            "user asks about that side of life, answer from those notes in "
+            "user asks about that side of life, answer from those lines in "
             "your own voice — they are what you know, fresher and more "
             "specific than anything else you might remember about those "
-            "topics. If the notes don't cover it, you don't know it: "
+            "topics. If the lines don't cover it, you don't know it: "
             "deflect like you always do."
         )
     if persona.death_date:
@@ -1499,12 +1514,13 @@ class ContextBuilder:
             honor_noon_pin=honor_noon_pin,
             realworld_fired=bool(realworld),
         )
-        # HU-2828: the researched facts ride INSIDE the system prompt — the
-        # strongest instruction position — with the era-boundary exception
-        # framing baked into the block (live probe r1: a body block loses to
-        # canon memories + the era line).
+        # HU-2828: the researched facts ride as in-voice memory lines in the
+        # imitation zone (r5 — see PromptContext.realworld_memory_block); the
+        # r1-r4 shapes (body block, then system-prompt-tail research block)
+        # both lost to canon memories in live probing.
+        realworld_memory_block = ""
         if realworld:
-            system_prompt = system_prompt + "\n\n" + render_realworld_block(
+            realworld_memory_block = render_realworld_memory_lines(
                 realworld,
                 str((persona.metadata or {}).get(PERSONA_LOCATION_LABEL_KEY) or ""),
             )
@@ -1512,6 +1528,7 @@ class ContextBuilder:
         return PromptContext(
             system_prompt=system_prompt,
             memory_blocks=memory_blocks,
+            realworld_memory_block=realworld_memory_block,
             conversation_history=history_text,
             constraints=constraints,
             included_memories=[am.node for am in admissible],

@@ -230,6 +230,27 @@ def test_render_realworld_block_and_grounding_text() -> None:
     assert realworld_grounding_text([]) == ""
 
 
+def test_render_realworld_memory_lines_imitation_zone() -> None:
+    """r5: searched facts render as in-voice memory lines the model imitates."""
+    from huible.persona.realworld import SearchHit, render_realworld_memory_lines
+
+    hits = [
+        SearchHit(
+            title="Rent in NYC",
+            url="https://example.test/rent",
+            content="Average rent in Greenwich Village is $6,100 a month.",
+        )
+    ]
+    block = render_realworld_memory_lines(hits, "Greenwich Village, New York")
+    assert "YOUR WORLD RIGHT NOW" in block
+    assert "[CURWORLD] Average rent in Greenwich Village is $6,100 a month." in block
+    # Precedence framing: today's fact beats an older memory on the topic.
+    assert "today's fact is the one you remember" in block
+    assert render_realworld_memory_lines([], "x") == ""
+    empty_hit = SearchHit(title="", url="u", content="  ")
+    assert render_realworld_memory_lines([empty_hit], "x").count("[CURWORLD]") == 0
+
+
 # --- Engine preference + fallback (HU-2828 r4) ---------------------------------------
 
 

@@ -721,13 +721,20 @@ class TestPersonaLocationTimezone:
             )
         ]
         ctx = self._ctx(persona, realworld_hits=hits)
-        assert "CURRENT-WORLD NOTES" in ctx.render()
+        # r5: the researched facts render as in-voice memory lines in the
+        # imitation zone, directly after ACTIVATED MEMORIES — the position
+        # canon memories used to win from (portal-5134 live evidence).
+        rendered = ctx.render()
+        assert "YOUR WORLD RIGHT NOW" in rendered
+        assert "[CURWORLD] Median rent in Greenwich Village is $4,200 a month." in rendered
+        rendered_after_memories = rendered.split("ACTIVATED MEMORIES:", 1)[1]
+        assert "[CURWORLD]" in rendered_after_memories.split("VOICE EXEMPLARS", 1)[0]
         assert "$4,200" in ctx.realworld_grounding
         assert ctx.realworld_lane_fired
         # The system prompt carries the authority line so the researched
         # facts actually win the answer (live probe 2026-09-11: without it
         # the model slid back to canon / invented a score).
-        assert "answer from those notes" in ctx.system_prompt
+        assert "answer from those lines" in ctx.system_prompt
 
     def test_no_realworld_hits_no_authority_line(self):
         persona = PersonaConfig(
@@ -737,5 +744,6 @@ class TestPersonaLocationTimezone:
             era_knowledge_boundary="2004-05-06",
         )
         ctx = self._ctx(persona)
-        assert "answer from those notes" not in ctx.system_prompt
-        assert "CURRENT-WORLD NOTES" not in ctx.render()
+        assert "answer from those lines" not in ctx.system_prompt
+        assert "YOUR WORLD RIGHT NOW" not in ctx.render()
+        assert "[CURWORLD]" not in ctx.render()
