@@ -1,0 +1,21 @@
+{
+ "probe": "H4 Five-Friends v0 EXECUTION (boss-gated, real generator only)",
+ "started_at": "2026-09-11T02:09:48.146051+00:00",
+ "finished_at": "2026-09-11T02:14:07.204448+00:00",
+ "conversation_id": "h4ff-c3969030ca",
+ "turns": 35,
+ "avg_turn_latency_ms": 5782,
+ "comparator_lines": 30,
+ "pairing": {
+  "seed": 1789092847,
+  "X": "five-friends-v0",
+  "Y": "comparator-desc-only"
+ },
+ "leakage_gate_pass": true,
+ "engagement_all_in_band": false,
+ "grounded_share": 1.0,
+ "signature_hit_share": 0.029,
+ "tell_line_count": 0,
+ "self_graded_verdict": null,
+ "note": "Boss rates blind at gate time. The harness assigns NO verdict."
+}

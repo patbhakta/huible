@@ -57,15 +57,29 @@ corpus band stays the founder-approved 0.20–0.45 (single-line register).
 - Harness: `scripts/v2_harness/h4_five_friends_run.py` (`--check` wiring /
   `--i-am-the-boss --run`; aborts loudly on any fake-voice fallback — real
   generator only).
-- Orchestrator: Kestra flow `pat.personas/five-friends-v0`, one-shot cron
-  2026-09-11 00:40Z (after the z.ai daily token reset; HU-2774's r9 battery
-  at 00:30Z shares the window — combined draw ≈0.7M of the 2M ceiling).
+- Orchestrator: v1 host-side one-shot 00:40:30Z died on persona-key consent
+  (rc=1; keys are persona-scoped — fixed same night by HU-2819, commit
+  `23db392`, scope re-verified 5/5). Redundant v2 one-shot (09-12 00:40Z)
+  disarmed; HU-2811 executed live from its 02:06Z heartbeat.
 - Budget plan: dialogue ≈35 turns × ~3.6k tok ≈ 130k + probes ≈ 20k +
   comparator ≈ 5k ⇒ ≈155k tokens total.
 
 ## Results
 
-(post-run: summary.json numbers, leakage gate verdict, engagement table,
-grounding share, signature share, scoring + blind pack links)
+Executed live 2026-09-11T02:09Z (conv `h4ff-c3969030ca`); full report:
+`hu2811_execution_report_20260911.md`.
+
+- Leakage gate **PASS** (40/40 fail-closed ownership checks; probe battery clean)
+- **0** AI-tell lines / platform markers; real zai provider on all 40 calls
+- Grounded share **1.0** (35/35 turns above the 0.50 activation floor)
+- Signature hit share **0.029**; question-rate band met 1/5 personas (finding)
+- Emergence (design-owner provisional): unseeded "haunted phone" group premise
+  + multi-turn running gags; novelty collapse post-t20 (finding)
+- Blind pack sealed (seed `1789092847`, X=ff-v0, Y=comparator); boss rates at gate
+- Cost: 182,673 tokens, single 2026-09-11 window (1.24M/2M after run)
+
+Artifacts: `dialogue_transcript.json`, `cross_vault_probes.json`, `scoring.json`,
+`summary.json`, `rating_pack_pair1.json` + `provenance.json` (boss-only),
+`comparator.txt`, `execution_console.log`.
 
 — Huible Tech Lead, run HU-2811

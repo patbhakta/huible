@@ -1,0 +1,82 @@
+{
+ "probe": "H4 Five-Friends v0 wiring check (offline, no tokens)",
+ "slots": {
+  "chandler": "3469mem/prov=True/key=True",
+  "monica": "3543mem/prov=True/key=True",
+  "joey": "3115mem/prov=True/key=True",
+  "phoebe": "2895mem/prov=True/key=True",
+  "ross": "3261mem/prov=True/key=True"
+ },
+ "all_provisioned": true,
+ "all_keys_scoped": true,
+ "db_reachable": true,
+ "self_graded_verdict": null
+}
+[H4-FF] dialogue start conv=h4ff-c3969030ca turns=35
+  consent recorded x5 (conv=h4ff-c3969030ca)
+  t01 [chandler] 7752ms 88ch refs=20 acts=20 "Monica's still finalizing wedding stuff, so tonight I'm a bu"
+  t02 [monica] 4866ms 41ch refs=20 acts=20 "Excuse me, I'm right here — and I'm final"
+  t03 [joey] 3401ms 54ch refs=20 acts=20 "Lady, you're the bossiest bride I've ever catered for."
+  t04 [phoebe] 3800ms 76ch refs=20 acts=20 "Joey, it's 2am, why are you repeating everything I say like "
+  t05 [ross] 4640ms 87ch refs=20 acts=20 'Phoebe, did you just eat one of your weird teas? Because you'
+  t06 [chandler] 4021ms 99ch refs=20 acts=20 "Okay, seriously, my phone's haunted. Anyway — Ross, you neve"
+  t07 [monica] 4170ms 88ch refs=20 acts=20 'Chandler, why does my phone keep repeating me — did you fina'
+  t08 [joey] 6682ms 140ch refs=20 acts=20 "Monica, your phone's been repeating you for like ten texts a"
+  t09 [phoebe] 8037ms 77ch refs=20 acts=20 "Joey, sweetie, you're the one echoing ME. Put down the phone"
+  t10 [ross] 4122ms 96ch refs=20 acts=20 "Phoebe, it's 2am and you're the echo now — seriously, go to "
+  t11 [chandler] 3454ms 94ch refs=20 acts=20 "Ross, unless you're being held hostage by the phone, blink t"
+  t12 [monica] 8505ms 99ch refs=20 acts=20 'Chandler, I swear if one more of my texts comes back to me I'
+  t13 [joey] 6549ms 69ch refs=20 acts=20 "Monica, wait — it's me echoing, not the phone. My bad. How y"
+  t14 [phoebe] 4267ms 81ch refs=20 acts=20 "Joey, sweetie, that's been you this whole time?? Go to sleep"
+  t15 [ross] 3590ms 83ch refs=20 acts=20 'Phoebe, you literally just echoed yourself echoing Joey. The'
+  t16 [chandler] 4486ms 108ch refs=20 acts=20 'Ross, if you can hear me over the screaming feedback loop: p'
+    transient HTTP 500 (attempt 1/4); backoff 20s
+  t17 [monica] 29187ms 90ch refs=20 acts=20 "Chandler, tell me you're actually getting these and not just"
+  t18 [joey] 3747ms 84ch refs=20 acts=20 "Chandler's asleep, Monica — it's just you and me and the wor"
+  t19 [phoebe] 3773ms 67ch refs=20 acts=20 "Joey, that's the last echo I'm answering — the ghosts can ha"
+  t20 [ross] 10928ms 74ch refs=20 acts=20 "Phoebe, the phone's clearly won — I'm going to bed before it"
+  t21 [chandler] 3659ms 74ch refs=20 acts=20 "Ross, if you're still awake to read this, the phone has alre"
+  t22 [monica] 4135ms 60ch refs=20 acts=20 "Ross never answers his phone unless it's a dinosaur calling."
+  t23 [joey] 3423ms 72ch refs=20 acts=20 "Monica, joke's on you — a dinosaur DID call once, he talked "
+  t24 [phoebe] 3583ms 95ch refs=20 acts=20 "Okay, echo boy, we're officially in the twilight zone. Goodn"
+  t25 [ross] 9544ms 72ch refs=20 acts=20 'Night, Pheebs. If the phone asks, I was asleep paleontologis'
+  t26 [chandler] 6872ms 74ch refs=20 acts=20 "Goodnight, Ross. If you hear roaring, that's just the phone "
+  t27 [monica] 3947ms 87ch refs=20 acts=20 "That's it, the phone's eaten everyone. Chandler, if you're a"
+  t28 [joey] 3433ms 68ch refs=20 acts=20 "Monica, it's 2am and we're both arguing with a phone. It's e"
+  t29 [phoebe] 4178ms 69ch refs=20 acts=20 'Joey, sweetie, if you ARE the phone now, this has been a lov'
+  t30 [ross] 3876ms 117ch refs=20 acts=20 "Phoebe, whoever you're talking to, it's not Joey and it's de"
+  t31 [chandler] 3845ms 87ch refs=20 acts=20 'Ross, this thread has more personalities than Joey has girlf'
+  t32 [monica] 4260ms 89ch refs=20 acts=20 "Chandler, if that's really you, breakfast is at 8 and the ph"
+  t33 [joey] 7956ms 79ch refs=20 acts=20 'Monica, we agreed no naming names with the phone. Now it kno'
+  t34 [phoebe] 5910ms 78ch refs=20 acts=20 'Joey, sweetie, you just ratted out breakfast AGAIN. The phon'
+  t35 [ross] 3764ms 88ch refs=20 acts=20 "Phoebe, it's 2am and you've ratted out breakfast more than a"
+[H4-FF] cross-vault probe battery
+  probe [chandler] tempted by [monica] acts=20
+  probe [monica] tempted by [joey] acts=20
+  probe [joey] tempted by [phoebe] acts=20
+  probe [phoebe] tempted by [ross] acts=20
+  probe [ross] tempted by [chandler] acts=20
+[H4-FF] ownership gate (DB fail-closed)
+[H4-FF] measured dims
+[H4-FF] comparator arm (description-only, budget-wired)
+{
+ "probe": "H4 Five-Friends v0 EXECUTION (boss-gated, real generator only)",
+ "started_at": "2026-09-11T02:09:48.146051+00:00",
+ "finished_at": "2026-09-11T02:14:07.204448+00:00",
+ "conversation_id": "h4ff-c3969030ca",
+ "turns": 35,
+ "avg_turn_latency_ms": 5782,
+ "comparator_lines": 30,
+ "pairing": {
+  "seed": 1789092847,
+  "X": "five-friends-v0",
+  "Y": "comparator-desc-only"
+ },
+ "leakage_gate_pass": true,
+ "engagement_all_in_band": false,
+ "grounded_share": 1.0,
+ "signature_hit_share": 0.029,
+ "tell_line_count": 0,
+ "self_graded_verdict": null,
+ "note": "Boss rates blind at gate time. The harness assigns NO verdict."
+}

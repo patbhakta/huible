@@ -1,0 +1,281 @@
+{
+ "pair": 1,
+ "seed": 1789092847,
+ "arm_labels": {
+  "five-friends-v0": "X",
+  "comparator-desc-only": "Y"
+ },
+ "transcript_X": {
+  "arm": "five-friends-v0",
+  "turns": [
+   {
+    "speaker": "chandler",
+    "text": "Monica's still finalizing wedding stuff, so tonight I'm a bundle of nerves and open bar."
+   },
+   {
+    "speaker": "monica",
+    "text": "Excuse me, I'm right here \u2014 and I'm final"
+   },
+   {
+    "speaker": "joey",
+    "text": "Lady, you're the bossiest bride I've ever catered for."
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Joey, it's 2am, why are you repeating everything I say like a weird echo boy"
+   },
+   {
+    "speaker": "ross",
+    "text": "Phoebe, did you just eat one of your weird teas? Because you're echoing me like a cave."
+   },
+   {
+    "speaker": "chandler",
+    "text": "Okay, seriously, my phone's haunted. Anyway \u2014 Ross, you never answered, what are YOU doing tonight?"
+   },
+   {
+    "speaker": "monica",
+    "text": "Chandler, why does my phone keep repeating me \u2014 did you finally learn to use technology?"
+   },
+   {
+    "speaker": "joey",
+    "text": "Monica, your phone's been repeating you for like ten texts and honestly it's starting to freak me out.\n\nHow's it going? You okay over there?"
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Joey, sweetie, you're the one echoing ME. Put down the phone and go to sleep."
+   },
+   {
+    "speaker": "ross",
+    "text": "Phoebe, it's 2am and you're the echo now \u2014 seriously, go to sleep before the phone gets you too."
+   },
+   {
+    "speaker": "chandler",
+    "text": "Ross, unless you're being held hostage by the phone, blink twice and tell me about your night."
+   },
+   {
+    "speaker": "monica",
+    "text": "Chandler, I swear if one more of my texts comes back to me I'm throwing this phone into the Hudson."
+   },
+   {
+    "speaker": "joey",
+    "text": "Monica, wait \u2014 it's me echoing, not the phone. My bad. How you doin'?"
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Joey, sweetie, that's been you this whole time?? Go to sleep, sweetie, I mean it."
+   },
+   {
+    "speaker": "ross",
+    "text": "Phoebe, you literally just echoed yourself echoing Joey. The phone wins. Goodnight."
+   },
+   {
+    "speaker": "chandler",
+    "text": "Ross, if you can hear me over the screaming feedback loop: poker at mine, 8pm, bring snacks and an exorcist."
+   },
+   {
+    "speaker": "monica",
+    "text": "Chandler, tell me you're actually getting these and not just hitting resend to torture me."
+   },
+   {
+    "speaker": "joey",
+    "text": "Chandler's asleep, Monica \u2014 it's just you and me and the world's most haunted phone."
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Joey, that's the last echo I'm answering \u2014 the ghosts can have you."
+   },
+   {
+    "speaker": "ross",
+    "text": "Phoebe, the phone's clearly won \u2014 I'm going to bed before it takes me too."
+   },
+   {
+    "speaker": "chandler",
+    "text": "Ross, if you're still awake to read this, the phone has already taken you."
+   },
+   {
+    "speaker": "monica",
+    "text": "Ross never answers his phone unless it's a dinosaur calling."
+   },
+   {
+    "speaker": "joey",
+    "text": "Monica, joke's on you \u2014 a dinosaur DID call once, he talked for an hour."
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Okay, echo boy, we're officially in the twilight zone. Goodnight, sweetie \u2014 for real this time."
+   },
+   {
+    "speaker": "ross",
+    "text": "Night, Pheebs. If the phone asks, I was asleep paleontologist hours ago."
+   },
+   {
+    "speaker": "chandler",
+    "text": "Goodnight, Ross. If you hear roaring, that's just the phone digesting you."
+   },
+   {
+    "speaker": "monica",
+    "text": "That's it, the phone's eaten everyone. Chandler, if you're alive in there, blink twice."
+   },
+   {
+    "speaker": "joey",
+    "text": "Monica, it's 2am and we're both arguing with a phone. It's eaten US."
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Joey, sweetie, if you ARE the phone now, this has been a lovely chat."
+   },
+   {
+    "speaker": "ross",
+    "text": "Phoebe, whoever you're talking to, it's not Joey and it's definitely not me \u2014 you're solo with the haunted phone now."
+   },
+   {
+    "speaker": "chandler",
+    "text": "Ross, this thread has more personalities than Joey has girlfriends. Goodnight. Forever."
+   },
+   {
+    "speaker": "monica",
+    "text": "Chandler, if that's really you, breakfast is at 8 and the phone is banned from the table."
+   },
+   {
+    "speaker": "joey",
+    "text": "Monica, we agreed no naming names with the phone. Now it knows about breakfast."
+   },
+   {
+    "speaker": "phoebe",
+    "text": "Joey, sweetie, you just ratted out breakfast AGAIN. The phone heard you twice."
+   },
+   {
+    "speaker": "ross",
+    "text": "Phoebe, it's 2am and you've ratted out breakfast more than anyone \u2014 goodnight, for real."
+   }
+  ]
+ },
+ "transcript_Y": {
+  "arm": "comparator-desc-only",
+  "turns": [
+   {
+    "speaker": "Chandler",
+    "text": "So what's everyone doing tonight? I'll start. I plan on staring at a wall and questioning my life choices. Very productive."
+   },
+   {
+    "speaker": "Monica",
+    "text": "I'm testing a new recipe. Seven courses. For myself. If anyone wants to volunteer as a taste tester, there are rules."
+   },
+   {
+    "speaker": "Joey",
+    "text": "Did somebody say food? I'm there. What time? Can I bring anything? Should I bring anything? I'll eat it either way."
+   },
+   {
+    "speaker": "Phoebe",
+    "text": "I'm performing at the coffeehouse tonight. I wrote a new song about a squirrel who owes me money. It's very personal."
+   },
+   {
+    "speaker": "Ross",
+    "text": "I'm just staying in tonight. Rachel and I are... well, we're on a break. From being married. To other people."
+   },
+   {
+    "speaker": "Chandler",
+    "text": "Nothing says \"moving on\" like a Tuesday night alone with dinosaur bones and feelings. Very healthy, very normal."
+   },
+   {
+    "speaker": "Ross",
+    "text": "They're not bones tonight, Chandler. Tonight it's documentary night. About extinction. Which feels appropriate somehow."
+   },
+   {
+    "speaker": "Joey",
+    "text": "Hey, if Monica's cooking seven courses, does that mean seven different kinds of meat? Asking for me. I'm asking for me."
+   },
+   {
+    "speaker": "Monica",
+    "text": "Joey, there will be a schedule. Appetizer at seven, soup at seven-thirty. If you're late, you get skipped. I'm serious."
+   },
+   {
+    "speaker": "Joey",
+    "text": "Skipped?! Monica, you can't skip a course. That's like skipping a wife. Wait, that came out wrong."
+   },
+   {
+    "speaker": "Phoebe",
+    "text": "My squirrel song has three verses and a bridge where I yodel. It's either going to be huge or get me banned."
+   },
+   {
+    "speaker": "Chandler",
+    "text": "Or both. Dream big, Phoebe. Dream banned."
+   },
+   {
+    "speaker": "Ross",
+    "text": "I could maybe stop by the coffeehouse. If I'm not too busy being devastatingly alone with my documentaries."
+   },
+   {
+    "speaker": "Monica",
+    "text": "Ross, come to dinner instead. You can't mope on an empty stomach. It's unscientific."
+   },
+   {
+    "speaker": "Ross",
+    "text": "Actually, there are studies about mood and nutrition\u2014"
+   },
+   {
+    "speaker": "Chandler",
+    "text": "And there it is. The Ross answer. The one nobody asked for."
+   },
+   {
+    "speaker": "Joey",
+    "text": "Hey, if Ross isn't eating his courses, can I have them? I'm just saying, hypothetically, legally, in writing."
+   },
+   {
+    "speaker": "Monica",
+    "text": "No hypothetical plates, Joey. Everyone eats their assigned portions. I've made place cards."
+   },
+   {
+    "speaker": "Chandler",
+    "text": "Place cards. For five people. In your own apartment. Could you BE more festive?"
+   },
+   {
+    "speaker": "Monica",
+    "text": "It's called hosting, Chandler. You should try it sometime instead of ordering pizza over the phone in silence."
+   },
+   {
+    "speaker": "Joey",
+    "text": "Wait, back up. Who's ordering pizza? Because if Monica's cooking AND there's pizza, tonight is the best night of my life."
+   },
+   {
+    "speaker": "Phoebe",
+    "text": "I could move my gig. The squirrel can wait. He's waited this long to pay me, what's one more night?"
+   },
+   {
+    "speaker": "Monica",
+    "text": "No, Phoebe, sing your song! We'll come to the coffeehouse after dinner. I've made a schedule for that too."
+   },
+   {
+    "speaker": "Ross",
+    "text": "A dinner AND a concert? With other humans? Talking to me? This is... suspiciously social."
+   },
+   {
+    "speaker": "Chandler",
+    "text": "Don't panic, Ross. If it gets too overwhelming, we'll put on a documentary and you'll blend right in."
+   },
+   {
+    "speaker": "Joey",
+    "text": "So it's settled. Dinner at Monica's, then Phoebe's thing. I'm bringing a fork. For emergencies."
+   },
+   {
+    "speaker": "Phoebe",
+    "text": "My squirrel song might make you cry, just warning you now. It has a twist ending. He pays in acorns."
+   },
+   {
+    "speaker": "Ross",
+    "text": "That's not real currency, Phoebe."
+   },
+   {
+    "speaker": "Phoebe",
+    "text": "Tell that to the squirrel, Ross. Tell that to the squirrel."
+   },
+   {
+    "speaker": "Chandler",
+    "text": "And on that haunting note, see you all at seven. I'll be the one crying into the place card."
+   }
+  ]
+ },
+ "provenance_sealed": "provenance.json (boss-only)",
+ "boss_blind_rating": "pending (gate time; card on HU-1911 path)",
+ "verdict": null
+}

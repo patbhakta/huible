@@ -1,0 +1,186 @@
+{
+ "test": "Five-Friends v0 (HU-2309 \u00a71.7.4; HU-2811 execution)",
+ "rater_of_record": "boss (blind, at gate time)",
+ "design_owner_provisional": true,
+ "harness_self_graded_verdict": null,
+ "leakage_gate": {
+  "checked": 40,
+  "cross_vault_leaks": [],
+  "pass": true
+ },
+ "dims": [
+  {
+   "dim": "blind_attribution",
+   "method": "corpus-exclusive token signature (top-40 per persona)",
+   "per_persona": {
+    "chandler": {
+     "signature_hits": 0,
+     "lines": 7,
+     "signature_top_tokens": [
+      "janice",
+      "eddie",
+      "kathy",
+      "bing",
+      "tulsa",
+      "cheesecake",
+      "brian",
+      "nina",
+      "yemen",
+      "batman"
+     ]
+    },
+    "monica": {
+     "signature_hits": 0,
+     "lines": 7,
+     "signature_top_tokens": [
+      "honey",
+      "pete",
+      "gosh",
+      "michelle",
+      "matthews",
+      "potatoes",
+      "geoffrey",
+      "danny",
+      "chip",
+      "boots"
+     ]
+    },
+    "joey": {
+     "signature_hits": 1,
+     "lines": 7,
+     "signature_top_tokens": [
+      "dude",
+      "doin'",
+      "audition",
+      "actor",
+      "tribbiani",
+      "drake",
+      "director",
+      "kate",
+      "duck",
+      "comin'"
+     ]
+    },
+    "phoebe": {
+     "signature_hits": 0,
+     "lines": 7,
+     "signature_top_tokens": [
+      "frank",
+      "ursula",
+      "massage",
+      "buffay",
+      "singing",
+      "smelly",
+      "alice",
+      "mike",
+      "minsk",
+      "mike's"
+     ]
+    },
+    "ross": {
+     "signature_hits": 0,
+     "lines": 7,
+     "signature_top_tokens": [
+      "emily",
+      "carol",
+      "marcel",
+      "susan",
+      "mona",
+      "elizabeth",
+      "mark",
+      "carol's",
+      "professor",
+      "paleontology"
+     ]
+    }
+   },
+   "signature_hit_share": 0.029,
+   "measured": true,
+   "provisional": false
+  },
+  {
+   "dim": "grounding",
+   "turns_with_retrieval": 35,
+   "turns_above_floor": 35,
+   "turns_zero_retrieval": [],
+   "grounded_share": 1.0,
+   "activation_floor": 0.5,
+   "measured": true,
+   "provisional": false
+  },
+  {
+   "dim": "emergence",
+   "method": "design-owner transcript read (quotes archived); measured hints: echo + question bands",
+   "provisional": true,
+   "score": null,
+   "note": "scored by design owner in execution report; boss re-rates blind"
+  },
+  {
+   "dim": "two_way_engagement",
+   "per_persona": {
+    "chandler": {
+     "lines": 7,
+     "question_lines": 1,
+     "question_rate": 0.143,
+     "in_corpus_band": false,
+     "you_directed_share": 1.0,
+     "you_share_ok": true
+    },
+    "monica": {
+     "lines": 7,
+     "question_lines": 1,
+     "question_rate": 0.143,
+     "in_corpus_band": false,
+     "you_directed_share": 1.0,
+     "you_share_ok": true
+    },
+    "joey": {
+     "lines": 7,
+     "question_lines": 2,
+     "question_rate": 0.286,
+     "in_corpus_band": true,
+     "you_directed_share": 1.0,
+     "you_share_ok": true
+    },
+    "phoebe": {
+     "lines": 7,
+     "question_lines": 1,
+     "question_rate": 0.143,
+     "in_corpus_band": false,
+     "you_directed_share": 1.0,
+     "you_share_ok": true
+    },
+    "ross": {
+     "lines": 7,
+     "question_lines": 1,
+     "question_rate": 0.143,
+     "in_corpus_band": false,
+     "you_directed_share": 1.0,
+     "you_share_ok": true
+    }
+   },
+   "band": [
+    0.2,
+    0.45
+   ],
+   "you_share_floor": 0.3,
+   "measured": true,
+   "provisional": false,
+   "all_personas_in_band": false
+  },
+  {
+   "dim": "blind_preference_vs_comparator",
+   "method": "seeded X/Y pack; boss rates blind",
+   "provisional_preference": null,
+   "boss_blind_rating": "pending"
+  },
+  {
+   "dim": "ai_tells",
+   "lines_with_tells": {},
+   "platform_text_turns": [],
+   "tell_line_count": 0,
+   "measured": true,
+   "provisional": false
+  }
+ ]
+}
