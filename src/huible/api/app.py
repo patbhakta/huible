@@ -2813,6 +2813,31 @@ def _record_turn(
 WORKING_MEMORY_SERVICE_ID_METADATA_KEY = "working_memory_service_id"
 
 
+_ORDINAL_RECALL_PROBE_NEEDLES = (
+    "first thing",
+    "first message",
+    "first text",
+    "first line",
+    "first said",
+    "first say",
+    "first words",
+    "what was the first",
+    "our first conversation",
+    "remember the first",
+    "did i say",
+    "i said to you",
+)
+
+
+def _is_ordinal_recall_probe(text: str) -> bool:
+    """HU-2820 fix (b): detect an ordinal-recall probe ("what was the very
+    first thing i said to you?"). Deliberately needle-based and low-stakes:
+    a false positive only skips an episodic index pointer, never the turn's
+    exchange memory."""
+    normalized = " ".join((text or "").lower().split())
+    return any(needle in normalized for needle in _ORDINAL_RECALL_PROBE_NEEDLES)
+
+
 def _claim_conversation_index(
     application: FastAPI, persona_id: UUID, conversation_id: str | None
 ) -> bool:
@@ -2881,6 +2906,9 @@ async def _writeback_conversation_memory(
     * Content carries the user's words verbatim plus the persona reply, so
       "what was the very first thing I said to you?" semantically matches the
       turn that actually holds those words.
+    * The episodic ordinal index is suppressed when a conversation's first
+      completed turn is itself an ordinal-recall probe (HU-2820 fix b): the
+      probe text must never be enshrined as "the first thing they said".
     * Disclosure scope CLOSE_FRIENDS: the strictest scope every chat requester
       tier (family and closer) may see — the INV-DS ordering is
       most→least restrictive (all_contacts, close_friends, family, private),
@@ -2919,29 +2947,45 @@ async def _writeback_conversation_memory(
     index_node = None
     if _claim_conversation_index(application, persona_id, conversation_id):
         who = (user_name or "").strip() or "they"
-        index_node = MemoryNode(
-            id=uuid4(),
-            persona_id=persona_id,
-            tier=MemoryTier.ACCRUED,
-            content=(
-                f"Conversation index: the first thing {who} said to "
-                f"{persona.name or 'me'} was: \"{user_text}\""
-            ),
-            content_type=ContentType.NARRATIVE,
-            embedding_content=_embed(
-                f"the first thing {who} said to {persona.name or 'me'} "
-                f"was: {user_text}"
-            ),
-            source_type=SourceType.CONVERSATION,
-            disclosure_scope=DisclosureScope.CLOSE_FRIENDS,
-            source_ref={"conversation_id": conversation_id,
-                        "origin": "chat_writeback",
-                        "kind": "conversation_index"},
-            metadata={"confidence_level": "medium",
-                      "conversation_id": conversation_id,
-                      "origin": "chat_writeback",
-                      "kind": "conversation_index"},
-        )
+        if _is_ordinal_recall_probe(user_text):
+            # HU-2820 fix (b): a conversation whose first completed turn is
+            # itself an ordinal-recall probe must not claim the episodic
+            # index — the pointer would quote the probe as "the first thing
+            # {who} said", poisoning every later recall probe (r9 battery:
+            # s2 probe-text index rows at 00:46:28/00:49:39 outranked the
+            # genuine openers). The claim stays consumed, so no later turn
+            # of this conversation misindexes either — none of them is the
+            # literal first thing said.
+            logger.info(
+                "conversation write-back: episodic index suppressed for "
+                "(%s, %s) — first turn is an ordinal recall probe",
+                persona_id,
+                conversation_id,
+            )
+        else:
+            index_node = MemoryNode(
+                id=uuid4(),
+                persona_id=persona_id,
+                tier=MemoryTier.ACCRUED,
+                content=(
+                    f"Conversation index: the first thing {who} said to "
+                    f"{persona.name or 'me'} was: \"{user_text}\""
+                ),
+                content_type=ContentType.NARRATIVE,
+                embedding_content=_embed(
+                    f"the first thing {who} said to {persona.name or 'me'} "
+                    f"was: {user_text}"
+                ),
+                source_type=SourceType.CONVERSATION,
+                disclosure_scope=DisclosureScope.CLOSE_FRIENDS,
+                source_ref={"conversation_id": conversation_id,
+                            "origin": "chat_writeback",
+                            "kind": "conversation_index"},
+                metadata={"confidence_level": "medium",
+                          "conversation_id": conversation_id,
+                          "origin": "chat_writeback",
+                          "kind": "conversation_index"},
+            )
     try:
         node = MemoryNode(
             id=uuid4(),

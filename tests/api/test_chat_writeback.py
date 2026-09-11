@@ -231,6 +231,73 @@ def test_index_claims_are_per_persona_per_conversation() -> None:
     assert _claim_conversation_index(app, persona_a, None) is False
 
 
+def test_probe_first_conversation_never_writes_an_index() -> None:
+    """HU-2820 fix (b) regression (r9 battery, 2026-09-11): a session-2
+    conversation opened with the cross-session recall probe used to claim
+    the episodic index and quote the probe itself as "the first thing they
+    said" (r9 index rows 00:46:28/00:49:39), poisoning every later ordinal
+    probe. A probe-first conversation now stores exchange memories only,
+    and the claim stays consumed so a later turn of the same conversation
+    cannot misindex with its own text either."""
+    app = _helper_app()
+    persona = PersonaConfig(id=PERSONA_ID, name="Monica")
+    backend = InMemoryMemoryBackend()
+    kwargs = dict(
+        persona=persona,
+        persona_id=PERSONA_ID,
+        backend=backend,
+        conversation_id=CONV,
+        user_name="Chandler",
+    )
+    probe = "wait wait — what was the very first thing i said to you?"
+    loop = asyncio.new_event_loop()
+    try:
+        assert loop.run_until_complete(
+            _writeback_conversation_memory(
+                app,
+                user_message=probe,
+                persona_reply="You said hi, and then vanished for a week.",
+                **kwargs,
+            )
+        ) is True
+        # A later, ordinary turn of the SAME conversation must not claim
+        # the index with its own text either.
+        assert loop.run_until_complete(
+            _writeback_conversation_memory(
+                app,
+                user_message="anyway, how was your day?",
+                persona_reply="Long. You first.",
+                **kwargs,
+            )
+        ) is True
+    finally:
+        loop.close()
+    memories = [
+        m for m in backend.memories.values()
+        if m.source_type == SourceType.CONVERSATION
+    ]
+    assert len(memories) == 2  # two exchanges, zero index rows
+    assert not [
+        m for m in memories if m.metadata.get("kind") == "conversation_index"
+    ]
+
+
+def test_ordinal_probe_detector() -> None:
+    """HU-2820 fix (b): needle cases from the r9 probe corpus vs banter."""
+    from huible.api.app import _is_ordinal_recall_probe
+
+    assert _is_ordinal_recall_probe(
+        "wait wait — what was the very first thing i said to you?"
+    )
+    assert _is_ordinal_recall_probe("What was the FIRST MESSAGE I sent you?")
+    assert _is_ordinal_recall_probe("wait wait — earlier… did i say?")
+    assert _is_ordinal_recall_probe("what were my first words to you?")
+    assert not _is_ordinal_recall_probe("hey, how's your week been?")
+    assert not _is_ordinal_recall_probe("First off, love the new apartment.")
+    assert not _is_ordinal_recall_probe("")
+    assert not _is_ordinal_recall_probe(None)  # type: ignore[arg-type]
+
+
 def test_second_persona_first_turn_in_shared_conversation_writes_index() -> None:
     """Direct helper-level version of the dual-persona shape: persona B's
     first completed turn of a conversation persona A already spoke in must
