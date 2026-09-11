@@ -747,3 +747,92 @@ class TestPersonaLocationTimezone:
         assert "answer from those lines" not in ctx.system_prompt
         assert "YOUR WORLD RIGHT NOW" not in ctx.render()
         assert "[CURWORLD]" not in ctx.render()
+
+    def test_lane_fired_turn_suppresses_conversation_echo_memories(self):
+        """r6: write-back artifacts quoting the question never beat [CURWORLD]."""
+        from huible.memory.protocol import (
+            ContentType,
+            DisclosureScope,
+            MemoryNode,
+            MemoryTier,
+            SourceType,
+        )
+        from huible.memory.retrieval import ActivatedMemory
+        from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY
+        from huible.persona.realworld import SearchHit
+
+        persona = PersonaConfig(
+            id=uuid4(),
+            name="Chandler",
+            voice_instructions="",
+            era_knowledge_boundary="2004-05-06",
+        )
+
+        def echo_node(content: str) -> MemoryNode:
+            # Mirrors real write-back rows (app.py _writeback_conversation_
+            # memory): ACCRUED narrative, undated (memory_date NULL — passes
+            # the era gate), medium confidence, conversation origin.
+            return MemoryNode(
+                id=uuid4(),
+                persona_id=persona.id,
+                tier=MemoryTier.ACCRUED,
+                content=content,
+                content_type=ContentType.NARRATIVE,
+                embedding_content=[0.5],
+                memory_date=None,
+                source_type=SourceType.CONVERSATION,
+                disclosure_scope=DisclosureScope.FAMILY,
+                metadata={CONFIDENCE_LEVEL_METADATA_KEY: "medium"},
+            )
+
+        msg = "How much is rent where you live?"
+        echo = echo_node(
+            f"{msg}\nChandler said: Rent controlled, so basically legal robbery."
+        )
+        hits = [
+            SearchHit(
+                title="Rents",
+                url="https://x.test",
+                content="Median rent in Greenwich Village is $4,200 a month.",
+            )
+        ]
+        ctx = ContextBuilder().filter_and_render(
+            [ActivatedMemory(node=echo, activation=0.9)],
+            persona=persona,
+            requester_tier=RelationshipTier.FAMILY,
+            real_now=datetime(2026, 9, 11, 20, 33, tzinfo=UTC),
+            current_message=msg,
+            realworld_hits=hits,
+        )
+        assert "rent controlled" not in ctx.memory_blocks.lower()
+        assert ctx.exclusion_counts.get("realworld_echo") == 1
+        assert str(echo.id) in {ref.id for ref in ctx.excluded_memory_refs}
+        # Same echo on a NON-lane turn stays admissible (gate is lane-scoped).
+        plain = ContextBuilder().filter_and_render(
+            [ActivatedMemory(node=echo, activation=0.9)],
+            persona=persona,
+            requester_tier=RelationshipTier.FAMILY,
+            real_now=datetime(2026, 9, 11, 20, 33, tzinfo=UTC),
+            current_message=msg,
+        )
+        assert "rent controlled" in plain.memory_blocks.lower()
+        assert "realworld_echo" not in plain.exclusion_counts
+
+    def test_conversation_echo_detector_shape(self):
+        from huible.persona.context import _conversation_echo
+
+        msg = "How much is rent where you live?"
+        assert _conversation_echo(
+            f"{msg}\nChandler said: Rent controlled.", msg
+        )
+        # Case/whitespace-insensitive containment.
+        assert _conversation_echo(
+            "  how much is RENT where you live?\nchandler said: x", msg
+        )
+        # A genuine vault line about rent (no question quote) is not an echo.
+        assert not _conversation_echo(
+            "I pay almost nothing thanks to rent control.", msg
+        )
+        # Short/generic inbound never triggers the gate.
+        assert not _conversation_echo("anything at all", "hi")
+        assert not _conversation_echo("x", "")

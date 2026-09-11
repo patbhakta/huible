@@ -298,7 +298,9 @@ async def test_fallback_to_unrestricted_pool_on_zero_usable() -> None:
     assert calls == ["brave", ""]  # exactly one fallback, unrestricted
 
 
-def test_settings_searxng_engines_default() -> None:
+def test_settings_searxng_engines_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The code-level default is brave; deployments override via env/.env."""
     from huible.api.settings import Settings
 
-    assert Settings().searxng_engines == "brave"
+    monkeypatch.delenv("SEARXNG_ENGINES", raising=False)
+    assert Settings(_env_file=None).searxng_engines == "brave"

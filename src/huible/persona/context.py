@@ -817,11 +817,40 @@ def _inbound_duplicate(content: str, current_message: str) -> bool:
     return overlap / union >= INBOUND_DUPLICATE_JACCARD
 
 
+#: Minimum normalized length of the inbound message for the conversation-echo
+#: gate (HU-2828 r6): shorter strings are too generic to attribute as echoes.
+_CONVERSATION_ECHO_MIN_CHARS = 12
+
+
+def _conversation_echo(content: str, current_message: str) -> bool:
+    """True when a retrieved memory is a write-back artifact of THIS message.
+
+    The conversation write-back stores ``"{user_text}\\n{name} said: {reply}"``
+    (app.py ``_writeback_conversation_memory``). When the CURRENT-REALITY lane
+    serves researched facts for the very same question, those artifacts
+    mechanically replay the pre-research answer ("rent controlled") and
+    outcompete the ``[CURWORLD]`` lines — live evidence portal-302a/5134
+    (2026-09-11): hits=5 on every search, canon answer anyway, 8 identical
+    echo memories activated. Substring containment (normalized whitespace,
+    terminal punctuation stripped), deliberately stricter than the Jaccard
+    gate: only a memory that literally quotes the inbound question is an
+    echo; genuine vault lines on the same topic are untouched.
+    """
+    if not current_message or not content:
+        return False
+    message = " ".join(current_message.lower().split()).strip(" ?!.")
+    if len(message) < _CONVERSATION_ECHO_MIN_CHARS:
+        return False
+    haystack = " ".join(content.lower().split())
+    return message in haystack
+
+
 def _filter_activated(
     activated: Sequence[ActivatedMemory],
     requester_scope: DisclosureScope,
     era_boundary: date | None,
     current_message: str = "",
+    realworld_fired: bool = False,
 ) -> tuple[list[ActivatedMemory], dict[str, int], list[ExcludedMemoryRef]]:
     """Apply all hard gates to retrieval output.
 
@@ -833,6 +862,11 @@ def _filter_activated(
     ``current_message`` (HU-2774) enables the inbound-duplicate damping gate;
     empty (legacy callers / deterministic tests) keeps the exact pre-existing
     gate set.
+
+    ``realworld_fired`` (HU-2828 r6) enables the conversation-echo gate: on a
+    lane-fired turn (searched facts served), write-back memories quoting the
+    current question are excluded (reason ``realworld_echo``) so the
+    researched figures actually win the answer.
     """
     admissible: list[ActivatedMemory] = []
     counts: dict[str, int] = {}
@@ -841,6 +875,12 @@ def _filter_activated(
         ok, reason = _check_admissible(am.node, requester_scope, era_boundary)
         if ok and _inbound_duplicate(am.node.content, current_message):
             ok, reason = False, "inbound_duplicate"
+        if (
+            ok
+            and realworld_fired
+            and _conversation_echo(am.node.content, current_message)
+        ):
+            ok, reason = False, "realworld_echo"
         if ok:
             admissible.append(am)
         else:
@@ -1482,11 +1522,13 @@ class ContextBuilder:
         keeps the pre-W5 prompt shape.
         """
         era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
+        realworld = list(realworld_hits)
         admissible, exclusion_counts, excluded_refs = _filter_activated(
             activated,
             requester_scope=requester_tier.disclosure_scope,
             era_boundary=era_boundary,
             current_message=current_message,
+            realworld_fired=bool(realworld),
         )
 
         memory_blocks = "\n".join(_format_memory_block(am.node) for am in admissible)
@@ -1501,7 +1543,6 @@ class ContextBuilder:
         world = list(current_events_exemplars)
         feelings = list(emotion_exemplars)
         work = list(career_exemplars)
-        realworld = list(realworld_hits)
         system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(
             persona,
             requester_tier,
