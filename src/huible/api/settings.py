@@ -266,6 +266,12 @@ class Settings(BaseSettings):
     searxng_base_url: str = "http://100.101.235.117:8888"
     searxng_timeout_s: float = 6.0
     searxng_max_results: int = 5
+    # HU-2828 r4: preferred engine set (comma-separated SearXNG `engines`
+    # value). "brave" is the only general-web engine on this instance that
+    # returns relevant snippets from this IP (bing/qwant are bot-blocked);
+    # the client falls back to the unrestricted pool when brave yields no
+    # usable hits (cold suspension). Empty = instance default pool.
+    searxng_engines: str = "brave"
 
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""

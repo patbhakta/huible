@@ -2847,6 +2847,7 @@ async def _run_realworld_search(
             timeout_s=settings.searxng_timeout_s,
             transport=transport,
             limit=settings.searxng_max_results,
+            engines=settings.searxng_engines,
         )
     except Exception as exc:
         logger.error(
@@ -2860,12 +2861,13 @@ async def _run_realworld_search(
         return []
     logger.info(
         "realworld.search conversation=%s trace_id=%s persona=%s query=%r "
-        "hits=%d base_url=%s",
+        "hits=%d engines=%s base_url=%s",
         conversation_id,
         trace_id,
         persona.id,
         query,
         len(hits),
+        settings.searxng_engines or "-",
         settings.searxng_base_url,
     )
     return hits

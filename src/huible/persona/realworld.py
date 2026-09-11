@@ -357,8 +357,18 @@ async def searxng_search(
     timeout_s: float = 6.0,
     transport: httpx.AsyncBaseTransport | None = None,
     limit: int = 5,
+    engines: str = "",
 ) -> list[SearchHit]:
     """Query self-hosted SearXNG's JSON API and return normalized hits.
+
+    ``engines`` (HU-2828 r4) restricts the query to specific instance engines
+    (comma-separated, e.g. ``"brave"``): on the founder's instance the
+    general-web pool is dominated by bot-blocked bing whose boilerplate junk
+    passes any length filter, while brave returns relevant snippets — but
+    brave rate-limits under burst load. So the caller's preferred engine set
+    goes first and, when it yields zero usable hits, exactly one fallback
+    request without the restriction runs (a cold brave suspension then still
+    gets the aggregate pool instead of a hard empty).
 
     ``transport`` is injectable so tests exercise the full request path
     without a live endpoint (same convention as the LLM clients). Raises
@@ -368,25 +378,54 @@ async def searxng_search(
     if not query or not query.strip():
         raise SearchToolError("refusing empty search query")
     url = base_url.rstrip("/") + "/search"
+    hits = await _searxng_once(
+        query, base_url=url, timeout_s=timeout_s, transport=transport,
+        limit=limit, engines=engines,
+    )
+    if not hits and engines:
+        hits = await _searxng_once(
+            query, base_url=url, timeout_s=timeout_s, transport=transport,
+            limit=limit, engines="",
+        )
+    return hits
+
+
+async def _searxng_once(
+    query: str,
+    *,
+    base_url: str,
+    timeout_s: float,
+    transport: httpx.AsyncBaseTransport | None,
+    limit: int,
+    engines: str,
+) -> list[SearchHit]:
+    params: dict[str, str] = {
+        "q": query,
+        "format": "json",
+        "safesearch": "1",
+        "language": "en",
+    }
+    if engines.strip():
+        params["engines"] = engines.strip()
     try:
         async with httpx.AsyncClient(timeout=timeout_s, transport=transport) as client:
             response = await client.get(
-                url,
-                params={"q": query, "format": "json", "safesearch": "1", "language": "en"},
-                headers={"Accept": "application/json"},
+                base_url, params=params, headers={"Accept": "application/json"}
             )
     except httpx.HTTPError as exc:
-        raise SearchToolError(f"search request to {url} failed: {exc}") from exc
+        raise SearchToolError(f"search request to {base_url} failed: {exc}") from exc
     if response.status_code >= 400:
         raise SearchToolError(
-            f"search at {url} returned HTTP {response.status_code}: {response.text[:200]}"
+            f"search at {base_url} returned HTTP {response.status_code}: {response.text[:200]}"
         )
     try:
         data = response.json()
     except ValueError as exc:
-        raise SearchToolError(f"search at {url} returned non-JSON body: {exc}") from exc
+        raise SearchToolError(
+            f"search at {base_url} returned non-JSON body: {exc}"
+        ) from exc
     if not isinstance(data, dict):
-        raise SearchToolError(f"search at {url} returned non-object JSON body")
+        raise SearchToolError(f"search at {base_url} returned non-object JSON body")
     hits: list[SearchHit] = []
     for row in data.get("results") or []:
         if not isinstance(row, dict):

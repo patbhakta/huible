@@ -228,3 +228,56 @@ def test_render_realworld_block_and_grounding_text() -> None:
     assert "Rent in NYC" in grounding
     assert "$4,200/month" in grounding
     assert realworld_grounding_text([]) == ""
+
+
+# --- Engine preference + fallback (HU-2828 r4) ---------------------------------------
+
+
+def _hit(content: str) -> dict:
+    return {"title": "t", "url": "https://x.test", "content": content}
+
+
+async def test_preferred_engine_used_when_usable_hits() -> None:
+    good = {
+        "results": [_hit("Average rent in Greenwich Village is $6,100 a month right now.")]
+    }
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json=good)
+
+    hits = await searxng_search(
+        "average rent in Greenwich Village",
+        base_url=BASE,
+        transport=httpx.MockTransport(handler),
+        engines="brave",
+    )
+    assert len(hits) == 1
+    assert requests[0].url.params["engines"] == "brave"
+    assert len(requests) == 1  # no fallback when the preferred engine delivers
+
+
+async def test_fallback_to_unrestricted_pool_on_zero_usable() -> None:
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.params.get("engines", ""))
+        if request.url.params.get("engines") == "brave":
+            return httpx.Response(200, json={"results": []})  # cold suspension
+        return httpx.Response(
+            200,
+            json={"results": [_hit("Aggregate pool result with a usable fact sentence.")]},
+        )
+
+    hits = await searxng_search(
+        "q", base_url=BASE, transport=httpx.MockTransport(handler), engines="brave"
+    )
+    assert len(hits) == 1
+    assert calls == ["brave", ""]  # exactly one fallback, unrestricted
+
+
+def test_settings_searxng_engines_default() -> None:
+    from huible.api.settings import Settings
+
+    assert Settings().searxng_engines == "brave"
