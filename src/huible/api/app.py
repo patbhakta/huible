@@ -176,6 +176,8 @@ from huible.llm.client import (
     LLMBudgetExceededError,
     LLMClient,
     LLMConfigError,
+    LLMEmptyContentError,
+    LLMError,
     LLMProvider,
     build_llm_client,
 )
@@ -200,7 +202,21 @@ from huible.persona.context import (
 )
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.persona.length import reply_budget_tokens, stats_from_metadata
-from huible.persona.tools import caretaker_reply, is_temporal_question, parse_era_boundary
+from huible.persona.realworld import (
+    PERSONA_LOCATION_LABEL_KEY,
+    PersonaKnowledgeProfile,
+    SearchHit,
+    build_search_query,
+    is_academic_question,
+    is_real_world_question,
+    searxng_search,
+)
+from huible.persona.tools import (
+    caretaker_reply,
+    is_temporal_question,
+    parse_era_boundary,
+    resolve_persona_tz,
+)
 from huible.persona.working_memory import (
     NullWorkingMemory,
     TencentWorkingMemory,
@@ -1098,6 +1114,9 @@ def _register_routes(application: FastAPI) -> None:
         provider_key: str | None = Header(
             default=None, alias=PROVIDER_KEY_HEADER
         ),
+        client_hint: str | None = Header(
+            default=None, alias=HUMAN_PORTAL_CLIENT_HEADER
+        ),
     ) -> PersonaChatResponse:
         """Persona-scoped chat endpoint — the Phase-1 integration milestone (HU-1406).
 
@@ -1642,9 +1661,21 @@ def _register_routes(application: FastAPI) -> None:
         # refuse_topic) outranks the caretaker. ``risk_enforcement`` stays on
         # the trace as the audit evidence that G8 evaluated this turn.
         real_now = application.state.chat_now()
+        # HU-2828: mint the persona-turn trace id up front so the search-lane
+        # logs and the transient-LLM 503 path join the turn's telemetry even
+        # when generation never completes (the M1.1 trace id used to be minted
+        # after generation, invisible to failure paths).
+        turn_trace_id = str(uuid4())
         if settings.caretaker_channel_enabled and is_temporal_question(body.message):
             boundary = parse_era_boundary(binding.persona.era_knowledge_boundary)
-            caretaker_text = caretaker_reply(real_now, binding.persona.name)
+            # HU-2828: render the real clock in the persona's location (the
+            # engine runs UTC; a NYC-canonical persona's visitor should get
+            # New York time, labeled with the zone).
+            caretaker_text = caretaker_reply(
+                real_now,
+                binding.persona.name,
+                tz=resolve_persona_tz(binding.persona.metadata),
+            )
             _emit_turn(persona_id, outcome="caretaker")
             # M1.4 (HU-2732): mint the per-turn id here and thread it into
             # BOTH the telemetry line and the response trace, so the
@@ -1692,6 +1723,27 @@ def _register_routes(application: FastAPI) -> None:
         # state the HISTORY_WINDOW tail evicts (RC-3). Any failure degrades
         # to an empty block (pre-W4 prompt shape); the lane never breaks a
         # clinical turn.
+        # --- HU-2828 CURRENT-REALITY search lane ------------------------------
+        # External lookups route through per-persona permissioned lanes
+        # (PersonaKnowledgeProfile, provisioned from dialog evidence). The
+        # lane classifies the message shape, runs SearXNG once, and degrades
+        # to empty on any failure — the turn then proceeds exactly as
+        # pre-HU-2828 (vault-only, honest ignorance). The ACADEMIC lane
+        # (Mayans-class probes) stays OFF for Chandler inside the profile, so
+        # correct out-of-world ignorance is structural, not incidental.
+        realworld_hits: list[SearchHit] = []
+        if settings.real_world_search_enabled:
+            realworld_hits = await _run_realworld_search(
+                application,
+                persona=binding.persona,
+                message=body.message,
+                conversation_id=str(body.conversation_id),
+                trace_id=turn_trace_id,
+            )
+        # HU-2828: human-portal conversations opt out of the HU-2774
+        # battery-flow "noon" clock pin so live visitors see the persona's
+        # real location time; machine flows (no header) keep the pin.
+        human_portal = (client_hint or "").strip().lower() == HUMAN_PORTAL_CLIENT_VALUE
         working_memory = application.state.working_memory
         # HU-2774 isolation: personas with an explicit
         # ``working_memory_service_id`` in their metadata get their own
@@ -1723,6 +1775,9 @@ def _register_routes(application: FastAPI) -> None:
             scoped_vault_reads=settings.scoped_vault_reads_enabled,
             # HU-2774 interlocutor awareness: who the persona is talking to.
             user_name=body.requester_user_name(),
+            # HU-2828: researched real-world hits + human-portal clock opt-out.
+            realworld_hits=realworld_hits,
+            honor_noon_pin=not human_portal,
         )
 
         prompt = ctx.render()
@@ -1731,11 +1786,16 @@ def _register_routes(application: FastAPI) -> None:
             system_prompt = system_prompt + "\n\n" + build_reframe_addendum(binding.persona.name)
         budget_fallback = False
         _llm_t0 = time.perf_counter()
-        try:
+        _reply_budget = reply_budget_tokens(
+            binding.persona.length_stats,
+            default=settings.persona_chat_max_tokens,
+        )
+
+        async def _hosted_generate() -> str:
             # conversation_id rides along for the per-conversation cost log
             # line emitted by metered/ceilinged providers (zai HU-1910); the
             # clients consume it for logging and never send it to the API.
-            response_text = await llm.generate(
+            return await llm.generate(
                 prompt,
                 system_prompt=system_prompt,
                 conversation_id=body.conversation_id,
@@ -1745,11 +1805,28 @@ def _register_routes(application: FastAPI) -> None:
                 # HU-2231: per-persona cap derived from the persona's own
                 # corpus length register when measured (fallback: the
                 # global Chandler-tuned setting).
-                max_tokens=reply_budget_tokens(
-                    binding.persona.length_stats,
-                    default=settings.persona_chat_max_tokens,
-                ),
+                max_tokens=_reply_budget,
             )
+
+        try:
+            # HU-2828: the client retries empty-content twice already; one
+            # further turn-level retry keeps "the persona output no text on a
+            # tool-call turn → retry the call, never a 500" true even when a
+            # provider (or a future client) leaks the failure up here.
+            for _attempt in (1, 2):
+                try:
+                    response_text = await _hosted_generate()
+                    break
+                except LLMEmptyContentError:
+                    if _attempt == 2:
+                        raise
+                    logger.warning(
+                        "persona-chat empty content (persona=%s conversation=%s "
+                        "trace_id=%s); retrying once at turn level",
+                        persona_id,
+                        body.conversation_id,
+                        turn_trace_id,
+                    )
         except LLMBudgetExceededError:
             # Board-approved degraded posture (HU-1774 decision sweep
             # 2026-08-18, item 3: "$50/mo hard cap; fake voice stays as
@@ -1766,6 +1843,39 @@ def _register_routes(application: FastAPI) -> None:
             fallback = _FakeLLMClient(persona_name=binding.persona.name)
             response_text = await fallback.generate(prompt, system_prompt=system_prompt)
             provider_label = f"{provider_label}->fake(budget)"
+        except LLMError as exc:
+            # HU-2828: never surface a raw 500 mid-conversation. Transient
+            # provider failures (empty content after its retries, HTTP 5xx,
+            # network) degrade to a clean, structured, retryable 503 the
+            # portal renders verbatim. The fake voice is deliberately NOT
+            # served here — only the board-approved budget posture may pose
+            # the persona with deterministic text; a transient model error
+            # must never persist fake content as persona memory.
+            logger.error(
+                "persona-chat llm transient failure (persona=%s conversation=%s "
+                "trace_id=%s provider=%s): %s",
+                persona_id,
+                body.conversation_id,
+                turn_trace_id,
+                provider_label,
+                exc,
+            )
+            _emit_turn(persona_id, outcome="llm_error", status_class="5xx")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "error": {
+                        "code": "LLM_TRANSIENT",
+                        "message": (
+                            f"{binding.persona.name}'s engine hit a transient "
+                            "model error — try again in a moment."
+                        ),
+                        "retryable": True,
+                        "conversation_id": str(body.conversation_id),
+                        "trace_id": turn_trace_id,
+                    }
+                },
+            ) from exc
 
         # HU-2243 Sprint 1: meter the LLM turn — one usage row per generate
         # call (requests, tokens in/out, latency, modeled cost) keyed on the
@@ -1837,6 +1947,9 @@ def _register_routes(application: FastAPI) -> None:
                 None if body.requester_user_name()
                 else ((binding.persona.name or "").split() or [None])[0]
             ),
+            # HU-2828: search-backed claims ground against the researched
+            # text (CURRENT-REALITY lane), not against nothing.
+            external_context=ctx.realworld_grounding or None,
         )
         response_text = capability.text
         alignment = apply_alignment_guard(
@@ -1849,6 +1962,8 @@ def _register_routes(application: FastAPI) -> None:
             # HU-1911: vary the suppression fallback per conversation so the
             # canned line is not verbatim-identical across sessions.
             fallback_seed=str(body.conversation_id),
+            # HU-2828: researched real-world text grounds the lane's claims.
+            external_context=ctx.realworld_grounding or None,
         )
 
         # HU-2161 judge backstop on the suppression decision (§7.4.2 roadmap
@@ -1961,7 +2076,7 @@ def _register_routes(application: FastAPI) -> None:
         # M1.1 (HU-2732): one trace id per generated turn — returned in the
         # response trace and logged on the chat.trace telemetry line so
         # transcripts, telemetry, and harness archives join unambiguously.
-        turn_trace_id = str(uuid4())
+        # HU-2828: minted before generation now (failure paths log it too).
         _log_chat_trace(
             application,
             body.conversation_id,
@@ -2678,6 +2793,84 @@ async def _persona_scope_grounding_refs(
     return refs
 
 
+async def _run_realworld_search(
+    application: FastAPI,
+    *,
+    persona: PersonaConfig,
+    message: str,
+    conversation_id: str,
+    trace_id: str,
+) -> list[SearchHit]:
+    """HU-2828 CURRENT-REALITY lane: classify + fetch + degrade, never raise.
+
+    Gating is two-layered: the persona's permissioned lanes
+    (:class:`PersonaKnowledgeProfile` from metadata, provisioned from dialog
+    evidence) decide whether the tool may fire at all, and the conservative
+    message-shape classifiers decide whether *this* message is a real-world
+    probe. An academic-shaped probe on an academic-OFF persona logs the skip
+    (measurable honest-ignorance posture) and fetches nothing. Any search
+    failure logs and returns ``[]`` — the turn proceeds without the grounding
+    block, exactly as pre-HU-2828.
+    """
+    settings: Settings = application.state.settings
+    profile = PersonaKnowledgeProfile.from_metadata(persona.metadata)
+    if not profile.current_reality:
+        # Lane not provisioned for this persona. Academic-shaped probes here
+        # are the documented honest-ignorance path (Chandler / Mayans).
+        if is_academic_question(message):
+            logger.info(
+                "realworld.lane_skip conversation=%s trace_id=%s persona=%s "
+                "lane=academic provisioned=false (vault-only, honest ignorance)",
+                conversation_id,
+                trace_id,
+                persona.id,
+            )
+        return []
+    if not is_real_world_question(message):
+        if is_academic_question(message):
+            logger.info(
+                "realworld.lane_skip conversation=%s trace_id=%s persona=%s "
+                "lane=academic provisioned=false (vault-only, honest ignorance)",
+                conversation_id,
+                trace_id,
+                persona.id,
+            )
+        return []
+    metadata = persona.metadata or {}
+    location_label = str(metadata.get(PERSONA_LOCATION_LABEL_KEY) or "").strip()
+    query = build_search_query(message, location_label)
+    transport = getattr(application.state, "searxng_transport", None)
+    try:
+        hits = await searxng_search(
+            query,
+            base_url=settings.searxng_base_url,
+            timeout_s=settings.searxng_timeout_s,
+            transport=transport,
+            limit=settings.searxng_max_results,
+        )
+    except Exception as exc:
+        logger.error(
+            "realworld.search_error conversation=%s trace_id=%s query=%r "
+            "error=%s (degrading: turn proceeds without real-world grounding)",
+            conversation_id,
+            trace_id,
+            query,
+            exc,
+        )
+        return []
+    logger.info(
+        "realworld.search conversation=%s trace_id=%s persona=%s query=%r "
+        "hits=%d base_url=%s",
+        conversation_id,
+        trace_id,
+        persona.id,
+        query,
+        len(hits),
+        settings.searxng_base_url,
+    )
+    return hits
+
+
 async def _adjudicate_alignment_suppression(
     application: FastAPI,
     *,
@@ -3027,6 +3220,13 @@ async def _writeback_conversation_memory(
 #: persisted; metering attributes the turn to the caller's own bearer key
 #: with ``key_source='byok'``.
 PROVIDER_KEY_HEADER = "X-Provider-Key"
+
+#: HU-2828: human-facing portals self-identify with this client header so the
+#: in-world clock opts OUT of the HU-2774 battery-flow "noon" pin. Machine
+#: flows (no header) keep the pinned clock; portal visitors get the persona's
+#: real location time (Chandler = America/New_York from persona metadata).
+HUMAN_PORTAL_CLIENT_HEADER = "X-Huible-Client"
+HUMAN_PORTAL_CLIENT_VALUE = "portal-human"
 
 
 def _byok_vault_or_403(application: FastAPI) -> tuple[ByokVault, Settings]:

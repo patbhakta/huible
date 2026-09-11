@@ -726,6 +726,7 @@ def build_grounding_corpus(
     persona_scope_refs: Sequence[MemoryNode] | None = None,
     conversation_history: Sequence[ConversationTurnLike] | None = None,
     current_message: str | None = None,
+    external_context: str | None = None,
 ) -> set[str]:
     """Build the salient-token corpus a turn's claims are aligned against.
 
@@ -759,6 +760,14 @@ def build_grounding_corpus(
     a biographical claim on the user's words and was suppressed. The user's
     own message is first-party truth for this exchange by definition.
 
+    ``external_context`` (HU-2828) widens the corpus with the turn's
+    researched real-world text (SearXNG hits fetched by the CURRENT-REALITY
+    lane for exactly this message). A search-backed rent/price/score claim
+    must align against the *researched* text — the lane's whole purpose —
+    instead of being suppressed as confabulation. Only the caller that
+    actually fetched the hits passes it; every other caller keeps the
+    pre-HU-2828 corpus (``None``).
+
     Grounding is intentionally a *content-overlap* check at Phase-1: a claim's
     named entity must appear in the corpus. This is the deterministic baseline
     the Clinical Advisor can reason about; it hardens to NLI / LLM-as-judge
@@ -778,6 +787,8 @@ def build_grounding_corpus(
                 corpus |= _corpus_tokens(turn.content)
     if current_message:
         corpus |= _corpus_tokens(current_message)
+    if external_context:
+        corpus |= _corpus_tokens(external_context)
     # Persona vault: name parts, voice-instruction tokens, era-boundary year.
     if persona.name:
         corpus |= _corpus_tokens(persona.name)
@@ -817,6 +828,7 @@ def align_response(
     persona_scope_refs: Sequence[MemoryNode] | None = None,
     conversation_history: Sequence[ConversationTurnLike] | None = None,
     current_message: str | None = None,
+    external_context: str | None = None,
 ) -> AlignmentReport:
     """Align ``response`` against the turn's refs + persona vault.
 
@@ -827,12 +839,17 @@ def align_response(
     ``persona_scope_refs`` (HU-2070) widens the grounding corpus with the
     persona-scoped G4-admissible memory set; see
     :func:`build_grounding_corpus`.
+
+    ``external_context`` (HU-2828) widens the corpus with this turn's
+    researched real-world text (CURRENT-REALITY lane hits); see
+    :func:`build_grounding_corpus`.
     """
     claims = extract_claims(response, persona_name=persona.name or "")
     corpus = build_grounding_corpus(
         refs, persona, persona_scope_refs=persona_scope_refs,
         conversation_history=conversation_history,
         current_message=current_message,
+        external_context=external_context,
     )
     ungrounded = [c for c in claims if not is_grounded(c, corpus)]
     return AlignmentReport(
@@ -852,6 +869,7 @@ def apply_alignment_guard(
     conversation_history: Sequence[ConversationTurnLike] | None = None,
     current_message: str | None = None,
     fallback_seed: str | None = None,
+    external_context: str | None = None,
 ) -> AlignmentReport:
     """Apply the §7.4.2 generation-time alignment guard.
 
@@ -873,11 +891,16 @@ def apply_alignment_guard(
     ``persona_scope_refs`` (HU-2070) widens the grounding corpus with the
     persona-scoped G4-admissible memory set; see
     :func:`build_grounding_corpus`.
+
+    ``external_context`` (HU-2828) widens the corpus with this turn's
+    researched real-world text (CURRENT-REALITY lane hits); see
+    :func:`build_grounding_corpus`.
     """
     report = align_response(
         response, refs=refs, persona=persona, persona_scope_refs=persona_scope_refs,
         conversation_history=conversation_history,
         current_message=current_message,
+        external_context=external_context,
     )
     if report.disposition == "suppressed":
         report.text = select_alignment_fallback(fallback_seed)

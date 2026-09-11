@@ -252,6 +252,21 @@ class Settings(BaseSettings):
     current_events_tool_enabled: bool = True
     scoped_vault_reads_enabled: bool = True
 
+    # ── HU-2828 real-world search tool (CURRENT-REALITY lane) ──────────────
+    # Lane-routed external lookups through self-hosted SearXNG's JSON API
+    # (founder decision 2026-09-11 — no new vendor; the endpoint is the only
+    # vendor-specific value and sits behind one client function). Default OFF:
+    # no persona reaches the web until this is armed AND the persona's
+    # `search_lanes` metadata provisioned the lane from dialog evidence.
+    # Per-persona gating (PersonaKnowledgeProfile) + conservative message-
+    # shape classification gate every lookup; the academic lane stays
+    # metadata-driven so honest out-of-world ignorance is structural
+    # (Chandler OFF / Ross ON, same question class).
+    real_world_search_enabled: bool = False
+    searxng_base_url: str = "http://100.101.235.117:8888"
+    searxng_timeout_s: float = 6.0
+    searxng_max_results: int = 5
+
     # ── API authentication (Phase 2+) ──────────────────────────────────────
     api_keys: str = ""
 

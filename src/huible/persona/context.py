@@ -94,6 +94,11 @@ from huible.persona.length import (
     CorpusLengthStats,
     render_texting_directive,
 )
+from huible.persona.realworld import (
+    SearchHit,
+    realworld_grounding_text,
+    render_realworld_block,
+)
 from huible.persona.tools import (
     era_clock_system_line,
     in_world_now,
@@ -102,6 +107,7 @@ from huible.persona.tools import (
     is_emotion_question,
     is_interest_question,
     resolve_in_world_time_of_day,
+    resolve_persona_tz,
 )
 from huible.safety.crisis import UserAffect
 from huible.safety.framing import get_distress_addendum, get_framing
@@ -637,6 +643,11 @@ class PromptContext:
     current_events_exemplars: list[MemoryNode] = field(default_factory=list)
     emotion_exemplars: list[MemoryNode] = field(default_factory=list)
     career_exemplars: list[MemoryNode] = field(default_factory=list)
+    # HU-2828 CURRENT-REALITY lane: SearXNG hits researched for this turn's
+    # real-world probe (rent, local facts, current scores). Prompt surface
+    # (CURRENT-WORLD NOTES block) + guard grounding, kept separate from
+    # activated memories like every exemplar lane. Empty renders nothing.
+    realworld_exemplars: list[SearchHit] = field(default_factory=list)
     current_message: str = ""
     framing_version: int = 0
     distress_grounding: bool = False
@@ -663,6 +674,22 @@ class PromptContext:
             fired["career"] = len(self.career_exemplars)
         return fired
 
+    @property
+    def realworld_lane_fired(self) -> bool:
+        """HU-2828: True when the CURRENT-REALITY search lane served hits."""
+        return bool(self.realworld_exemplars)
+
+    @property
+    def realworld_grounding(self) -> str:
+        """HU-2828: researched text grounding this turn's factual claims.
+
+        Fed to the §7.4.2 alignment corpus and the W3 capability guard as
+        ``external_context`` so a search-backed answer is *grounded*, not
+        suppressed — the researched facts are first-party for the lane-fired
+        turn by founder directive.
+        """
+        return realworld_grounding_text(self.realworld_exemplars)
+
     def render(self) -> str:
         """Render the full flat prompt string for a generator.
 
@@ -687,6 +714,8 @@ class PromptContext:
             parts.append(_render_emotion_block(self.emotion_exemplars))
         if self.career_exemplars:
             parts.append(_render_career_block(self.career_exemplars))
+        if self.realworld_exemplars:
+            parts.append(render_realworld_block(self.realworld_exemplars))
         if self.working_memory:
             parts.append(_render_working_memory(self.working_memory))
         parts.append("CONVERSATION HISTORY:")
@@ -983,6 +1012,7 @@ def _build_system_prompt(
     real_now: datetime | None = None,
     user_name: str | None = None,
     current_message: str = "",
+    honor_noon_pin: bool = True,
 ) -> tuple[str, list[str], int, bool]:
     """Build the system-prompt skeleton and the constraint list.
 
@@ -1040,11 +1070,21 @@ def _build_system_prompt(
         # HU-2774: a "noon" in_world_clock persona pins the time-of-day (a
         # machine-driven conversation must not inherit the caller's 3 AM
         # wall clock); everyone else carries the real time through.
+        # HU-2828: human-portal conversations opt out of the pin (the
+        # ``x-huible-client: portal-human`` header) so live visitors see the
+        # persona's real local time, and the carried time resolves in the
+        # persona's *location* (metadata location_timezone, Chandler = NYC)
+        # instead of the server's clock.
         clock_line = era_clock_system_line(
             in_world_now(
                 real_now,
                 era_boundary,
-                time_of_day=resolve_in_world_time_of_day(persona.metadata),
+                time_of_day=(
+                    resolve_in_world_time_of_day(persona.metadata)
+                    if honor_noon_pin
+                    else None
+                ),
+                tz=resolve_persona_tz(persona.metadata),
             )
         )
         if clock_line:
@@ -1372,6 +1412,8 @@ class ContextBuilder:
         working_memory: str = "",
         real_now: datetime | None = None,
         user_name: str | None = None,
+        realworld_hits: Sequence[SearchHit] = (),
+        honor_noon_pin: bool = True,
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
@@ -1424,6 +1466,7 @@ class ContextBuilder:
         world = list(current_events_exemplars)
         feelings = list(emotion_exemplars)
         work = list(career_exemplars)
+        realworld = list(realworld_hits)
         system_prompt, constraints, framing_version, distress_grounding = _build_system_prompt(
             persona,
             requester_tier,
@@ -1433,6 +1476,7 @@ class ContextBuilder:
             real_now=real_now,
             user_name=user_name,
             current_message=current_message,
+            honor_noon_pin=honor_noon_pin,
         )
 
         return PromptContext(
@@ -1450,6 +1494,7 @@ class ContextBuilder:
             current_events_exemplars=world,
             emotion_exemplars=feelings,
             career_exemplars=work,
+            realworld_exemplars=realworld,
             working_memory=working_memory,
             current_message=current_message,
             framing_version=framing_version,
@@ -1477,6 +1522,8 @@ class ContextBuilder:
         current_events_tool: bool = True,
         scoped_vault_reads: bool = True,
         user_name: str | None = None,
+        realworld_hits: Sequence[SearchHit] | None = None,
+        honor_noon_pin: bool = True,
     ) -> PromptContext:
         """Run retrieval, then filter + render.
 
@@ -1521,6 +1568,21 @@ class ContextBuilder:
         prompt shape. The era gate inside :meth:`_scoped_exemplars` is the
         enforceable knowledge boundary — no lane can surface a post-boundary
         atom, so tool availability never creates out-of-era competence.
+
+        ``realworld_hits`` (HU-2828 CURRENT-REALITY lane) are the caller-
+        fetched SearXNG hits for this turn's real-world probe (the caller
+        classifies the lane, runs the search, and degrades to empty on
+        failure). Non-empty hits (a) render the CURRENT-WORLD NOTES block,
+        (b) keep the W3 competence wall silent — a lane-fired turn is
+        in-domain by construction, and (c) ground the reply in the safety
+        guards via ``external_context``. Empty keeps every pre-HU-2828
+        prompt shape byte-identical (honest ignorance on out-of-world
+        trivia survives — the ACADEMIC lane simply never fetches).
+
+        ``honor_noon_pin`` (HU-2828) keeps the HU-2774 ``in_world_clock``
+        pin semantics; human-portal callers pass ``False`` so live visitors
+        get the persona's real location time instead of the battery-flow
+        noon pin.
         """
         config = retrieval_config or self._default_retrieval_config or RetrievalConfig()
         # Class B floor override (HU-2673 C3 / HU-2707): the persona's own
@@ -1554,7 +1616,12 @@ class ContextBuilder:
         # routing there dead-answered the recall probe.
         exemplars: list[MemoryNode] = []
         question_exemplars: list[MemoryNode] = []
-        if deflection_probe_embedding is not None:
+        # HU-2828: a lane-fired CURRENT-REALITY turn is in-domain by
+        # construction — the researched facts are this turn's grounding — so
+        # the W3 competence wall (out-of-domain deflection) stays silent and
+        # the capability guard never replaces the search-backed answer.
+        realworld = list(realworld_hits or ())
+        if deflection_probe_embedding is not None and not realworld:
             era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
             admissible, _, _ = _filter_activated(
                 activated,
@@ -1689,6 +1756,8 @@ class ContextBuilder:
             working_memory=working_memory,
             real_now=real_now,
             user_name=user_name,
+            realworld_hits=realworld,
+            honor_noon_pin=honor_noon_pin,
         )
 
     async def _ordinal_index_line(

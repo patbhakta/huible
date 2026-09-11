@@ -65,8 +65,10 @@ from __future__ import annotations
 import re
 from datetime import date, datetime, time
 from typing import Any
+from zoneinfo import ZoneInfo
 
 __all__ = [
+    "PERSONA_LOCATION_TZ_KEY",
     "PINNED_NOON",
     "PERSONA_IN_WORLD_CLOCK_KEY",
     "caretaker_reply",
@@ -79,6 +81,7 @@ __all__ = [
     "is_temporal_question",
     "parse_era_boundary",
     "resolve_in_world_time_of_day",
+    "resolve_persona_tz",
 ]
 
 
@@ -129,10 +132,38 @@ def resolve_in_world_time_of_day(metadata: dict[str, Any] | None) -> time | None
     return PINNED_NOON if mode == "noon" else None
 
 
+#: HU-2828: per-persona IANA timezone key inside ``PersonaConfig.metadata``.
+#: The carried time-of-day must resolve to the *persona's* location at reply
+#: time (Chandler lives in New York — a UTC wall clock had him answering
+#: "evening" at 4 PM local). ``America/New_York`` for Chandler; absent or
+#: invalid values fall back to the caller's clock unchanged (fail-safe:
+#: existing personas byte-identical).
+PERSONA_LOCATION_TZ_KEY = "location_timezone"
+
+
+def resolve_persona_tz(metadata: dict[str, Any] | None) -> ZoneInfo | None:
+    """Resolve the persona's location timezone from its metadata.
+
+    Returns the :class:`ZoneInfo` for ``metadata[PERSONA_LOCATION_TZ_KEY]``
+    (e.g. ``"America/New_York"``), or ``None`` when absent/invalid — callers
+    then keep the raw clock (the pre-HU-2828 behavior).
+    """
+    if not metadata:
+        return None
+    raw = metadata.get(PERSONA_LOCATION_TZ_KEY)
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        return ZoneInfo(raw.strip())
+    except Exception:
+        return None
+
+
 def in_world_now(
     real_now: datetime,
     boundary: date | None,
     time_of_day: time | None = None,
+    tz: ZoneInfo | None = None,
 ) -> datetime | None:
     """The persona's in-world "now", era-gated (never past the boundary).
 
@@ -149,11 +180,19 @@ def in_world_now(
     energy is not set by the battery's wall-clock hour. ``None`` keeps the
     legacy carry-through byte-identically.
 
+    ``tz`` (HU-2828) resolves the persona's *location* first: an aware
+    ``real_now`` is converted into the persona's timezone before the
+    time-of-day is carried through, so the persona experiences their own
+    local hour (Chandler = New York), not the server's. ``None`` keeps the
+    caller's clock unchanged (legacy behavior, byte-identical).
+
     Returns ``None`` when ``boundary`` is ``None`` (fail-closed: no date
     claims at all rather than an unpinned one).
     """
     if boundary is None:
         return None
+    if tz is not None and real_now.tzinfo is not None:
+        real_now = real_now.astimezone(tz)
     pinned_date = min(real_now.date(), boundary)
     carry_time = time_of_day if time_of_day is not None else real_now.time()
     return datetime.combine(pinned_date, carry_time, tzinfo=real_now.tzinfo)
@@ -215,14 +254,22 @@ def is_temporal_question(message: str) -> bool:
     return any(p.search(message) for p in _TEMPORAL_PATTERNS)
 
 
-def caretaker_reply(real_now: datetime, persona_name: str) -> str:
+def caretaker_reply(
+    real_now: datetime, persona_name: str, tz: ZoneInfo | None = None
+) -> str:
     """Render the clearly-labeled, out-of-persona caretaker answer (§1.6b).
 
     The caretaker never speaks in-voice: the reply opens with an explicit
     out-of-character label, answers from the *real* clock, and states the era
     boundary posture so the persona's world is not pierced. It is a system
     voice, not a persona turn.
+
+    ``tz`` (HU-2828) renders the clock in the persona's location (the engine
+    runs UTC; a NYC-canonical persona's visitor asking "what time is it?"
+    should get New York time, labeled with the zone name).
     """
+    if tz is not None and real_now.tzinfo is not None:
+        real_now = real_now.astimezone(tz)
     real_date = real_now.astimezone(real_now.tzinfo) if real_now.tzinfo else real_now
     day = real_date.strftime("%A")
     month = real_date.strftime("%B")

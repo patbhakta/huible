@@ -380,6 +380,7 @@ def apply_capability_guard(
     fallback_seed: str | None = None,
     identity_exchange: bool = False,
     first_name: str | None = None,
+    external_context: str | None = None,
 ) -> CapabilityGuardReport:
     """Apply the post-generation capability-leak guard to a candidate reply.
 
@@ -425,6 +426,7 @@ def apply_capability_guard(
         persona_scope_refs=persona_scope_refs,
         conversation_history=conversation_history,
         current_message=current_message,
+        external_context=external_context,
     )
     for exemplar in deflection_exemplars or ():
         if exemplar.content:

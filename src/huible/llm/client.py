@@ -39,6 +39,7 @@ env-var change once a key lands.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import os
@@ -73,6 +74,7 @@ __all__ = [
     "LLMConfig",
     "LLMConfigError",
     "LLMDailyTokenLimitExceededError",
+    "LLMEmptyContentError",
     "LLMError",
     "LLMProvider",
     "OpenRouterLLMClient",
@@ -119,6 +121,20 @@ class LLMDailyTokenLimitExceededError(LLMBudgetExceededError):
     :class:`LLMBudgetExceededError` so the chat handler's existing
     budget-fallback posture (fake voice, never a dropped turn) applies
     unchanged.
+    """
+
+
+class LLMEmptyContentError(LLMError):
+    """Raised when a provider returns HTTP 200 with empty/missing text.
+
+    HU-2828: glm-5.3 transiently returns an empty ``choices[0].message.content``
+    body (observed live 2026-09-11 ~20:33 UTC in portal conversation
+    portal-ab1c710de1af2291 — one occurrence, surfaced to the user as a raw
+    ``[500] engine error``). This failure is *retryable*, not fatal: it
+    subclasses :class:`LLMError` so every existing ``except LLMError`` posture
+    is unchanged, while :class:`ZaiLLMClient` retries it (short backoff)
+    before giving up. Missing structural fields keep raising plain
+    :class:`LLMError` — a malformed body is a different failure class.
     """
 
 
@@ -175,6 +191,11 @@ DEFAULT_ZAI_TOKEN_STATE_PATH = "/var/lib/huible/zai-tokens.json"
 #: thought, so the zai client disables thinking by default; set
 #: ``ZAI_THINKING=enabled`` to opt back in.
 DEFAULT_ZAI_THINKING = "disabled"
+#: HU-2828: transient provider-side empty responses are retried twice with a
+#: short backoff before the error surfaces (founder directive 2026-09-11:
+#: "Treat empty LLM content as RETRYABLE: retry x2 (short backoff)").
+DEFAULT_ZAI_EMPTY_CONTENT_RETRIES = 2
+DEFAULT_ZAI_RETRY_BACKOFF_S = 0.5
 
 
 # --- Protocol ---------------------------------------------------------------
@@ -227,6 +248,12 @@ class LLMConfig:
     zai_daily_token_limit: int = DEFAULT_ZAI_DAILY_TOKEN_LIMIT
     zai_token_state_path: str = DEFAULT_ZAI_TOKEN_STATE_PATH
     zai_thinking: str = DEFAULT_ZAI_THINKING
+    #: HU-2828: transient empty-content responses are retried this many times
+    #: (short linear backoff) before the error propagates. ``0`` restores the
+    #: one-shot call.
+    zai_empty_content_retries: int = DEFAULT_ZAI_EMPTY_CONTENT_RETRIES
+    #: Base seconds for the retry backoff (attempt N sleeps ``base * N``).
+    zai_retry_backoff_s: float = DEFAULT_ZAI_RETRY_BACKOFF_S
     max_tokens: int = 512
     temperature: float = 0.7
     request_timeout_s: float = 60.0
@@ -329,6 +356,12 @@ class LLMConfig:
             zai_token_state_path=(env.get("ZAI_TOKEN_STATE_PATH") or "").strip()
             or DEFAULT_ZAI_TOKEN_STATE_PATH,
             zai_thinking=_zai_thinking(env),
+            zai_empty_content_retries=max(
+                0, _int("ZAI_EMPTY_CONTENT_RETRIES", DEFAULT_ZAI_EMPTY_CONTENT_RETRIES)
+            ),
+            zai_retry_backoff_s=max(
+                0.0, _float("ZAI_RETRY_BACKOFF_S", DEFAULT_ZAI_RETRY_BACKOFF_S)
+            ),
             max_tokens=_int("LLM_MAX_TOKENS", 512),
             temperature=_float("LLM_TEMPERATURE", 0.7),
             request_timeout_s=_float("LLM_REQUEST_TIMEOUT_S", 60.0),
@@ -799,35 +832,62 @@ class ZaiLLMClient:
         url = self._chat_completions_url()
         headers = self._headers()
         timeout = float(kwargs.pop("request_timeout_s", self._config.request_timeout_s))
-        data = await _post_json(
-            url=url,
-            headers=headers,
-            payload=payload,
-            timeout_s=timeout,
-            transport=self._transport,
+        # HU-2828: glm-5.3 transiently returns HTTP 200 with an empty content
+        # body (live occurrence 2026-09-11, portal conversation
+        # portal-ab1c710de1af2291). Retry those (and only those) with a short
+        # linear backoff before surfacing the error. Every attempt's usage is
+        # metered — the provider spends tokens on empty replies too — and each
+        # retry logs one structured line (conversation id joins it to the
+        # per-turn trace id in the chat handler's telemetry).
+        attempts = 1 + max(0, int(self._config.zai_empty_content_retries))
+        backoff = max(0.0, float(self._config.zai_retry_backoff_s))
+        for attempt in range(1, attempts + 1):
+            data = await _post_json(
+                url=url,
+                headers=headers,
+                payload=payload,
+                timeout_s=timeout,
+                transport=self._transport,
+            )
+            usage = _extract_usage(data)
+            self.tokens.record_tokens(usage["total_tokens"])
+            # HU-2243 metering: exact in/out counts from the usage block; the
+            # subscription bills quota not tokens, so the usage row carries a
+            # *modeled* cost at reference rates (cost_basis='modeled').
+            self.last_usage = {
+                **usage,
+                "model": str(payload.get("model", self._config.zai_model)),
+            }
+            snapshot = self.tokens.snapshot()
+            logger.info(
+                "zai.usage conversation=%s model=%s tokens_in=%d tokens_out=%d "
+                "day_to_date_tokens=%d daily_limit=%d cost_basis=subscription "
+                "incremental_cost_usd=0.00",
+                conversation_id or "-",
+                payload.get("model", self._config.zai_model),
+                usage["prompt_tokens"],
+                usage["completion_tokens"],
+                snapshot["day_to_date_tokens"],
+                snapshot["limit_tokens"],
+            )
+            try:
+                return self._extract_content(data, url)
+            except LLMEmptyContentError:
+                if attempt >= attempts:
+                    raise
+                logger.error(
+                    "zai.empty_content_retry conversation=%s attempt=%d/%d "
+                    "retrying after %.2fs backoff (HTTP 200 with empty "
+                    "choices[0].message.content)",
+                    conversation_id or "-",
+                    attempt,
+                    attempts,
+                    backoff * attempt,
+                )
+                await asyncio.sleep(backoff * attempt)
+        raise LLMEmptyContentError(  # pragma: no cover - loop always returns/raises
+            f"LLM at {url} returned empty content after {attempts} attempts"
         )
-        usage = _extract_usage(data)
-        self.tokens.record_tokens(usage["total_tokens"])
-        # HU-2243 metering: exact in/out counts from the usage block; the
-        # subscription bills quota not tokens, so the usage row carries a
-        # *modeled* cost at reference rates (cost_basis='modeled').
-        self.last_usage = {
-            **usage,
-            "model": str(payload.get("model", self._config.zai_model)),
-        }
-        snapshot = self.tokens.snapshot()
-        logger.info(
-            "zai.usage conversation=%s model=%s tokens_in=%d tokens_out=%d "
-            "day_to_date_tokens=%d daily_limit=%d cost_basis=subscription "
-            "incremental_cost_usd=0.00",
-            conversation_id or "-",
-            payload.get("model", self._config.zai_model),
-            usage["prompt_tokens"],
-            usage["completion_tokens"],
-            snapshot["day_to_date_tokens"],
-            snapshot["limit_tokens"],
-        )
-        return self._extract_content(data, url)
 
     def _chat_completions_url(self) -> str:
         return self._config.zai_base_url.rstrip("/") + "/chat/completions"
@@ -877,7 +937,11 @@ class ZaiLLMClient:
                 f"LLM at {url} response missing choices[0].message.content: {exc}"
             ) from exc
         if not isinstance(content, str) or not content.strip():
-            raise LLMError(f"LLM at {url} returned empty content")
+            # HU-2828: empty content is a *retryable* provider glitch — raise
+            # the dedicated subclass so the generate() retry loop (and any
+            # caller that wants to special-case it) can distinguish it from a
+            # structurally malformed response.
+            raise LLMEmptyContentError(f"LLM at {url} returned empty content")
         return content
 
 

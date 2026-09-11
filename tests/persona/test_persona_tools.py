@@ -623,3 +623,104 @@ class TestQuestionExemplarLane:
         )
         assert ctx.question_exemplars == []
         assert ctx.exclusion_counts.get("inbound_duplicate") == 1
+
+
+# --- HU-2828: persona-location time-of-day (Chandler = NYC) ---------------------
+
+
+class TestPersonaLocationTimezone:
+    def test_resolve_persona_tz_valid_and_invalid(self):
+        from zoneinfo import ZoneInfo
+
+        from huible.persona.tools import resolve_persona_tz
+
+        assert (
+            resolve_persona_tz({"location_timezone": "America/New_York"})
+            == ZoneInfo("America/New_York")
+        )
+        assert resolve_persona_tz({"location_timezone": "Mars/Olympus"}) is None
+        assert resolve_persona_tz({"location_timezone": ""}) is None
+        assert resolve_persona_tz({"location_timezone": 12}) is None
+        assert resolve_persona_tz(None) is None
+        assert resolve_persona_tz({}) is None
+
+    def test_in_world_now_converts_to_persona_location(self):
+        from huible.persona.tools import resolve_persona_tz
+
+        # 20:33 UTC = 16:33 America/New_York (EDT, UTC-4 in September).
+        real_now = datetime(2026, 9, 11, 20, 33, tzinfo=UTC)
+        ny = resolve_persona_tz({"location_timezone": "America/New_York"})
+        pinned = in_world_now(real_now, date(2004, 5, 6), tz=ny)
+        assert pinned is not None
+        assert pinned.date() == date(2004, 5, 6)  # era date pin unchanged
+        assert pinned.hour == 16 and pinned.minute == 33
+        assert pinned.tzname() == "EDT"
+
+    def test_in_world_now_without_tz_is_byte_identical(self):
+        real_now = datetime(2026, 9, 11, 20, 33, tzinfo=UTC)
+        legacy = in_world_now(real_now, date(2004, 5, 6))
+        assert legacy is not None
+        assert legacy.hour == 20 and legacy.minute == 33
+
+    def test_caretaker_renders_persona_location_clock(self):
+        from huible.persona.tools import resolve_persona_tz
+
+        real_now = datetime(2026, 9, 11, 20, 33, tzinfo=UTC)
+        ny = resolve_persona_tz({"location_timezone": "America/New_York"})
+        reply = caretaker_reply(real_now, "Chandler", tz=ny)
+        assert "16:33" in reply
+        assert "EDT" in reply
+        # Legacy call keeps the caller's clock (UTC).
+        legacy = caretaker_reply(real_now, "Chandler")
+        assert "20:33" in legacy
+
+    def _ctx(self, persona, **kwargs):
+        return ContextBuilder().filter_and_render(
+            [],
+            persona=persona,
+            requester_tier=RelationshipTier.FAMILY,
+            real_now=datetime(2026, 9, 11, 20, 33, tzinfo=UTC),
+            **kwargs,
+        )
+
+    def test_machine_flow_keeps_noon_pin_human_portal_opts_out(self):
+        from huible.persona.context import PERSONA_FRAMING_CLASS_KEY
+
+        persona = PersonaConfig(
+            id=uuid4(),
+            name="Chandler",
+            voice_instructions="",
+            era_knowledge_boundary="2004-05-06",
+            metadata={
+                PERSONA_FRAMING_CLASS_KEY: "fictional",
+                "location_timezone": "America/New_York",
+                PERSONA_IN_WORLD_CLOCK_KEY: "noon",
+            },
+        )
+        machine = self._ctx(persona).system_prompt
+        clock = [line for line in machine.splitlines() if "In-world clock" in line]
+        assert clock and "(12:00)" in clock[0]  # battery-flow pin unchanged
+        human = self._ctx(persona, honor_noon_pin=False).system_prompt
+        clock = [line for line in human.splitlines() if "In-world clock" in line]
+        assert clock and "(16:33)" in clock[0]  # persona-local real time
+
+    def test_realworld_hits_render_and_ground(self):
+        from huible.persona.realworld import SearchHit
+
+        persona = PersonaConfig(
+            id=uuid4(),
+            name="Chandler",
+            voice_instructions="",
+            era_knowledge_boundary="2004-05-06",
+        )
+        hits = [
+            SearchHit(
+                title="Rents",
+                url="https://x.test",
+                content="Median rent in Greenwich Village is $4,200 a month.",
+            )
+        ]
+        ctx = self._ctx(persona, realworld_hits=hits)
+        assert "CURRENT-WORLD NOTES" in ctx.render()
+        assert "$4,200" in ctx.realworld_grounding
+        assert ctx.realworld_lane_fired
