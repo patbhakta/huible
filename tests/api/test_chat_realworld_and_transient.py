@@ -20,6 +20,7 @@ from typing import Any
 from uuid import uuid4
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from huible.api.app import _embed, create_app
@@ -35,6 +36,22 @@ from huible.memory.protocol import (
     SourceType,
 )
 from huible.persona.context import CONFIDENCE_LEVEL_METADATA_KEY, PersonaConfig
+
+
+@pytest.fixture(autouse=True)
+def _host_independent_embedder(monkeypatch: pytest.MonkeyPatch):
+    """Bind embeddings to the host-independent legacy embedder.
+
+    The chat path resolves its embedder through the process-cached
+    ``get_embedder()`` (env-bound), so a developer ``.env`` carrying
+    ``EMBEDDING_PROVIDER=local_onnx`` would fail app construction on any
+    host without ``fastembed`` — before a single assertion runs. This
+    suite exercises chat wiring, not the embedder, so pin the legacy
+    token-hash embedder for the module.
+    """
+    from huible import embeddings as _emb
+
+    monkeypatch.setattr(_emb, "get_embedder", lambda: _emb.LegacyTokenHashEmbedder())
 
 PERSONA_ID = uuid4()
 API_KEY = "key-chandler-family"
@@ -125,7 +142,10 @@ def _make_app(
     persona = _persona(persona_metadata)
     registry = InMemoryPersonaRegistry({persona.id: (persona, _FakeBackend())})
     keys = InMemoryApiKeyStore({API_KEY: PERSONA_ID}, read_env=False)
-    resolved = settings or Settings()
+    # Default to the fake embedder so the suite never depends on a host-side
+    # fastembed install (EMBEDDING_PROVIDER=local_onnx in a developer .env
+    # would otherwise fail app construction before the assertions run).
+    resolved = settings or Settings(embedding_provider="fake")
     application = create_app(
         api_key_store=keys,
         persona_registry=registry,
