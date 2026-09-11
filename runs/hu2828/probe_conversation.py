@@ -79,8 +79,23 @@ def main() -> None:
         status, body = call("/api/chat", {"sid": sid, "message": msg})
         dt = time.time() - t0
         reply = body.get("reply") or json.dumps(body)
+        trace = body.get("trace") or {}
         transcript["turns"].append(
-            {"n": i, "user": msg, "reply": reply, "status": status, "s": round(dt, 1)}
+            {
+                "n": i,
+                "user": msg,
+                "reply": reply,
+                "status": status,
+                "s": round(dt, 1),
+                # HU-2828 r6 evidence: gate firings + what memory lines the
+                # model actually saw on each turn.
+                "exclusion_counts": trace.get("exclusion_counts"),
+                "wall": trace.get("competence_wall"),
+                "activated": [
+                    (m.get("content") or "")[:110]
+                    for m in (trace.get("activated_memories") or [])[:5]
+                ],
+            }
         )
         print(f"[{i:02d}] ({status} {dt:4.1f}s) {msg}\n     -> {reply[:180]}")
         time.sleep(1.0)
