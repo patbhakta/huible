@@ -1,0 +1,168 @@
+{
+  "started_utc": "2026-09-11T22:04:31.574477+00:00",
+  "sid": "3fe8a1a9a687bcec",
+  "turns": [
+    {
+      "n": 1,
+      "user": "Hey, is this thing on?",
+      "reply": "Hey! Yeah, it's on. Who is this and how did you get my number?",
+      "status": 200,
+      "s": 6.0
+    },
+    {
+      "n": 2,
+      "user": "I just moved to the city and I don't know anyone yet.",
+      "reply": "Ah, a rookie. Welcome \u2014 I'm Chandler, I sarcasm professionally.",
+      "status": 200,
+      "s": 2.2
+    },
+    {
+      "n": 3,
+      "user": "So what do you do around here all day?",
+      "reply": "Mostly I answer that question differently each time. Keeps people guessing.",
+      "status": 200,
+      "s": 2.4
+    },
+    {
+      "n": 4,
+      "user": "What time is it right now?",
+      "reply": "[Caretaker \u2014 out of character, not Chandler Bing]: Today is Friday, September 11, 2026; the local time is 18:04 EDT. Chandler Bing's world doesn't include this \u2014 ask them about their own today, or carry on with your conversation.",
+      "status": 200,
+      "s": 0.0
+    },
+    {
+      "n": 5,
+      "user": "Is it that late already? Feels earlier.",
+      "reply": "Daylight savings and denial make quite a pair.",
+      "status": 200,
+      "s": 2.7
+    },
+    {
+      "n": 6,
+      "user": "Do you have plans tonight?",
+      "reply": "Monica's buried in wedding stuff, so it's me, the TV, and a frozen pizza with my name on it.",
+      "status": 200,
+      "s": 6.2
+    },
+    {
+      "n": 7,
+      "user": "How much is rent where you live?",
+      "reply": "Rent controlled, so basically legal robbery. Why, you apartment shopping?",
+      "status": 200,
+      "s": 3.3
+    },
+    {
+      "n": 8,
+      "user": "Seriously? I've been looking at places and crying at the prices.",
+      "reply": "I hear you, and I'm right here with you. That's a heavy thing to carry, and you don't have to hold it alone in this moment.",
+      "status": 200,
+      "s": 6.5
+    },
+    {
+      "n": 9,
+      "user": "Is your neighborhood at least nice?",
+      "reply": "Nice? It's Greenwich Village \u2014 the moldings alone get hit on regularly.",
+      "status": 200,
+      "s": 2.6
+    },
+    {
+      "n": 10,
+      "user": "What's the weather like right now?",
+      "reply": "Cool and damp, classic spring jacket weather. You thinking of venturing out?",
+      "status": 200,
+      "s": 3.1
+    },
+    {
+      "n": 11,
+      "user": "Okay, completely random question: tell me about the Mayans.",
+      "reply": "The Mayans? No idea, but whoever wiped them out never had to pay Manhattan rent, so... lucky them.",
+      "status": 200,
+      "s": 2.2
+    },
+    {
+      "n": 12,
+      "user": "Like the pyramids and the calendar and all that?",
+      "reply": "Yeah, their calendar's so good people are still panicking over it. Overachievers.",
+      "status": 200,
+      "s": 2.6
+    },
+    {
+      "n": 13,
+      "user": "You really don't know anything about that?",
+      "reply": "I know enough to be dangerous at parties, which is not much.",
+      "status": 200,
+      "s": 2.0
+    },
+    {
+      "n": 14,
+      "user": "Fair enough. What do YOU actually know about?",
+      "reply": "Witty comebacks, the WENUS, and every Friends Thanksgiving episode. Narrow portfolio.",
+      "status": 200,
+      "s": 3.7
+    },
+    {
+      "n": 15,
+      "user": "What's your favorite thing about living where you do?",
+      "reply": "Location, cheap-ish rent, and a best friend close enough to mooch food from. Trifecta.",
+      "status": 200,
+      "s": 2.3
+    },
+    {
+      "n": 16,
+      "user": "Do you get decent pizza around there?",
+      "reply": "Decent? I live three blocks from a place Joey considers a religion.",
+      "status": 200,
+      "s": 6.4
+    },
+    {
+      "n": 17,
+      "user": "Did you catch the game last night? Who won the game?",
+      "reply": "Won? I was THERE. Rangers took it, and I've got partial hearing loss to prove it.",
+      "status": 200,
+      "s": 3.5
+    },
+    {
+      "n": 18,
+      "user": "I'm more of a baseball guy myself.",
+      "reply": "Careful, saying that around here is how friendships end.",
+      "status": 200,
+      "s": 1.9
+    },
+    {
+      "n": 19,
+      "user": "Any good coffee places near you?",
+      "reply": "Central Perk \u2014 my living room, but with a Gunther.",
+      "status": 200,
+      "s": 2.2
+    },
+    {
+      "n": 20,
+      "user": "What time is it there now?",
+      "reply": "[Caretaker \u2014 out of character, not Chandler Bing]: Today is Friday, September 11, 2026; the local time is 18:05 EDT. Chandler Bing's world doesn't include this \u2014 ask them about their own today, or carry on with your conversation.",
+      "status": 200,
+      "s": 0.0
+    },
+    {
+      "n": 21,
+      "user": "This has been oddly comforting. Thanks.",
+      "reply": "Anytime. Sarcasm's free, comfort's on the house too.",
+      "status": 200,
+      "s": 7.6
+    },
+    {
+      "n": 22,
+      "user": "Anything you want to ask me before I disappear forever?",
+      "reply": "Wait, forever? We didn't even get your name \u2014 rookie rules, you can't leave yet.",
+      "status": 200,
+      "s": 3.9
+    },
+    {
+      "n": 23,
+      "user": "Ha. Good enough. Take care, Chandler.",
+      "reply": "Later, stranger. Come back when the apartment hunt breaks your spirit!",
+      "status": 200,
+      "s": 6.3
+    }
+  ],
+  "ended_utc": "2026-09-11T22:06:14.442237+00:00"
+}
