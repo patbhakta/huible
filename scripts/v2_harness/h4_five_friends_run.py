@@ -94,19 +94,49 @@ def psql(query: str) -> str:
     return out.stdout.strip()
 
 
-def resolve_key() -> str:
+def resolve_keys() -> dict[str, str]:
+    """One persona-scoped key per ring persona (HU-2819 fix, 2026-09-11).
+
+    API keys are persona-scoped (src/huible/api/auth.py): one key grants
+    exactly one persona; a wrong-scope request 403s. The v0 wiring probe
+    passed with the chandler key, then consent died on monica — the single
+    ``chandler-*`` key can never serve the ring. ``PERSONA_IDS`` is the
+    persona map; ``API_KEYS`` entries are matched by the ``<name>-`` prefix
+    convention already used by the provisioned chandler/monica keys.
+    ``HUIBLE_PROBE_API_KEY`` (legacy single-key override) applies to
+    chandler only — every other persona still needs its own entry.
+    """
     import os
 
-    key = os.environ.get("HUIBLE_PROBE_API_KEY")
-    if key:
-        return key.strip()
-    for line in (REPO_ROOT / ".env.failover").read_text().splitlines():
-        if line.startswith("API_KEYS="):
-            for entry in line[len("API_KEYS="):].split(","):
-                k = entry.strip().partition(":")[0]
-                if k.startswith("chandler-"):
-                    return k
-    raise SystemExit(2)
+    entries: dict[str, str] = {}
+    for env_name in (".env.failover", ".env"):  # .env (live engine store) wins
+        path = REPO_ROOT / env_name
+        if not path.exists():
+            continue
+        for line in path.read_text().splitlines():
+            if line.startswith("API_KEYS="):
+                for entry in line[len("API_KEYS="):].split(","):
+                    k = entry.strip().partition(":")[0]
+                    name = k.split("-", 1)[0]
+                    if name in PERSONA_IDS:
+                        entries[name] = k
+
+    keys: dict[str, str] = {}
+    for name in RING:
+        if name == "chandler":
+            override = os.environ.get("HUIBLE_PROBE_API_KEY")
+            if override:
+                keys[name] = override.strip()
+                continue
+        if name in entries:
+            keys[name] = entries[name]
+    missing = [n for n in RING if n not in keys]
+    if missing:
+        raise SystemExit(
+            f"no persona-scoped API key for: {', '.join(missing)} "
+            f"(add '<name>-<hex>:{PERSONA_IDS[name]}' entries to "
+            ".env.failover API_KEYS and recreate the app container)")
+    return keys
 
 
 def request(method: str, path: str, api_key: str, body: dict | None) -> tuple[int, dict]:
@@ -154,11 +184,11 @@ def assert_live(reply: str, where: str) -> None:
             "budget/provider outage. This run is not persona evidence.")
 
 
-def consent_all(api_key: str, conv: str) -> None:
+def consent_all(keys: dict[str, str], conv: str) -> None:
     for name in RING:
         status, body = request("POST", f"/api/v1/chat/{PERSONA_IDS[name]}/consent",
-                               api_key, {"conversation_id": conv,
-                                         "card_version": 3})
+                               keys[name], {"conversation_id": conv,
+                                            "card_version": 3})
         if status not in (200, 409):
             raise SystemExit(f"consent failed for {name}: {status} {body}")
     log(f"  consent recorded x5 (conv={conv})")
@@ -170,31 +200,37 @@ def check() -> dict:
     rows = psql("SELECT id::text, display_name FROM personas").splitlines()
     db = {r.split("|")[0]: r.split("|")[1] for r in rows if "|" in r}
     slots = {}
+    try:
+        keys = resolve_keys()
+    except SystemExit:
+        keys = {}
     for name in RING:
         pid = PERSONA_IDS[name]
         n = psql(f"SELECT count(*) FROM memories WHERE persona_id='{pid}'")
         slots[name] = {"persona_id": pid, "provisioned": pid in db,
-                       "memories": int(n or 0)}
+                       "memories": int(n or 0),
+                       "key_scoped": name in keys}
     budget = psql("SELECT 1") == "1"
     result = {
         "probe": "H4 Five-Friends v0 wiring check (offline, no tokens)",
         "slots": slots,
         "all_provisioned": all(s["provisioned"] and s["memories"] > 500
                                for s in slots.values()),
+        "all_keys_scoped": all(s["key_scoped"] for s in slots.values()),
         "db_reachable": budget,
         "self_graded_verdict": None,
     }
     log(json.dumps({k: (v if k != "slots" else
                         {n: f"{s['memories']}mem/prov={s['provisioned']}"
-                         for n, s in v.items()})
+                         f"/key={s['key_scoped']}" for n, s in v.items()})
                     for k, v in result.items()}, indent=1))
     return result
 
 
 # ── dialogue ────────────────────────────────────────────────────────────────
 
-def run_dialogue(api_key: str, conv: str, turns: int) -> dict:
-    consent_all(api_key, conv)
+def run_dialogue(keys: dict[str, str], conv: str, turns: int) -> dict:
+    consent_all(keys, conv)
     transcript = []
     inbound = SEED_LINE
     speaker = RING[0]
@@ -202,7 +238,7 @@ def run_dialogue(api_key: str, conv: str, turns: int) -> dict:
     for i in range(turns):
         prev = RING[(RING.index(speaker) - 1) % len(RING)]
         t0 = time.perf_counter()
-        status, body = turn_with_retry(api_key, PERSONA_IDS[speaker], conv,
+        status, body = turn_with_retry(keys[speaker], PERSONA_IDS[speaker], conv,
                                        inbound, user_name=DISPLAY[prev])
         latency_ms = round((time.perf_counter() - t0) * 1000)
         total_ms += latency_ms
@@ -258,7 +294,7 @@ def exclusive_snippet(target: str, all_notes: dict[str, set[str]]) -> str | None
     return None
 
 
-def cross_vault_probes(api_key: str, out_dir: Path) -> dict:
+def cross_vault_probes(keys: dict[str, str], out_dir: Path) -> dict:
     """Per persona: tempt with another persona's exclusive line; the trace
     must stay persona-scoped (no retrieval from the tempting persona)."""
     vault_tokens = {}
@@ -276,11 +312,11 @@ def cross_vault_probes(api_key: str, out_dir: Path) -> dict:
             continue
         conv = f"h4x{target[:2]}-{uuid.uuid4().hex[:8]}"
         status, _ = request("POST", f"/api/v1/chat/{PERSONA_IDS[target]}/consent",
-                            api_key, {"conversation_id": conv, "card_version": 3})
+                            keys[target], {"conversation_id": conv, "card_version": 3})
         if status not in (200, 409):
             raise SystemExit(f"probe consent failed {target}: {status}")
         status, body = turn_with_retry(
-            api_key, PERSONA_IDS[target], conv,
+            keys[target], PERSONA_IDS[target], conv,
             PROBE_TEMPLATE.format(snippet=snippet))
         reply = (body.get("response") or "").strip()
         if status != 200 or not reply:
@@ -535,7 +571,8 @@ def main() -> int:
 
     if args.check:
         result = check()
-        return 0 if result["all_provisioned"] and result["db_reachable"] else 1
+        return 0 if (result["all_provisioned"] and result["all_keys_scoped"]
+                     and result["db_reachable"]) else 1
     if not args.run:
         ap.error("nothing to do: use --check or --run")
     if not args.i_am_the_boss:
@@ -545,21 +582,24 @@ def main() -> int:
     pre = check()
     if not pre["all_provisioned"]:
         raise SystemExit(f"pre-flight FAILED: slots not provisioned: {pre['slots']}")
+    if not pre["all_keys_scoped"]:
+        raise SystemExit("pre-flight FAILED: missing persona-scoped API key(s) "
+                         f"for: {[n for n in RING if not pre['slots'][n]['key_scoped']]}")
     if pre["slots"]["joey"]["memories"] < 500:
         raise SystemExit("pre-flight FAILED: joey vault too thin")
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    api_key = resolve_key()
+    keys = resolve_keys()
     conv = f"h4ff-{uuid.uuid4().hex[:10]}"
     started = datetime.now(UTC).isoformat()
     log(f"[H4-FF] dialogue start conv={conv} turns={args.turns}")
 
-    transcript = run_dialogue(api_key, conv, args.turns)
+    transcript = run_dialogue(keys, conv, args.turns)
     (args.out_dir / "dialogue_transcript.json").write_text(
         json.dumps({"started_at": started, **transcript}, indent=1))
 
     log("[H4-FF] cross-vault probe battery")
-    probes = cross_vault_probes(api_key, args.out_dir)
+    probes = cross_vault_probes(keys, args.out_dir)
     (args.out_dir / "cross_vault_probes.json").write_text(json.dumps(probes, indent=1))
 
     log("[H4-FF] ownership gate (DB fail-closed)")
