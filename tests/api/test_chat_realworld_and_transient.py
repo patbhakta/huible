@@ -200,7 +200,7 @@ class TestRealworldLaneChatWiring:
         _chat(client, "How much is rent where you live?", conv)
 
         assert requests, "SearXNG was never called"
-        assert requests[0].url.params["q"] == "rent Greenwich Village, New York"
+        assert requests[0].url.params["q"] == "average rent in Greenwich Village, New York"
         assert requests[0].url.params["format"] == "json"
 
     def test_mayans_probe_never_touches_search(self):

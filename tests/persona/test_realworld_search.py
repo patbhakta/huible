@@ -175,7 +175,7 @@ async def test_searxng_search_normalizes_hits() -> None:
             {"title": "", "content": ""},  # dropped
             "not-a-dict",  # dropped
             {"title": "Boilerplate", "url": "", "content": "too short"},  # junk
-            {"title": "Second", "url": "", "content": "Another usable fact sentence."},
+            {"title": "Second", "url": "", "content": "Another usable fact sentence about housing costs this year."},
         ]
     }
     transport, requests = _searx_transport(payload)
@@ -190,7 +190,7 @@ async def test_searxng_search_normalizes_hits() -> None:
 
 
 async def test_searxng_search_respects_limit() -> None:
-    payload = {"results": [{"title": f"t{i}", "content": f"c{i}"} for i in range(10)]}
+    payload = {"results": [{"title": f"t{i}", "content": f"usable fact sentence number {i} about the query topic"} for i in range(10)]}
     transport, _ = _searx_transport(payload)
     hits = await searxng_search("q", base_url=BASE, transport=transport, limit=2)
     assert len(hits) == 2
