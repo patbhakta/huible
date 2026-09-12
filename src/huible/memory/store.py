@@ -489,7 +489,7 @@ class PostgresMemoryBackend(MemoryBackend):
                 select(MemoryRow)
                 .where(MemoryRow.persona_id == persona_id)
                 .where(MemoryRow.is_active.is_(True))
-                .where(MemoryRow.metadata_["kind"].astext == "conversation_index")
+                .where(MemoryRow.metadata_["kind"].as_string() == "conversation_index")
                 .order_by(MemoryRow.created_at.desc())
                 .limit(limit),
             )
