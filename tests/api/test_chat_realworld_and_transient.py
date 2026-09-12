@@ -3,8 +3,9 @@
 Proves the founder's three portal symptoms are fixed end-to-end:
 
 1. time-of-day resolves to the persona's location (Chandler = NYC) at reply
-   time, with the HU-2774 "noon" pin scoped to machine flows (human portals
-   opt out via the ``X-Huible-Client: portal-human`` header);
+   time, with the HU-2774 "noon" pin scoped to machine flows (HU-2830: the
+   pin is machine opt-in via ``X-Huible-Client: battery-flow`` — human
+   portals and headerless callers get the persona's real location time);
 2. a real-world probe (rent) fetches SearXNG hits through the persona's
    CURRENT-REALITY lane and grounds the prompt + safety guards;
 3. a transient LLM failure NEVER surfaces as a raw 500 — the portal gets a
@@ -285,7 +286,7 @@ class TestPersonaLocalClock:
         assert "16:33" in system
         assert "(12:00)" not in system
 
-    def test_machine_flows_keep_noon_pin(self):
+    def test_battery_flow_header_keeps_noon_pin(self):
         client, llm, application = _make_app(
             persona_metadata={"in_world_clock": "noon"}
         )
@@ -293,12 +294,41 @@ class TestPersonaLocalClock:
         conv = "conv-machine"
         _consent(client, conv)
 
-        r = _chat(client, "So, busy day?", conv, portal=False)
+        r = client.post(
+            f"/api/v1/chat/{PERSONA_ID}",
+            json={"message": "So, busy day?", "conversation_id": conv},
+            headers={
+                "Authorization": f"Bearer {API_KEY}",
+                "X-Huible-Client": "battery-flow",
+            },
+        )
 
         assert r.status_code == 200
         _prompt, system = llm.calls[-1]
-        # Battery-flow semantics unchanged (HU-2774).
+        # Battery-flow semantics unchanged (HU-2774) — explicit opt-in.
         assert "(12:00)" in system
+
+    def test_headerless_caller_ignores_noon_pin(self):
+        """HU-2830: the pin is machine opt-IN — a headerless caller (the
+        human-eval failure mode: a portal that forgets the portal-human
+        header) must never see the persisted noon pin."""
+        client, llm, application = _make_app(
+            persona_metadata={"in_world_clock": "noon"}
+        )
+        application.state.chat_now = lambda: datetime(2026, 9, 11, 20, 33, tzinfo=UTC)
+        conv = "conv-headerless"
+        _consent(client, conv)
+
+        r = client.post(
+            f"/api/v1/chat/{PERSONA_ID}",
+            json={"message": "So, busy day?", "conversation_id": conv},
+            headers={"Authorization": f"Bearer {API_KEY}"},
+        )
+
+        assert r.status_code == 200
+        _prompt, system = llm.calls[-1]
+        assert "16:33" in system
+        assert "(12:00)" not in system
 
     def test_caretaker_answers_in_persona_location_tz(self):
         client, llm, application = _make_app()
@@ -313,6 +343,26 @@ class TestPersonaLocalClock:
         assert body["trace"]["caretaker"]["kind"] == "temporal"
         assert "EDT" in body["response"] or "-04:00" in body["response"]
         assert "16:33" in body["response"]
+
+    def test_caretaker_catches_embedded_clock_question(self):
+        """HU-2830: embedded real-clock forms ("do you know what time it
+        is?") route to the caretaker — a miss left the persona inventing a
+        time from its in-world clock line."""
+        client, llm, application = _make_app(
+            persona_metadata={"in_world_clock": "noon"}
+        )
+        application.state.chat_now = lambda: datetime(2026, 9, 11, 20, 33, tzinfo=UTC)
+        conv = "conv-caretaker-embedded"
+        _consent(client, conv)
+
+        r = _chat(client, "Do you know what time it is?", conv)
+
+        assert r.status_code == 200
+        body = r.json()
+        assert body["trace"]["caretaker"]["kind"] == "temporal"
+        assert "16:33" in body["response"]
+        # The real clock, not the pinned in-world one.
+        assert "12:00" not in body["response"]
 
 
 class TestTransientLLMNeverRaw500:

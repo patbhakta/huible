@@ -102,10 +102,16 @@ def _consent(client: TestClient) -> None:
 
 
 def _turn(client: TestClient, message: str):
+    # Internal traffic class: headerless posts resolve to TrafficClass.REAL,
+    # which puts every filler turn behind the host-env ramp gate — a staged
+    # 503 there silently drops recorded rows and breaks the eviction math.
     return client.post(
         f"/api/v1/chat/{PERSONA_ID}",
         json={"message": message, "conversation_id": CONV},
-        headers={"Authorization": f"Bearer {API_KEY}"},
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "X-Huible-Traffic-Class": "internal",
+        },
     )
 
 

@@ -148,6 +148,8 @@ class _StubWorkingMemory:
             context = ""
             strategy = ""
             chars = 0
+            digest_settled = None
+            gist_blocks = None
 
             @classmethod
             def empty(cls):  # pragma: no cover - shape parity

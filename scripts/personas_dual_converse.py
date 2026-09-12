@@ -270,7 +270,11 @@ def post(path, key, payload, tries=4):
             ENGINE + path, data=body, method="POST",
             headers={"Content-Type": "application/json",
                      "Authorization": f"Bearer {key}",
-                     "X-Huible-Traffic-Class": "internal"})
+                     "X-Huible-Traffic-Class": "internal",
+                     # HU-2830: the noon clock pin is machine opt-in — the
+                     # battery must identify itself or its personas carry
+                     # the real wall-clock hour (3 AM dynamics return).
+                     "X-Huible-Client": "battery-flow"})
         try:
             with urllib.request.urlopen(req, timeout=180) as r:
                 return json.loads(r.read()), None

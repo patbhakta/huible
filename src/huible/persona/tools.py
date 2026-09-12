@@ -239,6 +239,14 @@ _TEMPORAL_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         r"\bwhat\s+time\s+(is\s+it|is\s+it\s+right\s+now|do\s+you\s+have)\b",
         r"\bhow\s+late\s+is\s+it\b",
         r"\bis\s+it\s+(morning|afternoon|evening|night)\b",
+        # HU-2830: embedded real-clock forms — conversational askings that
+        # still name the clock itself ("do you know what time it is?",
+        # "tell me the time?"). The clock noun is explicit and deictic, so
+        # the caretaker's real-clock answer is the correct lane. The
+        # tell/give form is end-anchored so autobiographical continuations
+        # ("tell me the time of our final?") stay persona-voiced.
+        r"\bwhat\s+(day|time|year|date)\s+it\s+is\b",
+        r"\b(tell|give)\s+me\s+the\s+(time|date)\s*[?!]?\s*$",
         # Standalone "do you know the time/date?" — anchored to the question
         # end so autobiographical forms ("do you know the time of our
         # final?") stay persona-voiced.

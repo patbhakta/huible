@@ -160,6 +160,11 @@ class TestTemporalClassifier:
             "is it morning there?",
             "do you know the time?",
             "do you know the date?",
+            # HU-2830: embedded real-clock forms.
+            "do you know what time it is?",
+            "any idea what time it is over there?",
+            "tell me the time",
+            "tell me the date?",
         ):
             assert is_temporal_question(message), message
 
@@ -174,6 +179,7 @@ class TestTemporalClassifier:
             "what time did the game start?",
             "hey you guys!",
             "do you know the time of our foosball final?",
+            "tell me the time of our final?",
             "",
         ):
             assert not is_temporal_question(message), message

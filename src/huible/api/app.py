@@ -1740,10 +1740,17 @@ def _register_routes(application: FastAPI) -> None:
                 conversation_id=str(body.conversation_id),
                 trace_id=turn_trace_id,
             )
-        # HU-2828: human-portal conversations opt out of the HU-2774
-        # battery-flow "noon" clock pin so live visitors see the persona's
-        # real location time; machine flows (no header) keep the pin.
-        human_portal = (client_hint or "").strip().lower() == HUMAN_PORTAL_CLIENT_VALUE
+        # HU-2830: the HU-2774 battery-flow "noon" clock pin is machine
+        # OPT-IN. Only callers that identify as battery flows keep the
+        # pinned in-world clock; every other caller — including headerless
+        # human surfaces — sees the persona's real location time. The pin
+        # is persisted on persona rows (provision-side), so defaulting to
+        # honored left any headerless human path noon-pinned; defaulting
+        # to dropped fails safe toward correct human-eval behavior while
+        # battery harnesses opt in explicitly.
+        battery_flow = (
+            (client_hint or "").strip().lower() == BATTERY_CLIENT_HEADER_VALUE
+        )
         working_memory = application.state.working_memory
         # HU-2774 isolation: personas with an explicit
         # ``working_memory_service_id`` in their metadata get their own
@@ -1775,9 +1782,10 @@ def _register_routes(application: FastAPI) -> None:
             scoped_vault_reads=settings.scoped_vault_reads_enabled,
             # HU-2774 interlocutor awareness: who the persona is talking to.
             user_name=body.requester_user_name(),
-            # HU-2828: researched real-world hits + human-portal clock opt-out.
+            # HU-2828: researched real-world hits; HU-2830: battery opt-in
+            # clock pin (headerless callers get real persona-local time).
             realworld_hits=realworld_hits,
-            honor_noon_pin=not human_portal,
+            honor_noon_pin=battery_flow,
         )
 
         prompt = ctx.render()
@@ -3223,12 +3231,15 @@ async def _writeback_conversation_memory(
 #: with ``key_source='byok'``.
 PROVIDER_KEY_HEADER = "X-Provider-Key"
 
-#: HU-2828: human-facing portals self-identify with this client header so the
-#: in-world clock opts OUT of the HU-2774 battery-flow "noon" pin. Machine
-#: flows (no header) keep the pinned clock; portal visitors get the persona's
-#: real location time (Chandler = America/New_York from persona metadata).
+#: HU-2828: human-facing portals self-identify with this client header.
+#: HU-2830: the semantics flipped to machine opt-in — the HU-2774 battery
+#: "noon" pin applies ONLY to callers sending
+#: ``X-Huible-Client: battery-flow``; human surfaces (portal header or no
+#: header at all) get the persona's real location time (Chandler =
+#: America/New_York from persona metadata).
 HUMAN_PORTAL_CLIENT_HEADER = "X-Huible-Client"
 HUMAN_PORTAL_CLIENT_VALUE = "portal-human"
+BATTERY_CLIENT_HEADER_VALUE = "battery-flow"
 
 
 def _byok_vault_or_403(application: FastAPI) -> tuple[ByokVault, Settings]:
