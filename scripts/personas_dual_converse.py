@@ -80,13 +80,31 @@ RECALL_PROBE = "wait wait — what was the very first thing i said to you today?
 #: script I follow is my cleaning schedule" is everyday vocabulary — the word
 #: alone carries no show meta; the meta CLASSES are show/episode/actor/
 #: actress/sitcom/tv/series/character).
+#: Corpus revision 2026-09-12 (r10-friends-2 false positive, F3 doctrine):
+#: bare \btv\b flagged "I'm claiming the TV and full custody of the remote" —
+#: the persona corpora have 44 bare-tv persona lines ("turns off the tv",
+#: "we watched tv", "tv guide") — ordinary in-world life, zero meta signal.
+#: Bare \bshow\b (58 persona lines: "i'll show you to my room", concert
+#: "the show was great") and bare \bepisode\b (2 lines, third-party in-world
+#: "the episode of three's company") fail the same way. tv/show/episode move
+#: to self/meta CONTEXT collocations (measured corpus hits: "tv show(s)" 1,
+#: "this/that show" 3, "game show" 1 — rare enough that keeping them flagged
+#: costs ~nothing while still catching the classic meta tell); the bare
+#: sitcom/actor/actress/character/series classes stay (0-16 corpus uses, all
+#: in-world-adjacent).
 AI_TELLS = [
     (r"\bas an ai\b", "as-an-ai"),
     (r"\blanguage model\b", "language-model"),
     (r"\bi (?:cannot|can't) (?:help|assist|disclose|reveal|share)\b", "refusal-assist"),
     (r"\bi'm not (?:allowed|able) to\b", "not-allowed"),
     (r"\bi apologize\b", "i-apologize"),
-    (r"\b(?:tv|sitcom|actor|actress|character|show|series|episode)\b", "sitcom-meta"),
+    (r"\b(?:sitcom|actor|actress|character|series)\b", "sitcom-meta"),
+    (
+        r"\b(?:tv|television) shows?\b"
+        r"|\b(?:this|that) (?:show|episode)\b"
+        r"|\b(?:game|talk|reality) shows?\b",
+        "sitcom-meta",
+    ),
     # Corpus revision 2026-09-10 (r10-ask-verify false positives, F3
     # doctrine): bare \bfriends\b flagged "the vacuum and I are just
     # friends" — the corpus has 58 everyday "friends" lines ("meet my
@@ -322,10 +340,20 @@ def content_words(text):
 
 
 def run_conversation(args, keys):
-    conv_id = args.run_id
     scenario = args.scenario
+    # r11 isolation fix (r10 finding 2026-09-12): each persona gets its OWN
+    # session-1 conversation id. The engine's prompt context includes the
+    # shared conversation history keyed by conversation_id only (app.py
+    # _history), with no speaker identity — a single shared id injected the
+    # seed->Chandler exchange into Monica's context as a generic "user" line.
+    # She then quoted the seed verbatim in cross-session recall ("hi, whats
+    # your name? — very romantic") — a line she was NEVER sent. Per-side ids
+    # give each persona a context holding only what they actually
+    # experienced (the HU-2774 no-shared-state bar); s2 already used
+    # per-persona ids (r9-verify finding 2026-09-10).
+    conv_for = {pid: f"{args.run_id}-s1-{DISPLAY[pid].lower()}" for pid in keys}
     for pid, key in keys.items():
-        if not consent(pid, key, conv_id):
+        if not consent(pid, key, conv_for[pid]):
             raise SystemExit(f"consent failed for {pid}")
     print(f"consent recorded for both personas (scenario={scenario})", flush=True)
 
@@ -357,7 +385,7 @@ def run_conversation(args, keys):
         return out
 
     # seed goes straight to Chandler: the user opener asks HIS name
-    first = speak(transcript, conv_id, CHANDLER_ID, opener, 0, "opener")
+    first = speak(transcript, conv_for[CHANDLER_ID], CHANDLER_ID, opener, 0, "opener")
     last_text = first["text"]
     last_speaker = CHANDLER_ID
     probe_turns = {RECALL_TURN} | ({args.turns} if args.turns >= 20 else set())
@@ -367,7 +395,7 @@ def run_conversation(args, keys):
         speaker = b_id if last_speaker == a_id else a_id
         kind = "recall_probe" if turn in probe_turns else "talk"
         msg = RECALL_PROBE if turn in probe_turns else last_text
-        out = speak(transcript, conv_id, speaker, msg, turn, kind)
+        out = speak(transcript, conv_for[speaker], speaker, msg, turn, kind)
         last_text, last_speaker = out["text"], speaker
         if out["platform_text"]:
             print(f"PLATFORM TEXT at turn {turn} — stopping the loop "

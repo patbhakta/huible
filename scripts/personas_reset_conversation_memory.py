@@ -8,6 +8,16 @@ finding 2026-09-10: Monica quoted her own PREVIOUS RUN's answer to the same
 probe — the durable memory lane working exactly as designed, which is
 precisely why evidence runs must reset it).
 
+r10 finding 2026-09-12: the conversation HISTORY table is durable too
+(HU-1440), and the §3 dosage gate derives turn_count from it
+(RISK_DOSAGE_CAP_TURNS=40 → pause_session). A killed/repeated battery round
+left 34 stale conversation_turns rows under the same run id; the next round
+started at turn_count 18 and the cap fired mid-conversation (r10-friends-1
+t23 platform-text failure). This script therefore ALSO purges
+conversation_turns + crisis_sessions for the battery namespace
+('hu2774-%') — the two tables that feed enforcement signals (turn count,
+crisis history). Consent rows are re-recorded per run and left alone.
+
 The working memories inside a run are untouched: within a run, session 2's
 cross-session recall of session 1 (the CEO bar) still rides the persisted
 conversation memories written during THIS run.
@@ -61,6 +71,9 @@ def main():
     placeholders = ', '.join(f"'{pid}'" for pid in PERSONA_IDS)
     where = (f"source_type = 'conversation' "
              f"AND persona_id IN ({placeholders})")
+    #: Enforcement-signal tables keyed by conversation id (see docstring).
+    #: Battery run ids + s1/s2 conversation ids all carry the hu2774- prefix.
+    SIGNAL_TABLES = ('conversation_turns', 'crisis_sessions')
     try:
         import psycopg  # psycopg 3
     except ImportError:
@@ -77,6 +90,15 @@ def main():
                 print(f"deleted: {cur.rowcount}")
             elif not args.execute:
                 print('dry run — pass --execute to delete')
+            for table in SIGNAL_TABLES:
+                cur.execute(f"SELECT count(*) FROM {table} "
+                            f"WHERE conversation_id LIKE 'hu2774-%'")
+                n = cur.fetchone()[0]
+                print(f"{table} rows for the battery namespace: {n}")
+                if args.execute and n:
+                    cur.execute(f"DELETE FROM {table} "
+                                f"WHERE conversation_id LIKE 'hu2774-%'")
+                    print(f"deleted: {cur.rowcount}")
         conn.commit()
     finally:
         conn.close()
