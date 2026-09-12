@@ -470,6 +470,32 @@ class PostgresMemoryBackend(MemoryBackend):
             rows = result.scalars().all()
             return [self._row_to_node(r) for r in rows]
 
+    async def get_conversation_index_memories(
+        self,
+        persona_id: UUID,
+        limit: int = 20,
+    ) -> list[MemoryNode]:
+        """Exact metadata-keyed conversation-index read (HU-2774 r12).
+
+        The ordinal lane's vector top-k pre-filter dropped the index line
+        stochastically (r11-friends-1: Monica's fresh s2 probe found nothing
+        while Chandler's fired in the same slot — her longer first-inbound
+        diluted the index embedding below the vault noise floor). This read
+        keys on ``metadata_['kind'] == 'conversation_index'`` directly:
+        per-persona index rows number in the tens, so a JSONB filter scan is
+        deterministic, cheap, and rank-independent."""
+        async with self._session() as session:
+            result = await session.execute(
+                select(MemoryRow)
+                .where(MemoryRow.persona_id == persona_id)
+                .where(MemoryRow.is_active.is_(True))
+                .where(MemoryRow.metadata_["kind"].astext == "conversation_index")
+                .order_by(MemoryRow.created_at.desc())
+                .limit(limit),
+            )
+            rows = result.scalars().all()
+            return [self._row_to_node(r) for r in rows]
+
     async def get_active_memory_facts(
         self,
         persona_id: UUID,

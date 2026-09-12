@@ -1820,7 +1820,6 @@ class ContextBuilder:
                 backend=backend,
                 persona=persona,
                 requester_tier=requester_tier,
-                query_embedding=query_embedding_content,
             )
             if index_line:
                 working_memory = (
@@ -1854,39 +1853,36 @@ class ContextBuilder:
         persona: PersonaConfig,
         requester_tier: RelationshipTier,
         backend: MemoryBackend,
-        query_embedding: list[float],
     ) -> str:
         """Best conversation-index memory content for a recall-probe turn.
 
-        Searches the persona's own store for ``metadata.kind ==
-        'conversation_index'`` nodes (written by the chat write-back lane on
-        each conversation's first turn), applies the same hard gates as the
-        prompt firewall, and returns the freshest hit's content verbatim.
-        Empty string when the backend has none (fresh persona) or nothing
-        survives the gates — the lane never fabricates.
+        Reads the persona's conversation-index nodes through the exact
+        metadata-keyed backend read (``get_conversation_index_memories``,
+        HU-2774 r12) and applies the same hard gates as the prompt firewall,
+        returning the freshest admissible hit's content verbatim. The
+        previous vector top-16 pre-filter dropped the index stochastically on
+        large corpora — the lane went silent exactly when the vault noise
+        outranked the index embedding (r11-friends-1 Monica: predigest/0,
+        "I don't have any earlier texts", while Chandler's identical probe
+        fired the lane 30 seconds earlier). Empty string when the backend has
+        none (fresh persona) or nothing survives the gates — the lane never
+        fabricates.
         """
         try:
-            results = await backend.search_by_content(
-                persona.id, query_embedding, top_k=16
+            index_nodes = await backend.get_conversation_index_memories(
+                persona.id
             )
         except Exception:  # degraded lane: never break the turn
             logger.warning("ordinal-index search failed", exc_info=True)
             return ""
         era_boundary = _parse_era_boundary(persona.era_knowledge_boundary)
-        candidates = []
-        for sr in results:
-            node = sr.node
-            if (node.metadata or {}).get("kind") != "conversation_index":
-                continue
+        for node in index_nodes:  # freshest first — first admissible wins
             ok, _ = _check_admissible(
                 node, requester_tier.disclosure_scope, era_boundary
             )
             if ok:
-                candidates.append((node.created_at, node.content))
-        if not candidates:
-            return ""
-        candidates.sort(key=lambda pair: pair[0], reverse=True)
-        return candidates[0][1]
+                return node.content
+        return ""
 
     async def persona_scoped_grounding_refs(
         self,

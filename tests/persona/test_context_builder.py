@@ -822,3 +822,129 @@ class TestActivationScorePassthrough:
         assert [m.id for m in ctx.included_memories] == [admitted.id]
         assert set(ctx.activation_scores) == {admitted.id}
         assert ctx.activation_scores[admitted.id] == pytest.approx(0.42)
+
+
+class _IndexBackend(_FakeBackend):
+    """Fake backend whose conversation-index read is exact (r12 lane contract).
+
+    Mirrors ``PostgresMemoryBackend.get_conversation_index_memories``: the
+    index is found by metadata, NEVER by embedding rank."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.index_nodes: list[MemoryNode] = []
+
+    async def store_memory(self, node: MemoryNode) -> UUID:
+        if (node.metadata or {}).get("kind") == "conversation_index":
+            self.index_nodes.append(node)
+        return await super().store_memory(node)
+
+    async def get_conversation_index_memories(
+        self, persona_id: UUID, limit: int = 20
+    ) -> list[MemoryNode]:
+        mine = [n for n in self.index_nodes if n.persona_id == persona_id]
+        mine.sort(key=lambda n: n.created_at, reverse=True)
+        return mine[:limit]
+
+
+_RECALL_PROBE = (
+    "wait wait — earlier, in our last conversation — what was the very "
+    "first thing i said to you?"
+)
+
+
+class TestOrdinalIndexLane:
+    """HU-2774 r12: the ordinal-recall lane must find the conversation index
+    deterministically. r11-friends-1 regression: the lane pre-filtered with a
+    vector top-16 over the whole persona store, so a vault-noise-outranked
+    index made the lane silently render nothing (Monica: "I don't have any
+    earlier texts") while Chandler's identical probe fired in the same slot."""
+
+    @staticmethod
+    def _index_node(
+        content: str,
+        persona_id: UUID = PERSONA_ID,
+        disclosure_scope: DisclosureScope = DisclosureScope.CLOSE_FRIENDS,
+    ) -> MemoryNode:
+        return MemoryNode(
+            id=uuid4(),
+            persona_id=persona_id,
+            tier=MemoryTier.ACCRUED,
+            content=content,
+            content_type=ContentType.NARRATIVE,
+            embedding_content=[0.0] * 8,  # orthogonal to any probe vector
+            source_type=SourceType.CONVERSATION,
+            disclosure_scope=disclosure_scope,
+            metadata={"kind": "conversation_index",
+                      "confidence_level": "medium"},
+        )
+
+    async def test_lane_fires_even_when_index_ranks_out_of_vector_noise(self):
+        backend = _IndexBackend()
+        # Vault noise: 30 high-confidence lines that all match the probe's
+        # embedding far better than the orthogonal index ever could.
+        for i in range(30):
+            await backend.store_memory(_node(
+                content=f"vault line {i} about the first thing i said",
+                confidence_level=ConfidenceLevel.HIGH,
+            ))
+        index = await backend.store_memory(self._index_node(
+            'Conversation index: the first thing Chandler said to Monica '
+            'was: "Hey! Pretty good — I successfully avoided doing laundry '
+            'twice."'
+        ))
+
+        ctx = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+            query_embedding_content=_vec("fishing"),
+            current_message=_RECALL_PROBE,
+            working_memory="",
+        )
+        prompt = ctx.render()
+        assert "successfully avoided doing laundry" in prompt
+
+    async def test_lane_silent_when_no_index_exists(self):
+        backend = _IndexBackend()
+        ctx = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+            query_embedding_content=_vec("fishing"),
+            current_message=_RECALL_PROBE,
+            working_memory="",
+        )
+        assert "successfully avoided doing laundry" not in ctx.render()
+
+    async def test_lane_respects_gates_private_scope(self):
+        backend = _IndexBackend()
+        node = self._index_node(
+            'Conversation index: the first thing X said was: "private line"',
+            disclosure_scope=DisclosureScope.PRIVATE,
+        )
+        await backend.store_memory(node)
+        ctx = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.ACQUAINTANCE,
+            backend=backend,
+            query_embedding_content=_vec("fishing"),
+            current_message=_RECALL_PROBE,
+            working_memory="",
+        )
+        assert "private line" not in ctx.render()
+
+    async def test_lane_not_triggered_by_ordinary_message(self):
+        backend = _IndexBackend()
+        await backend.store_memory(self._index_node(
+            'Conversation index: the first thing X said was: "laundry again"'
+        ))
+        ctx = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+            query_embedding_content=_vec("fishing"),
+            current_message="hey, how's your week been?",
+            working_memory="",
+        )
+        assert "laundry again" not in ctx.render()

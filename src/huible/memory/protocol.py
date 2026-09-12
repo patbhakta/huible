@@ -197,6 +197,21 @@ class MemoryBackend(Protocol):
         limit: int = 50,
     ) -> list[MemoryNode]: ...
 
+    async def get_conversation_index_memories(
+        self,
+        persona_id: UUID,
+        limit: int = 20,
+    ) -> list[MemoryNode]:
+        """Conversation-index nodes for a persona, freshest first (HU-2774).
+
+        Exact metadata-keyed read (``metadata.kind == 'conversation_index'``)
+        — the ordinal-recall lane must find the index deterministically; a
+        vector top-k pre-filter drops it stochastically on corpora where the
+        index embedding ranks below the vault noise floor (r11-friends-1:
+        Monica's s2 probe ran with an empty ordinal lane while Chandler's
+        fired in the same slot)."""
+        ...
+
     async def quarantine_candidate(
         self,
         entry: QuarantineEntry,
