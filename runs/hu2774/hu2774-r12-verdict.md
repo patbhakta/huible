@@ -4,16 +4,27 @@ Recorded 2026-09-12T~04:10Z by Huible Tech Lead from `runs/hu2774/r12_oneshot.lo
 
 ## Verdict
 
-**r12 produced no engine-quality signal.** The battery must be re-fired (r12b) after
-the OpenRouter monthly cap is raised/topped up. Do not score r12 as a pass/fail round;
-the r9→r11 trend (0/6 → 2/6 → 3/6) is unchanged as the last valid state.
+**r12 produced no engine-quality signal.** The battery is re-fired automatically (r12b)
+after the zai daily token ledger auto-resets — **no board action needed**. Do not score r12
+as a pass/fail round; the r9→r11 trend (0/6 → 2/6 → 3/6) is unchanged as the last valid state.
+
+**Correction (2026-09-12T04:12Z, per reviewer comment 3e700ca3):** the budget that fired is
+the **zai DAILY token ledger** (`ZAI_DAILY_TOKEN_LIMIT=2000000`, `.env:92`; ledger
+`docker/runtime/app-state/zai-tokens.json` shows 2026-09-11: 2,001,990 and 2026-09-12: 2,001,329),
+not the $50/mo OpenRouter cap. The OpenRouter USD lane is a different provider and was not
+involved; the zai lane is $0 incremental. The reset is automatic at 2026-09-13T00:00Z
+(`DailyTokenTracker` buckets on `utc_day_key`) — no restart, no cap raise.
 
 ## Finding 1 — every turn ran on the budget-exhausted fake voice
 
 - Every logged turn carries `zai->fake(budget)`: the hosted call raised
-  `LLMBudgetExceededError` and the handler (src/huible/api/app.py:1838-1853) served the
-  deterministic `_FakeLLMClient` per the board-approved HU-1774 posture
-  ($50/mo hard cap, fake voice as rollback; `OPENROUTER_MONTHLY_BUDGET_USD=50` in `.env`).
+  `LLMDailyTokenLimitExceededError` (src/huible/llm/client.py:113), which **subclasses**
+  `LLMBudgetExceededError` and therefore lands in the same handler
+  (src/huible/api/app.py:1838-1853) that served the deterministic `_FakeLLMClient`.
+  The handler's comment mentions only the HU-1774 OpenRouter posture ($50/mo hard cap,
+  `OPENROUTER_MONTHLY_BUDGET_USD=50`, `.env:34) — that is how the initial diagnosis drifted
+  to the wrong budget lane. The ledger actually crossed is the zai daily token ceiling
+  (`ZAI_DAILY_TOKEN_LIMIT=2000000`, `.env:92`).
 - r11 by comparison ran real `zai` replies (`runs/hu2774/r11_oneshot.log` line 11+).
 - Consequence: all four failing checks are stub artifacts, not engine regressions:
   - `identity` — stub text cannot greet a friend by name.
@@ -47,8 +58,21 @@ the r9→r11 trend (0/6 → 2/6 → 3/6) is unchanged as the last valid state.
   generates the comedy line that armed it. The crisis.py narrowing + anti-repeat guard
   remain unvalidated until a real-voice round.
 
-## Unblock (board action)
+## Unblock (corrected 04:12Z — no board action)
 
-Raise or top up the OpenRouter monthly cap (HU-1774 reserves cap changes to the board),
-restart the engine so the env change lands, then re-fire the battery (r12b) — engine deploy
-(d571eb6), one-shot + flock guard (2ce3d2f) and dynamics v3 are already in place.
+- **No board/founder action required.** `DailyTokenTracker` buckets per-call on `utc_day_key`;
+  at **2026-09-13T00:00Z** the zai daily ceiling clears itself. No restart, no cap raise.
+- **r12b is already armed**: transient `hu2774-r12-refire.timer`, `OnCalendar=2026-09-13 00:05:00 UTC`
+  (≈5 min after reset), hardened (`TimeoutStartSec=0`, `RuntimeMaxSec=0`, `KillMode=control-group`),
+  runs `runs/hu2774/host_oneshot_r12.sh` unmodified (engine deploy d571eb6, flock guard 2ce3d2f,
+  dynamics v3 in place). Timer verified active 04:16Z (`Trigger: Sun 2026-09-13 00:05:00 UTC`).
+- **Killed 03:59:17Z battery**: its slot JSONs are stub-polluted and will be overwritten by r12b;
+  `r12_oneshot.log` frozen 04:01:53, no `R12_HOST_ONESHOT_DONE`, no battery processes remain.
+- **No battery may fire before 00:00Z** — one 6-slot real battery ≈ 400–500K tokens fits the
+  fresh day's 2M budget.
+- The detach/reap concern in Finding 2 is covered by the timer's hardened
+  `KillMode=control-group` + `RuntimeMaxSec=0` and the existing flock guard.
+- Post-completion (~00:30Z): arm the issue monitor (`nextCheckAt≈2026-09-13T00:40:00Z`) and
+  confirm non-null `monitorNextCheckAt` in the PATCH response before claiming it; verify zero
+  fake-voice markers across all 6 slots from `r12_oneshot.log`; land the verdict here and on
+  HU-2712. Bar unchanged: 6/6 → founder card path.
