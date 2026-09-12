@@ -40,3 +40,14 @@ turns. The engine is chat-ready for long-horizon dogfooding.
    zai token ledger, and 503-rate.)
 4. Multi-SESSION persistence test (new conversation_id, same persona — does
    TencentDB working memory carry across sessions? untested tonight).
+
+## Addendum — long-horizon + multi-session results (23:45 UTC)
+
+- Dosage cap disabled → 53/53-turn marathon, ZERO pause events, memory exam 10/10.
+- **Multi-session persistence: PASS.** Fresh conversation_id, no carried context:
+  Chandler recalled the recital date ("October 18th — circled in permanent marker"),
+  the speech, Tuesday soccer practice, and the three-weekend faucet saga —
+  all seeded in the *prior* session. This is the months/years engagement primitive.
+- Sprint-3 lane states: codex Atlas live+hosted (8.5/9.5/9.0 blind audit);
+  claude dist already has all 6 atlas routes built (still finishing QC);
+  antigravity committed generator early, iterating.
