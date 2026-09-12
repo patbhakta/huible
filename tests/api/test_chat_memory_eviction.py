@@ -85,7 +85,27 @@ def _make_app(
         llm_client=FakeLLMClient(persona_name="Chandler"),
         # Dosage pause disabled: the test walks past the 20-exchange session
         # threshold to reach the 40-row prompt boundary the WM lane backs.
-        settings=Settings(working_memory_enabled=False, risk_dosage_cap_turns=0),
+        # Host-independent env (HU-2836, same pattern as HU-2828 32a7fb8):
+        # Settings is a pydantic BaseSettings bound to the CWD's .env, so any
+        # field not passed here absorbs host drift — GENERATOR_PROVIDER=
+        # openrouter falls back to the mock generator, EMBEDDING_PROVIDER=
+        # local_onnx fails app construction (or fetches models), the
+        # PERSONA_CHAT_* gates and DATABASE_URL leak host posture into the
+        # route. Pin the env-sensitive surface the chat path touches.
+        settings=Settings(
+            working_memory_enabled=False,
+            risk_dosage_cap_turns=0,
+            generator_provider="mock",
+            llm_provider="fake",
+            embedding_provider="fake",
+            persona_chat_real_user_traffic="off",
+            persona_chat_real_user_mode="off",
+            persona_chat_coverage_enforcement="off",
+            conversation_writeback_enabled=False,
+            database_url="",
+            postgres_user="",
+            postgres_db="",
+        ),
         start_time=0.0,
     )
     application.state.working_memory = lane
