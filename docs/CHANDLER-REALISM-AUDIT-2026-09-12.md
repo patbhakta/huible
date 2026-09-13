@@ -51,3 +51,24 @@ turns. The engine is chat-ready for long-horizon dogfooding.
 - Sprint-3 lane states: codex Atlas live+hosted (8.5/9.5/9.0 blind audit);
   claude dist already has all 6 atlas routes built (still finishing QC);
   antigravity committed generator early, iterating.
+
+## Addendum 2 — Gemini/Antigravity-lane voice swap attempt (00:05 UTC, Sep 13)
+
+Boss order: "Have Chandler switch to antigravity if needed" (i.e. move the persona
+voice off z.ai onto the Gemini/Antigravity lane key).
+
+**Attempted blind env swap → REVERTED within ~10 min.** Three blockers found:
+1. Google geo-block: engine must egress via pat-w11pc SOCKS relay. Global
+   ALL_PROXY/HTTPS_PROXY vars broke the engine's own internal urllib calls
+   (working-memory /recall: "unknown url type: socks5") — proxy must be scoped
+   to the LLM client only (httpx transport), never global env.
+2. httpx lacked the socks extra → fixed properly: pyproject httpx[socks] (committed).
+3. Gemini API 400: persona request builder leaks the z.ai `thinking` field into
+   the Gemini payload (GENERATOR_EXTRA_JSON) — needs per-provider payload guards.
+
+**State: reverted to the PROVEN zai glm-5.3 config; re-verified alive (2-3s replies).**
+Proper fix queued as a lane card: scoped SOCKS transport in GeminiLLMClient +
+provider-guarded payload + fallback ladder gemini→zai (never fake). Also notes:
+investinme-lane Gemini quota status unknown post-refill; Antigravity CLI itself
+is a coding agent, not a serving model — "switch Chandler to antigravity" maps
+to the Gemini key its lane uses, not the agy CLI.
