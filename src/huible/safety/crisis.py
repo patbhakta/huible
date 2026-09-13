@@ -173,7 +173,21 @@ _MEANS_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 _DISTRESS_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\b(crying|can'?t\s+stop\s+cry|sob(bing)?)\b", re.IGNORECASE),
+    # HU-2774 r14 finding (friends-1 t20/t21→t22): bare "crying|sobbing" matched
+    # comedy banter ("all crying must now be done on the balcony", "sobbing over
+    # staplers"); two consecutive hits drove distress_trend_rising and the warm
+    # escalation REPLACED a persona reply with platform self-harm text in a
+    # joking thread. Same disease as the "broken"/"lost" narrowing below: keep
+    # the genuine shapes ("can't stop crying", first-person "I'm/we were
+    # crying|sobbing"); the objectified "crying|sobbing over X" hyperbole
+    # marker and impersonal/gerund uses no longer grade DISTRESS on their own.
+    re.compile(r"\bcan'?t\s+stop\s+cry(?:ing)?\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:i|we)\s*(?:'m|am|was|were|keep|kept|started|end(?:ed)?\s+up)\s+"
+        r"(?:(?:so|still|literally|openly|quietly|actually)\s+)?"
+        r"(?:crying|sobbing|sob)\b",
+        re.IGNORECASE,
+    ),
     # HU-2774: bare "broken" matched "phone's broken" banter and (via two
     # hits) escalated a session to distress_trend_rising -> handoff. Keep the
     # emotional anchors; require a first-person/relational shape for "broken".
