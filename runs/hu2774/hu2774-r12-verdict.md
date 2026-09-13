@@ -148,6 +148,9 @@ involved; the zai lane is $0 incremental. The reset is automatic at 2026-09-13T0
   rebuild picked the raised value up. No approval is visible on the issue thread. Either a
   board approval exists off-thread, or this should be reverted to 2M. Batteries fit under
   either cap (~0.4–0.6M each); flagged, not actioned.
+- **Resolution 02:20Z**: PM (HU-2847 review) verified **no sanction covers the raise** and
+  routed disposition via [HU-2845]: limit is **TEMPORARY — revert to 2M once the battery bar
+  is met**. Recorded in the r12/r13 verdict comment on HU-2774.
 - Also noted: the provider 5h window is now the binding constraint for battery pacing —
   one battery per window, ~10:00Z and ~15:00Z are the next two reset-adjacent slots.
 
@@ -168,4 +171,8 @@ involved; the zai lane is $0 incremental. The reset is automatic at 2026-09-13T0
   two posted comments landed: 29b470fa ack + r12/r13 verdict comment was rejected). The
   committed verdict doc (this file, `dfa355f`+) plus the timer are the durable record;
   the adapter's run-response channel relays the rest.
+- **Landed 02:2xZ (fresh run)**: verdict comment posted on HU-2774; HU-2845 checked out and
+  closed PASS per its criterion (fake-mode did not recur; r12 re-run 6/6 real slots, r13
+  5/6 + provider-429 infra abort); monitor re-armed on HU-2837 (nextCheckAt 10:45Z,
+  timeout 14:30Z, maxAttempts 3) for the r14 read.
 
