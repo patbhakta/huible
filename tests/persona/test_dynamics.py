@@ -387,6 +387,60 @@ async def test_bare_surname_sentence_stripped_and_elicited_exempt():
     assert elicited.residual == []
 
 
+@pytest.mark.asyncio
+async def test_trademark_cadence_sentence_stripped():
+    """r19 stranger-2 leak: the catchphrase cadence ('Could this BE any
+    more...') is scored by the gate on every turn — enforced mechanically
+    via sentence strip, and never elicitation-exempt."""
+    from huible.persona.dynamics import persona_name_tells
+
+    history = [
+        ConversationTurn(speaker="user", content="m1"),
+        ConversationTurn(speaker="persona", content="sure, what next?"),
+    ]
+
+    async def parrot(_addendum):
+        return "could this be any more of a cliffhanger? anyway, spit it out."
+
+    report = await apply_dynamics_enforcement(
+        "could this be any more of a cliffhanger? anyway, spit it out.",
+        "okay fine, tell me the thing",
+        history,
+        regenerate=parrot,
+        seed="c16",
+        name_tells=persona_name_tells("Chandler"),
+    )
+    assert "trademark-cadence" in report.fired
+    assert "mutate:strip_surname" in report.actions
+    assert "could this" not in report.text.casefold()
+    assert "spit it out" in report.text
+    assert report.residual == []
+
+
+@pytest.mark.asyncio
+async def test_cadence_enforced_even_when_elicited():
+    from huible.persona.dynamics import persona_name_tells
+
+    history = [
+        ConversationTurn(speaker="user", content="m1"),
+        ConversationTurn(speaker="persona", content="sure, what next?"),
+    ]
+
+    async def parrot(_addendum):
+        return "could i be any more ready? sure."
+
+    report = await apply_dynamics_enforcement(
+        "could i be any more ready? sure.",
+        "who are you again?",
+        history,
+        regenerate=parrot,
+        seed="c17",
+        name_tells=persona_name_tells("Chandler"),
+    )
+    assert "trademark-cadence" in report.fired
+    assert report.residual == []
+
+
 def test_persona_name_tells_unknown_persona_empty():
     from huible.persona.dynamics import persona_name_tells
 

@@ -243,35 +243,35 @@ _ELICITATION_RE = re.compile(
 #: Canonical persona → famous surname (corpus-specific, case-insensitive).
 _SURNAME_BY_PERSONA = {"chandler": "bing", "monica": "geller"}
 
+#: Canonical persona → trademark cadence (the gate's CADENCE_TELLS; r19
+#: stranger-2: "Could this BE any more of a cliffhanger?" — the catchphrase
+#: is model priors, exactly what the no-priors doctrine forbids). Scored
+#: unconditionally by the gate (no elicitation exemption), enforced the same.
+_CADENCE_BY_PERSONA = {"chandler": r"could (?:this|i|we) be any"}
+
 
 def persona_name_tells(persona_name: str | None) -> tuple[tuple[str, str], ...]:
-    """Per-persona self-name tell patterns for ``apply_dynamics_enforcement``.
+    """Per-persona self-name + cadence tell patterns.
 
-    ``(fullname, surname)`` regexes for the known battery personas; empty for
-    any other persona (no famous-surname doctrine applies).
+    ``(pattern, tag)`` regexes for the known battery personas; empty for any
+    other persona (no famous-persona doctrine applies). Tags:
+    ``self-fullname`` / ``self-surname`` (elicitation-exempt, like the
+    gate's name tells) and ``trademark-cadence`` (never exempt — the gate
+    scores it on every turn).
     """
     first = (persona_name or "").strip().split()
     if not first:
         return ()
-    surname = _SURNAME_BY_PERSONA.get(first[0].casefold())
-    if not surname:
-        return ()
     low = first[0].casefold()
-    return (
-        (rf"\b{low} {surname}\b", "self-fullname"),
-        (rf"\b{surname}\b", "self-surname"),
-    )
-
-
-def _name_tell_hits(
-    text: str, name_tells: Sequence[tuple[str, str]]
-) -> list[tuple[str, str]]:
-    low = (text or "").casefold()
-    hits: list[tuple[str, str]] = []
-    for pat, tag in name_tells:
-        for m in re.finditer(pat, low):
-            hits.append((tag, m.group(0)))
-    return hits
+    surname = _SURNAME_BY_PERSONA.get(low)
+    cadence = _CADENCE_BY_PERSONA.get(low)
+    tells: list[tuple[str, str]] = []
+    if surname:
+        tells.append((rf"\b{low} {surname}\b", "self-fullname"))
+        tells.append((rf"\b{surname}\b", "self-surname"))
+    if cadence:
+        tells.append((cadence, "trademark-cadence"))
+    return tuple(tells)
 
 
 def _strip_sentences_with_spans(text: str, spans: set[str]) -> str:
@@ -387,9 +387,13 @@ async def apply_dynamics_enforcement(
     # over the CURRENT text and the pass below re-checks after every mutation.
 
     def _name_hits_now(t: str) -> list[tuple[str, str]]:
-        if _ELICITATION_RE.search((inbound or "").casefold()):
-            return []
-        return _name_tell_hits(t, name_tells)
+        elicited = _ELICITATION_RE.search((inbound or "").casefold())
+        return [
+            (tag, m.group(0))
+            for pat, tag in name_tells
+            if not (elicited and tag != "trademark-cadence")
+            for m in re.finditer(pat, t.casefold())
+        ]
 
     if _deficit(text):
         fired.append("question_deficit")
@@ -434,12 +438,23 @@ async def apply_dynamics_enforcement(
             + "."
         )
     if name_hits:
-        directives.append(
-            "Never use your own surname or family name — first name only. "
-            "Rewrite around these phrases: "
-            + ", ".join(f'"{sp}"' for sp in sorted({s for _, s in name_hits})[:4])
-            + "."
-        )
+        if any(tg == "trademark-cadence" for _, tg in name_hits):
+            directives.append(
+                "Never use catchphrase phrasings like \"could this be any "
+                "more...\" — say it in everyday wording instead."
+            )
+        if any(tg != "trademark-cadence" for _, tg in name_hits):
+            directives.append(
+                "Never use your own surname or family name — first name "
+                "only. Rewrite around these phrases: "
+                + ", ".join(
+                    f'"{sp}"'
+                    for sp in sorted(
+                        {s for _, s in name_hits if _ != "trademark-cadence"}
+                    )[:4]
+                )
+                + "."
+            )
     if _greet_missed(text):
         directives.append(
             f"Open this reply by greeting {user_name.split()[0]} by name."
