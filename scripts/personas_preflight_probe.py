@@ -58,17 +58,54 @@ def probe_turn(key, pid):
         return None, {"error": str(e)}
 
 
+def acknowledge_consent(key, pid):
+    """Acknowledge the reality-framing consent card for the probe session.
+
+    The engine re-prompts consent when its consent-card version bumps (409
+    CONSENT_REQUIRED on chat); personas_dual_converse.py self-consents the
+    same way before every conversation. Without this the preflight would
+    409 forever and abort every battery fire.
+    """
+    body = json.dumps({"conversation_id": PROBE_CONV}).encode()
+    req = urllib.request.Request(
+        ENGINE + f"/api/v1/chat/{pid}/consent", data=body, method="POST",
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {key}",
+                 "X-Huible-Traffic-Class": "internal",
+                 "X-Huible-Client": "battery-flow"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return r.status in (200, 201, 204)
+    except Exception:
+        return False
+
+
 def main():
     try:
         with urllib.request.urlopen(ENGINE + "/health", timeout=10) as r:
             health = json.loads(r.read())
         if health.get("data", {}).get("status") != "ok":
             sys.exit(f"preflight: engine health not ok: {health}")
+        # r14-preflight incident 2026-09-13: an invalid GENERATOR_PROVIDER in
+        # .env silently falls back to mock, which still serves 200s — so a
+        # healthy probe turn does NOT prove real mode. Fail closed: only fire
+        # the battery when health explicitly reports a non-mock generator.
+        gen = str(health.get("data", {}).get("checks", {}).get("generator", "")).lower()
+        if not gen:
+            sys.exit(f"preflight: health payload has no generator check — cannot prove real mode: {health}")
+        if "mock" in gen:
+            sys.exit(f"preflight: generator in MOCK mode ({gen!r}) — check .env GENERATOR_PROVIDER; aborting before slot burn")
     except Exception as e:
         sys.exit(f"preflight: engine unreachable: {e}")
 
     key, pid = first_persona_key()
     status, data = probe_turn(key, pid)
+    if status == 409 and (data.get("detail", {}).get("error", {}).get("code")
+                          == "CONSENT_REQUIRED"):
+        if not acknowledge_consent(key, pid):
+            sys.exit("preflight: consent acknowledgment failed — probe cannot proceed")
+        print("preflight: consent acknowledged (card re-prompt), retrying probe")
+        status, data = probe_turn(key, pid)
     detail = json.dumps(data)[:300]
     if status == 200 and (data.get("response") or "").strip():
         print(f"preflight: lane serving (persona={pid} turn ok) — window open")
