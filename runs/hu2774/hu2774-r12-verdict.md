@@ -76,3 +76,85 @@ involved; the zai lane is $0 incremental. The reset is automatic at 2026-09-13T0
   confirm non-null `monitorNextCheckAt` in the PATCH response before claiming it; verify zero
   fake-voice markers across all 6 slots from `r12_oneshot.log`; land the verdict here and on
   HU-2712. Bar unchanged: 6/6 → founder card path.
+
+---
+
+# Addendum (2026-09-13 ~01:55Z) — r12b fired, r13 iterated; NEW provider-side wall found
+
+## A1 — the r12b refire unit was dead on arrival (root cause + workaround)
+
+- `hu2774-r12-refire.service` was created with `RuntimeMaxSec=0` **believing 0 = unlimited**.
+  This host's systemd treats `RuntimeMaxSec=0` as an **immediate** runtime limit: the service
+  was TERM'd **3 ms** after its 00:05:00Z start (`Result: timeout`, Duration: 3ms). The
+  battery never ran; log stayed frozen at the Sep 12 stub state, no done marker.
+- Workaround that works: launch `host_oneshot_r12.sh` directly, detached, under its flock
+  guard (`setsid nohup ... &`) from a monitor wake. Used for both r12 and r13 today.
+- Engine pre-flight was verified green before relaunch: image rebuilt 23:59:16Z contains
+  `get_conversation_index_memories` (grep-verified in-container); zai day ledger fresh
+  (23,868 tokens at 00:41Z); health ok. Health label `generator: ready (mock)` cleared as a
+  non-blocker: the persona chat path serves via the zai `llm_client` (app.py:1806) with
+  fake-voice only on `LLMBudgetExceededError`; `state.generator` is the two-tier voice
+  abstraction whose mock is the board-mandated default (`.env:19`'s `GENERATOR_PROVIDER=
+  openrouter` was never a valid enum value — cosmetic only).
+
+## A2 — r12 (dynamics v3, 00:46:46Z→01:02:05Z): gate 2/6
+
+| slot | qrate (band .20–.45) | echo (floor .23) | failed |
+|---|---|---|---|
+| friends-1 | 0.32 ✓ | 0.16 ✗ | grounded_wit |
+| friends-2 | 0.16 ✗ | 0.08 ✗ | engagement, grounded_wit, no_ai_tells |
+| friends-3 | 0.24 ✓ | 0.36 ✓ | — PASS |
+| stranger-1 | 0.40 ✓ | 0.16 ✗ | grounded_wit |
+| stranger-2 | 0.32 ✓ | 0.28 ✓ | — PASS |
+| stranger-3 | 0.64 ✗ | 0.32 ✓ | engagement |
+
+- **Progress that held**: identity 6/6 (v3 name-greeting fixed r11's recognition miss),
+  memory_recall 6/6 (ordinal-index lane + registry hydration validated end-to-end).
+- **Failure modes**: echo is bimodal (0.08–0.16 fail vs 0.28–0.36 pass) — the reuse rule sat
+  mid-block and diluted; stranger-3 qrate 0.64 — the block header said "habits with a
+  *friend*", leaving strangers unframed; friends-2 tell = self-surname gag ("the Bing Flex").
+- → dynamics **v4**: positional echo opener (open the reply with their exact word),
+  scenario-neutral header, one-in-three rhythm anchor, surname/accusation-word habit line.
+  Applied + app restarted 01:07Z.
+
+## A3 — r13 (dynamics v4, 01:11Z→01:36Z): gate 1/6 + provider 429 wall
+
+| slot | qrate | echo | failed |
+|---|---|---|---|
+| friends-1 | 0.40 ✓ | 0.32 ✓ | no_ai_tells ("Ms. Geller-Bing" — hyphenate surname gag) |
+| friends-2 | 0.36 ✓ | 0.24 ✓ | — PASS |
+| friends-3 | 0.40 ✓ | 0.12 ✗ | grounded_wit, no_ai_tells ("my programmer wrote better comebacks") |
+| stranger-1 | 0.20 (boundary) | 0.24 ✓ | engagement |
+| stranger-2 | 0.48 (over top) | 0.36 ✓ | engagement |
+| stranger-3 | — | — | INFRA: zai HTTP 429 code 1308, slot aborted |
+
+- Echo improved where v4's positional opener was adopted; stranger qrates moved from blowout
+  (0.64) to boundary misses (0.20/0.48). Two single-line tells decided two slots.
+- **NEW blocker class — provider-side rolling window**: at 01:34:46Z zai returned
+  `HTTP 429 {"code":"1308","message":"Usage limit reached for 5 hour. Your limit will reset
+  at 2026-09-13 10:00:36"}`. This is the subscription's **5-hour rolling usage window**,
+  distinct from both the app daily ledger (day usage ~0.6M/8M at the time) and the
+  OpenRouter USD lane. The harness's ~200s retry cannot outlast it; the engine correctly
+  refuses to fake-voice a transient error (503, `retryable: true`). **No battery can run
+  until ~10:00:36Z.**
+- → dynamics **v5**: first-names-only habit (kills hyphenate gags) +
+  creator/programmer/developer added to banned vocabulary. Applied + app restarted 01:52Z.
+  This is this session's last dynamics revision (3-revision cap); r14 scores v5 cold.
+
+## A4 — governance flag (CEO visibility)
+
+- `.env:92` now reads `ZAI_DAILY_TOKEN_LIMIT=8000000` — the corrected verdict above (and the
+  CEO issue text: "z.ai lane budget now 2M/day") cite **2,000,000**. The 23:59:16Z image
+  rebuild picked the raised value up. No approval is visible on the issue thread. Either a
+  board approval exists off-thread, or this should be reverted to 2M. Batteries fit under
+  either cap (~0.4–0.6M each); flagged, not actioned.
+- Also noted: the provider 5h window is now the binding constraint for battery pacing —
+  one battery per window, ~10:00Z and ~15:00Z are the next two reset-adjacent slots.
+
+## A5 — next
+
+- **r14 at ~10:05Z** (monitor armed on HU-2774): pre-check the 429 window is clear (one cheap
+  probe turn), launch `host_oneshot_r12.sh` with `R12_RUN_TAG=hu2774-r14` detached, gate →
+  verdict. If 6/6: founder card path via HU-2712. If not: failure analysis, next single
+  targeted lever, re-run in the following window.
+

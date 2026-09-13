@@ -1,0 +1,5 @@
+{
+ "run_id": "hu2774-r13-stranger-3",
+ "scenario": "stranger",
+ "error": "s2 turn 1: engine error for 3ef60bec-79d2-5e31-8d9e-e856bb1ebfea: {'status': 503, 'detail': {'detail': {'error': {'code': 'LLM_TRANSIENT', 'message': \"Monica's engine hit a transient model error \u2014 try again in a moment.\", 'retryable': True, 'conversation_id': 'hu2774-r13-stranger-3-s2-monica', 'trace_id': '20f0664c-3ec1-44a0-b100-283e6a2b7766'}}}}"
+}
