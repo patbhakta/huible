@@ -238,3 +238,61 @@ but left "crying|sobbing" unanchored.
 - Bar unchanged: 6/6 → founder card path. HU-2712 verdict only lands on a
   pass; r15 failure ⇒ next single lever (identity recognition or echo, TBD
   by r15's evidence).
+
+
+---
+
+# Addendum (2026-09-13 ~15:55Z) — r15 read (v5 + crisis fix, real voice): gate 1/6 FAIL → prompt-tuning loop STOPPED, escalation filed
+
+Read by Huible Tech Lead from `runs/hu2774/r12_oneshot.log` lines 1371–1773
+(preflight 15:05:01Z rc=0 — window open; battery 15:05→15:23:46Z;
+`R12_HOST_ONESHOT_DONE` gate_rc=1). **Zero fake-voice markers in all 6
+slots** (every sampled turn `zai`).
+
+## r15 per-slot (slot JSONs on disk are authoritative)
+
+| slot | result | failed gate detail |
+|---|---|---|
+| friends-1 | **PASS** | — (r14's crisis slot: platform-text cascade gone; the f737501 crying/sobbing narrowing is CONFIRMED) |
+| friends-2 | FAIL | engagement qr 0.16 vs band [0.20,0.45] — BOTH personas under (0.154/0.167); you_share 1.0 ✓; per-persona min ✓ |
+| friends-3 | FAIL | grounded_wit echo 0.16 vs floor 0.23 |
+| stranger-1 | FAIL | grounded_wit echo 0.12 vs floor 0.23 |
+| stranger-2 | FAIL | engagement qr 0.48 — Chandler 0.615 vs Monica 0.333 (hogging) |
+| stranger-3 | FAIL | engagement qr 0.56 — Chandler 0.692 hogging; + 1 no_ai_tells: s2-probe reply "a company?? do i look like a sitcom writer's room to you? i write my own burns" ("company"/"writer's room" not covered by v5 banned vocab) |
+
+**BATTERY: FAIL 1/6 (bar 6/6).** Trend: r9 0/6 → r10/r11 → r12 2/6 → r13 1/6
+→ r14 3/6 → r15 1/6.
+
+## Decisive finding — per-run variance now dominates, not steering gaps
+
+Between r14 and r15 exactly one thing changed (crisis.py f737501 — it only
+touches the distress classifier). Yet the pass set flipped from
+{friends-3, stranger-2, stranger-3} to {friends-1}: **three slots moved
+across the pass line under identical dynamics steering**. Per-check
+movements are all within the established bimodal adoption noise:
+
+- echo: 0.36→0.16 (friends-3), 0.24→0.32→0.12 (stranger-1 across r14/r15),
+  while friends-1/2 sat at 0.28 — the v4 positional opener is adopted
+  stochastically (~4/6 slots per run).
+- qrate: stranger slots flip 0.40↔0.48↔0.56 around the 0.45 ceiling;
+  Chandler over-asking in stranger scenarios is semi-systematic
+  (0.692/0.615/0.692 in the last four stranger slots) but prompt-level
+  rhythm rules ("one in three", "never two in a row") have not contained it
+  across v3→v5.
+- identity + memory_recall: 6/6 PASS again in r15 (v3 fixes holding).
+- tells: down to a single uncovered vocabulary pair ("company",
+  "writer's room").
+
+## Disposition — iteration capped, founder decision requested
+
+The dynamics block has had its 3 revision iterations (v3→v4→v5); r15 (v5
+cold) failed the gate, so per the revision cap the prompt-tuning lever is
+STOPPED. The evidence says single-trial 6/6 gating of a stochastic
+generator cannot be reached by prompt refinement alone — the residual is
+instruction-adoption variance. Escalated to the board on HU-2774 with three
+options: (1) engine-side mechanical enforcement (question-budget /
+echo-opener post-processing in the reply pipeline), (2) recalibrate the bar
+(corpus-derived band/floor vs. multi-trial pass criterion, e.g. best-of-2
+batteries per slot), (3) keep iterating prompt-only (not recommended).
+No r16 was armed — no battery fires until the board picks a direction.
+Next zai 5h window would open ~20:00Z if option 1/3 is chosen.
