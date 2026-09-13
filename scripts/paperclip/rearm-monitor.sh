@@ -6,15 +6,18 @@
 # with a proven 200 (armed 2026-09-08T02:14:27Z, fired 03:15Z). Full-policy
 # shapes with kind/serviceName/timeoutAt/stages are rejected (400 enum / 422).
 #
-# Usage: rearm-monitor.sh [--issue-id <id>] [--minutes <n>]
-#   Defaults: --issue-id $PAPERCLIP_TASK_ID, --minutes 63
+# Usage: rearm-monitor.sh [--issue-id <id>] [--minutes <n>] [--notes <text>]
+#   Defaults: --issue-id $PAPERCLIP_TASK_ID, --minutes 63,
+#             --notes "pg-health sweep cadence (~1h); re-armed by HU-1796 sweep"
 # Exit: 0 armed (monitorNextCheckAt non-null in response), 1 not armed.
 set -euo pipefail
 issue_id="${PAPERCLIP_TASK_ID:-}" minutes=63
+notes="pg-health sweep cadence (~1h); re-armed by HU-1796 sweep"
 while [ $# -gt 0 ]; do
   case "$1" in
     --issue-id) issue_id="$2"; shift 2 ;;
     --minutes)  minutes="$2"; shift 2 ;;
+    --notes)    notes="$2"; shift 2 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -24,9 +27,9 @@ done
   echo "PAPERCLIP_API_KEY / PAPERCLIP_API_URL / PAPERCLIP_RUN_ID not set" >&2; exit 2; }
 
 next=$(date -u -d "+$minutes min" +%Y-%m-%dT%H:%M:%SZ)
-body=$(jq -n --arg next "$next" \
+body=$(jq -n --arg next "$next" --arg notes "$notes" \
   '{executionPolicy: {monitor: {nextCheckAt: $next, scheduledBy: "assignee",
-     notes: "pg-health sweep cadence (~1h); re-armed by HU-1796 sweep"}}}')
+     notes: $notes}}}')
 
 resp=$(curl -s -w '\n%{http_code}' -X PATCH \
   -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
