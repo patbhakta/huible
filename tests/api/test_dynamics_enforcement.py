@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 
 from huible.api.app import create_app
 from huible.api.auth import InMemoryApiKeyStore, InMemoryPersonaRegistry
+from huible.api.metering import InMemoryUsageRecorder
 from huible.api.settings import Settings
 from huible.llm.client import FakeLLMClient
 from tests.api.test_chat import (
@@ -28,9 +29,11 @@ from tests.api.test_chat import (
 BAD_REPLY = "ha, no questions from me. do i look like a sitcom writer's room to you?"
 
 
-def _make_client(*, dynamics: bool) -> tuple[TestClient, FakeLLMClient]:
+def _make_client(
+    *, dynamics: bool, reply: str = BAD_REPLY, recorder: InMemoryUsageRecorder | None = None
+) -> tuple[TestClient, FakeLLMClient]:
     backend = _FakeBackend()
-    llm = FakeLLMClient(response=BAD_REPLY, persona_name="Chandler")
+    llm = FakeLLMClient(response=reply, persona_name="Chandler")
     persona = _persona(PERSONA_ID)
     registry = InMemoryPersonaRegistry({persona.id: (persona, backend)})
     keys = InMemoryApiKeyStore(
@@ -43,6 +46,7 @@ def _make_client(*, dynamics: bool) -> tuple[TestClient, FakeLLMClient]:
         llm_client=llm,
         settings=settings,
         start_time=0.0,
+        usage_recorder=recorder,
     )
     return TestClient(application), llm
 
@@ -107,3 +111,38 @@ def test_flag_on_history_rules_fire_across_turns():
         "question_deficit" in t3["trace"]["dynamics"]["fired"]
         or "mutate:append_question" in t3["trace"]["dynamics"]["actions"]
     )
+
+
+def test_flag_on_single_sentence_tell_surfaces_residual():
+    """HU-2850 condition 1 at the trace surface: a single-sentence tell the
+    strip cannot remove without emptying the reply is served unchanged, with
+    no strip action claimed and the residual violation on the report."""
+    client, _llm = _make_client(dynamics=True, reply="i'm just a chatbot haha")
+    conv = _consent(client, f"conv-{uuid4()}")
+    out = _chat(client, "sobbing over the staplers again lol", conv)
+    dynamics = out["trace"]["dynamics"]
+    assert dynamics is not None
+    assert "bot-speak" in dynamics["fired"]
+    assert "mutate:strip_tells" not in dynamics["actions"]
+    assert dynamics["residual"] == ["bot-speak"]
+    assert "chatbot" in out["response"].casefold()
+
+
+def test_regen_turn_meters_discarded_draft_row():
+    """HU-2850 condition 4: a regen overwrites ``last_usage``, so the turn
+    row meters the served (regen) call — the discarded draft generate is
+    recorded as its own usage row (token/cost totals count both)."""
+    recorder = InMemoryUsageRecorder()
+    client, _llm = _make_client(dynamics=True, recorder=recorder)
+    conv = _consent(client, f"conv-{uuid4()}")
+    out = _chat(client, "how was your week?", conv)
+    dynamics = out["trace"]["dynamics"]
+    assert dynamics is not None and dynamics["regenerated"] is True
+    assert len(recorder.rows) == 2, [r.model_dump() for r in recorder.rows]
+    draft_row, turn_row = recorder.rows
+    assert draft_row.latency_ms == 0
+    # the regen addendum changes the prompt, not the completion — both rows
+    # meter the same served response shape on the same provider.
+    assert draft_row.tokens_out == turn_row.tokens_out > 0
+    assert draft_row.provider == turn_row.provider
+    assert draft_row.conversation_id == turn_row.conversation_id

@@ -872,6 +872,16 @@ class DynamicsView(BaseModel):
         default=False,
         description="True when the regeneration ran this turn.",
     )
+    residual: list[str] = Field(
+        default_factory=list,
+        description=(
+            "HU-2850 condition 1: rule tags still violated by the FINAL "
+            "text after the regeneration and fallbacks — e.g. a "
+            "single-sentence tell the strip cannot remove without "
+            "emptying the reply, or a suppressed distress-branch strip. "
+            "Non-empty = the turn needs review; never silently dropped."
+        ),
+    )
 
 
 class PersonaChatResponse(BaseModel):

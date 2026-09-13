@@ -130,6 +130,12 @@ _QUESTION_TAILS = (
     "you still there? what's your take?",
 )
 
+#: HU-2850 condition 3: on the distress branch the demanding tail reads as
+#: tone-deaf after a heavy share (G3 only replaces concrete dismissive
+#: patterns, so it would survive) — the appended question is restricted to
+#: the gentle pool there.
+_QUESTION_TAILS_DISTRESS = _QUESTION_TAILS[:3]
+
 
 def content_words(text: str) -> set[str]:
     """Content-word set — identical to the battery gate's matcher."""
@@ -184,6 +190,10 @@ class DynamicsReport:
     ``fired`` lists rule tags detected on the draft (pre-regen);
     ``actions`` lists what actually changed the text (``regen``, ``mutate:*``);
     ``regenerated`` is True when the one allowed regeneration ran.
+    ``residual`` lists rule tags STILL violated by the final text — the
+    honest audit surface for fallback no-ops (HU-2850 condition 1: a
+    single-sentence tell the strip cannot remove without emptying the reply
+    is reported as residual, never as a mutation that did not happen).
     """
 
     text: str
@@ -191,19 +201,28 @@ class DynamicsReport:
     fired: list[str] = field(default_factory=list)
     actions: list[str] = field(default_factory=list)
     regenerated: bool = False
+    residual: list[str] = field(default_factory=list)
 
 
 def _strip_questions(text: str) -> str:
     return (text or "").replace("?", ".")
 
 
-def _append_question(text: str, user_name: str | None, seed: str, n_replies: int) -> str:
-    idx = int(hashlib.sha256(f"{seed}:{n_replies}".encode()).hexdigest(), 16) % len(
-        _QUESTION_TAILS
-    )
-    tail = _QUESTION_TAILS[idx]
+def _append_question(
+    text: str,
+    user_name: str | None,
+    seed: str,
+    n_replies: int,
+    *,
+    gentle: bool = False,
+) -> str:
+    pool = _QUESTION_TAILS_DISTRESS if gentle else _QUESTION_TAILS
+    idx = int(hashlib.sha256(f"{seed}:{n_replies}".encode()).hexdigest(), 16) % len(pool)
+    tail = pool[idx]
     if user_name and idx == 0:
-        tail = f"{user_name.split()[0].lower()}, {tail}"
+        # First token only, original case — lowercasing mangles proper names
+        # (HU-2850 minor finding).
+        tail = f"{user_name.split()[0]}, {tail}"
     body = (text or "").rstrip()
     return f"{body} {tail}" if body else tail
 
@@ -240,6 +259,7 @@ async def apply_dynamics_enforcement(
     regenerate: Callable[[str], Awaitable[str]],
     user_name: str | None = None,
     seed: str = "",
+    distress: bool = False,
 ) -> DynamicsReport:
     """Enforce the question / echo / vocabulary rules on one persona turn.
 
@@ -248,7 +268,12 @@ async def apply_dynamics_enforcement(
     replies exactly this persona's lines). ``regenerate`` re-runs the hosted
     generation with a directive addendum appended to the system prompt —
     exactly one regen per turn, latency-bounded; a regen failure keeps the
-    draft and the deterministic fallbacks still apply.
+    draft and the deterministic fallbacks still apply. ``distress`` marks the
+    G3 distress branch (HU-2850 conditions 2-3): the tell-strip is suppressed
+    there — it could delete the one empathic sentence — and the appended
+    question, if any, comes from the gentle tail pool. Vocabulary patterns
+    stay gate-aligned even on distress turns (the rewrite regen still runs);
+    only the destructive fallback is suppressed.
     """
     replies = [t.content for t in history if getattr(t, "speaker", None) == "persona"]
     fired: list[str] = []
@@ -345,18 +370,25 @@ async def apply_dynamics_enforcement(
     # order effects (a prepend cannot re-trigger, an append cannot un-strip).
     for _pass in range(2):
         changed = False
-        if _vocab_hits(text, inbound):
-            text = _strip_tell_sentences(text, inbound)
-            if "mutate:strip_tells" not in actions:
-                actions.append("mutate:strip_tells")
-            changed = True
+        if _vocab_hits(text, inbound) and not distress:
+            stripped = _strip_tell_sentences(text, inbound)
+            if stripped != text:
+                text = stripped
+                if "mutate:strip_tells" not in actions:
+                    actions.append("mutate:strip_tells")
+                changed = True
+            # else: single-sentence tell — stripping would empty the reply,
+            # so the text is kept (HU-2850 condition 1): no mutation action
+            # is recorded; the residual scan below surfaces the violation.
         if _cap_hit(text) and _has_question(text):
             text = _strip_questions(text)
             if "mutate:strip_questions" not in actions:
                 actions.append("mutate:strip_questions")
             changed = True
         if _deficit(text):
-            text = _append_question(text, user_name, seed, len(replies))
+            text = _append_question(
+                text, user_name, seed, len(replies), gentle=distress
+            )
             if "mutate:append_question" not in actions:
                 actions.append("mutate:append_question")
             changed = True
@@ -370,7 +402,21 @@ async def apply_dynamics_enforcement(
         if not changed:
             break
 
+    # HU-2850 condition 1: the report must tell the truth about the final
+    # text — any fired rule still violated after the regen + fallbacks is
+    # surfaced as residual (never silently dropped, never mis-attributed).
+    residual: list[str] = []
+    if _deficit(text):
+        residual.append("question_deficit")
+    if _cap_hit(text):
+        residual.append("question_cap")
+    if _echo_missed(text):
+        residual.append("echo_miss")
+    for tag, _span in _vocab_hits(text, inbound):
+        if tag not in residual:
+            residual.append(tag)
+
     return DynamicsReport(
         text=text, original=draft, fired=fired, actions=actions,
-        regenerated="regen" in actions,
+        regenerated="regen" in actions, residual=residual,
     )

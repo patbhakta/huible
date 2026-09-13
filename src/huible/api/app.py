@@ -1897,6 +1897,11 @@ def _register_routes(application: FastAPI) -> None:
         # deterministic text, never persona output worth enforcing.
         dynamics_report: DynamicsReport | None = None
         if settings.dynamics_enforcer_enabled and not budget_fallback:
+            # HU-2850 condition 4 bookkeeping: the draft generate's usage,
+            # snapshotted before the enforcer's regen overwrites it.
+            pre_enforcement_usage: dict = dict(
+                getattr(llm, "last_usage", None) or {}
+            )
 
             async def _dynamics_regen(addendum: str) -> str:
                 return await llm.generate(
@@ -1913,8 +1918,31 @@ def _register_routes(application: FastAPI) -> None:
                 regenerate=_dynamics_regen,
                 user_name=body.requester_user_name(),
                 seed=str(body.conversation_id),
+                # HU-2850 conditions 2-3: on the distress branch the tell
+                # strip could delete the one empathic sentence and the
+                # demanding question tail reads as tone-deaf — the enforcer
+                # suppresses the destructive fallbacks there (same branch
+                # signal G3 keys on).
+                distress=(effective_affect == UserAffect.DISTRESS),
             )
             response_text = dynamics_report.text
+            if dynamics_report.regenerated:
+                # HU-2850 condition 4: the regen replaced ``llm.last_usage``,
+                # so the turn row below meters the served (regen) call —
+                # record the discarded draft call as its own usage row so
+                # token/cost totals count both generates. The draft's latency
+                # is folded into the turn row (one wall-clock window); this
+                # row carries tokens/cost only.
+                _record_usage_row(
+                    application,
+                    api_key=principal.api_key,
+                    persona_id=persona_id,
+                    conversation_id=body.conversation_id,
+                    usage=pre_enforcement_usage,
+                    latency_ms=0,
+                    key_source=llm_key_source,
+                    provider=str(getattr(llm, "provider", None) or "unknown"),
+                )
 
         # HU-2243 Sprint 1: meter the LLM turn — one usage row per generate
         # call (requests, tokens in/out, latency, modeled cost) keyed on the
@@ -2212,6 +2240,7 @@ def _register_routes(application: FastAPI) -> None:
                         fired=list(dynamics_report.fired),
                         actions=list(dynamics_report.actions),
                         regenerated=dynamics_report.regenerated,
+                        residual=list(dynamics_report.residual),
                     )
                     if dynamics_report is not None
                     else None
@@ -3395,6 +3424,46 @@ def _resolve_turn_llm(
     return client, "byok"
 
 
+def _record_usage_row(
+    application: FastAPI,
+    *,
+    api_key: str,
+    persona_id: UUID,
+    conversation_id: str | None,
+    usage: dict,
+    latency_ms: int,
+    key_source: str = "shared",
+    provider: str | None = None,
+) -> None:
+    """Write one :class:`~huible.api.metering.UsageRecord` through the wired
+    recorder. Best-effort by construction: a metering failure logs and the
+    turn continues unmetered (same posture as the metrics/paging helpers —
+    billing telemetry must never break a clinical turn).
+    """
+    recorder: UsageRecorder | None = getattr(application.state, "usage_recorder", None)
+    if recorder is None:
+        return
+    try:
+        reported_cost = usage.get("cost")
+        record = UsageRecord(
+            api_key_id=api_key_attribution_id(api_key),
+            persona_id=str(persona_id),
+            conversation_id=conversation_id,
+            provider=str(provider or usage.get("provider") or "unknown"),
+            model=str(usage["model"]) if usage.get("model") else None,
+            tokens_in=int(usage.get("prompt_tokens") or 0),
+            tokens_out=int(usage.get("completion_tokens") or 0),
+            latency_ms=latency_ms,
+            reported_cost_usd=(
+                float(reported_cost) if reported_cost is not None else None
+            ),
+            key_source=key_source,
+        )
+        recorder.record_turn(record)
+    except Exception:  # pragma: no cover - defensive; never break a turn
+        logger.exception("usage metering write failed; turn continues unmetered")
+
+
 def _meter_llm_turn(
     application: FastAPI,
     *,
@@ -3409,36 +3478,19 @@ def _meter_llm_turn(
 
     Reads the just-populated ``last_usage`` on the client that actually
     generated (exact provider token counts; the fake voice estimates) and
-    writes one :class:`~huible.api.metering.UsageRecord` through the wired
-    recorder — per-key attribution via a SHA-256 digest, never the raw key.
-    Best-effort by construction: a metering failure logs and the turn
-    continues unmetered (same posture as the metrics/paging helpers —
-    billing telemetry must never break a clinical turn).
+    delegates to :func:`_record_usage_row` — per-key attribution via a
+    SHA-256 digest, never the raw key.
     """
-    recorder: UsageRecorder | None = getattr(application.state, "usage_recorder", None)
-    if recorder is None:
-        return
-    try:
-        usage = getattr(client, "last_usage", None) or {}
-        provider = str(getattr(client, "provider", None) or "unknown")
-        reported_cost = usage.get("cost")
-        record = UsageRecord(
-            api_key_id=api_key_attribution_id(api_key),
-            persona_id=str(persona_id),
-            conversation_id=conversation_id,
-            provider=provider,
-            model=str(usage["model"]) if usage.get("model") else None,
-            tokens_in=int(usage.get("prompt_tokens") or 0),
-            tokens_out=int(usage.get("completion_tokens") or 0),
-            latency_ms=latency_ms,
-            reported_cost_usd=(
-                float(reported_cost) if reported_cost is not None else None
-            ),
-            key_source=key_source,
-        )
-        recorder.record_turn(record)
-    except Exception:  # pragma: no cover - defensive; never break a turn
-        logger.exception("usage metering write failed; turn continues unmetered")
+    _record_usage_row(
+        application,
+        api_key=api_key,
+        persona_id=persona_id,
+        conversation_id=conversation_id,
+        usage=dict(getattr(client, "last_usage", None) or {}),
+        latency_ms=latency_ms,
+        key_source=key_source,
+        provider=str(getattr(client, "provider", None) or "unknown"),
+    )
 
 
 def _session_meta(application: FastAPI, conversation_id: str | None) -> SessionMetaView:
@@ -3529,6 +3581,10 @@ def _log_chat_trace(
             f"{'+'.join(dynamics.fired)}>"
             f"{'+'.join(dynamics.actions) or 'verbatim'}"
         )
+        # HU-2850 condition 1: residual violations survive to the telemetry
+        # so the audit trail cannot claim more than the text shows.
+        if dynamics.residual:
+            dyn_field += f"!residual={'+'.join(dynamics.residual)}"
     logger.info(
         "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s "
         "disposition=%s turn_count=%s trace_id=%s wm=%s scoped=%s wb=%s dyn=%s",

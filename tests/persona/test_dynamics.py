@@ -220,6 +220,96 @@ async def test_tell_sentence_stripped_when_regen_echoes_it():
     assert "i write my own burns." in report.text
 
 
+# --- HU-2850 safety-review conditions ----------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_strip_noop_not_claimed_as_mutation():
+    """HU-2850 condition 1: a single-sentence tell the strip cannot remove
+    without emptying the reply is surfaced as residual — no mutation action
+    is recorded for text that did not change."""
+    history = [
+        ConversationTurn(speaker="user", content="staplers everywhere, help"),
+        ConversationTurn(speaker="persona", content="staplers, sure, what next?"),
+    ]
+
+    async def parrot(_addendum):
+        return "haha the staplers win, i'm just a chatbot"
+
+    report = await apply_dynamics_enforcement(
+        "haha the staplers win, i'm just a chatbot",
+        "staplers everywhere, help",
+        history,
+        regenerate=parrot,
+        seed="c7",
+    )
+    assert "bot-speak" in report.fired
+    assert "mutate:strip_tells" not in report.actions
+    assert "chatbot" in report.text
+    assert report.residual == ["bot-speak"]
+
+
+@pytest.mark.asyncio
+async def test_distress_turn_suppresses_tell_strip():
+    """HU-2850 condition 2: on the distress branch the strip is suppressed —
+    a genuine apology / empathic sentence is never deleted. The violation is
+    still reported (fired + residual); only the destructive fallback is off.
+    The vocabulary patterns stay gate-aligned."""
+    history = [
+        ConversationTurn(speaker="user", content="i keep mixing up the days"),
+        ConversationTurn(speaker="persona", content="the days, sure, what next?"),
+    ]
+
+    async def parrot(_addendum):
+        return "i apologize for mixing up the days"
+
+    report = await apply_dynamics_enforcement(
+        "i apologize for mixing up the days",
+        "i keep mixing up the days",
+        history,
+        regenerate=parrot,
+        seed="c8",
+        distress=True,
+    )
+    assert "refusal-speak" in report.fired
+    assert "mutate:strip_tells" not in report.actions
+    assert report.text == "i apologize for mixing up the days"
+    assert report.residual == ["refusal-speak"]
+
+
+@pytest.mark.asyncio
+async def test_distress_deficit_appends_gentle_tail():
+    """HU-2850 condition 3: the demanding tail never lands on a distress
+    turn, and the name prefix (when the rotation picks it) keeps proper
+    casing."""
+    history = [
+        ConversationTurn(speaker="user", content="you told me about monica"),
+        ConversationTurn(speaker="persona", content="no questions here"),
+        ConversationTurn(speaker="user", content="rough week for me too"),
+        ConversationTurn(speaker="persona", content="still rough here"),
+    ]
+
+    async def parrot(_addendum):
+        return "rough week, honestly"
+
+    report = await apply_dynamics_enforcement(
+        "rough week, honestly",
+        "yeah rough one indeed",
+        history,
+        regenerate=parrot,
+        seed="c9",
+        user_name="Monica",
+        distress=True,
+    )
+    from huible.persona.dynamics import _QUESTION_TAILS_DISTRESS
+
+    assert report.text.rstrip().endswith(_QUESTION_TAILS_DISTRESS)
+    assert "you still there" not in report.text
+    assert "monica," not in report.text
+    assert "mutate:append_question" in report.actions
+    assert report.residual == []
+
+
 # --- band invariant (the r16 predictor) --------------------------------------
 
 
