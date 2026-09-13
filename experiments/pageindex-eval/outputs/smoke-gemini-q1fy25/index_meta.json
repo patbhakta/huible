@@ -1,0 +1,14 @@
+{
+  "model": "gemini/gemini-3.8-flash",
+  "llm_calls": 18,
+  "prompt_tokens": 14897,
+  "completion_tokens": 5205,
+  "total_tokens": 20102,
+  "wall_s": 88.8,
+  "pdf_name": "q1-fy25-earnings.pdf",
+  "pages": 22,
+  "text_chars": 45391,
+  "index_wall_s": 88.6,
+  "s_per_page": 4.03,
+  "tokens_per_page": 913.7
+}

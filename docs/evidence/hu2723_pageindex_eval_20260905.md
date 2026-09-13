@@ -178,7 +178,7 @@ units; $ pending rate card).
 2. FRAMES wiki-corpus pass via `md_to_tree` (corpus-scale generality).
    **done this block** — see FRAMES section above.
 4. Gemini-flash tree-gen rerun once the HU-2701 relay is back; cost/quality
-   comparison across lanes.
+   comparison across lanes. **done 2026-09-12** — see the lane-rerun section below.
 5. Vault record after measurement (measure-first doctrine) — this doc is
    the measurement; Librarian record follows founder/CEO review.
 
@@ -188,3 +188,80 @@ Original PageIndex: rejected by Pat in production for resource weight —
 stores each page as an image, multi-page content left to interpretation,
 constant LLM interpretation toll. Flash (text-based tree-gen, just
 released) is the unproven successor being benchmarked here.
+
+## Lane rerun — Gemini flash tree-gen (2026-09-12, HU-2726)
+
+The founder-directive rerun: same 22-page q1-fy25-earnings.pdf, same
+UsageLedger methodology, every LLM call on the flash ladder
+(`gemini/gemini-3.8-flash`) via litellm's native gemini provider.
+Harness: `scripts/run_flash_smoke_gemini.py` (prep'd in 8f18691; this run
+also fixed a latent `new_client()` signature bug that would have
+TypeErrored the Gemini arm — it had never executed, committed blocked).
+
+### Preconditions, verified empirically (not assumed)
+
+- `GEMINI_API_KEY` provisioned in the repo `.env` on 2026-09-12 (blocker
+  resolved out-of-thread; `.env` comment references this issue).
+- Direct egress to `generativelanguage.googleapis.com` is **geo-blocked**
+  from this box (HTTP 400 `User location is not supported`) — the
+  pat-w11pc SOCKS5 relay is **required**, not a fallback.
+- Relay + key end-to-end: keyed `models.list` through
+  `socks5://100.83.231.16:1080` → HTTP 200, `gemini-3.8-flash` present;
+  ~30 KB POST (summary-prompt scale) → 200 with generation.
+- Transport note for any rerun: litellm 1.100.x defaults to its aiohttp
+  transport, which cannot do SOCKS proxies (connection resets). Env
+  `DISABLE_AIOHTTP_TRANSPORT=True` + `ALL_PROXY=socks5://…` switches it
+  to httpx, which tunnels cleanly. Isolated venv rebuilt this run
+  (pageindex 0.2.10 from PyPI — the Sep-5 venv did not survive the box).
+
+### Results — index-only, 22p, serialized concurrency, gpt-4o tokenizer
+
+| metric | z.ai glm-5.3-flash (HU-2723, as recorded) | Gemini gemini-3.8-flash (this run) | FRAMES-md index (79 wiki docs) |
+|---|---|---|---|
+| LLM calls (index) | 1 recorded | 18 | 73 (~0.9/doc, summaries batched) |
+| total tokens (index) | 7,239 recorded | **20,102** (14,897 in / 5,205 out) | 5.8k/article |
+| tokens/page | 329 recorded | **913.7** | — |
+| s/page | 47.0 (wall 1034 s, 429-backoff-laden) | **4.03** (wall 88.6 s) | — |
+| tree | "sensible section/subsection hierarchy" (raw storage never committed) | 18 nodes, depth 2, spans p1–22, summaries on all 18 (avg 506 chars) | wiki md_to_tree |
+
+### Measurement-integrity caveat on the z.ai figures
+
+The z.ai arm's `llm_calls: 1` is inconsistent with the same SDK 0.2.10
+code path measured here: `summarize_tree` issues one call per summary-
+eligible node (18 for this corpus — the structure pass is deterministic
+and LLM-free on both lanes), and no batching exists in the flash PDF
+path. One recorded call carrying 6,713 prompt tokens matches the
+callback-era under-capture this same document warns about above ("1 of
+~20 calls recorded"). The recorded 7,239 tokens (329 tok/page) is
+therefore very likely an **under-capture**, and the honest cross-lane
+token comparison is: prompts are byte-identical per node across lanes,
+so Gemini's 20.1k total is the expected order of the true z.ai toll;
+the z.ai per-call completion delta is unrecoverable from the stored
+record. Recorded as-is; not worked around.
+
+### Tree quality (Gemini arm)
+
+Top level mirrors the Disney earnings document: title/summary page →
+guidance+CEO commentary → summarized results → segment discussion (Star
+India / Entertainment / Sports / Experiences children) → other financial
+information (4 children) → income statement → balance sheets → DTC
+definitions → non-GAAP → forward-looking statements. All 18 nodes carry
+page spans covering p1–22 and a summary. This matches the recorded
+z.ai-run description qualitatively; a node-level lane diff is not
+possible because the z.ai raw tree was never committed (`.pageindex/`
+is gitignored) and the box was since pruned. The Gemini tree snapshot
+is committed at
+`outputs/smoke-gemini-q1fy25/tree_snapshot.json` so the claim is
+checkable this time.
+
+### Verdict
+
+The flash tree-gen lane is portable across the flash ladder: identical
+harness, identical deterministic structure, coherent tree on
+gemini-3.8-flash through the relay at ~20.1k tokens (≈914 tok/page,
+289 tok/summary) and 4.03 s/page — 11.7× faster wall than the z.ai
+arm's recorded run, though most of that gap is the z.ai lane's 429
+backoff ladder, not model speed. The z.ai token figures recorded in the
+HU-2723 section should be read as lower bounds (capture bug), not as a
+Gemini cost premium. Gemini lane egress requires the pat-w11pc relay
+(direct is geo-blocked); transport recipe recorded above.

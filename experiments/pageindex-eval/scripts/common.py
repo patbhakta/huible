@@ -151,11 +151,11 @@ def apply_zai_throttle(max_concurrency: int = 1, ledger: "UsageLedger | None" = 
     pu.llm_acompletion = throttled
 
 
-def new_client(storage_path: Path):
-    """Local-mode PageIndex client on the z.ai flash lane."""
+def new_client(storage_path: Path, index_model: str = FLASH_MODEL):
+    """Local-mode PageIndex client (default z.ai flash lane; HU-2726 passes the Gemini arm)."""
     from pageindex import PageIndexLocalClient
 
     return PageIndexLocalClient(
         storage_path=str(storage_path),
-        index_model=FLASH_MODEL,
+        index_model=index_model,
     )
