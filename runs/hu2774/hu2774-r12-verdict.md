@@ -153,8 +153,19 @@ involved; the zai lane is $0 incremental. The reset is automatic at 2026-09-13T0
 
 ## A5 — next
 
-- **r14 at ~10:05Z** (monitor armed on HU-2774): pre-check the 429 window is clear (one cheap
-  probe turn), launch `host_oneshot_r12.sh` with `R12_RUN_TAG=hu2774-r14` detached, gate →
-  verdict. If 6/6: founder card path via HU-2712. If not: failure analysis, next single
-  targeted lever, re-run in the following window.
+- **r14 armed autonomously**: transient `hu2774-r14-refire.timer` → **2026-09-13 10:05:00 UTC**
+  (4½ min after the 10:00:36Z window reset), service `RuntimeMaxSec=3h` (real limit — the
+  `=0` mistake that 3ms-killed the r12b unit is documented in A1), flock-guarded, run tag
+  `hu2774-r14`. **New preflight** (`scripts/personas_preflight_probe.py`, wired into
+  `host_oneshot_r12.sh`): one cheap real turn before slot 1; aborts the whole battery if the
+  429 wall is somehow still up — no slots burned into a closed window.
+- If a monitor wake lands instead/also: the flock guard makes double-arm a no-op; check
+  `R12_HOST_ONESHOT_DONE` (gate_rc=8 ⇒ preflight abort, 0 ⇒ all-pass battery, 1 ⇒ gate
+  failure with full per-slot evidence) and `runs/hu2774/r12_oneshot.log`.
+- Gate → verdict on HU-2774 + HU-2712. Bar unchanged: 6/6 → founder card path. If r14 fails
+  gate: failure analysis → ONE targeted lever → re-run in the next 5h window (~15:00Z).
+- Run 589e27a2 lost its control-plane writes mid-heartbeat (run JWT went 401 ~02:00Z, after
+  two posted comments landed: 29b470fa ack + r12/r13 verdict comment was rejected). The
+  committed verdict doc (this file, `dfa355f`+) plus the timer are the durable record;
+  the adapter's run-response channel relays the rest.
 

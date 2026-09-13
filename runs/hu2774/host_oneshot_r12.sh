@@ -41,6 +41,20 @@ export HU2774_ENGINE="http://127.0.0.1:8000"
 
   OVERALL_RC=0
   GATE_RC=9
+  # Preflight (r14 lesson 2026-09-13): zai enforces a provider-side rolling
+  # 5h window (HTTP 429 code 1308) the ledger doesn't see. One cheap real
+  # turn proves the lane serves before six slots commit. Abort-before-slot
+  # keeps the run dir clean of half-walled batteries.
+  echo "[r12-oneshot] task preflight-zai-window $(date -u +%FT%TZ)"
+  python3 scripts/personas_preflight_probe.py
+  PREFLIGHT_RC=$?
+  echo "[r12-oneshot] preflight rc=$PREFLIGHT_RC $(date -u +%FT%TZ)"
+  if (( PREFLIGHT_RC != 0 )); then
+    echo "[r12-oneshot] ABORT: zai window walled or engine down — no slots burned"
+    OVERALL_RC=8
+  fi
+
+  if (( OVERALL_RC == 0 )); then
   for slot in "${SLOTS[@]}"; do
     SCENARIO="${slot%%-*}"
     echo "[r12-oneshot] task reset-before-$slot $(date -u +%FT%TZ)"
@@ -67,6 +81,7 @@ export HU2774_ENGINE="http://127.0.0.1:8000"
     "$RUN_TAG-stranger-1" "$RUN_TAG-stranger-2" "$RUN_TAG-stranger-3" 2>&1
   GATE_RC=$?
   echo "[r12-oneshot] battery-gate rc=$GATE_RC (non-zero = gate FAILED: aggregate bar not met) $(date -u +%FT%TZ)"
+  fi
 
   echo "[r12-oneshot] done $(date -u +%FT%TZ)"
   printf '{"fired_at": "%s", "finished_at": "%s", "gate_rc": %d}\n' \
