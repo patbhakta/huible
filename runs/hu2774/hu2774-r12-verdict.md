@@ -176,3 +176,65 @@ involved; the zai lane is $0 incremental. The reset is automatic at 2026-09-13T0
   5/6 + provider-429 infra abort); monitor re-armed on HU-2837 (nextCheckAt 10:45Z,
   timeout 14:30Z, maxAttempts 3) for the r14 read.
 
+
+---
+
+# Addendum (2026-09-13 ~11:00Z) — r14 read (dynamics v5, real voice): gate 3/6 FAIL
+
+Read by Huible Tech Lead from `runs/hu2774/r12_oneshot.log` lines 989–1370
+(preflight 10:05:02Z rc=0 — zai 5h window open; battery 10:05→10:20:48Z;
+`R12_HOST_ONESHOT_DONE` gate_rc=1). **Zero fake-voice markers in all 6 slots**
+(every sampled turn `zai`) — first fully-real battery since r11.
+
+## r14 per-slot
+
+| slot | qrate (band .20–.45) | echo (floor .23) | failed |
+|---|---|---|---|
+| friends-1 | 0.304 ✓ agg, but Chandler 0.083 vs Monica 0.545 | 0.348 ✓ | engagement (per-persona imbalance), no_ai_tells |
+| friends-2 | 0.28 ✓ | 0.20 ✗ | identity (recognition miss), grounded_wit, no_ai_tells |
+| friends-3 | 0.36 ✓ | 0.36 ✓ | — PASS |
+| stranger-1 | 0.52 ✗ (Chandler 0.692) | 0.08 ✗ | engagement, grounded_wit |
+| stranger-2 | 0.40 ✓ | 0.24 ✓ | — PASS |
+| stranger-3 | 0.32 ✓ | 0.24 ✓ | — PASS |
+
+**BATTERY: FAIL 3/6 (bar 6/6)** — up from r13's 1/6.
+
+## Root cause of the round's decisive failure — crisis classifier banter false-positive
+
+friends-1 t22: in a joking thread ("All crying must now be done on the
+balcony", "sobbing over staplers"), the bare `\b(crying|sobbing)\b` distress
+pattern graded two consecutive user turns DISTRESS → `distress_trend_rising`
+(≥2 in last-3 window, app.py:3506) → warm escalation **replaced Chandler's
+reply with platform self-harm text** ("You don't have to carry this alone…").
+One mis-fire ⇒ no_ai_tells violation AND Chandler's question starvation
+(1 question / 12 lines ⇒ per-persona engagement imbalance). This is the r11
+crisis "alone" cascade class — the earlier narrowing fixed "broken"/"lost"
+but left "crying|sobbing" unanchored.
+
+## ONE lever applied (r15): crisis.py crying/sobbing narrowing
+
+- `src/huible/safety/crisis.py` (commit `f737501`): keep "can't stop crying" +
+  first-person progressive shapes ("I'm/we were crying|sobbing"); objectified
+  "crying|sobbing over X" and impersonal gerund uses no longer grade DISTRESS.
+- Verified: banter lines clean, all existing test distress shapes still caught;
+  tests/safety 389 passed (1 pre-existing fastembed env skip-class failure);
+  image rebuilt + app restarted 10:5xZ, fix grep-verified in-container, /health 200.
+
+## Remaining failure classes (deliberately NOT actioned this round — one-lever rule)
+
+- friends-2: turn-1 recognition miss (1/6, v3-era fix flaked) + echo 0.20
+  near-miss + 2 sitcom-meta collocation tells ("game show" joke, in-world
+  "that show" re Joey's job — checker doctrine debate, not actioned).
+- stranger-1: aggregate qrate 0.52 over top (Chandler 0.692 hogging) +
+  echo 0.08 (v4 positional opener not adopted that slot).
+
+## Next
+
+- **r15 armed**: transient `hu2774-r15-refire.timer` → **15:05:00 UTC**
+  (right after the ~15:00Z window reset), `RuntimeMaxSec=3h`,
+  `KillMode=control-group`, flock-guarded, run tag `hu2774-r15`, preflight
+  aborts (rc=8, no slots burned) if the window is still closed.
+- Monitor on HU-2837 re-armed for the r15 read (~15:35Z).
+- Bar unchanged: 6/6 → founder card path. HU-2712 verdict only lands on a
+  pass; r15 failure ⇒ next single lever (identity recognition or echo, TBD
+  by r15's evidence).
