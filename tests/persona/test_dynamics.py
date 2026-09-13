@@ -417,3 +417,32 @@ def test_banned_vocab_aligned_with_gate_battery():
 def test_cap_constant_matches_gate_band_top():
     gate = _load_gate()
     assert pytest.approx(gate.QUESTION_BAND[1]) == QUESTION_RATE_CAP
+
+
+def test_gate_echo_scores_lag1_against_own_inbound():
+    """r16 root-cause pin (2026-09-13): grounded_wit scores each line against
+    the content words of ITS OWN inbound (lag-1, the hu2773 study's metric),
+    not against the previous line's inbound (the old chained walk's lag-2)."""
+    gate = _load_gate()
+    transcript = [
+        # hooks its inbound ("staplers")
+        {"turn": 0, "speaker": gate.CHANDLER_ID, "speaker_name": "chandler",
+         "kind": "talk", "text": "wow, the staplers",
+         "inbound": "the staplers are sobbing"},
+        # does NOT hook its inbound ("wow, staplers")
+        {"turn": 1, "speaker": gate.MONICA_ID, "speaker_name": "monica",
+         "kind": "talk", "text": "totally unrelated words here",
+         "inbound": "wow, staplers"},
+        # hooks its inbound ("unrelated") — the old lag-2 walk missed this one
+        {"turn": 2, "speaker": gate.CHANDLER_ID, "speaker_name": "chandler",
+         "kind": "talk", "text": "sure, unrelated",
+         "inbound": "totally unrelated words here"},
+        {"turn": 3, "speaker": gate.MONICA_ID, "speaker_name": "monica",
+         "kind": "talk", "text": "random as ever, pal",
+         "inbound": "sure, unrelated"},
+    ]
+    verdict = gate.eval_transcript(
+        transcript, opener="the staplers are sobbing", scenario="stranger", s2=None
+    )
+    gw = verdict["criteria"]["grounded_wit"]
+    assert gw["echo_rate"] == pytest.approx(0.5)  # lines 0 and 2 hook

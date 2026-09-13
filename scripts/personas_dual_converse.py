@@ -538,15 +538,22 @@ def eval_transcript(transcript, opener, scenario="stranger", s2=None):
     # 3. grounded wit: echo of previous turn's content words — pass floor is
     # the corpus echo rate itself (CEO bar raise: "at or above the 23
     # percent corpus echo rate, measured not vibes").
+    # r16 root-cause fix (2026-09-13): the walk below scores LAG-1 — each
+    # line is compared against the content words of ITS OWN inbound (the
+    # message it replies to), matching the hu2773 dialog study that
+    # calibrated the 0.23 corpus rate (pipeline/hu2773_dialog_study.py [4]:
+    # "lines echo a content word from the previous turn"). The shipped walk
+    # chained ``prev`` from the PREVIOUS line's inbound, which accidentally
+    # scored each line against the speaker's own previous line (lag-2,
+    # self-continuity) — off-by-one vs both the docstring and the study.
     echoes = 0
     links = 0
-    prev = content_words(transcript[0]["inbound"])
     for t in transcript:
+        prev = content_words(t["inbound"])
         cur = content_words(t["text"])
         if prev and cur & prev:
             echoes += 1
         links += 1
-        prev = content_words(t["inbound"])
     echo_rate = echoes / links
     checks["grounded_wit"] = {"pass": echo_rate >= ECHO_FLOOR,
                               "echo_rate": round(echo_rate, 3),

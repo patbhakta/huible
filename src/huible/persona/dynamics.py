@@ -408,7 +408,10 @@ async def apply_dynamics_enforcement(
     residual: list[str] = []
     if _deficit(text):
         residual.append("question_deficit")
-    if _cap_hit(text):
+    # Cap residual only when THIS text still carries a question — a
+    # "?"-free reply over a historically over-cap window is already
+    # compliant (nothing left to remove); reporting it would be noise.
+    if _cap_hit(text) and _has_question(text):
         residual.append("question_cap")
     if _echo_missed(text):
         residual.append("echo_miss")
