@@ -201,7 +201,11 @@ from huible.persona.context import (
     RelationshipTier,
     identity_exchange_triggered,
 )
-from huible.persona.dynamics import DynamicsReport, apply_dynamics_enforcement
+from huible.persona.dynamics import (
+    DynamicsReport,
+    apply_dynamics_enforcement,
+    persona_name_tells,
+)
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.persona.length import reply_budget_tokens, stats_from_metadata
 from huible.persona.realworld import (
@@ -1922,8 +1926,10 @@ def _register_routes(application: FastAPI) -> None:
                 # strip could delete the one empathic sentence and the
                 # demanding question tail reads as tone-deaf — the enforcer
                 # suppresses the destructive fallbacks there (same branch
-                # signal G3 keys on).
+                # signal G3 keys on). Name tells (r17): the famous surname
+                # never appears in the persona's own voice.
                 distress=(effective_affect == UserAffect.DISTRESS),
+                name_tells=persona_name_tells(binding.persona.name),
             )
             response_text = dynamics_report.text
             if dynamics_report.regenerated:

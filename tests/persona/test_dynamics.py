@@ -310,6 +310,90 @@ async def test_distress_deficit_appends_gentle_tail():
     assert report.residual == []
 
 
+# --- self-name tells (r17 finding) -------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_surname_self_reference_dropped_in_place():
+    """r17 friends-2 leak: 'chandler bing does not negotiate...' — the
+    fullname collapses to the first name, both name-tell tags fire, nothing
+    residual."""
+    from huible.persona.dynamics import persona_name_tells
+
+    history = [
+        ConversationTurn(speaker="user", content="staplers everywhere, help"),
+        ConversationTurn(speaker="persona", content="staplers, sure, what next?"),
+    ]
+
+    async def parrot(_addendum):
+        return "chandler bing does not negotiate with terrorist laundry. but fine."
+
+    report = await apply_dynamics_enforcement(
+        "chandler bing does not negotiate with terrorist laundry. but fine.",
+        "staplers everywhere, help",
+        history,
+        regenerate=parrot,
+        seed="c10",
+        name_tells=persona_name_tells("Chandler"),
+    )
+    assert "self-fullname" in report.fired and "self-surname" in report.fired
+    assert "mutate:drop_surname" in report.actions
+    assert report.text == "chandler does not negotiate with terrorist laundry. but fine."
+    assert report.residual == []
+
+
+@pytest.mark.asyncio
+async def test_bare_surname_sentence_stripped_and_elicited_exempt():
+    from huible.persona.dynamics import persona_name_tells
+
+    history = [
+        ConversationTurn(speaker="user", content="m1"),
+        ConversationTurn(speaker="persona", content="sure, what next?"),
+    ]
+
+    async def parrot(_addendum):
+        return "the geller pride is on the line. we ordered the good napkins."
+
+    report = await apply_dynamics_enforcement(
+        "the geller pride is on the line. we ordered the good napkins.",
+        "staplers everywhere, help",
+        history,
+        regenerate=parrot,
+        seed="c11",
+        name_tells=persona_name_tells("Monica"),
+    )
+    assert "self-surname" in report.fired
+    assert "mutate:strip_surname" in report.actions
+    assert "geller" not in report.text.casefold()
+    assert report.residual == []
+
+    # identity-elicited turn: the gate exempts self-name replies there.
+    async def name_reply(_addendum):
+        return "monica geller, at your service."
+
+    elicited = await apply_dynamics_enforcement(
+        "monica geller, at your service.",
+        "hi, whats your name?",
+        history,
+        regenerate=name_reply,
+        seed="c12",
+        name_tells=persona_name_tells("Monica"),
+    )
+    assert "self-fullname" not in elicited.fired and "self-surname" not in elicited.fired
+    assert "mutate:drop_surname" not in elicited.actions
+    # the echo rule is independent of name tells and may still prepend its
+    # hook — the name itself must survive verbatim.
+    assert elicited.text.endswith("monica geller, at your service.")
+    assert elicited.residual == []
+
+
+def test_persona_name_tells_unknown_persona_empty():
+    from huible.persona.dynamics import persona_name_tells
+
+    assert persona_name_tells("Ross") == ()
+    assert persona_name_tells(None) == ()
+
+
 # --- band invariant (the r16 predictor) --------------------------------------
 
 

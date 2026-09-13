@@ -227,17 +227,70 @@ def _append_question(
     return f"{body} {tail}" if body else tail
 
 
-def _strip_tell_sentences(text: str, inbound: str) -> str:
-    """Remove sentences carrying a banned-vocab hit; keep at least one."""
-    hits = _vocab_hits(text, inbound)
-    if not hits:
+#: HU-2774 r17 finding (2026-09-13): self-name tells — the gate's
+#: SURNAME_TELLS / FULLNAME_TELLS classes. The famous surname must never
+#: appear in the persona's own voice (founder directive: no model priors).
+#: The battery scores it on every friends turn and stranger turn 0, but prod
+#: has no scenario exemption — enforced on every turn, with the gate's
+#: identity-elicitation exemption (a reply to "what's your name" is
+#: evidence-legal; the cold-open first-name guard handles that upstream).
+_ELICITATION_RE = re.compile(
+    r"\b(what'?s your name|who are you|what model|which model|are you an? "
+    r"ai|are you a (?:bot|robot|chatbot|computer)|did a company write|"
+    r"are you real)\b"
+)
+
+#: Canonical persona → famous surname (corpus-specific, case-insensitive).
+_SURNAME_BY_PERSONA = {"chandler": "bing", "monica": "geller"}
+
+
+def persona_name_tells(persona_name: str | None) -> tuple[tuple[str, str], ...]:
+    """Per-persona self-name tell patterns for ``apply_dynamics_enforcement``.
+
+    ``(fullname, surname)`` regexes for the known battery personas; empty for
+    any other persona (no famous-surname doctrine applies).
+    """
+    first = (persona_name or "").strip().split()
+    if not first:
+        return ()
+    surname = _SURNAME_BY_PERSONA.get(first[0].casefold())
+    if not surname:
+        return ()
+    low = first[0].casefold()
+    return (
+        (rf"\b{low} {surname}\b", "self-fullname"),
+        (rf"\b{surname}\b", "self-surname"),
+    )
+
+
+def _name_tell_hits(
+    text: str, name_tells: Sequence[tuple[str, str]]
+) -> list[tuple[str, str]]:
+    low = (text or "").casefold()
+    hits: list[tuple[str, str]] = []
+    for pat, tag in name_tells:
+        for m in re.finditer(pat, low):
+            hits.append((tag, m.group(0)))
+    return hits
+
+
+def _strip_sentences_with_spans(text: str, spans: set[str]) -> str:
+    """Remove sentences carrying any of ``spans``; keep at least one."""
+    if not spans:
         return text
-    spans = {span.casefold() for _, span in hits}
     sentences = re.split(r"(?<=[.!?])\s+", (text or "").strip())
     kept = [s for s in sentences if not any(sp in s.casefold() for sp in spans)]
     if not kept:
         return text
     return " ".join(kept)
+
+
+def _strip_tell_sentences(text: str, inbound: str) -> str:
+    """Remove sentences carrying a banned-vocab hit; keep at least one."""
+    hits = _vocab_hits(text, inbound)
+    if not hits:
+        return text
+    return _strip_sentences_with_spans(text, {span.casefold() for _, span in hits})
 
 
 def _prev_pair(history: Sequence[object]) -> tuple[str, str] | None:
@@ -260,6 +313,7 @@ async def apply_dynamics_enforcement(
     user_name: str | None = None,
     seed: str = "",
     distress: bool = False,
+    name_tells: Sequence[tuple[str, str]] = (),
 ) -> DynamicsReport:
     """Enforce the question / echo / vocabulary rules on one persona turn.
 
@@ -317,6 +371,11 @@ async def apply_dynamics_enforcement(
     # can live inside a stripped tell sentence), so conditions are closures
     # over the CURRENT text and the pass below re-checks after every mutation.
 
+    def _name_hits_now(t: str) -> list[tuple[str, str]]:
+        if _ELICITATION_RE.search((inbound or "").casefold()):
+            return []
+        return _name_tell_hits(t, name_tells)
+
     if _deficit(text):
         fired.append("question_deficit")
     if _cap_hit(text):
@@ -325,6 +384,10 @@ async def apply_dynamics_enforcement(
         fired.append("echo_miss")
     hits = _vocab_hits(text, inbound)
     for tag, _span in hits:
+        if tag not in fired:
+            fired.append(tag)
+    name_hits = _name_hits_now(text)
+    for tag, _span in name_hits:
         if tag not in fired:
             fired.append(tag)
 
@@ -351,6 +414,13 @@ async def apply_dynamics_enforcement(
             "These words are not in your vocabulary — rewrite those phrases "
             "with everyday wording, same meaning and length: "
             + ", ".join(f'"{b}"' for b in banned)
+            + "."
+        )
+    if name_hits:
+        directives.append(
+            "Never use your own surname or family name — first name only. "
+            "Rewrite around these phrases: "
+            + ", ".join(f'"{sp}"' for sp in sorted({s for _, s in name_hits})[:4])
             + "."
         )
     addendum = "Mechanical rewrite rules for THIS reply only:\n" + "\n".join(
@@ -380,6 +450,32 @@ async def apply_dynamics_enforcement(
             # else: single-sentence tell — stripping would empty the reply,
             # so the text is kept (HU-2850 condition 1): no mutation action
             # is recorded; the residual scan below surfaces the violation.
+        nhits = _name_hits_now(text)
+        if nhits:
+            # Fullname self-reference → drop the surname token in place
+            # ("chandler bing" → "chandler", original case kept).
+            new_text = text
+            for pat, tg in name_tells:
+                if tg == "self-fullname":
+                    new_text = re.sub(
+                        pat, lambda m: m.group(0).split()[0], new_text,
+                        flags=re.IGNORECASE,
+                    )
+            if new_text != text:
+                text = new_text
+                if "mutate:drop_surname" not in actions:
+                    actions.append("mutate:drop_surname")
+                changed = True
+                nhits = _name_hits_now(text)
+            # Residual bare surname → strip its sentence (≥1 sentence kept).
+            sent_spans = {sp.casefold() for _, sp in nhits}
+            if sent_spans:
+                stripped = _strip_sentences_with_spans(text, sent_spans)
+                if stripped != text:
+                    text = stripped
+                    if "mutate:strip_surname" not in actions:
+                        actions.append("mutate:strip_surname")
+                    changed = True
         if _cap_hit(text) and _has_question(text):
             text = _strip_questions(text)
             if "mutate:strip_questions" not in actions:
@@ -416,6 +512,9 @@ async def apply_dynamics_enforcement(
     if _echo_missed(text):
         residual.append("echo_miss")
     for tag, _span in _vocab_hits(text, inbound):
+        if tag not in residual:
+            residual.append(tag)
+    for tag, _span in _name_hits_now(text):
         if tag not in residual:
             residual.append(tag)
 
