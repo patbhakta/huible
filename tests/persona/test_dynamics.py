@@ -431,7 +431,7 @@ async def test_cadence_enforced_even_when_elicited():
 
     report = await apply_dynamics_enforcement(
         "could i be any more ready? sure.",
-        "who are you again?",
+        "who are you? and what about those staplers",
         history,
         regenerate=parrot,
         seed="c17",
