@@ -394,6 +394,46 @@ def test_persona_name_tells_unknown_persona_empty():
     assert persona_name_tells(None) == ()
 
 
+@pytest.mark.asyncio
+async def test_turn0_greet_prepended_for_known_interlocutor():
+    """r18 friends-2 finding: the first persona reply to a known
+    interlocutor must address them by name — mechanically guaranteed."""
+    async def cold_regen(_addendum):
+        return "can't complain, how's the crazy house?"
+
+    report = await apply_dynamics_enforcement(
+        "can't complain, how's the crazy house?",
+        "hey, how's your week been?",
+        [],
+        regenerate=cold_regen,
+        user_name="Monica",
+        seed="c13",
+    )
+    assert "greet_miss" in report.fired
+    assert "mutate:prepend_greet" in report.actions
+    assert report.text.startswith("Monica, ")
+    assert report.residual == []
+
+
+@pytest.mark.asyncio
+async def test_turn0_greet_not_fired_for_stranger_or_later_turns():
+    async def plain_regen(_addendum):
+        return "can't complain, you?"
+
+    # stranger cold open: no user_name -> HU-2732 guard territory, not ours.
+    r1 = await apply_dynamics_enforcement(
+        "can't complain, you?", "hey", [], regenerate=plain_regen,
+        user_name=None, seed="c14",
+    )
+    assert "greet_miss" not in r1.fired and "mutate:prepend_greet" not in r1.actions
+    # nickname counts as recognition (gate tolerance: monica|mon).
+    r2 = await apply_dynamics_enforcement(
+        "hey Mon, can't complain, you?", "hey", [], regenerate=plain_regen,
+        user_name="Monica", seed="c15",
+    )
+    assert "greet_miss" not in r2.fired
+
+
 # --- band invariant (the r16 predictor) --------------------------------------
 
 

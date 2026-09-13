@@ -367,6 +367,21 @@ async def apply_dynamics_enforcement(
     def _echo_missed(t: str) -> bool:
         return prev_missed and not (content_words(t) & content_words(inbound))
 
+    def _greet_missed(t: str) -> bool:
+        # r18 friends-2 finding: the friends-recognition criterion needs the
+        # first persona reply to address the (known) interlocutor by name;
+        # prompt-side greeting is stochastic. Only applies on turn 0 with a
+        # known user_name — stranger cold opens (user_name None) are handled
+        # by the HU-2732 identity guard upstream.
+        if user_name is None or n != 0:
+            return False
+        first = user_name.split()[0]
+        nick = first[:3]
+        return (
+            re.search(rf"\b({re.escape(first)}|{re.escape(nick)})\b", t, re.IGNORECASE)
+            is None
+        )
+
     # Rule state may change as fallbacks mutate the text (e.g. the only "?"
     # can live inside a stripped tell sentence), so conditions are closures
     # over the CURRENT text and the pass below re-checks after every mutation.
@@ -390,6 +405,8 @@ async def apply_dynamics_enforcement(
     for tag, _span in name_hits:
         if tag not in fired:
             fired.append(tag)
+    if _greet_missed(text):
+        fired.append("greet_miss")
 
     if not fired:
         return DynamicsReport(text=text, original=draft)
@@ -422,6 +439,10 @@ async def apply_dynamics_enforcement(
             "Rewrite around these phrases: "
             + ", ".join(f'"{sp}"' for sp in sorted({s for _, s in name_hits})[:4])
             + "."
+        )
+    if _greet_missed(text):
+        directives.append(
+            f"Open this reply by greeting {user_name.split()[0]} by name."
         )
     addendum = "Mechanical rewrite rules for THIS reply only:\n" + "\n".join(
         f"- {d}" for d in directives
@@ -497,6 +518,13 @@ async def apply_dynamics_enforcement(
                 changed = True
         if not changed:
             break
+
+    # Turn-0 name greet is mechanical and applied last (a prepended name
+    # cannot un-fix any other rule; the deficit/echo mutations shape the
+    # reply first, then the greet wraps it).
+    if _greet_missed(text):
+        text = f"{user_name.split()[0]}, {text}"
+        actions.append("mutate:prepend_greet")
 
     # HU-2850 condition 1: the report must tell the truth about the final
     # text — any fired rule still violated after the regen + fallbacks is
