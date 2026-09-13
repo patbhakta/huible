@@ -830,6 +830,48 @@ class ChatTrace(BaseModel):
             "baseline."
         ),
     )
+    dynamics: DynamicsView | None = Field(
+        default=None,
+        description=(
+            "Conversation-dynamics enforcement report (HU-2774 board decision "
+            "2026-09-13). Non-null on turns where the enforcer ran (flag "
+            "DYNAMICS_ENFORCER_ENABLED on, persona-voiced turn); null "
+            "elsewhere. Carries the rule tags detected on the draft, the "
+            "actions that touched the text (one directive-bounded "
+            "regeneration plus deterministic fallback mutations), so every "
+            "mutation of a persona reply is auditable — decision condition "
+            "(2) safety review and condition (3) naturalness fallback both "
+            "read this surface."
+        ),
+    )
+
+
+class DynamicsView(BaseModel):
+    """Per-turn dynamics-enforcement report (HU-2774, 2026-09-13)."""
+
+    fired: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Rule tags detected on the generated draft before enforcement: "
+            "question_deficit, question_cap, echo_miss, plus the banned-"
+            "vocabulary tags (sitcom-meta, bot-speak, ...)."
+        ),
+    )
+    actions: list[str] = Field(
+        default_factory=list,
+        description=(
+            "What actually touched the text, in order: 'regen' (one "
+            "directive-bounded regeneration), 'regen_failed', and the "
+            "deterministic fallback mutations "
+            "('mutate:strip_questions', 'mutate:append_question', "
+            "'mutate:prepend_echo', 'mutate:strip_tells'). Empty = the "
+            "reply showed verbatim."
+        ),
+    )
+    regenerated: bool = Field(
+        default=False,
+        description="True when the regeneration ran this turn.",
+    )
 
 
 class PersonaChatResponse(BaseModel):

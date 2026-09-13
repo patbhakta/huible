@@ -149,6 +149,7 @@ from huible.api.schemas import (
     ConsentAcknowledgeResponse,
     ConsentCardView,
     DataEnvelope,
+    DynamicsView,
     ExcludedMemoryRefView,
     HandoffQueueItemView,
     HandoffResolveRequest,
@@ -163,9 +164,9 @@ from huible.api.schemas import (
     RiskEnforcementView,
     RiskIntakeAssessmentRequest,
     RiskIntakeData,
-    ScopedVaultReadView,
     RiskIntakeResponse,
     SafetyEventView,
+    ScopedVaultReadView,
     SessionMetaView,
     UsageDailyRowView,
     WorkingMemoryView,
@@ -200,6 +201,7 @@ from huible.persona.context import (
     RelationshipTier,
     identity_exchange_triggered,
 )
+from huible.persona.dynamics import DynamicsReport, apply_dynamics_enforcement
 from huible.persona.generator import PersonaGeneratorClient, make_generator_client
 from huible.persona.length import reply_budget_tokens, stats_from_metadata
 from huible.persona.realworld import (
@@ -1885,6 +1887,35 @@ def _register_routes(application: FastAPI) -> None:
                 },
             ) from exc
 
+        # HU-2774 conversation-dynamics enforcement (board decision
+        # 2026-09-13): deterministic post-generation pass over the draft —
+        # question-rhythm band, echo grounding, banned meta vocabulary —
+        # with at most ONE directive-bounded regeneration plus mechanical
+        # fallback mutations. Runs before metering (the served turn is what
+        # is metered) and before the safety guards (they always see the
+        # final text). Skipped on budget-fallback turns: the fake voice is
+        # deterministic text, never persona output worth enforcing.
+        dynamics_report: DynamicsReport | None = None
+        if settings.dynamics_enforcer_enabled and not budget_fallback:
+
+            async def _dynamics_regen(addendum: str) -> str:
+                return await llm.generate(
+                    prompt,
+                    system_prompt=system_prompt + "\n\n" + addendum,
+                    conversation_id=body.conversation_id,
+                    max_tokens=_reply_budget,
+                )
+
+            dynamics_report = await apply_dynamics_enforcement(
+                response_text,
+                body.message,
+                _history(application, body.conversation_id),
+                regenerate=_dynamics_regen,
+                user_name=body.requester_user_name(),
+                seed=str(body.conversation_id),
+            )
+            response_text = dynamics_report.text
+
         # HU-2243 Sprint 1: meter the LLM turn — one usage row per generate
         # call (requests, tokens in/out, latency, modeled cost) keyed on the
         # caller's API key + persona + conversation. The budget-fallback
@@ -2103,6 +2134,7 @@ def _register_routes(application: FastAPI) -> None:
             # M1.4 (HU-2732): scoped-lane evidence on the telemetry line —
             # lane:lines prove the scoped vault read reached this turn.
             scoped=ctx.scoped_reads_fired or None,
+            dynamics=dynamics_report,
         )
 
         # §3 Sev-1 (C) — consent-bypass defensive check (HU-1451 trigger #4).
@@ -2173,6 +2205,15 @@ def _register_routes(application: FastAPI) -> None:
                         markers=list(capability.fired_markers),
                     )
                     if ctx.competence_wall_fired
+                    else None
+                ),
+                dynamics=(
+                    DynamicsView(
+                        fired=list(dynamics_report.fired),
+                        actions=list(dynamics_report.actions),
+                        regenerated=dynamics_report.regenerated,
+                    )
+                    if dynamics_report is not None
                     else None
                 ),
                 interest_tool=(
@@ -3428,6 +3469,7 @@ def _log_chat_trace(
     wm_synced: bool | None = None,
     scoped: dict[str, int] | None = None,
     writeback: bool | None = None,
+    dynamics: DynamicsReport | None = None,
 ) -> None:
     """Emit one ``chat.trace`` stdout line per chat turn (HU-1442).
 
@@ -3476,9 +3518,20 @@ def _log_chat_trace(
     wb_field = (
         "-" if writeback is None else ("stored" if writeback else "skipped")
     )
+    # HU-2774 dynamics enforcer footprint: fired>actions when the enforcer
+    # ran, "-" when disabled/skipped, "clean" when it ran and nothing fired.
+    if dynamics is None:
+        dyn_field = "-"
+    elif not dynamics.fired:
+        dyn_field = "clean"
+    else:
+        dyn_field = (
+            f"{'+'.join(dynamics.fired)}>"
+            f"{'+'.join(dynamics.actions) or 'verbatim'}"
+        )
     logger.info(
         "chat.trace session=%s action=%s fired_flags=%s ungrounded=%s "
-        "disposition=%s turn_count=%s trace_id=%s wm=%s scoped=%s wb=%s",
+        "disposition=%s turn_count=%s trace_id=%s wm=%s scoped=%s wb=%s dyn=%s",
         conversation_id or "-",
         action,
         flags,
@@ -3489,6 +3542,7 @@ def _log_chat_trace(
         wm_field,
         scoped_field,
         wb_field,
+        dyn_field,
     )
 
 

@@ -252,6 +252,18 @@ class Settings(BaseSettings):
     current_events_tool_enabled: bool = True
     scoped_vault_reads_enabled: bool = True
 
+    # ── HU-2774 conversation-dynamics enforcement (board decision
+    # 2026-09-13, interaction 5755b7e5) ─────────────────────────────────────
+    # Deterministic post-generation enforcement of the measured dynamics
+    # gates (question rhythm band, echo grounding floor, banned meta
+    # vocabulary): one directive-bounded regeneration plus mechanical
+    # fallback mutations (huible.persona.dynamics). Default OFF because the
+    # enforcement MUTATES generated reply text on the chat path — enabling
+    # is gated on the decision's condition (2), a safety review of the text
+    # mutation; condition (3) (naturalness regression) is the documented
+    # fallback to multi_trial, and the founder can reverse by comment.
+    dynamics_enforcer_enabled: bool = False
+
     # ── HU-2828 real-world search tool (CURRENT-REALITY lane) ──────────────
     # Lane-routed external lookups through self-hosted SearXNG's JSON API
     # (founder decision 2026-09-11 — no new vendor; the endpoint is the only
