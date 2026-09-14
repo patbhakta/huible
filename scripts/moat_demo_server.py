@@ -50,7 +50,17 @@ BIND = os.environ.get("HUIBLE_MOAT_BIND", "100.101.235.117")
 ACCESS_TOKEN = os.environ.get("HUIBLE_DEMO_TOKEN", "huible-preview")
 
 CHANDLER_KEY = os.environ.get("HUIBLE_DEMO_KEY", "")
-PERSONA_ID = "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894"
+PERSONA_ID = os.environ.get("HUIBLE_DEMO_PERSONA", "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894")
+PERSONA_CHOICES = {
+    "chandler": "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894",
+    "monica": "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea",
+}
+# Persona-scoped API keys (same table the .env API_KEYS uses): the demo
+# gateway signs each turn with the key scoped to the active persona.
+PERSONA_KEYS = {
+    "fdc3a44b-4c0f-565d-b671-4ed0e3bc7894": os.environ.get("HUIBLE_DEMO_KEY", ""),
+    "3ef60bec-79d2-5e31-8d9e-e856bb1ebfea": os.environ.get("HUIBLE_DEMO_KEY_MONICA", ""),
+}
 PERSONA_NAME = "Chandler"
 
 # Working-memory gateway (read-only /recall probes for the store inspector).
@@ -58,9 +68,24 @@ WM_GATEWAY = os.environ.get("HUIBLE_WM_GATEWAY", "http://127.0.0.1:8420")
 WM_SERVICE_ID = os.environ.get("HUIBLE_WM_SERVICE_ID", "huible-chandler")
 
 
-def session_key_for(conversation_id: str) -> str:
+def persona_id_for(query: str = "") -> str:
+    """Per-request persona: ?p=monica|chandler overrides the env default."""
+    import urllib.parse as _up
+    q = _up.parse_qs(query.lstrip("?"))
+    choice = (q.get("p") or [""])[0].lower()
+    return PERSONA_CHOICES.get(choice, PERSONA_ID)
+
+
+def persona_label(pid: str) -> str:
+    for label, uuid in PERSONA_CHOICES.items():
+        if uuid == pid:
+            return label.title()
+    return pid[:8]
+
+
+def session_key_for(conversation_id: str, pid: str = "") -> str:
     """The engine's exact working-memory session key for this conversation."""
-    return f"huible-p{PERSONA_ID}-c{conversation_id}"
+    return f"huible-p{pid or PERSONA_ID}-c{conversation_id}"
 
 
 def api_call(method, path, body=None, key=CHANDLER_KEY, timeout=120, internal=True):
@@ -350,7 +375,7 @@ function xrayCard(userText, reply, trace, opts) {
 async function refreshStore(query) {
   if (!CONV) return;
   const r = await api('GET', '/demo/store?conversation_id=' + encodeURIComponent(CONV) +
-    '&q=' + encodeURIComponent(query || 'session digest'));
+    '&p=' + PERSONA + '&q=' + encodeURIComponent(query || 'session digest'));
   const el = document.getElementById('store-card');
   if (r.status !== 200) {
     el.innerHTML = '<span class="bad">gateway probe failed: ' + esc(JSON.stringify(r.data).slice(0, 140)) + '</span>';
@@ -392,11 +417,11 @@ async function boot() {
   else { CONV = saved; }
   renderSession();
   // First turn without consent -> the real 409 card (the real G6 gate firing)
-  const first = await api('POST', '/demo/turn', { message: 'Hey Chandler, you there?', conversation_id: CONV });
+  const first = await api('POST', '/demo/turn', { message: 'Hey, you there?', conversation_id: CONV, persona: PERSONA });
   if (first.status === 409 && first.data.consent_card) {
     renderConsent(first.data.consent_card);
   } else if (first.status === 200) {
-    onReply('Hey Chandler, you there?', first.data);
+    onReply('Hey, you there?', first.data);
   } else {
     addMsg('err', 'First-turn response ' + first.status + ': ' + JSON.stringify(first.data).slice(0, 160));
   }
@@ -614,8 +639,10 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html") and ACCESS_TOKEN not in self.path:
             return self._send(401, "token required: append ?t=" + ACCESS_TOKEN, "text/plain")
         if path in ("/", "/index.html"):
-            html = PAGE.replace("__PERSONA_ID__", PERSONA_ID).replace(
-                "__PERSONA_NAME__", PERSONA_NAME
+            pid = persona_id_for(self.path)
+            pname = persona_label(pid)
+            html = PAGE.replace("__PERSONA_ID__", pid).replace(
+                "__PERSONA_NAME__", pname
             )
             self._send(200, html, "text/html; charset=utf-8")
         elif path == "/demo/health":
@@ -636,12 +663,13 @@ class Handler(BaseHTTPRequestHandler):
                 q = unquote_plus(self.path.split("q=")[-1].split("&")[0])
             if not conv:
                 return self._send(400, {"error": "conversation_id required"})
-            d = gateway_recall(session_key_for(conv), q)
+            pid = persona_id_for(self.path)
+            d = gateway_recall(session_key_for(conv, pid), q)
             ctx = d.get("prepend_context") or ""
             self._send(
                 200,
                 {
-                    "session_key": session_key_for(conv),
+                    "session_key": session_key_for(conv, persona_id_for(self.path)),
                     "strategy": d.get("strategy"),
                     "digest_settled": d.get("digest_settled"),
                     "gist_blocks": d.get("gist_blocks"),
@@ -681,7 +709,11 @@ class Handler(BaseHTTPRequestHandler):
             # explicitly turned the lane off; omit otherwise (engine default).
             if payload.get("working_memory_enabled") is False:
                 chat_body["working_memory_enabled"] = False
-            st, body = api_call("POST", f"/chat/{PERSONA_ID}", chat_body)
+            turn_pid = persona_id_for("p=" + str(payload.get("persona") or ""))
+            st, body = api_call(
+                "POST", f"/chat/{turn_pid}", chat_body,
+                key=PERSONA_KEYS.get(turn_pid) or CHANDLER_KEY,
+            )
             if st in (200, 409, 429):
                 if st == 409:
                     card, detail = {}, ""
@@ -696,7 +728,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(st if st else 502, body)
         elif self.path == "/demo/consent":
             conv = payload.get("conversation_id") or ""
-            st, body = api_call("POST", f"/chat/{PERSONA_ID}/consent", {"conversation_id": conv})
+            consent_pid = persona_id_for("p=" + str(payload.get("persona") or ""))
+            st, body = api_call(
+                "POST", f"/chat/{consent_pid}/consent", {"conversation_id": conv},
+                key=PERSONA_KEYS.get(consent_pid) or CHANDLER_KEY,
+            )
             self._send(st, body)
         else:
             self._send(404, {"error": "not found"})
