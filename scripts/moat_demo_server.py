@@ -134,6 +134,7 @@ PAGE = r"""<!doctype html>
   .msg.sys  { align-self: center; background: #161b22; border: 1px dashed #30363d; color: #8b949e;
     font-size: 12.5px; max-width: 95%; text-align: center; }
   .msg.err  { align-self: center; color: #f85149; font-size: 12.5px; }
+  .msg.dim  { opacity: .6; font-size: 12.5px; }
   .msg.fake { border-color: #9e6a03; }
   /* X-ray card — inline under each reply */
   .xray { align-self: flex-start; width: 96%; margin: 2px 0 6px; background: #0b1420;
@@ -212,6 +213,7 @@ PAGE = r"""<!doctype html>
           </div>
         </div>
         <button id="amnesia">🧠 Amnesia test — wipe page, ask &ldquo;what did I say first?&rdquo;</button>
+        <button id="deepamnesia">🕳 Deep amnesia — evict the live window (42 turns, ~4 min), then ask</button>
         <button id="isolation">🛡 New conversation (strict isolation guard)</button>
         <button id="resume">↩ Resume latest store session</button>
       </div>
@@ -219,8 +221,9 @@ PAGE = r"""<!doctype html>
         The X-ray under the reply shows it being <b>written to TencentDB</b> (L0) and the
         <b>working-memory block</b> injected into the prompt, verbatim. Click
         <b>Amnesia test</b>: the page is wiped and the persona recalls your first line from the
-        store — turn 1 is far outside the model's context window, so a correct answer can only
-        come from TencentDB. Flip the <b>kill switch</b> and the same question goes generic.</div>
+        store. <b>Deep amnesia</b> is the airtight version: 42 filler turns push your first
+        line out of the model's live window entirely — only the TencentDB block can carry it.
+        Flip the <b>kill switch</b> and the injected block disappears.</div>
     </div>
     <h3>Store inspector (live gateway read)</h3>
     <div class="card" id="store-card"><span class="warn">awaiting first turn…</span></div>
@@ -472,6 +475,75 @@ document.getElementById('amnesia').onclick = async () => {
   turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
 };
 
+const FILLER = [
+  'Anyway — enough of that.', 'Crazy day, huh?', 'So what else is new with you?',
+  'Ha! Classic.', 'You believe this weather?', 'Ok but seriously though.',
+  'Man, I needed that laugh.', 'Right, right. And then what?', 'Huh. Never thought of it that way.',
+  'You always this philosophical before lunch?', 'Fair enough. Fair enough.',
+  'Let\'s talk about something else entirely.', 'Ok ok ok, moving on!',
+  'That is BOTH things, yes.', 'See, this is why we get along.',
+  'Anyway, what were we talking about?', 'No no, you go first.', 'I\'m listening. Truly.',
+  'Wild. Absolutely wild.', 'And how does that make you feel, hmm?',
+  'Could this BE any more circular?', 'Ok that one you actually nailed.',
+  'Noted. Filed. Forgotten.', 'Pivot! New topic!', 'Honestly? Same.',
+  'You and me both, buddy.', 'Hmm. Say more.', 'That tracks.',
+  'Sure, but consider: snacks.', 'Big if true.', 'Small if false.',
+  'Ok that\'s the energy I show up with.', 'We\'re drifting. I like it.',
+  'Ha — you would say that.', 'Tell me you\'re not writing this down.',
+  'Whatever you say, boss.', 'Half agreed. Proceed.', 'This is fine. Everything is fine.',
+  'Deep thoughts hour continues.', 'And yet, here we are.', 'One more for the road.',
+];
+
+document.getElementById('deepamnesia').onclick = async () => {
+  if (!CONV || BUSY) return;
+  log.innerHTML = '';
+  TURN = 0;
+  const keep = MEMORY_ON;
+  addMsg('sys', 'DEEP AMNESIA — driving ' + FILLER.length + ' filler turns (kill switch ON during ' +
+    'filler: the store stays clean, only the live window fills). Your first line will fall out ' +
+    'of the model\'s live window. Then we ask. ~4 minutes; watch the X-rays.');
+  BUSY = true; send.disabled = true; inp.disabled = true;
+  let done = 0, failed = 0;
+  for (const line of FILLER) {
+    const body = { message: line, conversation_id: CONV, working_memory_enabled: false };
+    const r = await api('POST', '/demo/turn', body);
+    if (r.status === 200) {
+      done++;
+      const d = r.data;
+      addMsg('user', line);
+      addMsg('bot dim', (d.response || '').slice(0, 90) + ((d.response || '').length > 90 ? '…' : ''));
+      const el = document.createElement('div');
+      el.className = 'msg sys';
+      el.textContent = 'window-eviction filler ' + done + '/' + FILLER.length +
+        (done === 10 ? ' — first line just left the verbatim band' : '') +
+        (done === 40 ? ' — first line now out of the entire live band' : '');
+      addNode(el);
+    } else if (r.status === 409) {
+      renderConsent((r.data && r.data.consent_card) || {});
+      failed++;
+      break;
+    } else {
+      failed++;
+      addMsg('err', 'filler turn ' + (done + 1) + ' failed: ' + r.status +
+        ' ' + JSON.stringify(r.data).slice(0, 120));
+      if (r.status === 429) break;
+    }
+  }
+  BUSY = false; send.disabled = false; inp.disabled = false;
+  MEMORY_ON = keep;
+  wmSwitch.classList.toggle('off', !MEMORY_ON);
+  document.getElementById('wmlabel').textContent = MEMORY_ON ? 'Memory ON' : 'Memory OFF — kill switch';
+  if (failed === 0) {
+    addMsg('sys', 'Live window evicted (' + done + ' filler turns, memory lane off throughout). ' +
+      'Memory back ON — now: what was the first thing I said?');
+    turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
+  } else {
+    addMsg('sys', 'Filler sequence stopped early (' + done + ' turns) — deep amnesia may not hold. ' +
+      'The X-ray on the next probe shows whatever the store still serves.');
+    turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
+  }
+};
+
 document.getElementById('isolation').onclick = async () => {
   if (BUSY) return;
   const r = await api('POST', '/demo/session');
@@ -480,8 +552,10 @@ document.getElementById('isolation').onclick = async () => {
   localStorage.removeItem('moat_conv');
   log.innerHTML = '';
   TURN = 0;
-  addMsg('sys', 'NEW conversation id → new isolated working-memory scope (the 2026-08-16 ' +
-    'contamination guard). The persona must NOT know earlier sessions here.');
+  addMsg('sys', 'NEW conversation id → the W4 TencentDB session lane starts empty (the ' +
+    '2026-08-16 contamination guard: one conversation\u2019s working memory can never surface ' +
+    'in another\u2019s prompt). The persona\u2019s durable VAULT memory legitimately persists ' +
+    'per-persona — that is the long-term lane, shown separately in every X-ray.');
   turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
 };
 
@@ -509,7 +583,7 @@ wmSwitch.onclick = () => {
 document.getElementById('about-card').innerHTML =
   kv('Pane 1 — chat', 'real engine, real path (G1/G6/G8, ZAI voice)') +
   kv('Pane 2 — X-ray', 'verbatim injected blocks + writes + vault notes, per turn') +
-  kv('Pane 3 — amnesia', 'recall from TencentDB after the page is wiped') +
+  kv('Pane 3 — amnesia', 'quick: recall from the store after a page wipe · deep: window evicted, store is the only carrier') +
   kv('Pane 4 — kill switch', 'lane off → recall degrades; the delta is the moat') +
   '<div class="hint">If retrieval fails anywhere, the X-ray shows the failure ' +
   '(empty block, NOT written, unsettled digest). Diagnostic, not sales pitch.</div>';
