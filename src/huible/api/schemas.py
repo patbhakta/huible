@@ -174,6 +174,16 @@ class PersonaChatRequest(BaseModel):
         default=None,
         description="Opaque conversation id. Threads the in-process session log (G7).",
     )
+    working_memory_enabled: bool | None = Field(
+        default=None,
+        description=(
+            "HU-2793 founder-demo kill switch: ``False`` disables the W4 "
+            "TencentDB working-memory lane for THIS turn only (recall empty, "
+            "capture skipped) while the vault retrieval lanes stay on — the "
+            "ON/OFF delta is then the live proof the lane is load-bearing. "
+            "``None``/``True`` keeps the deployment default untouched."
+        ),
+    )
     user_name: str | None = Field(
         default=None,
         description=(
@@ -619,6 +629,16 @@ class WorkingMemoryView(BaseModel):
     gist_blocks: int | None = Field(
         default=None,
         description="HU-2687: number of settled block gists at read time. None = not observed.",
+    )
+    context: str = Field(
+        default="",
+        description=(
+            "HU-2793 founder-visible X-ray: the verbatim working-memory block "
+            "the Arm A recall injected into this turn's prompt (session-gist "
+            "digest + verbatim drill-down excerpts). Empty when the recall "
+            "served nothing. Evidence surface for the live memory demo; the "
+            "block is the requesting caller's own session-scoped content."
+        ),
     )
 
 

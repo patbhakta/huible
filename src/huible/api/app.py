@@ -1758,6 +1758,13 @@ def _register_routes(application: FastAPI) -> None:
             (client_hint or "").strip().lower() == BATTERY_CLIENT_HEADER_VALUE
         )
         working_memory = application.state.working_memory
+        # HU-2793 founder-demo kill switch: an explicit per-request
+        # ``working_memory_enabled=False`` drops the W4 lane for THIS turn
+        # only (recall empty, capture skipped); the vault retrieval lanes
+        # stay armed so the ON/OFF delta isolates the TencentDB lane. The
+        # deployment default is untouched when the field is None/True.
+        if body.working_memory_enabled is False:
+            working_memory = NullWorkingMemory()
         # HU-2774 isolation: personas with an explicit
         # ``working_memory_service_id`` in their metadata get their own
         # TencentDB MemoryCore instance (the gateway partitions all state per
@@ -2214,6 +2221,9 @@ def _register_routes(application: FastAPI) -> None:
                         synced=wm_synced,
                         digest_settled=wm_recall.digest_settled,
                         gist_blocks=wm_recall.gist_blocks,
+                        # HU-2793 founder-visible X-ray: the verbatim block
+                        # this turn's prompt actually carried.
+                        context=wm_recall.context,
                     )
                     if not isinstance(working_memory, NullWorkingMemory)
                     else None

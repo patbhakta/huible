@@ -158,9 +158,7 @@ def test_disabled_lane_is_pre_w4(caplog) -> None:
     assert "WORKING MEMORY" not in prompt
     assert r.json()["trace"]["working_memory"] is None
     # M1.2 (HU-2732): a disabled lane reports no Arm A read on the line.
-    trace_lines = [
-        rec.getMessage() for rec in caplog.records if "chat.trace" in rec.getMessage()
-    ]
+    trace_lines = [rec.getMessage() for rec in caplog.records if "chat.trace" in rec.getMessage()]
     assert trace_lines and "wm=-" in trace_lines[-1]
 
 
@@ -175,3 +173,49 @@ def test_degraded_recall_keeps_turn_alive() -> None:
     trace = r.json()["trace"]
     assert trace["working_memory"]["chars"] == 0
     assert trace["working_memory"]["synced"] is True
+
+
+def test_trace_carries_verbatim_context() -> None:
+    """HU-2793: the X-ray view exposes the exact injected block verbatim."""
+    block = "WM-XRAY digest line + verbatim excerpt FALAFEL-7"
+    lane = _StubWorkingMemory(
+        recall=WorkingMemoryRecall(context=block, strategy=ARM_A_STRATEGY, chars=len(block))
+    )
+    client, llm = _make_app(lane)
+    _consent(client)
+    r = _chat(client, "say the demo word back")
+    assert r.status_code == 200, r.text
+    prompt, _system = llm.calls[-1]
+    assert block in prompt
+    trace = r.json()["trace"]
+    assert trace["working_memory"]["context"] == block
+
+
+def test_request_kill_switch_disables_lane_for_one_turn() -> None:
+    """HU-2793: working_memory_enabled=False drops recall+capture for THIS
+    turn only; the next plain turn uses the lane again (deployment default)."""
+    lane = _StubWorkingMemory()
+    client, llm = _make_app(lane)
+    _consent(client)
+    r = client.post(
+        f"/api/v1/chat/{PERSONA_ID}",
+        json={
+            "message": "kill-switch turn",
+            "conversation_id": CONV,
+            "working_memory_enabled": False,
+        },
+        headers={"Authorization": f"Bearer {API_KEY}"},
+    )
+    assert r.status_code == 200, r.text
+    # The lane was never consulted and the turn was never captured.
+    assert lane.recalls == []
+    assert lane.captures == []
+    prompt, _system = llm.calls[-1]
+    assert "WORKING MEMORY" not in prompt
+    assert r.json()["trace"]["working_memory"] is None
+    # The lane default resumes on the next turn.
+    r2 = _chat(client, "memory-on turn")
+    assert r2.status_code == 200, r2.text
+    assert len(lane.recalls) == 1
+    assert len(lane.captures) == 1
+    assert r2.json()["trace"]["working_memory"]["synced"] is True
