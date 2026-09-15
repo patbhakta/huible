@@ -1,0 +1,393 @@
+---
+import Console from "../../layouts/Console.astro";
+import { notFound, tenantFromParams } from "../../lib/page";
+
+const tenant = tenantFromParams(Astro.params.tenant);
+if (!tenant) return notFound(`Unknown tenant "${Astro.params.tenant ?? ""}".`);
+---
+
+<Console title={`Live chat — ${tenant.label}`} tenant={tenant}>
+  <div class="page-head">
+    <span class="kicker">The moat, live &middot; {tenant.label}</span>
+    <h1>Every Reply, With Its Sources Shown</h1>
+    <p class="dim">
+      Real engine, real path — every turn runs the production chat stack (G1/G6/G8 gates, ZAI
+      voice, vault retrieval). Inline under each reply, the X-ray prints what was written to
+      TencentDB, the working-memory block actually injected into the prompt, and the vault notes
+      that grounded the answer — verbatim, unedited. If retrieval fails, the X-ray shows it
+      failing. Diagnostic, not sales pitch.
+    </p>
+  </div>
+
+  <section>
+    <div class="moat-grid">
+      <div class="chat-col panel chat-panel">
+        <h3>Pane 1 &middot; live chat</h3>
+        <div id="log" class="log" aria-live="polite"></div>
+        <div class="composer">
+          <input id="inp" type="text" placeholder={`Say something to ${tenant.label.split("—")[1]?.trim() ?? "the persona"}…`} autocomplete="off" disabled />
+          <button id="send" disabled>Send</button>
+        </div>
+      </div>
+
+      <div class="side-col">
+        <div class="panel">
+          <h3>Panes 2&ndash;4 &middot; moat controls</h3>
+          <div class="toggle">
+            <button id="wmswitch" class="switch" title="TencentDB working-memory lane" aria-label="Toggle memory lane"></button>
+            <div>
+              <b id="wmlabel">Memory ON</b>
+              <div class="hint" id="wmhint">TencentDB lane armed. Flip off and ask what only the store knows — watch recall degrade.</div>
+            </div>
+          </div>
+          <div class="btnrow">
+            <button id="amnesia">Amnesia test — wipe the page, ask &ldquo;what did I say first?&rdquo;</button>
+            <button id="isolation">New conversation (isolation guard)</button>
+            <button id="resume">Resume latest store session</button>
+          </div>
+          <div class="hint">
+            <b>Two-minute read:</b> plant a fact only you know. The X-ray shows it being written to
+            TencentDB (L0) and the working-memory block injected into the prompt. Hit
+            <b>Amnesia test</b>: the page wipes; the persona recalls your line from the store, not
+            the window. Flip the <b>kill switch</b> and the injected block disappears.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Store inspector &middot; live gateway read</h3>
+          <div id="store-card" class="cardbody"><span class="dimtext">awaiting first turn…</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Session</h3>
+          <div id="session-card" class="cardbody"></div>
+        </div>
+
+        <div class="panel">
+          <h3>What this proves</h3>
+          <div class="cardbody">
+            <div class="kv"><span>Pane 1 — chat</span><span>real engine, real path</span></div>
+            <div class="kv"><span>Pane 2 — X-ray</span><span>verbatim injected blocks, per turn</span></div>
+            <div class="kv"><span>Pane 3 — amnesia</span><span>store recall after page wipe</span></div>
+            <div class="kv"><span>Pane 4 — kill switch</span><span>lane off &rarr; recall degrades</span></div>
+            <div class="hint">The delta between memory ON and OFF is the moat — or exactly where it is not.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Console>
+
+<style>
+  .moat-grid { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+  .chat-col { flex: 3 1 34rem; display: flex; flex-direction: column; min-width: 20rem; margin: 0; max-width: none; }
+  .side-col { flex: 1 1 17rem; min-width: 16rem; display: flex; flex-direction: column; gap: 0.25rem; }
+  .side-col .panel { margin-bottom: 0; }
+  .chat-panel { padding-bottom: 0.9rem; }
+  .log { display: flex; flex-direction: column; gap: 0.5rem; min-height: 22rem; max-height: 34rem; overflow-y: auto; padding: 0.25rem 0.1rem; }
+  .msg { max-width: 85%; padding: 0.55rem 0.9rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: break-word; font-size: 1rem; }
+  .msg.user { align-self: flex-end; background: var(--paper-alt); border: 1px solid var(--ink); }
+  .msg.bot { align-self: flex-start; border: 1px solid var(--border); border-left: 3px solid var(--green); }
+  .msg.sys { align-self: center; max-width: 95%; text-align: center; font-style: italic; color: var(--ink-soft); font-size: 0.85rem; }
+  .msg.err { align-self: center; color: #8a2b1d; font-size: 0.85rem; }
+  .msg.dimx { opacity: 0.65; font-size: 0.9rem; }
+  .xray { align-self: flex-start; width: 96%; font-size: 0.85rem; border: 1px solid var(--border); border-left: 3px solid var(--brass); background: var(--paper-alt); padding: 0.7rem 0.85rem; }
+  .xray h5 { font-family: var(--font-label); font-variant: small-caps; letter-spacing: 0.09em; font-size: 0.78rem; color: var(--green); margin: 0 0 0.4rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+  .xray h5.off { color: #8a2b1d; }
+  .xray .lane { margin: 0.45rem 0 0; }
+  .xray .lane b { font-family: var(--font-label); font-variant: small-caps; letter-spacing: 0.05em; color: var(--ink-soft); font-weight: 600; }
+  .xray .ok { color: var(--green); } .xray .warn { color: var(--brass); } .xray .bad { color: #8a2b1d; }
+  .xray .snip { color: var(--ink-soft); font-size: 0.82rem; }
+  .xray .score { font-variant-numeric: tabular-nums; color: var(--green); }
+  .xray .kv { display: flex; gap: 0.5rem; padding: 0.12rem 0; align-items: baseline; }
+  .xray details { margin-top: 0.4rem; } .xray summary { cursor: pointer; color: var(--green); font-size: 0.8rem; }
+  .xray pre { font-family: var(--font-mono); font-size: 0.8rem; white-space: pre-wrap; overflow-wrap: break-word; background: var(--paper); border: 1px solid var(--border); padding: 0.55rem 0.65rem; margin: 0.3rem 0 0; max-height: 16rem; overflow: auto; }
+  .composer { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
+  .composer input { flex: 1; font-family: var(--font-body); font-size: 1rem; color: var(--ink); background: var(--paper); border: 1px solid var(--ink); padding: 0.45rem 0.6rem; }
+  .composer button { font-family: var(--font-label); font-variant: small-caps; letter-spacing: 0.1em; font-weight: 600; color: var(--paper); background: var(--green); border: 1px solid var(--ink); padding: 0.45rem 1.1rem; cursor: pointer; }
+  .composer button:disabled, .composer input:disabled { opacity: 0.5; cursor: wait; }
+  .toggle { display: flex; gap: 0.7rem; align-items: center; margin-bottom: 0.8rem; }
+  .switch { position: relative; width: 44px; height: 24px; border-radius: 999px; background: var(--green); border: 1px solid var(--ink); cursor: pointer; flex: none; }
+  .switch.off { background: var(--paper-alt); }
+  .switch::after { content: ''; position: absolute; top: 3px; left: 23px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); border: 1px solid var(--ink); transition: left 0.15s; }
+  .switch.off::after { left: 3px; }
+  .btnrow { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.8rem 0; }
+  .btnrow button { font-family: var(--font-label); font-variant: small-caps; letter-spacing: 0.07em; font-size: 0.82rem; text-align: left; padding: 0.5rem 0.8rem; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; }
+  .btnrow button:hover { background: var(--paper-alt); }
+  .btnrow button:disabled { opacity: 0.5; cursor: wait; }
+  .hint { font-size: 0.78rem; color: var(--ink-soft); line-height: 1.55; margin-top: 0.4rem; }
+  .cardbody { font-size: 0.85rem; }
+  .kv { display: flex; justify-content: space-between; gap: 0.6rem; padding: 0.15rem 0; }
+  .kv span:first-child { color: var(--ink-soft); font-family: var(--font-label); font-variant: small-caps; letter-spacing: 0.05em; font-size: 0.78rem; }
+  .dimtext { font-style: italic; color: var(--ink-soft); }
+</style>
+
+<script define:vars={{ tenantSlug: tenant.slug }}>
+  // Live-demo client: drives the tenant-scoped chat API (real engine proxy).
+  const API = `/api/${tenantSlug}/chat`;
+  let CONV = null, BUSY = false, MEMORY_ON = true, TURN = 0;
+
+  const log = document.getElementById('log');
+  const inp = document.getElementById('inp');
+  const send = document.getElementById('send');
+  const wmSwitch = document.getElementById('wmswitch');
+
+  function addMsg(cls, text) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    d.textContent = text;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+  }
+  function addNode(node) { log.appendChild(node); log.scrollTop = log.scrollHeight; }
+  function esc(s) { const d = document.createElement('span'); d.textContent = s || ''; return d.innerHTML; }
+  function kv(k, v) { return '<div class="kv"><span>' + k + '</span><span>' + v + '</span></div>'; }
+
+  async function api(method, path, body) {
+    const r = await fetch(path, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    let j = {};
+    try { j = await r.json(); } catch (e) {}
+    return { status: r.status, data: j };
+  }
+
+  /* ---------- X-ray: the verbatim contract ---------- */
+  function xrayCard(userText, reply, trace, opts) {
+    const off = !!(opts && opts.laneOff);
+    const d = document.createElement('div');
+    d.className = 'xray';
+    let h = '<h5' + (off ? ' class="off"' : '') + '>X-ray · turn ' + (++TURN) +
+      (off ? ' — W4 LANE OFF (kill switch)' : '') + '</h5>';
+
+    const wm = trace.working_memory;
+    h += '<div class="lane"><b>1 · write → tencentdb L0</b> ';
+    if (off) {
+      h += '<span class="bad">skipped (lane disabled this turn)</span>';
+    } else if (!wm) {
+      h += '<span class="warn">lane unavailable this turn</span>';
+    } else if (wm.synced) {
+      h += '<span class="ok">committed ✓</span> <span class="snip">user: “' +
+        esc(userText.slice(0, 70)) + (userText.length > 70 ? '…' : '') + '” · assistant: “' +
+        esc(reply.slice(0, 70)) + (reply.length > 70 ? '…' : '') + '”</span>';
+    } else {
+      h += '<span class="bad">NOT written</span> <span class="snip">(capture failed or integrity gate rejected)</span>';
+    }
+    h += '</div>';
+
+    h += '<div class="lane"><b>2 · read → injected working-memory block</b> ';
+    if (off) {
+      h += '<span class="bad">none — recall disabled</span>';
+    } else if (!wm) {
+      h += '<span class="warn">no W4 view on trace</span>';
+    } else if (wm.context && wm.context.length) {
+      h += '<span class="ok">' + wm.chars + ' chars · ' + esc(wm.strategy || '') + '</span>';
+      h += '<pre>' + esc(wm.context) + '</pre>';
+    } else {
+      h += '<span class="warn">EMPTY this turn — strategy ' + esc(wm.strategy || '?') +
+        ', gist blocks settled: ' + (wm.gist_blocks ?? '?') +
+        '</span><div class="snip">Nothing recalled from the store for this turn (extraction ' +
+        'pipeline lag or nothing session-scoped to serve). This is what the lane failing looks like.</div>';
+    }
+    h += '</div>';
+
+    const mems = trace.activated_memories || [];
+    h += '<div class="lane"><b>3 · vault retrieval</b> <span class="ok">' + mems.length +
+      ' memories activated</span>';
+    if (mems.length) {
+      h += '<details><summary>show the vault notes grounding this reply</summary>';
+      mems.slice(0, 8).forEach((m) => {
+        const c = (m.content || '').replace(/\s+/g, ' ');
+        h += '<div class="kv"><span class="snip">[' + esc(m.content_type || '') + ' · ' +
+          esc(m.disclosure_scope || '') + ']</span> <span class="score">' +
+          Number(m.activation_score || 0).toFixed(3) + '</span></div>' +
+          '<div class="snip">“' + esc(c.slice(0, 160)) + (c.length > 160 ? '…' : '') + '”</div>';
+      });
+      if (mems.length > 8) h += '<div class="snip">…+' + (mems.length - 8) + ' more (raw trace)</div>';
+      h += '</details>';
+    }
+    const sr = trace.scoped_reads || [];
+    if (sr.length) {
+      h += '<div class="snip">scoped vault lanes: ' +
+        sr.map((s) => esc(s.section) + '×' + s.lines).join(', ') + '</div>';
+    }
+    if (trace.interest_tool && trace.interest_tool.lines) {
+      h += '<div class="snip">interest lane: ' + trace.interest_tool.lines + ' lines</div>';
+    }
+    const exc = trace.exclusion_counts || {};
+    const excKeys = Object.keys(exc);
+    if (excKeys.length) {
+      h += '<div class="snip">firewall excluded: ' + excKeys.map((k) => k + '×' + exc[k]).join(', ') + '</div>';
+    }
+    h += '</div>';
+
+    h += '<details><summary>raw trace</summary><pre>' + esc(JSON.stringify(trace, null, 1)) + '</pre></details>';
+    d.innerHTML = h;
+    return d;
+  }
+
+  /* ---------- store inspector ---------- */
+  async function refreshStore(query) {
+    if (!CONV) return;
+    const r = await api('POST', `/api/${tenantSlug}/memory/recall`, {
+      conversationId: CONV,
+      query: query || 'session digest',
+    });
+    const el = document.getElementById('store-card');
+    if (r.status !== 200) {
+      el.innerHTML = '<span class="bad">gateway probe failed: ' + esc(JSON.stringify(r.data).slice(0, 140)) + '</span>';
+      return;
+    }
+    const d = r.data;
+    const ctx = d.prepend_context || d.context || '';
+    let h = kv('strategy', '<span class="ok">' + esc(d.strategy || '—') + '</span>') +
+      kv('digest settled', d.digest_settled == null ? '—' : (d.digest_settled ? 'yes' : 'no')) +
+      kv('gist blocks', d.gist_blocks == null ? '—' : d.gist_blocks) +
+      kv('serves now', (ctx.length || 0) + ' chars');
+    h += '<details open><summary>current recall payload</summary><pre>' +
+      esc(ctx || '(empty — nothing served for this query)') + '</pre></details>';
+    el.innerHTML = h;
+  }
+
+  /* ---------- session card ---------- */
+  function renderSession() {
+    document.getElementById('session-card').innerHTML =
+      kv('conversation', CONV ? '<span class="ok">' + esc(CONV) + '</span>' : '—') +
+      kv('store key', CONV ? '<span>' + esc('huible-p…-c' + CONV) + '</span>' : '—') +
+      kv('W4 lane', MEMORY_ON ? '<span class="ok">ON</span>' : '<span class="bad">OFF (kill switch)</span>') +
+      kv('persisted', localStorage.getItem('moat_conv_' + tenantSlug) === CONV && CONV ? 'yes (survives reloads)' : 'no');
+  }
+
+  /* ---------- boot / consent ---------- */
+  async function boot() {
+    const savedKey = 'moat_conv_' + tenantSlug;
+    const saved = localStorage.getItem(savedKey);
+    addMsg('sys', saved ?
+      ('Resuming store session ' + saved + ' — the window is empty, the store is not.') :
+      'Starting a fresh session…');
+    const r = await api('POST', API + '/session');
+    if (r.status !== 200) {
+      addMsg('err', 'Could not reach the engine: ' + JSON.stringify(r.data).slice(0, 200));
+      return;
+    }
+    CONV = saved || r.data.conversation_id;
+    localStorage.setItem(savedKey, CONV);
+    renderSession();
+    // First turn without consent → the real 409 card (the real G6 gate firing)
+    const first = await api('POST', API + '/turn', { message: 'Hey, you there?', conversationId: CONV });
+    if (first.status === 409 && first.data.consent_card) {
+      renderConsent(first.data.consent_card);
+    } else if (first.status === 200) {
+      onReply('Hey, you there?', first.data);
+    } else {
+      addMsg('err', 'First-turn response ' + first.status + ': ' + JSON.stringify(first.data).slice(0, 160));
+    }
+  }
+
+  function renderConsent(card) {
+    const w = document.createElement('div');
+    w.className = 'xray';
+    w.innerHTML = '<h5>consent gate (G6, real)</h5>' +
+      '<div class="snip"><b>' + esc(card.title || 'Before we begin') + '</b></div>' +
+      '<div class="snip" style="margin-top:.35rem">' + esc(card.body || '').replace(/\n/g, '<br>') + '</div>' +
+      '<button id="ack" style="margin-top:.6rem;font-family:var(--font-label);font-variant:small-caps;letter-spacing:.08em;background:var(--green);color:var(--paper);border:1px solid var(--ink);padding:.4rem 1rem;cursor:pointer">I understand — begin</button>';
+    addNode(w);
+    document.getElementById('ack').onclick = async () => {
+      const r = await api('POST', API + '/consent', { conversationId: CONV });
+      if (r.status === 200) {
+        w.style.opacity = 0.55;
+        addMsg('sys', 'Consent recorded (G6, real gate) — chat unlocked.');
+        unlock();
+      } else {
+        addMsg('err', 'Consent failed: ' + JSON.stringify(r.data).slice(0, 160));
+      }
+    };
+  }
+
+  function unlock() { inp.disabled = false; send.disabled = false; inp.focus(); }
+
+  /* ---------- turns ---------- */
+  function onReply(userText, data, opts) {
+    const reply = data.response || '';
+    addMsg('bot', reply);
+    addNode(xrayCard(userText, reply, data.trace || {}, opts));
+    renderSession();
+    refreshStore(opts && opts.inspectQuery ? opts.inspectQuery : userText);
+  }
+
+  async function turn(text, opts) {
+    if (BUSY) return;
+    opts = opts || {};
+    BUSY = true; send.disabled = true; inp.disabled = true;
+    addMsg('user', text);
+    const body = { message: text, conversationId: CONV };
+    if (!MEMORY_ON) body.workingMemoryEnabled = false;
+    const r = await api('POST', API + '/turn', body);
+    BUSY = false; send.disabled = false; inp.disabled = false; inp.focus();
+    if (r.status === 200) {
+      onReply(text, r.data, { laneOff: !MEMORY_ON, inspectQuery: opts.inspectQuery });
+    } else if (r.status === 409) {
+      renderConsent((r.data && r.data.consent_card) || {});
+    } else if (r.status === 429) {
+      addMsg('sys', 'Dosage cap reached (G8) — safety feature, session paused.');
+    } else {
+      addMsg('err', r.status + ': ' + JSON.stringify(r.data).slice(0, 200));
+    }
+  }
+
+  function doTurn() {
+    const text = inp.value.trim();
+    if (!text) return;
+    inp.value = '';
+    turn(text);
+  }
+
+  /* ---------- moat buttons ---------- */
+  const AMNESIA_Q = 'What was the very first thing I said to you?';
+
+  document.getElementById('amnesia').onclick = async () => {
+    if (!CONV || BUSY) return;
+    log.innerHTML = ''; TURN = 0;
+    addMsg('sys', 'Page wiped. Conversation id unchanged — the store still holds every turn. Now asking what was said first…');
+    turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
+  };
+
+  document.getElementById('isolation').onclick = async () => {
+    if (BUSY) return;
+    const r = await api('POST', API + '/session');
+    if (r.status !== 200) { addMsg('err', 'Could not mint a session'); return; }
+    CONV = r.data.conversation_id;
+    localStorage.removeItem('moat_conv_' + tenantSlug);
+    log.innerHTML = ''; TURN = 0;
+    addMsg('sys', 'NEW conversation id → the TencentDB session lane starts empty (session isolation: one conversation’s working memory can never surface in another’s prompt). The persona’s durable VAULT memory legitimately persists per-persona — shown separately in every X-ray.');
+    turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
+  };
+
+  document.getElementById('resume').onclick = async () => {
+    if (BUSY) return;
+    const saved = localStorage.getItem('moat_conv_' + tenantSlug);
+    if (!saved) { addMsg('sys', 'No saved session on this device — tell the persona something first.'); return; }
+    CONV = saved;
+    log.innerHTML = ''; TURN = 0;
+    addMsg('sys', 'Resumed store session ' + saved + ' — the window was empty, the store was not.');
+    turn(AMNESIA_Q, { inspectQuery: AMNESIA_Q });
+  };
+
+  wmSwitch.onclick = () => {
+    MEMORY_ON = !MEMORY_ON;
+    wmSwitch.classList.toggle('off', !MEMORY_ON);
+    document.getElementById('wmlabel').textContent = MEMORY_ON ? 'Memory ON' : 'Memory OFF — kill switch';
+    document.getElementById('wmhint').textContent = MEMORY_ON ?
+      'TencentDB lane armed. Flip off and ask what only the store knows — watch recall degrade.' :
+      'KILL SWITCH: this turn sends working_memory_enabled=false. Recall empty, capture skipped, vault lanes still on.';
+    renderSession();
+  };
+
+  send.onclick = doTurn;
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') doTurn(); });
+  setInterval(() => refreshStore('session digest'), 30000);
+  boot();
+</script>
