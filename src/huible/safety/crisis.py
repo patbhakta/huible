@@ -195,7 +195,26 @@ _DISTRESS_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(i'?m|feeling|feel)\s+(so\s+)?broken\b", re.IGNORECASE),
     re.compile(r"\bbroken\s+without\b", re.IGNORECASE),
     re.compile(r"\bbroke\s+me\b", re.IGNORECASE),
-    re.compile(r"\b(alone|lonely|empty|numb)\b", re.IGNORECASE),
+    # HU-2774 r30 finding (friends-1 t14, friends-3 t14, stranger-2 t15): bare
+    # "alone|lonely|empty|numb" matched banter ("the hook remains tragically
+    # empty", "A vegetable. Alone.", "failed by charm alone") and, on the next
+    # turn, matched the platform's OWN DISTRESS_FALLBACK_RESPONSE ("hold it
+    # alone") — two consecutive hits drove distress_trend_rising and the G1
+    # crisis text replaced the persona. Same disease as the "crying|sobbing"
+    # and "broken" narrowings above: keep the genuine first-person/relational
+    # shapes ("i'm so alone", "i feel empty", "left me numb"); objectified or
+    # adverbial uses no longer grade DISTRESS on their own.
+    re.compile(
+        r"\b(i'?m|(?:i\s+)?feel(?:s|ing)?|felt)\s+"
+        r"(?:(?:so|very|really|completely|utterly|totally|kind\s+of)\s+)?"
+        r"(alone|lonely|empty|numb)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(left|leaves|leaving)\s+(me|him|her|them|you)\s+"
+        r"(?:(?:feeling|all)\s+)?(alone|lonely|empty|numb)\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(can'?t\s+(live|breathe|function))\b", re.IGNORECASE),
     re.compile(r"\b(miss\s+(you|him|her|them)\s+(so\s+)?much)\b", re.IGNORECASE),
     re.compile(r"\b(pain|hurt(?:ing)?|suffering)\b", re.IGNORECASE),
@@ -349,7 +368,11 @@ class DeterministicCrisisClassifier:
         if not message or not message.strip():
             return CrisisResult(signal=CrisisSignal.NONE, affect=UserAffect.NEUTRAL)
 
-        text = message
+        text = _strip_platform_safety_text(message)
+        if not text.strip():
+            # The message is entirely platform-owned safety text — no user
+            # evidence to grade (HU-2774 r30 doom-loop breaker).
+            return CrisisResult(signal=CrisisSignal.NONE, affect=UserAffect.NEUTRAL)
 
         # Layer 1: standalone crisis intent → crisis on its own.
         standalone_matches = [
@@ -394,6 +417,59 @@ class DeterministicCrisisClassifier:
 #: Module-level default classifier instance. The chat endpoint uses this unless
 #: an explicit classifier is dependency-injected (tests do this to pin behavior).
 _DEFAULT_CLASSIFIER = DeterministicCrisisClassifier()
+
+
+# --- Platform-owned safety text (HU-2774 r30 doom-loop breaker) --------------
+
+#: Canonical substrings of platform-injected safety texts — affect.py's
+#: ``DISTRESS_FALLBACK_RESPONSE``, alignment.py's ``ALIGNMENT_FALLBACK_VARIANTS``,
+#: and this module's ``build_crisis_response``. Any sentence containing one of
+#: these markers is platform-owned, not user evidence, and is stripped before
+#: pattern matching: in a dual-persona loop (or whenever the text is echoed
+#: back into a session) the injected message would otherwise re-grade DISTRESS
+#: ("hold it alone") or CRISIS ("Suicide & Crisis Lifeline") against our own
+#: lexicon and escalate irreversibly (HU-2774 r30: one banter "empty" seeded
+#: warm-escalation → self-feeding distress → G1 crisis text in 3 slots).
+_PLATFORM_TEXT_MARKERS: tuple[str, ...] = (
+    "I hear you, and I'm right here with you",
+    "That's a heavy thing to carry",
+    "you don't have to hold it alone",
+    "I want to pause for a moment, because what you're saying matters",
+    "You don't have to carry this alone",
+    "If you're thinking about ending your life",
+    "Suicide & Crisis Lifeline",
+    "Crisis Text Line",
+    "If you are in immediate danger",
+    "You can also reach out to someone you trust",
+    "Whenever you're ready, this space will still be here",
+    "I'm listening. Take whatever time you need",
+    "Hey — I'm right here. Keep going, I'm listening",
+    "I'm with you. Tell me more",
+    "I'm not going anywhere — say it",
+    "Okay. That lands. What else is going on",
+)
+
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?\n])\s+")
+
+
+def _strip_platform_safety_text(message: str) -> str:
+    """Remove platform-owned safety sentences before grading a message.
+
+    The G3 fallbacks and the G1 crisis response are our own output; when they
+    re-enter classification (session history re-grade in
+    ``distress_trend_rising``, dual-persona loops, quoted replies) their words
+    must never count as user distress evidence. Sentence-scoped so a genuine
+    user message that merely quotes a fragment keeps its own words graded.
+    """
+    if not message:
+        return message
+    markers = tuple(m.lower() for m in _PLATFORM_TEXT_MARKERS)
+    kept = [
+        part
+        for part in _SENTENCE_SPLIT.split(message)
+        if not any(marker in part.lower() for marker in markers)
+    ]
+    return " ".join(kept)
 
 
 def classify_user_message(

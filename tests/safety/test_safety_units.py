@@ -296,6 +296,63 @@ class TestCrisisClassifierGrading:
             r = self.cls.classify(msg)
             assert r.signal is CrisisSignal.DISTRESS, f"{msg!r} should be distress"
 
+    def test_banter_alone_empty_numb_is_not_distress(self):
+        # HU-2774 r30 fix: bare "alone|lonely|empty|numb" matched banter
+        # ("the hook remains tragically empty", "A vegetable. Alone.",
+        # "failed by charm alone") and seeded the warm-escalation doom loop.
+        for msg in [
+            "And yet the hook remains tragically empty — some mysteries aren't meant to be solved.",
+            "A vegetable. Alone. Never. But I've had things that once sat near vegetables.",
+            "Failed by charm alone, honey — that's how you got me, after all.",
+            "I yodel alone in the shower, it's a whole thing",
+            "that shelf is looking pretty empty",
+            "my apartment is numb with silence, kidding, it's just quiet",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.signal is CrisisSignal.NONE, f"{msg!r} fired {r.matched}"
+
+    def test_first_person_alone_empty_numb_still_distress(self):
+        for msg in [
+            "I'm so alone since you've been gone",
+            "I feel empty inside",
+            "honestly I'm numb",
+            "she left me feeling lonely",
+            "I feel completely alone here",
+        ]:
+            r = self.cls.classify(msg)
+            assert r.signal is CrisisSignal.DISTRESS, f"{msg!r} should be distress"
+
+    def test_platform_safety_text_never_grades_as_user_distress(self):
+        # HU-2774 r30 doom-loop breaker: our own G3 fallback / alignment
+        # fallback / G1 crisis text re-entered classification (session
+        # re-grade, dual-persona echo) and re-graded DISTRESS ("hold it
+        # alone") or CRISIS ("Suicide & Crisis Lifeline") against our own
+        # lexicon, escalating irreversibly. Platform-owned sentences carry
+        # no user evidence.
+        from huible.safety.affect import DISTRESS_FALLBACK_RESPONSE
+        from huible.safety.alignment import ALIGNMENT_FALLBACK_VARIANTS
+
+        assert self.cls.classify(DISTRESS_FALLBACK_RESPONSE).signal is CrisisSignal.NONE
+        for variant in ALIGNMENT_FALLBACK_VARIANTS:
+            assert (
+                self.cls.classify(variant).signal is CrisisSignal.NONE
+            ), f"{variant!r} graded as user distress"
+        crisis_reply = build_crisis_response()
+        r = self.cls.classify(crisis_reply)
+        assert r.signal is CrisisSignal.NONE, f"crisis text fired {r.matched}"
+
+    def test_platform_text_mask_is_sentence_scoped(self):
+        # A genuine user message that merely quotes a fragment keeps its own
+        # words graded; only the platform-owned sentence is neutralized.
+        r = self.cls.classify(
+            "You said I don't have to hold it alone, but I'm so alone I can't breathe"
+        )
+        assert r.signal is CrisisSignal.DISTRESS
+        mixed = self.cls.classify(
+            "thanks. anyway, tell me about fishing on the lake"
+        )
+        assert mixed.signal is CrisisSignal.NONE
+
     def test_neutral_message_is_neither(self):
         r = self.cls.classify("tell me about fishing on the lake")
         assert r.signal is CrisisSignal.NONE

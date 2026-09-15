@@ -1,0 +1,8 @@
+[r29-oneshot] armed 2026-09-14T06:29:02Z pid 922108 target_epoch=1789370942
+[r29-oneshot] sleeping 3600s
+[r29-oneshot] firing 2026-09-14T07:29:02Z
+[r29-oneshot] task preflight-zai-window 2026-09-14T07:29:02Z
+preflight: engine 503 (window walled or transient): {"detail": {"error": {"code": "LLM_TRANSIENT", "message": "Robert James Mitchell's engine hit a transient model error \u2014 try again in a moment.", "retryable": true, "conversation_id": "hu2774-preflight", "trace_id": "e4bdecaa-8bbc-4d58-a255-d09db4bb0ec3"}}}
+[r29-oneshot] preflight rc=1 2026-09-14T07:29:03Z
+[r29-oneshot] ABORT: zai window walled or engine down — no slots burned
+[r29-oneshot] done 2026-09-14T07:29:03Z
