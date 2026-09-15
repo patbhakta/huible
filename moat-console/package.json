@@ -1,0 +1,23 @@
+{
+  "name": "huible-moat-console",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Founder-visible memory moat console: tenant-scoped read-only API over TencentDB working memory + persona vaults (HU-2793)",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "serve": "node ./dist/server/entry.mjs"
+  },
+  "dependencies": {
+    "@astrojs/node": "^11.1.5",
+    "astro": "^7.3.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.5.1",
+    "typescript": "^6.0.3"
+  }
+}

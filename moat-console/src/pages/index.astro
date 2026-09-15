@@ -1,0 +1,23 @@
+---
+import { TENANT_LIST } from "../lib/gateway";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HUible moat console</title>
+  </head>
+  <body>
+    <h1>HUible moat console</h1>
+    <p>Tenant-scoped, read-only API over TencentDB working memory + persona vaults (HU-2793).</p>
+    <ul>
+      {TENANT_LIST.map((t) => (
+        <li>
+          <code>{t.slug}</code> — {t.label} (service <code>{t.serviceId}</code>)
+        </li>
+      ))}
+    </ul>
+    <p>Endpoints: <code>GET /api/health</code>, <code>POST /api/{":tenant"}/memory/recall</code>, <code>POST /api/{":tenant"}/memory/conversations</code>, <code>POST /api/{":tenant"}/memory/memories</code>, <code>GET /api/{":tenant"}/vault/notes</code>, <code>GET /api/{":tenant"}/vault/note?rel=...</code></p>
+  </body>
+</html>
