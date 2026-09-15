@@ -1,23 +1,82 @@
 ---
-import { TENANT_LIST } from "../lib/gateway";
+import Console from "../layouts/Console.astro";
+import { gatewayHealth, TENANT_LIST } from "../lib/gateway";
+
+let gateway: { ok: boolean; version?: unknown; uptime?: unknown; message?: string } = { ok: false };
+try {
+  const gw = await gatewayHealth();
+  gateway = { ok: true, version: gw.version ?? null, uptime: gw.uptime ?? null };
+} catch (err) {
+  gateway = { ok: false, message: err instanceof Error ? err.message : String(err) };
+}
+const uptimeHrs = typeof gateway.uptime === "number" ? (gateway.uptime / 3600).toFixed(1) : null;
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HUible moat console</title>
-  </head>
-  <body>
-    <h1>HUible moat console</h1>
-    <p>Tenant-scoped, read-only API over TencentDB working memory + persona vaults (HU-2793).</p>
-    <ul>
+<Console title="HUible moat console">
+  <div class="page-head">
+    <span class="kicker">Founder X-ray &middot; Read-only</span>
+    <h1>The Moat, Inspected</h1>
+    <p class="dim">
+      This console looks directly into the working memory the engine consults before every turn —
+      session gist, verbatim excerpts, the L0/L1 stores, and each persona's vault. Nothing here writes;
+      the pages are a lens, not a lever.
+    </p>
+  </div>
+
+  <section>
+    <h2 class="rule-head"><span class="numeral">I.</span> Choose a tenant</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center;">
       {TENANT_LIST.map((t) => (
-        <li>
-          <code>{t.slug}</code> — {t.label} (service <code>{t.serviceId}</code>)
-        </li>
+        <div class="panel" style="flex: 1 1 20rem; max-width: 24rem; margin-bottom: 0;">
+          <h3>{t.label}</h3>
+          <p style="font-size: 0.92rem; color: var(--ink-soft); margin-bottom: 0.9rem;">
+            tenant <code>{t.slug}</code><br />vault <code>{t.vaultRoot}</code>
+          </p>
+          <p style="display: flex; gap: 1rem; flex-wrap: wrap; font-variant: small-caps; letter-spacing: 0.06em;">
+            <a href={`/${t.slug}/memory`}>Memory browser</a><span style="color: var(--brass);">&middot;</span>
+            <a href={`/${t.slug}/xray`}>X-ray recall</a><span style="color: var(--brass);">&middot;</span>
+            <a href={`/${t.slug}/vault`}>Vault</a>
+          </p>
+        </div>
       ))}
-    </ul>
-    <p>Endpoints: <code>GET /api/health</code>, <code>POST /api/{":tenant"}/memory/recall</code>, <code>POST /api/{":tenant"}/memory/conversations</code>, <code>POST /api/{":tenant"}/memory/memories</code>, <code>GET /api/{":tenant"}/vault/notes</code>, <code>GET /api/{":tenant"}/vault/note?rel=...</code></p>
-  </body>
-</html>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="rule-head"><span class="numeral">II.</span> State of the works</h2>
+    <div class="panel">
+      <h3>Gateway &amp; console health</h3>
+      <div class="meta-line">
+        <span>console <b class="ok">ok</b></span>
+        {gateway.ok ? (
+          <span>gateway <b class="ok">ok</b></span>
+        ) : (
+          <span>gateway <b class="warn">unreachable</b> — {gateway.message}</span>
+        )}
+        {gateway.ok && gateway.version !== null && <span>version <b>{String(gateway.version)}</b></span>}
+        {gateway.ok && uptimeHrs && <span>uptime <b>{uptimeHrs} h</b></span>}
+      </div>
+      <p class="empty-note" style="padding: 0;">
+        Machine-readable: <code>GET /api/health</code>
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="rule-head"><span class="numeral">III.</span> The read API</h2>
+    <div class="panel">
+      <h3>Endpoints (all read-only)</h3>
+      <div class="meta-line">
+        <span><code>POST /api/:tenant/memory/recall</code> — exact injected block (X-ray contract)</span>
+        <span><code>POST /api/:tenant/memory/conversations</code> — L0 rows</span>
+        <span><code>POST /api/:tenant/memory/memories</code> — L1 profile memories</span>
+        <span><code>GET /api/:tenant/vault/notes?sub=</code> — vault listing</span>
+        <span><code>GET /api/:tenant/vault/note?rel=</code> — note body</span>
+      </div>
+      <p class="plate-caption">
+        Chat, amnesia, and kill-switch orchestration are the Tech Lead's next slice; those panes will
+        wire onto new API routes when they land.
+      </p>
+    </div>
+  </section>
+</Console>

@@ -1,0 +1,7 @@
+---
+import { notFound, tenantFromParams } from "../../lib/page";
+
+const tenant = tenantFromParams(Astro.params.tenant);
+if (!tenant) return notFound(`Unknown tenant "${Astro.params.tenant ?? ""}".`);
+return Astro.redirect(`/${tenant.slug}/memory`, 302);
+---

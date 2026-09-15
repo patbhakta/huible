@@ -1,0 +1,131 @@
+---
+import Console from "../../layouts/Console.astro";
+import { recall } from "../../lib/gateway";
+import { notFound, tenantFromParams } from "../../lib/page";
+
+const tenant = tenantFromParams(Astro.params.tenant);
+if (!tenant) return notFound(`Unknown tenant "${Astro.params.tenant ?? ""}".`);
+
+const q = (Astro.url.searchParams.get("q") ?? "").trim();
+const conversationId = (Astro.url.searchParams.get("conversationId") ?? "").trim();
+const sessionKey = (Astro.url.searchParams.get("sessionKey") ?? "").trim();
+
+type RecallOutcome =
+  | { state: "idle" }
+  | {
+      state: "ok";
+      context: string;
+      prepend?: string;
+      strategy?: string;
+      memoryCount?: number;
+      digestSettled?: boolean;
+      gistBlocks?: number;
+      sessionKey: string;
+    }
+  | { state: "error"; message: string };
+
+let result: RecallOutcome = { state: "idle" };
+if (q && (sessionKey || conversationId)) {
+  const key = sessionKey || conversationId;
+  try {
+    const r = await recall(tenant, q, key);
+    if (r && typeof r.context === "string") {
+      result = {
+        state: "ok",
+        context: r.context,
+        prepend: typeof r.prepend_context === "string" ? r.prepend_context : undefined,
+        strategy: r.strategy,
+        memoryCount: r.memory_count,
+        digestSettled: r.digest_settled,
+        gistBlocks: r.gist_blocks,
+        sessionKey: key,
+      };
+    } else {
+      result = { state: "error", message: (r as { message?: string })?.message ?? "gateway returned no context block" };
+    }
+  } catch (err) {
+    result = { state: "error", message: err instanceof Error ? err.message : String(err) };
+  }
+}
+const showFormError = Boolean(q) && !sessionKey && !conversationId;
+---
+
+<Console title={`X-ray — ${tenant.label}`} tenant={tenant}>
+  <div class="page-head">
+    <span class="kicker">X-ray recall &middot; {tenant.label}</span>
+    <h1>Before the Answer, the Recall</h1>
+    <p class="dim">
+      Run a probe query against a session and see the exact memory block the engine would inject on
+      its next turn — the settled session gist first, then verbatim excerpts. Rendered verbatim;
+      this is the X-ray contract, unedited.
+    </p>
+  </div>
+
+  <section>
+    <div class="panel">
+      <h3>Probe a session's recall</h3>
+      <form class="controls" method="get" action={`/${tenant.slug}/xray`}>
+        <label for="q">query</label>
+        <input type="text" id="q" name="q" value={q} placeholder="what should the persona recall here?" />
+        <label for="conversationId">conversation&nbsp;id</label>
+        <input
+          type="text"
+          id="conversationId"
+          name="conversationId"
+          value={conversationId}
+          placeholder="e.g. 42"
+          style="flex: 0 1 9rem;"
+        />
+        <label for="sessionKey">or session&nbsp;key</label>
+        <input
+          type="text"
+          id="sessionKey"
+          name="sessionKey"
+          value={sessionKey}
+          placeholder="huible-p&hellip;-c&hellip;"
+          style="flex: 0 1 15rem;"
+        />
+        <button type="submit">X-ray</button>
+      </form>
+      <p class="plate-caption">
+        Conversation ids are namespaced to this tenant automatically; paste a raw session key only if
+        you have one from the engine.
+      </p>
+      {showFormError && (
+        <p class="error-note" style="margin-top: 0.9rem;">
+          A conversation id (or full session key) is required — recall is session-scoped by design.
+        </p>
+      )}
+      {result.state === "error" && <p class="error-note" style="margin-top: 0.9rem;">Recall failed — {result.message}</p>}
+    </div>
+  </section>
+
+  {
+    result.state === "ok" && (
+      <section>
+        <h2 class="rule-head">
+          <span class="numeral">II.</span> The injected block — verbatim
+        </h2>
+        <div class="panel">
+          <h3>Exactly what the engine would inject</h3>
+          <div class="meta-line">
+            <span>session <b>{result.sessionKey}</b></span>
+            {result.strategy !== undefined && <span>strategy <b>{result.strategy}</b></span>}
+            {result.memoryCount !== undefined && <span>memories <b>{result.memoryCount}</b></span>}
+            {result.digestSettled !== undefined && (
+              <span>
+                digest <b class={result.digestSettled ? "ok" : "warn"}>{result.digestSettled ? "settled" : "unsettled"}</b>
+              </span>
+            )}
+            {result.gistBlocks !== undefined && <span>gist blocks <b>{result.gistBlocks}</b></span>}
+          </div>
+          {result.prepend && <pre class="verbatim prepend">{result.prepend}</pre>}
+          <pre class="verbatim">{result.context}</pre>
+          <p class="plate-caption">
+            Reproduced character-for-character from <code>POST /api/{tenant.slug}/memory/recall</code>.
+          </p>
+        </div>
+      </section>
+    )
+  }
+</Console>

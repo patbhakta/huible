@@ -1,0 +1,172 @@
+---
+import Console from "../../layouts/Console.astro";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { formatBytes, notFound, tenantFromParams } from "../../lib/page";
+
+const tenant = tenantFromParams(Astro.params.tenant);
+if (!tenant) return notFound(`Unknown tenant "${Astro.params.tenant ?? ""}".`);
+
+const sub = (Astro.url.searchParams.get("sub") ?? "").replaceAll("\\", "/");
+const rel = (Astro.url.searchParams.get("rel") ?? "").replaceAll("\\", "/");
+
+// ---- Directory listing (mirrors GET /api/:tenant/vault/notes validation) ----
+type Entry = { name: string; type: "dir" | "note"; rel: string; bytes?: number; modified?: string };
+type Listing =
+  | { state: "idle" }
+  | { state: "ok"; root: string; items: Entry[] }
+  | { state: "error"; message: string };
+
+let listing: Listing = { state: "idle" };
+{
+  const root = path.resolve(tenant.vaultRoot, sub);
+  if (!root.startsWith(path.resolve(tenant.vaultRoot))) {
+    listing = { state: "error", message: "path outside the vault" };
+  } else {
+    try {
+      const entries = await fs.readdir(root, { withFileTypes: true });
+      const items: Entry[] = [];
+      for (const entry of entries) {
+        if (entry.name.startsWith(".")) continue;
+        const full = path.join(root, entry.name);
+        if (entry.isDirectory()) {
+          items.push({ name: entry.name, type: "dir", rel: path.relative(tenant.vaultRoot, full) });
+        } else if (entry.name.endsWith(".md")) {
+          const stat = await fs.stat(full);
+          items.push({ name: entry.name, type: "note", rel: path.relative(tenant.vaultRoot, full), bytes: stat.size, modified: stat.mtime.toISOString() });
+        }
+      }
+      items.sort((a, b) => a.name.localeCompare(b.name));
+      listing = { state: "ok", root: sub || ".", items };
+    } catch (err) {
+      listing = { state: "error", message: err instanceof Error ? err.message : String(err) };
+    }
+  }
+}
+
+// ---- Note reader (mirrors GET /api/:tenant/vault/note validation) ----
+type Note =
+  | { state: "idle" }
+  | { state: "ok"; rel: string; content: string; bytes: number; modified: string }
+  | { state: "error"; message: string };
+
+let note: Note = { state: "idle" };
+if (rel) {
+  const normalized = path.normalize(rel).replaceAll("\\", "/");
+  const full = path.resolve(tenant.vaultRoot, normalized);
+  if (!full.startsWith(path.resolve(tenant.vaultRoot) + path.sep)) {
+    note = { state: "error", message: "path outside the vault" };
+  } else if (!normalized.endsWith(".md")) {
+    note = { state: "error", message: "only markdown notes are shown" };
+  } else {
+    try {
+      const content = await fs.readFile(full, "utf8");
+      const stat = await fs.stat(full);
+      note = { state: "ok", rel: normalized, content, bytes: stat.size, modified: stat.mtime.toISOString() };
+    } catch (err) {
+      note = { state: "error", message: err instanceof Error ? err.message : String(err) };
+    }
+  }
+}
+
+// ---- Breadcrumbs ----
+const crumbs = sub
+  ? sub.split("/").map((part, i, arr) => ({
+      name: part,
+      sub: arr.slice(0, i + 1).join("/"),
+    }))
+  : [];
+const noteDir = note.state === "ok" ? path.posix.dirname(note.rel) : "";
+const noteName = note.state === "ok" ? path.posix.basename(note.rel) : "";
+const modified =
+  note.state === "ok"
+    ? new Date(note.modified).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    : "";
+---
+
+<Console title={`Vault — ${tenant.label}`} tenant={tenant}>
+  <div class="page-head">
+    <span class="kicker">Vault browser &middot; {tenant.label}</span>
+    <h1>The Long-Term Papers</h1>
+    <p class="dim">
+      The persona's markdown vault — dialogues, scenes, and profile papers — read straight from disk,
+      path-validated to the tenant's own root.
+    </p>
+  </div>
+
+  {
+    note.state === "ok" && (
+      <section>
+        <h2 class="rule-head">
+          <span class="numeral">I.</span> A note, opened
+        </h2>
+        <div class="panel">
+          <h3>{noteName}</h3>
+          <p class="crumbs">
+            <a href={`/${tenant.slug}/vault`}>vault</a>
+            {noteDir !== "." &&
+              noteDir
+                .split("/")
+                .map((part, i, arr) => (
+                  <>
+                    {" / "}
+                    <a href={`/${tenant.slug}/vault?sub=${encodeURIComponent(arr.slice(0, i + 1).join("/"))}`}>{part}</a>
+                  </>
+                ))}
+            {" / "}
+            <span class="here">{noteName}</span>
+          </p>
+          <div class="meta-line">
+            <span>path <b>{note.rel}</b></span>
+            <span>size <b>{formatBytes(note.bytes)}</b></span>
+            <span>modified <b>{modified}</b></span>
+          </div>
+          <pre class="verbatim" style="max-height: 44rem;">{note.content}</pre>
+          <p class="plate-caption">
+            Set as filed — markdown source, unedited. <a href={`/${tenant.slug}/vault?sub=${encodeURIComponent(noteDir)}`}>Back to {noteDir === "." ? "vault root" : noteDir}</a>
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  <section>
+    <h2 class="rule-head"><span class="numeral">{note.state === "ok" ? "II." : "I."}</span> The shelves</h2>
+    <div class="panel">
+      <h3>{note.state === "ok" ? "Browse elsewhere" : "Vault contents"}</h3>
+      <p class="crumbs">
+        <a href={`/${tenant.slug}/vault`} class={sub ? undefined : "here"}>vault root</a>
+        {crumbs.map((c) => (
+          <>
+            {" / "}
+            <a href={`/${tenant.slug}/vault?sub=${encodeURIComponent(c.sub)}`} class={c.sub === sub ? "here" : undefined}>{c.name}</a>
+          </>
+        ))}
+      </p>
+      {listing.state === "ok" && (
+        listing.items.length > 0 ? (
+          <ul class="listing">
+            {listing.items.map((item) => (
+              <li>
+                {item.type === "dir" ? (
+                  <a href={`/${tenant.slug}/vault?sub=${encodeURIComponent(item.rel)}`}>
+                    <span class="dir-mark">&#9656;</span>
+                    {item.name}/
+                  </a>
+                ) : (
+                  <a href={`/${tenant.slug}/vault?rel=${encodeURIComponent(item.rel)}`}>
+                    {item.name}
+                    <span class="note-size">{formatBytes(item.bytes)}</span>
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="empty-note">This shelf is empty.</p>
+        )
+      )}
+      {listing.state === "error" && <p class="error-note">Cannot read this shelf — {listing.message}</p>}
+    </div>
+  </section>
+</Console>

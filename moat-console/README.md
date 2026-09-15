@@ -2,7 +2,14 @@
 
 Founder-visible memory moat console. Astro 7, `output: "server"`, Node adapter, tailnet-only.
 
-This repo slice is the **read-only API lane** (Tech Lead). UI lane (Design Technologist) builds on these endpoints.
+This repo slice is the **read-only API lane** (Tech Lead). The UI lane (Design Technologist) ships the founder-facing pages on these endpoints:
+
+- `/` — console overview + gateway health
+- `/:tenant/memory` — L0 conversation + L1 profile memory search
+- `/:tenant/xray` — X-ray recall probe (renders the exact injected block verbatim)
+- `/:tenant/vault` — vault browser (`?sub=` listing, `?rel=` note reader)
+
+Zero client JS: plain GET forms, server-rendered. Sepia/newspaper Monkey47 identity per `huible-frontend/THEME.md` (self-hosted fonts in `public/fonts/`, OFL licenses included).
 
 ## Run
 

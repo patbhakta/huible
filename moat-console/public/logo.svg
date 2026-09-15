@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="864" height="1138" viewBox="16 18 864 1138" role="img" aria-labelledby="logo-title logo-desc">
+  <title id="logo-title">HUible brain and infinity bulb</title>
+  <desc id="logo-desc">The uploaded logo refined into smooth, mirrored curves with uniform main strokes, balanced infinity loops, two thin support wires, and equally spaced diagonal screw threads. Editable vector geometry on a transparent background.</desc>
+  <defs>
+    <clipPath id="screw-silhouette" clipPathUnits="userSpaceOnUse">
+      <path d="M288 894 H608 L563 1068 C548 1109 498 1134 448 1134 C398 1134 348 1109 333 1068 Z"/>
+    </clipPath>
+  </defs>
+  <g id="brain-and-glass" fill="none" stroke="#28221e" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <g id="brain-left">
+      <path id="left-crown-and-stem" d="M424 442 V148 C424 104 392 70 346 70 C284 70 239 109 239 164 C239 205 261 235 295 235 C317 235 333 220 333 201 C333 185 324 175 312 179"/>
+      <path id="left-upper-fold" d="M237 152 C180 156 148 194 147 242 C146 289 178 326 220 326 H279 C338 326 347 324 377 374"/>
+      <path id="left-glass-outline" d="M145 254 C89 285 67 329 67 398 C67 542 94 610 173 690 C223 741 266 817 297 865"/>
+      <path id="left-outer-lower-fold" d="M68 428 C91 490 127 516 165 516 C207 516 239 516 255 468"/>
+      <path id="left-inner-lower-fold" d="M205 404 C220 450 263 480 309 480 C351 480 375 460 375 428"/>
+    </g>
+    <use id="brain-right" xlink:href="#brain-left" transform="translate(896 0) scale(-1 1)"/>
+  </g>
+  <path id="infinity" fill="none" stroke="#28221e" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" d="M448 640 C407 614 371 578 336 578 C293 578 260 604 260 640 C260 676 293 702 336 702 C371 702 407 666 448 640 C489 614 525 578 560 578 C603 578 636 604 636 640 C636 676 603 702 560 702 C525 702 489 666 448 640 Z"/>
+  <g id="filament-supports" fill="none" stroke="#28221e" stroke-width="18" stroke-linecap="round">
+    <path id="left-support" d="M423 902 C414 839 434 779 406 739"/>
+    <path id="right-support" d="M473 902 C482 839 462 779 490 739"/>
+  </g>
+  <g id="screw-base" fill="#28221e" clip-path="url(#screw-silhouette)">
+    <path id="top-thread" d="M200 894 H700 V898 L200 988 Z"/>
+    <path id="middle-thread" d="M200 1003 L700 913 V953 L200 1043 Z"/>
+    <path id="lower-thread" d="M200 1058 L700 968 V1008 L200 1098 Z"/>
+    <path id="bottom-contact" d="M200 1113 L700 1023 V1063 L200 1153 Z"/>
+  </g>
+</svg>

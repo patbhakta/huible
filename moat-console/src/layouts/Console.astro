@@ -1,0 +1,420 @@
+---
+// Shared masthead, tenant switcher, and colophon for the moat console.
+// Sepia/newspaper Monkey47 identity per huible-frontend/THEME.md — same
+// palette, fonts, and rules as the Gazette; this is a founder-facing
+// diagnostic console, so it adds print-box "instrument" panels. Zero client JS.
+import type { TenantConfig } from "../lib/tenants";
+import { TENANT_LIST } from "../lib/gateway";
+
+interface Props {
+  title: string;
+  tenant?: TenantConfig | null;
+}
+const { title, tenant = null } = Astro.props;
+const year = new Date().getFullYear();
+const base = tenant ? `/${tenant.slug}` : "";
+const t = (path: string) => `${base}${path}`;
+const dateLine = new Date().toLocaleDateString("en-US", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style is:global>
+      /* ---- Self-hosted type — see public/fonts/OFL-*.txt for licenses ---- */
+      @font-face {
+        font-family: 'EB Garamond';
+        font-style: normal;
+        font-weight: 400 800;
+        font-display: swap;
+        src: url('/fonts/eb-garamond-variable.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'EB Garamond';
+        font-style: italic;
+        font-weight: 400 800;
+        font-display: swap;
+        src: url('/fonts/eb-garamond-italic-variable.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Playfair Display';
+        font-style: normal;
+        font-weight: 400 900;
+        font-display: swap;
+        src: url('/fonts/playfair-display-variable.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Playfair Display';
+        font-style: italic;
+        font-weight: 400 900;
+        font-display: swap;
+        src: url('/fonts/playfair-display-italic-variable.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Source Serif 4';
+        font-style: normal;
+        font-weight: 200 900;
+        font-display: swap;
+        src: url('/fonts/source-serif-4-variable.woff2') format('woff2');
+      }
+
+      :root {
+        /* Print-shop palette — identical tokens to the Gazette */
+        --paper: #faf4ec;
+        --paper-alt: #efe6d5;
+        --ink: #1d1a15;
+        --ink-soft: #4c4636;
+        --green: #2d4a34;
+        --brass: #8a6d3b;
+        --border: #c9bfa8;
+
+        --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        --font-body: 'EB Garamond', Georgia, 'Times New Roman', serif;
+        --font-label: 'Source Serif 4', Georgia, serif;
+        --font-mono: 'Source Serif 4', 'Courier New', serif;
+
+        --max-w: 72rem;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background-color: var(--paper);
+        /* Paper grain — inline SVG fractal noise, no hotlinked texture image */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-variant-numeric: oldstyle-nums proportional-nums;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--green); text-decoration: none; }
+      a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+      code { font-family: var(--font-mono); font-size: 0.92em; background: var(--paper-alt); padding: 0.05em 0.3em; border: 1px solid var(--border); }
+      .container { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; }
+
+      /* ---- Dateline + masthead ---- */
+      .dateline-bar { border-bottom: 1px solid var(--border); }
+      .dateline-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        padding: 0.5rem 0 0.45rem;
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        color: var(--ink-soft);
+      }
+      .dateline-inner span.mid { color: var(--ink); font-weight: 600; }
+
+      header.masthead {
+        border-top: 5px double var(--ink);
+        border-bottom: 5px double var(--ink);
+        padding: 1.5rem 0 1.2rem;
+        text-align: center;
+      }
+      .edition-line {
+        font-style: italic;
+        font-size: 0.78rem;
+        letter-spacing: 0.06em;
+        color: var(--brass);
+        margin-bottom: 0.5rem;
+      }
+      .nameplate {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.9rem;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-variant: small-caps;
+        font-size: clamp(2.2rem, 7vw, 3.8rem);
+        letter-spacing: 0.05em;
+        color: var(--ink);
+        line-height: 1;
+      }
+      .masthead-logo { height: clamp(3rem, 7vw, 5rem); width: auto; flex: none; }
+      .tagline {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 1rem;
+        color: var(--ink-soft);
+        margin-top: 0.6rem;
+      }
+
+      /* ---- Nav + tenant switcher ---- */
+      nav.site-nav { border-bottom: 1px solid var(--ink); }
+      .nav-inner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        padding: 0.6rem 0;
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.09em;
+        font-size: 0.85rem;
+      }
+      .nav-inner a { color: var(--ink); }
+      .nav-inner a:hover, .nav-inner a[aria-current='page'] { color: var(--green); text-decoration: underline; }
+      .nav-inner .dot { color: var(--brass); }
+      .tenant-row {
+        border-bottom: 1px solid var(--border);
+        background: var(--paper-alt);
+      }
+      .tenant-inner {
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.9rem;
+        padding: 0.45rem 0;
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.09em;
+        font-size: 0.78rem;
+        color: var(--ink-soft);
+      }
+      .tenant-inner a { color: var(--ink-soft); }
+      .tenant-inner a[aria-current='true'] { color: var(--green); font-weight: 700; text-decoration: underline; }
+
+      main { padding: 2.75rem 0 3.5rem; }
+      section + section { border-top: 3px double var(--ink); margin-top: 2.75rem; padding-top: 2.75rem; }
+
+      .kicker {
+        display: block;
+        text-align: center;
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        color: var(--green);
+        margin-bottom: 0.6rem;
+      }
+      .kicker::before { content: '\2766  '; color: var(--brass); }
+      .kicker::after { content: '  \2766'; color: var(--brass); }
+
+      .page-head { text-align: center; margin-bottom: 2.25rem; }
+      .page-head h1 { font-size: clamp(1.9rem, 4.2vw, 2.6rem); margin-top: 0.4rem; font-family: var(--font-display); }
+      .page-head p.dim { max-width: 46rem; margin: 0.8rem auto 0; color: var(--ink-soft); font-style: italic; }
+
+      h2.rule-head {
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: var(--ink);
+        text-align: center;
+        margin-bottom: 1.25rem;
+      }
+      h2.rule-head .numeral { color: var(--green); font-style: italic; margin-right: 0.5rem; }
+
+      /* ---- Print-box instrument panels ---- */
+      .panel {
+        border: 1px solid var(--ink);
+        background: var(--paper);
+        padding: 1.25rem 1.4rem;
+        margin: 0 auto 1.75rem;
+        max-width: 58rem;
+      }
+      .panel > h3 {
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.1em;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--green);
+        margin-bottom: 0.85rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5rem;
+      }
+
+      form.controls { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+      form.controls label {
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        color: var(--ink-soft);
+      }
+      form.controls input[type='text'], form.controls select {
+        font-family: var(--font-body);
+        font-size: 1rem;
+        color: var(--ink);
+        background: var(--paper);
+        border: 1px solid var(--ink);
+        border-radius: 0;
+        padding: 0.35rem 0.55rem;
+      }
+      form.controls input[type='text'] { flex: 1 1 16rem; }
+      form.controls button {
+        font-family: var(--font-label);
+        font-variant: small-caps;
+        letter-spacing: 0.1em;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--paper);
+        background: var(--green);
+        border: 1px solid var(--ink);
+        border-radius: 0;
+        padding: 0.4rem 1.1rem;
+        cursor: pointer;
+      }
+      form.controls button:hover { background: var(--ink); }
+
+      /* ---- Verbatim blocks: the X-ray contract ---- */
+      pre.verbatim {
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        color: var(--ink);
+        background: var(--paper-alt);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--green);
+        padding: 1rem 1.1rem;
+        max-height: 34rem;
+        overflow: auto;
+      }
+      pre.verbatim.prepend { border-left-color: var(--brass); margin-bottom: 0.75rem; }
+      .plate-caption {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+        margin-top: 0.55rem;
+      }
+
+      .meta-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem 1.4rem;
+        font-family: var(--font-label);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        color: var(--ink-soft);
+        margin-bottom: 0.85rem;
+      }
+      .meta-line b { color: var(--ink); font-weight: 600; }
+      .meta-line .ok { color: var(--green); }
+      .meta-line .warn { color: var(--brass); }
+
+      .empty-note {
+        font-style: italic;
+        color: var(--ink-soft);
+        text-align: center;
+        padding: 0.75rem 0;
+      }
+      .error-note {
+        border: 1px solid var(--brass);
+        border-left: 3px solid var(--brass);
+        background: var(--paper-alt);
+        color: var(--ink);
+        padding: 0.85rem 1rem;
+        font-style: italic;
+      }
+
+      /* ---- Vault listing ---- */
+      ul.listing { list-style: none; columns: 2; column-gap: 2.5rem; column-rule: 1px solid var(--border); }
+      ul.listing li { break-inside: avoid; border-bottom: 1px solid var(--border); padding: 0.4rem 0.1rem; }
+      ul.listing a { color: var(--ink); }
+      ul.listing a:hover { color: var(--green); }
+      ul.listing .dir-mark { color: var(--brass); margin-right: 0.4rem; }
+      ul.listing .note-size { color: var(--ink-soft); font-size: 0.78rem; margin-left: 0.5rem; font-family: var(--font-label); }
+      .crumbs { font-family: var(--font-label); font-variant: small-caps; letter-spacing: 0.07em; font-size: 0.85rem; margin-bottom: 1rem; color: var(--ink-soft); }
+      .crumbs a { color: var(--ink-soft); }
+      .crumbs a:hover, .crumbs .here { color: var(--green); }
+
+      @media (max-width: 700px) {
+        .container { padding: 0 1rem; }
+        ul.listing { columns: 1; }
+        .dateline-inner { flex-wrap: wrap; justify-content: center; gap: 0.2rem 0.75rem; font-size: 0.68rem; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dateline-bar">
+      <div class="container dateline-inner">
+        <span>Memory Moat — Founder X-ray</span>
+        <span class="mid">{dateLine}</span>
+        <span>Read-only &middot; Tailnet only</span>
+      </div>
+    </div>
+    <header class="masthead">
+      <div class="container">
+        <p class="edition-line">The Working-Memory Ledger — Est. 2026</p>
+        <a href="/" class="nameplate" aria-label="HUible moat console — home">
+          <img class="masthead-logo" src="/logo.svg" alt="" />
+          <span>Huible Moat Console</span>
+        </a>
+        <p class="tagline">What the mind remembers, shown before it answers.</p>
+      </div>
+    </header>
+    <nav class="site-nav" aria-label="Console sections">
+      <div class="container nav-inner">
+        {TENANT_LIST.length > 0 && tenant ? (
+          <>
+            <a href={t('/memory')} aria-current={Astro.url.pathname === t('/memory') ? 'page' : undefined}>Memory</a><span class="dot">&middot;</span>
+            <a href={t('/xray')} aria-current={Astro.url.pathname === t('/xray') ? 'page' : undefined}>X-ray</a><span class="dot">&middot;</span>
+            <a href={t('/vault')} aria-current={Astro.url.pathname === t('/vault') ? 'page' : undefined}>Vault</a><span class="dot">&middot;</span>
+            <a href="/">About this console</a>
+          </>
+        ) : (
+          <>
+            {TENANT_LIST.map((tn, i) => (
+              <>
+                {i > 0 && <span class="dot">&middot;</span>}
+                <a href={`/${tn.slug}/memory`}>{tn.label}</a>
+              </>
+            ))}
+          </>
+        )}
+      </div>
+    </nav>
+    {tenant && (
+      <div class="tenant-row">
+        <div class="container tenant-inner">
+          <span>Tenant:</span>
+          {TENANT_LIST.map((tn) => (
+            <a href={`/${tn.slug}/memory`} aria-current={tn.slug === tenant.slug ? 'true' : undefined}>{tn.label}</a>
+          ))}
+          <span class="dot">&middot;</span>
+          <span>service <code>{tenant.serviceId}</code></span>
+        </div>
+      </div>
+    )}
+    <main class="container">
+      <slot />
+    </main>
+    <footer style="border-top: 5px double var(--ink); padding: 1.75rem 0 2.25rem; text-align: center;">
+      <div class="container">
+        <p style="color: var(--brass); margin-bottom: 0.6rem;">&#10086;</p>
+        <p style="font-size: 0.82rem; color: var(--ink-soft);">
+          &copy; {year} HUIble &mdash; read-only console; the engine's write paths are not wired here.
+        </p>
+        <p style="font-size: 0.8rem; font-style: italic; color: var(--ink-soft); margin-top: 0.3rem;">
+          Set in EB Garamond &amp; Playfair Display. Made with memory.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
