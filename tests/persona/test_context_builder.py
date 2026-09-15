@@ -948,3 +948,32 @@ class TestOrdinalIndexLane:
             working_memory="",
         )
         assert "laundry again" not in ctx.render()
+
+    async def test_recall_index_line_exposed_for_dynamics_rule(self):
+        """HU-2774 r33: build() must surface the lane's line on the context
+        so the dynamics enforcer's recall_miss rule can check adherence —
+        and leave it empty when the lane does not fire."""
+        backend = _IndexBackend()
+        await backend.store_memory(self._index_node(
+            'Conversation index: the first thing X said was: "laundry again"'
+        ))
+        fired = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+            query_embedding_content=_vec("fishing"),
+            current_message=_RECALL_PROBE,
+            working_memory="",
+        )
+        assert fired.recall_index_line == (
+            'Conversation index: the first thing X said was: "laundry again"'
+        )
+        quiet = await ContextBuilder().build(
+            persona=_persona(),
+            requester_tier=RelationshipTier.FAMILY,
+            backend=backend,
+            query_embedding_content=_vec("fishing"),
+            current_message="hey, how's your week been?",
+            working_memory="",
+        )
+        assert quiet.recall_index_line == ""

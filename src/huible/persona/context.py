@@ -631,6 +631,13 @@ class PromptContext:
     # state the HISTORY_WINDOW tail would otherwise have evicted (RC-3).
     # Prompt surface only; never counted as activated vault memory.
     working_memory: str = ""
+    # HU-2774 r33 recall lane: the conversation-index line this turn's
+    # ordinal-recall lane prepended into ``working_memory`` ("" when the
+    # lane did not fire). Evidence surface for the dynamics enforcer's
+    # recall_miss rule — the rule must know exactly which verbatim line the
+    # prompt carried so its adherence check is aligned with the battery
+    # gate's cross-session hit detector (same quoted-opener content words).
+    recall_index_line: str = ""
     # W5 interest tool (M-0R-E): the persona's own era-admissible
     # preference/fact lines retrieved on an interest/hobby-shaped turn.
     # Prompt surface (YOUR INTERESTS section) + evidence, kept separate from
@@ -1489,6 +1496,7 @@ class ContextBuilder:
         user_name: str | None = None,
         realworld_hits: Sequence[SearchHit] = (),
         honor_noon_pin: bool = True,
+        recall_index_line: str = "",
     ) -> PromptContext:
         """Apply the hard gates to pre-retrieved memories and render context.
 
@@ -1584,6 +1592,7 @@ class ContextBuilder:
             career_exemplars=work,
             realworld_exemplars=realworld,
             working_memory=working_memory,
+            recall_index_line=recall_index_line,
             current_message=current_message,
             framing_version=framing_version,
             distress_grounding=distress_grounding,
@@ -1815,6 +1824,7 @@ class ContextBuilder:
         # carries the probe's own vocabulary so recall has its content at
         # hand. Gates ride the same hard path as every other lane (confidence,
         # disclosure, era); no index found renders nothing (B2 doctrine).
+        index_line = ""
         if is_memory_recall_question(current_message):
             index_line = await self._ordinal_index_line(
                 backend=backend,
@@ -1841,6 +1851,7 @@ class ContextBuilder:
             emotion_exemplars=feelings,
             career_exemplars=work,
             working_memory=working_memory,
+            recall_index_line=index_line,
             real_now=real_now,
             user_name=user_name,
             realworld_hits=realworld,

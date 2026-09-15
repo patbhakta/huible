@@ -314,6 +314,7 @@ async def apply_dynamics_enforcement(
     seed: str = "",
     distress: bool = False,
     name_tells: Sequence[tuple[str, str]] = (),
+    recall_index_line: str = "",
 ) -> DynamicsReport:
     """Enforce the question / echo / vocabulary rules on one persona turn.
 
@@ -328,6 +329,17 @@ async def apply_dynamics_enforcement(
     question, if any, comes from the gentle tail pool. Vocabulary patterns
     stay gate-aligned even on distress turns (the rewrite regen still runs);
     only the destructive fallback is suppressed.
+
+    ``recall_index_line`` (HU-2774 r33) is the conversation-index line the
+    context builder's ordinal-recall lane prepended into this turn's prompt
+    ("" when the lane did not fire — fresh persona, gate-rejected index, or
+    the inbound is not a recall probe). When it is present and the draft
+    shows none of the quoted first-inbound's content words, the recall_miss
+    rule fires: the prompt CARRIED the verbatim answer and the generator
+    answered from a weaker echo instead (r32-stranger-3 Monica misattribution
+    — she quoted the interlocutor's own recall line, attributing the seed to
+    him). Detector is byte-aligned with the battery gate's cross-session hit
+    check: same content-word overlap, same acknowledgment-shape exemption.
     """
     replies = [t.content for t in history if getattr(t, "speaker", None) == "persona"]
     fired: list[str] = []
@@ -382,6 +394,29 @@ async def apply_dynamics_enforcement(
             is None
         )
 
+    # HU-2774 r33 recall adherence: the quoted first-inbound inside the
+    # lane's index line ("Conversation index: the first thing X said to Y
+    # was: \"...\""). Malformed lines leave the quote empty — the rule stays
+    # inert (never fire on a span we cannot pin to the write format).
+    recall_quote = ""
+    if recall_index_line:
+        m = re.search(r'was:\s*"(.*)"\s*$', recall_index_line, re.DOTALL)
+        if m:
+            recall_quote = m.group(1)
+
+    # Acknowledgment shapes the gate accepts instead of a quote (the scorer's
+    # own regex — a reply proving the memory is intact without quoting).
+    _RECALL_ACK_RE = re.compile(
+        r"\b(already asked|asked me that|first thing you (?:said|asked))\b"
+    )
+
+    def _recall_missed(t: str) -> bool:
+        if not recall_quote:
+            return False
+        if _RECALL_ACK_RE.search(t.casefold()):
+            return False
+        return not (content_words(t) & content_words(recall_quote))
+
     # Rule state may change as fallbacks mutate the text (e.g. the only "?"
     # can live inside a stripped tell sentence), so conditions are closures
     # over the CURRENT text and the pass below re-checks after every mutation.
@@ -401,6 +436,8 @@ async def apply_dynamics_enforcement(
         fired.append("question_cap")
     if _echo_missed(text):
         fired.append("echo_miss")
+    if _recall_missed(text):
+        fired.append("recall_miss")
     hits = _vocab_hits(text, inbound)
     for tag, _span in hits:
         if tag not in fired:
@@ -428,6 +465,12 @@ async def apply_dynamics_enforcement(
         directives.append(
             f"Open this reply with the exact word \"{echo_word(inbound)}\" from "
             "their last message, then add your own bit on top."
+        )
+    if _recall_missed(text):
+        directives.append(
+            f'Your memory holds the answer verbatim: "{recall_quote}". '
+            "When asked what they first said, quote THOSE actual words — "
+            "do not substitute a different line."
         )
     if hits:
         banned = sorted({span for _, span in hits})[:6]
@@ -531,6 +574,23 @@ async def apply_dynamics_enforcement(
                 if "mutate:prepend_echo" not in actions:
                     actions.append("mutate:prepend_echo")
                 changed = True
+        if _recall_missed(text):
+            # Mechanical recall repair: lead with the verbatim first-inbound
+            # quote, dropping a leading misattributed "you said \"...\" —"
+            # span when the draft carries one (r32-stranger-3 shape — the
+            # quote now present makes any leftover attribution clause read
+            # as contradicting the quote it follows).
+            stripped = re.sub(
+                r'^\s*(?:wait,?\s*)?you\s+(?:already\s+)?(?:said|asked)\s*'
+                r'["\u201c][^"\u201d]*["\u201d]\s*[^.!?]*?[—–-]\s*',
+                "",
+                text,
+                flags=re.IGNORECASE,
+            )
+            text = f'"{recall_quote}" — {stripped}'
+            if "mutate:prepend_recall" not in actions:
+                actions.append("mutate:prepend_recall")
+            changed = True
         if not changed:
             break
 
@@ -554,6 +614,8 @@ async def apply_dynamics_enforcement(
         residual.append("question_cap")
     if _echo_missed(text):
         residual.append("echo_miss")
+    if _recall_missed(text):
+        residual.append("recall_miss")
     for tag, _span in _vocab_hits(text, inbound):
         if tag not in residual:
             residual.append(tag)

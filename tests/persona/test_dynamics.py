@@ -624,3 +624,131 @@ def test_gate_echo_scores_lag1_against_own_inbound():
     )
     gw = verdict["criteria"]["grounded_wit"]
     assert gw["echo_rate"] == pytest.approx(0.5)  # lines 0 and 2 hook
+
+
+# --- HU-2774 r33: recall_miss (cross-session recall adherence) ----------------
+
+
+_INDEX_LINE = (
+    'Conversation index: the first thing they said to Monica was: '
+    '"Chandler. Don\'t wear it out. What\'s yours?"'
+)
+_QUOTE = "Chandler. Don't wear it out. What's yours?"
+_R32_ECHO_DRAFT = (
+    'You said "hi, whats your name?" — straight to the point, no pleasantries.'
+)
+
+
+@pytest.mark.asyncio
+async def test_recall_miss_fires_on_echo_misattribution():
+    """r32-stranger-3 shape: draft quotes the seed echo, zero overlap with
+    the true first inbound the lane carried."""
+    async def truthful_regen(addendum):
+        assert _QUOTE in addendum
+        return f'You said "{_QUOTE}" — very smug for an icebreaker.'
+
+    report = await apply_dynamics_enforcement(
+        _R32_ECHO_DRAFT,
+        "wait wait — earlier, in our last conversation — what was the very "
+        "first thing i said to you?",
+        [],
+        regenerate=truthful_regen,
+        seed="c9",
+        recall_index_line=_INDEX_LINE,
+    )
+    assert "recall_miss" in report.fired
+    assert "regen" in report.actions
+    assert report.residual == []
+    assert "smug" in report.text
+
+
+@pytest.mark.asyncio
+async def test_recall_miss_prepends_quote_after_regen_refusal():
+    async def cold_regen(_addendum):
+        return "still the wrong echo, no quote at all"
+
+    report = await apply_dynamics_enforcement(
+        _R32_ECHO_DRAFT,
+        "what was the very first thing i said to you?",
+        [],
+        regenerate=cold_regen,
+        seed="c10",
+        recall_index_line=_INDEX_LINE,
+    )
+    assert "recall_miss" in report.fired
+    assert "mutate:prepend_recall" in report.actions
+    assert report.text.startswith(f'"{_QUOTE}" — ')
+    # the misattributed leading span is stripped, not left contradicting
+    assert 'You said "hi' not in report.text
+    assert report.residual == []
+
+
+@pytest.mark.asyncio
+async def test_recall_acknowledgment_shape_does_not_fire():
+    """The gate accepts a repeat-acknowledgment in lieu of a quote — the
+    rule must not fire where the scorer would pass."""
+    async def no_regen(_a):
+        raise AssertionError("no regen expected")
+
+    report = await apply_dynamics_enforcement(
+        "oh, you already asked me that — keep up",
+        "what was the very first thing i said to you?",
+        [],
+        regenerate=no_regen,
+        seed="c11",
+        recall_index_line=_INDEX_LINE,
+    )
+    assert report.fired == [] and report.actions == []
+
+
+@pytest.mark.asyncio
+async def test_recall_rule_inert_without_index_line():
+    """No lane line (fresh persona / gate-rejected / non-probe inbound) —
+    the rule never fires, the prompt demonstrably carried nothing."""
+    async def no_regen(_a):
+        raise AssertionError("no regen expected")
+
+    report = await apply_dynamics_enforcement(
+        _R32_ECHO_DRAFT,
+        "what was the very first thing i said to you?",
+        [],
+        regenerate=no_regen,
+        seed="c12",
+        recall_index_line="",
+    )
+    assert report.fired == [] and report.actions == []
+
+
+@pytest.mark.asyncio
+async def test_recall_rule_inert_on_malformed_index_line():
+    async def no_regen(_a):
+        raise AssertionError("no regen expected")
+
+    report = await apply_dynamics_enforcement(
+        _R32_ECHO_DRAFT,
+        "what was the very first thing i said to you?",
+        [],
+        regenerate=no_regen,
+        seed="c13",
+        recall_index_line="Conversation index: no quote span here",
+    )
+    assert "recall_miss" not in report.fired
+
+
+@pytest.mark.asyncio
+async def test_recall_hit_draft_passes_untouched():
+    """A truthful quoting draft (the live-replay shape) passes verbatim."""
+    async def no_regen(_a):
+        raise AssertionError("no regen expected")
+
+    good = f'You said "{_QUOTE}" — very smug for an icebreaker.'
+    report = await apply_dynamics_enforcement(
+        good,
+        "what was the very first thing i said to you?",
+        [],
+        regenerate=no_regen,
+        seed="c14",
+        recall_index_line=_INDEX_LINE,
+    )
+    assert report.text == good
+    assert report.fired == [] and report.actions == []

@@ -1937,6 +1937,12 @@ def _register_routes(application: FastAPI) -> None:
                 # never appears in the persona's own voice.
                 distress=(effective_affect == UserAffect.DISTRESS),
                 name_tells=persona_name_tells(binding.persona.name),
+                # HU-2774 r33 recall adherence: the index line the ordinal
+                # lane prepended this turn ("" when it did not fire) — the
+                # enforcer's recall_miss rule checks the draft against it.
+                recall_index_line=(
+                    ctx.recall_index_line if ctx is not None else ""
+                ),
             )
             response_text = dynamics_report.text
             if dynamics_report.regenerated:
