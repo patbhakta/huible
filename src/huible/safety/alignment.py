@@ -425,6 +425,23 @@ _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 #: anchors. Sentence-initial single capitals are excluded downstream.
 _ENTITY_PATTERN = re.compile(r"\b([A-Z][a-zA-Z']+(?:\s+[A-Z][a-zA-Z']+){0,3})\b")
 
+#: Quoted spans inside a claim sentence (HU-2774 r31 Monica-cold-xs finding).
+#: A truthful cross-session recall answer QUOTES the counterpart's own words,
+#: but the entity pattern only sees the sentence's capitalized ornaments —
+#: Monica's verbatim-true quote of "Hey Mon! Not bad — I successfully avoided
+#: work, so all wins." produced the sole entity ``Classic`` (her sign-off
+#: flourish), which is in no memory, so the claim was suppressed and her
+#: correct recall replaced by the reflection fallback. Quoted spans therefore
+#: join the claim's salient set: a real quote grounds (the conversation
+#: write-back stores the counterpart's words verbatim, so its content tokens
+#: are in the grounding corpus), while a fabricated quote still fails (its
+#: tokens live in no memory). Same Phase-1 any-token content-overlap contract
+#: as multi-word entities; straight and curly quotes both match.
+_QUOTED_SPAN_PATTERN = re.compile(r'[“"]([^“”"]{3,})[”"]')
+
+#: Every character treated as a quote delimiter when counting sheared spans.
+_QUOTE_CHARS = "“”\""
+
 #: Tokens that are capitalized only because of sentence position, the persona
 #: self-reference, or common pronouns — never salient entities. The discourse
 #: adverbs (Honestly, Famously, …) are capitalized mid-sentence only inside
@@ -596,6 +613,31 @@ def _extract_entities(sentence: str, *, persona_name: str) -> tuple[list[str], l
     return multi, single
 
 
+def _quoted_spans(sentence: str) -> tuple[str, ...]:
+    """Quoted spans of ``sentence`` (HU-2774 r31 Monica-cold-xs finding).
+
+    Paired straight/curly spans first. When the sentence split shears a quote
+    across a boundary (``...was "Hey Mon!`` / ``Not bad — ... wins."\n\nClassic
+    you.`` — the closing quote right after the period blocks the split
+    lookbehind, so the quote's tail rides into the *next* extracted sentence),
+    the unmatched quote residue is the quoted content itself. With an odd
+    quote count, the unmatched delimiter is decided by shape: ``“`` opens
+    (residue is everything after it), ``”`` / straight ``"`` close (residue is
+    everything before it). Those residues join the salient set alongside
+    paired spans.
+    """
+    spans = [s for s in _QUOTED_SPAN_PATTERN.findall(sentence) if s.strip()]
+    hits = [idx for idx, ch in enumerate(sentence) if ch in _QUOTE_CHARS]
+    if len(hits) % 2 == 1:  # odd quote count → sheared across the split
+        if sentence[hits[0]] == "“":
+            residue = sentence[hits[0] + 1 :]
+        else:
+            residue = sentence[: hits[-1]]
+        if residue.strip():
+            spans.append(residue)
+    return tuple(spans)
+
+
 def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
     """Extract claims from a persona reply.
 
@@ -612,7 +654,9 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
       so the pure-second-person leak class is still caught. Category is
       ``relationship`` when the sentence carries a kinship/shared-past signal,
       else ``biographical``. Sentences with no entity and no factual cue are
-      pure reflection and yield no claim.
+      pure reflection and yield no claim. Quoted spans inside the sentence
+      (HU-2774 r31) join the salient set, so a verbatim recall quote grounds
+      on its own content rather than on the sentence's capitalized ornaments.
 
     ``persona_name`` excludes self-references from the entity set so a reply
     that simply names the persona does not become a claim.
@@ -640,6 +684,13 @@ def extract_claims(text: str, *, persona_name: str = "") -> list[Claim]:
             entities = multi + single
             if entities:
                 salient = tuple(entities)
+                # HU-2774 r31: quoted content joins the salient set so a
+                # verbatim recall quote grounds on its own tokens instead of
+                # the sentence's capitalized ornaments (r21/r22/r25/r31
+                # Monica-cold-xs: a true quote died on the sign-off entity
+                # "Classic"). Fabricated quotes still fail — their tokens are
+                # in no memory the corpus is built from.
+                salient += _quoted_spans(sentence)
                 words_lower = {w.strip("'\"").lower() for w in sentence.split()}
                 category = (
                     ClaimCategory.RELATIONSHIP

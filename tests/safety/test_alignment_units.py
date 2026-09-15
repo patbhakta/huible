@@ -357,6 +357,70 @@ class TestCurrentMessageGrounding:
         assert report.disposition == "suppressed"
 
 
+# --- HU-2774 r31: quoted recall content joins the salient set ---------------
+
+
+class TestQuotedRecallGrounding:
+    """A truthful cross-session recall answer QUOTES the counterpart's words.
+
+    r31 Monica-cold-xs: her verbatim-true quote of the first inbound line
+    produced the sole entity ``Classic`` (her sign-off flourish) — the quoted
+    content was never tested, so the claim was suppressed and a correct
+    recall answer replaced by the reflection fallback. Quoted spans (paired
+    or sheared across the sentence split) therefore join the salient set:
+    real quotes ground on the conversation write-back's verbatim tokens,
+    fabricated ones still fail.
+    """
+
+    OPENER = "Hey Mon! Not bad — I successfully avoided work, so all wins."
+
+    def _writeback_corpus(self) -> set[str]:
+        node = _node(
+            f"{self.OPENER}\nMonica said: Avoided work? Chandler, you have "
+            "a job. You go there. Daily.",
+            confidence_level="medium",
+        )
+        return build_grounding_corpus([node], PERSONA)
+
+    def test_sheared_quote_grounded_despite_unknown_ornament(self):
+        """The exact r31 s2-t1 shape: quote sheared across the sentence
+        split, ornament ``Classic`` unknown to the corpus — the reply must
+        ground now (was: suppressed)."""
+        reply = (
+            'You said, and I quote — "Hey Mon! Not bad — I successfully '
+            'avoided work, so all wins."\n\nClassic you.'
+        )
+        claims = extract_claims(reply, persona_name="Chandler")
+        assert claims, "the quote sentences are factual claims"
+        corpus = self._writeback_corpus()
+        assert all(is_grounded(c, corpus) for c in claims), [
+            (c.text, c.salient_entities) for c in claims
+        ]
+
+    def test_paired_quote_grounded(self):
+        """A clean paired quote of a stored line grounds on its content."""
+        reply = (
+            'I remember your first text, "Avoided work? Chandler, you have '
+            'a job." — verbatim.'
+        )
+        claims = extract_claims(reply, persona_name="Chandler")
+        assert claims
+        corpus = self._writeback_corpus()
+        assert any(is_grounded(c, corpus) for c in claims)
+
+    def test_fabricated_quote_still_suppressed(self):
+        """Anti-confabulation bar holds: a quoted "memory" whose tokens live
+        in no memory stays un-grounded (leak-probe contract)."""
+        reply = (
+            'You told me once, "I keep a diary of every sandwich I regret." '
+            "Big deal."
+        )
+        report = apply_alignment_guard(
+            reply, refs=VAULT_REFS, persona=PERSONA
+        )
+        assert report.disposition == "suppressed"
+
+
 class TestEntityDenylistPrecision:
     """HU-2161: capitalized discourse words (inside quotations) are not named
     entities and must never anchor a biographical claim."""
